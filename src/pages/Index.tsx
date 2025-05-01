@@ -4,8 +4,14 @@ import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
 import CrisisResources from '../components/CrisisResources';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Image } from 'lucide-react';
 
 const Index = () => {
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    e.currentTarget.src = '/placeholder.svg';
+    e.currentTarget.classList.remove('logo-pulse');
+  };
+
   return (
     <div className="min-h-screen bg-cvmhw-light flex flex-col">
       <Header />
@@ -15,11 +21,14 @@ const Index = () => {
           <Card className="shadow-md border-cvmhw-blue border">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-3">
-                <img 
-                  src="/logo.png" 
-                  alt="CVMHW Logo" 
-                  className="w-10 h-10"
-                />
+                <div className="relative w-10 h-10">
+                  <img 
+                    src="/logo.png" 
+                    alt="CVMHW Logo" 
+                    className="w-full h-full object-contain"
+                    onError={handleImageError}
+                  />
+                </div>
                 <CardTitle className="text-xl font-semibold text-cvmhw-purple">Welcome to Roger.AI</CardTitle>
               </div>
               <CardDescription>Your teen PTSD treatment companion</CardDescription>
@@ -52,11 +61,14 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center space-x-4 mb-4">
-                <img 
-                  src="/logo.png" 
-                  alt="CVMHW Logo" 
-                  className="w-16 h-16 logo-pulse"
-                />
+                <div className="relative w-16 h-16">
+                  <img 
+                    src="/logo.png" 
+                    alt="CVMHW Logo" 
+                    className="w-full h-full object-contain logo-pulse"
+                    onError={handleImageError}
+                  />
+                </div>
                 <div>
                   <p className="text-gray-600">
                     We are dedicated to supporting teen PTSD treatment through mindful, 
@@ -77,11 +89,14 @@ const Index = () => {
       <footer className="bg-white shadow-md mt-8 border-t border-cvmhw-blue">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-center gap-3 mb-3">
-            <img 
-              src="/logo.png" 
-              alt="CVMHW Logo" 
-              className="w-8 h-8"
-            />
+            <div className="relative w-8 h-8">
+              <img 
+                src="/logo.png" 
+                alt="CVMHW Logo" 
+                className="w-full h-full object-contain"
+                onError={handleImageError}
+              />
+            </div>
             <span className="font-medium text-cvmhw-purple">Cuyahoga Valley Mindful Health and Wellness</span>
           </div>
           <div className="text-center text-gray-600 text-sm">
