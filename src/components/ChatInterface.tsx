@@ -8,7 +8,9 @@ import {
   detectCrisisKeywords, 
   createMessage, 
   getInitialMessages, 
-  getCrisisMessage
+  getCrisisMessage,
+  getResponseBasedOnEmotion,
+  getVariedResponse
 } from '../utils/conversationUtils';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -26,6 +28,56 @@ const ChatInterface = () => {
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Calculate dynamic response time based on message length
+  const calculateResponseTime = (message: string): number => {
+    // Base time for processing (milliseconds)
+    const baseTime = 1000;
+    
+    // Additional time based on message length (50ms per character)
+    // This creates a more natural response time that varies with message complexity
+    const lengthFactor = Math.min(message.length * 50, 3000); // Cap at 3 seconds for very long messages
+    
+    // Add some randomness (±20% variation)
+    const randomFactor = (Math.random() * 0.4 + 0.8) * (baseTime + lengthFactor);
+    
+    return Math.round(randomFactor);
+  };
+
+  // Simulate realistic typing with variable speed
+  const simulateTypingResponse = (response: string, callback: (text: string) => void) => {
+    let currentIndex = 0;
+    let fullResponse = '';
+    
+    // Function to add next character with variable speed
+    const addNextChar = () => {
+      if (currentIndex < response.length) {
+        fullResponse += response[currentIndex];
+        currentIndex++;
+        
+        // Variable typing speed
+        // - Faster for short words and common punctuation
+        // - Slower for long complex words
+        // - Pauses at punctuation marks
+        let delay = 25 + Math.random() * 40; // Base typing speed
+        
+        const currentChar = response[currentIndex - 1];
+        if (['.', '!', '?'].includes(currentChar)) {
+          delay += 400; // Longer pause at end of sentences
+        } else if ([',', ';', ':'].includes(currentChar)) {
+          delay += 200; // Medium pause at punctuation
+        }
+        
+        callback(fullResponse);
+        setTimeout(addNextChar, delay);
+      } else {
+        setIsTyping(false);
+      }
+    };
+    
+    // Start typing simulation
+    setTimeout(addNextChar, 300);
   };
 
   const handleSendMessage = () => {
@@ -50,24 +102,42 @@ const ChatInterface = () => {
     setUserInput('');
     setIsTyping(true);
 
-    // Simulate Roger's response after a delay
+    // Store the current message to use in the response
+    const currentMessage = userInput;
+
+    // Calculate response time based on message complexity
+    const responseTime = calculateResponseTime(currentMessage);
+
+    // Generate Roger's response after a delay to simulate thinking
     setTimeout(() => {
-      let rogerResponse;
+      let responseText;
       
       if (containsCrisisKeywords) {
-        rogerResponse = createMessage(getCrisisMessage(), 'roger');
+        responseText = getCrisisMessage();
       } else {
-        // This would be integrated with an AI response in the future
-        // For now, we'll use a placeholder response
-        rogerResponse = createMessage(
-          "I appreciate you sharing that with me. While I'm here to listen and support you, remember I'm not a clinical professional. Would you like to explore this topic a bit more while you wait for your therapist?",
-          'roger'
-        );
+        // Create a more natural and varied response
+        const emotionResponse = getResponseBasedOnEmotion(currentMessage);
+        const acknowledgment = getVariedResponse('acknowledgment');
+        const supportStatement = getVariedResponse('support');
+        const exploration = getVariedResponse('exploration');
+        
+        // Combine different elements for a more natural, varied response
+        responseText = `${acknowledgment} ${emotionResponse} ${supportStatement} ${exploration}`;
       }
       
+      // Create temporary message object to update during typing simulation
+      const rogerResponse = createMessage('', 'roger');
       setMessages(prevMessages => [...prevMessages, rogerResponse]);
-      setIsTyping(false);
-    }, 1500);
+      
+      // Simulate typing with a callback to update the message text
+      simulateTypingResponse(responseText, (text) => {
+        setMessages(prevMessages => 
+          prevMessages.map(msg => 
+            msg.id === rogerResponse.id ? { ...msg, text } : msg
+          )
+        );
+      });
+    }, responseTime);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
