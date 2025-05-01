@@ -117,6 +117,10 @@ const CrisisResources = () => {
               <h3 className="font-medium text-roger-dark">Ohio State & National</h3>
               <div className="grid gap-2">
                 <ResourceItem 
+                  label="Ohio Gambling Hotline" 
+                  phone="888-532-3500" 
+                />
+                <ResourceItem 
                   label="Ohio Veteran Crisis Line" 
                   phone="800-273-8255" 
                 />
