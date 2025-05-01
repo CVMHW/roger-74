@@ -7,7 +7,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Phone, Info } from 'lucide-react';
+import { ChevronDown, ChevronUp, Phone, Info, HelpCircle } from 'lucide-react';
 
 const CrisisResources = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,13 +21,28 @@ const CrisisResources = () => {
       <CollapsibleTrigger asChild>
         <Button 
           variant="outline" 
-          className="w-full flex justify-between items-center p-5 border-b bg-roger-surface hover:bg-blue-100"
+          className="w-full flex justify-between items-center p-5 border-b bg-roger-surface hover:bg-blue-100 relative"
         >
           <div className="flex items-center gap-3 text-roger-dark">
-            <Info size={24} className="text-roger" />
+            <div className="relative">
+              <Info size={24} className="text-roger" />
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-roger opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-roger"></span>
+              </span>
+            </div>
             <span className="font-semibold text-lg">Crisis Resources & Support</span>
+            <div className="bg-blue-50 p-1 rounded-md flex items-center border border-blue-100 ml-2 animate-pulse">
+              <HelpCircle size={16} className="text-roger mr-1" />
+              <span className="text-xs text-roger-dark font-medium">Available 24/7</span>
+            </div>
           </div>
-          {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          <div className="flex items-center">
+            <div className="mr-3 bg-roger-surface p-1.5 rounded-full border border-roger">
+              <span className="text-xs text-roger-dark font-medium whitespace-nowrap">Click to view resources</span>
+            </div>
+            {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </div>
         </Button>
       </CollapsibleTrigger>
       
