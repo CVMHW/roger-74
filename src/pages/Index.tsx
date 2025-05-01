@@ -3,8 +3,8 @@ import React from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
 import CrisisResources from '../components/CrisisResources';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Image } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Image, Users, Award, BookOpen, Heart } from 'lucide-react';
 
 const Index = () => {
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -81,7 +81,44 @@ const Index = () => {
                   </p>
                 </div>
               </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                <div className="flex items-start space-x-3">
+                  <BookOpen className="text-cvmhw-purple h-6 w-6 mt-1" />
+                  <div>
+                    <h3 className="font-medium text-cvmhw-blue">Evidence-Based Approaches</h3>
+                    <p className="text-sm text-gray-600">Our therapists use cognitive-processing therapy, mindfulness techniques, and play therapy to address PTSD and related concerns.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <Heart className="text-cvmhw-pink h-6 w-6 mt-1" />
+                  <div>
+                    <h3 className="font-medium text-cvmhw-blue">Compassionate Care</h3>
+                    <p className="text-sm text-gray-600">Creating a safe, supportive environment where teens can feel heard and understood during their healing journey.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <Users className="text-cvmhw-blue h-6 w-6 mt-1" />
+                  <div>
+                    <h3 className="font-medium text-cvmhw-blue">Specialized Focus</h3>
+                    <p className="text-sm text-gray-600">Expert care for anxiety, depression, family dynamics, school issues, and trauma-related concerns.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <Award className="text-cvmhw-orange h-6 w-6 mt-1" />
+                  <div>
+                    <h3 className="font-medium text-cvmhw-blue">Insurance Accepted</h3>
+                    <p className="text-sm text-gray-600">We work with most major insurance providers including Aetna, Anthem, Blue Cross, Medicaid, and more.</p>
+                  </div>
+                </div>
+              </div>
             </CardContent>
+            <CardFooter className="border-t pt-4 text-sm text-gray-500">
+              <p>For appointments or questions, please contact your provider directly.</p>
+            </CardFooter>
           </Card>
         </div>
       </main>

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Image } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 
 const Header = () => {
   return (
@@ -18,13 +18,13 @@ const Header = () => {
                   e.currentTarget.classList.remove('logo-pulse');
                 }}
               />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                <Image className="h-6 w-6 text-gray-400" />
-              </div>
             </div>
             <div>
               <h1 className="text-2xl font-semibold gradient-text">Cuyahoga Valley Mindful Health and Wellness</h1>
-              <p className="text-gray-600">Peer Support Companion for Teen PTSD Treatment</p>
+              <div className="flex items-center text-gray-600">
+                <BookOpen className="h-4 w-4 mr-1" />
+                <p className="text-sm">Specialized teen PTSD treatment with evidence-based approaches</p>
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-2">
