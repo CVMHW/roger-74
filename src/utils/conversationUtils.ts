@@ -34,7 +34,7 @@ export const getCrisisMessage = (): string => {
     
     "I'm very sorry to hear that you're going through such a tough time. It sounds like you need immediate support. Please reach out to one of the crisis resources listed below. They are available 24/7 and can provide the help you need.",
     
-    "I can hear how much pain you're in. It's important that you get immediate support. Please contact one of the crisis resources listed below. They are there to help you through this.",
+    "I can hear how much pain you're in. It's important that you get immediate support. Please contact one of the crisis resources listed below. They can provide the support you need right now.",
     
     "I'm really worried about you. It sounds like you're in a crisis situation. Please reach out to one of the crisis resources listed below. They can provide the support you need right now."
   ];
@@ -153,7 +153,7 @@ export const getEatingDisorderMessage = (): string => {
     
     "I hear that you're having some difficult feelings about your body and eating. Many people struggle with these issues, and you deserve supportive, specialized care. The Emily Program listed in our resources can provide that specialized support. Would it help to talk about what's been most challenging for you lately?",
     
-    "What you're describing about your relationship with food and your body sounds really challenging. It's important that you know specialized support is available through programs like the Emily Program (listed in our resources). While we wait for your therapist, I'm here to listen if you want to share more about your experiences.",
+    "What you're describing about your relationship with food and your body sounds really challenging. It's important that you know specialized support is available through programs like the Emily Program (listed in our resources). While we wait for your therapist, I'm here to listen if you want to share more about what you're going through.",
     
     "I appreciate you being open about these struggles with food and body image. These concerns are important and deserve specialized care. The Emily Program (1-888-272-0836) provides support specifically for these types of concerns. In the meantime, what would feel most supportive to discuss while you wait for your therapist?"
   ];
@@ -180,9 +180,115 @@ export const getSubstanceUseMessage = (): string => {
   return substanceUseResponses[Math.floor(Math.random() * substanceUseResponses.length)];
 };
 
+// CVMHW company information and services
+const cvmhwInfo = {
+  generalInfo: {
+    name: "Cuyahoga Valley Mindful Health and Wellness",
+    abbreviation: "CVMHW",
+    mission: "Providing comprehensive mental health services for all ages, with a focus on evidence-based practices and personalized care.",
+    ageRange: "Serving clients from age 4 to adults, including veterans and families.",
+    mainPractitioner: "Eric Riesterer, Licensed Professional Counselor pursuing LPCC licensure in Cuyahoga Falls & Jefferson Ohio.",
+    supervision: "Supervised by Wendy Nathan, LPCC-S through Group Supervision and Work Supervision."
+  },
+  services: {
+    counseling: [
+      "Individual therapy for children (as young as 4), adolescents, adults, and veterans",
+      "Evidence-based approaches including cognitive-processing therapy, mindfulness techniques, and play therapy",
+      "Trauma treatment and PTSD/C-PTSD care with specialized veteran services",
+      "Family counseling and sibling relationship therapy",
+      "Child and adolescent counseling with play therapy",
+      "Anxiety, depression, and adjustment disorder treatment",
+      "School-based counseling and academic support",
+      "Boys' and men's mental health",
+      "Telehealth services via Doxy.me (HIPAA-compliant)"
+    ],
+    lifeCoaching: [
+      "Non-clinical services for real-world problems",
+      "More flexibility with meeting locations (parks, libraries, coffee shops, etc.)",
+      "Support for ADD/ADHD, academic challenges, career development",
+      "Parenting education and family stressors",
+      "Finding balance, purpose, and meaning",
+      "Social skill development",
+      "Work and school-related stressors"
+    ],
+    athleticCoaching: [
+      "Physical wellness services with sliding fee scales available",
+      "Running programs from Couch to 5K to Marathon training",
+      "Sprint, middle-distance, and distance development camps",
+      "Race plan consultations and performance visualization",
+      "Coaching experience at middle school, high school, and collegiate levels"
+    ]
+  },
+  credentials: {
+    education: "Master's in Counseling and Human Developmental Therapy at Walsh University with research focus in trauma psychotherapy",
+    experience: "4.5+ years of counseling experience through non-profit work, school-based services, and private practice",
+    specialties: "Trauma counseling, play therapy, mindfulness, cognitive-behavioral therapy, military adjustment",
+    coaching: "Track & Field/Cross-Country Coach in Hudson, Louisville, Burton, and Jefferson",
+    military: "6 years in the US Army Reserves working in petroleum/oil engineering"
+  },
+  insurance: [
+    "Aetna", "AmeriHealth", "Anthem", "Blue Cross", "Blue Shield", "BlueCross and BlueShield", 
+    "Buckeye", "Carelon Behavioral Health", "CareSource", "FrontPath", "Humana", 
+    "Medicaid", "Medical Mutual", "Molina Healthcare", "Paramount", "UnitedHealthcare"
+  ],
+  fees: {
+    individual: "$120 per session",
+    couples: "$120 per session",
+    slidingScale: "Available for qualifying low-income families",
+    payment: "Apple Cash, Cash, Check, Health Savings Account, Venmo"
+  },
+  locations: {
+    offices: ["Cuyahoga Falls", "Jefferson Ohio"],
+    telehealth: "Available via Doxy.me (HIPAA-compliant)"
+  },
+  contactInfo: "For appointments or questions, please contact your provider directly."
+};
+
+// Function to generate appropriate responses about CVMHW
+const generateCVMHWInfoResponse = (userInput: string): string | null => {
+  const lowerInput = userInput.toLowerCase();
+  
+  // Check if the user is asking about CVMHW
+  const cvmhwKeywords = ['cvmhw', 'cuyahoga valley', 'mindful health', 'wellness', 'the company', 'cvmwh.com', 'eric riesterer'];
+  
+  if (!cvmhwKeywords.some(keyword => lowerInput.includes(keyword))) {
+    return null; // Not asking about CVMHW
+  }
+  
+  // Generate response based on specific topics
+  if (lowerInput.includes('insurance') || lowerInput.includes('payment') || lowerInput.includes('cost')) {
+    return `Cuyahoga Valley Mindful Health and Wellness accepts many major insurance providers including ${cvmhwInfo.insurance.slice(0, 5).join(', ')}, and many more. Individual sessions cost ${cvmhwInfo.fees.individual}, with sliding scale options available for qualifying families. They accept various payment methods including ${cvmhwInfo.fees.payment}.`;
+  }
+  
+  if (lowerInput.includes('life coaching') || lowerInput.includes('non-clinical')) {
+    return `CVMHW offers Life Coaching services as a non-clinical alternative that provides flexibility and personalized guidance. These services include support for ${cvmhwInfo.services.lifeCoaching.slice(0, 3).join(', ')}, and more. Life coaching sessions can take place in various settings including parks, libraries, or coffee shops, giving you more control over your helping experience.`;
+  }
+  
+  if (lowerInput.includes('athletic') || lowerInput.includes('coaching') || lowerInput.includes('running') || lowerInput.includes('marathon')) {
+    return `Eric Riesterer at CVMHW provides Athletic Coaching services including ${cvmhwInfo.services.athleticCoaching.slice(0, 3).join(', ')}. He has extensive coaching experience at middle school, high school, and collegiate levels, with his own impressive athletic background including marathon PRs of 2:45:54 and numerous race victories.`;
+  }
+  
+  if (lowerInput.includes('veteran') || lowerInput.includes('military') || lowerInput.includes('army')) {
+    return `CVMHW offers specialized support for veterans and military families. Eric has 6 years of experience in the US Army Reserves and understands the unique challenges of military service and transition to civilian life. He provides counseling for military adjustment, PTSD, and finding balance after service.`;
+  }
+  
+  if (lowerInput.includes('child') || lowerInput.includes('kid') || lowerInput.includes('family') || lowerInput.includes('teen') || lowerInput.includes('adolescent')) {
+    return `CVMHW provides comprehensive services for children (as young as 4), adolescents, and families. Services include play therapy, family counseling, school-based support, and help with adjustment issues. Eric has extensive experience working with children in school settings and specializes in helping young clients communicate effectively and navigate challenges.`;
+  }
+  
+  // General response about CVMHW
+  return `Cuyahoga Valley Mindful Health and Wellness (CVMHW) provides comprehensive mental health services for clients of all ages, from children as young as 4 to adults and veterans. Led by Eric Riesterer, a Licensed Professional Counselor, they offer evidence-based therapies including cognitive-processing therapy, mindfulness techniques, and play therapy. They specialize in anxiety, depression, trauma treatment, family counseling, and military adjustment issues. They accept most major insurance providers and also offer Life Coaching and Athletic Coaching services.`;
+};
+
 // Function to generate appropriate conversational responses based on user input context
 export const generateConversationalResponse = (userInput: string): string => {
-  // Basic responses - can be expanded
+  // Check if the user is asking about CVMHW specifically
+  const cvmhwResponse = generateCVMHWInfoResponse(userInput);
+  if (cvmhwResponse) {
+    return cvmhwResponse;
+  }
+  
+  // Basic conversational responses - can be expanded
   const responses = [
     "That's interesting, tell me more.",
     "I understand. How does that make you feel?",
@@ -191,6 +297,6 @@ export const generateConversationalResponse = (userInput: string): string => {
     "I appreciate you being so open."
   ];
 
-  // Select a random response
+  // Select a random response for general conversation
   return responses[Math.floor(Math.random() * responses.length)];
 };
