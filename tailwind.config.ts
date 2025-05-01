@@ -74,6 +74,13 @@ export default {
 					light: '#6ee7b7', // emerald-300
 					dark: '#047857', // emerald-700
 					surface: '#ecfdf5', // emerald-50
+				},
+				cvmhw: {
+					blue: '#36C7FF', // Light blue from logo
+					purple: '#AE3BFF', // Purple from logo
+					pink: '#FF3B8B', // Pink from logo
+					orange: '#FF8B3B', // Orange from logo
+					light: '#F0F8FF', // Light background
 				}
 			},
 			borderRadius: {

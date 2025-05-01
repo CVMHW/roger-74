@@ -14,16 +14,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 221 83% 53%;
+    --primary: 210 100% 59%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 160 84% 39%;
+    --secondary: 270 100% 62%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 160 84% 39%;
+    --accent: 330 100% 61%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -31,7 +31,7 @@
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221 83% 53%;
+    --ring: 210 100% 59%;
 
     --radius: 0.5rem;
   }
@@ -73,5 +73,30 @@
 }
 
 .crisis-resources-scroll [data-radix-scroll-area-thumb] {
-  @apply bg-roger hover:bg-roger-dark rounded-full w-3.5 transition-colors duration-200;
+  @apply bg-cvmhw-blue hover:bg-cvmhw-purple rounded-full w-3.5 transition-colors duration-200;
+}
+
+/* Logo animation */
+@keyframes gentle-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.logo-pulse {
+  animation: gentle-pulse 4s ease-in-out infinite;
+}
+
+/* Gradient text for headings */
+.gradient-text {
+  @apply bg-gradient-to-r from-cvmhw-purple via-cvmhw-pink to-cvmhw-orange bg-clip-text text-transparent;
 }

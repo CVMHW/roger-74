@@ -16,30 +16,30 @@ const CrisisResources = () => {
     <Collapsible 
       open={isOpen} 
       onOpenChange={setIsOpen} 
-      className="w-full bg-white rounded-lg shadow-md overflow-hidden border-2 border-roger-light"
+      className="w-full bg-white rounded-lg shadow-md overflow-hidden border-2 border-cvmhw-blue"
     >
       <CollapsibleTrigger asChild>
         <Button 
           variant="outline" 
-          className="w-full flex justify-between items-center p-5 border-b bg-roger-surface hover:bg-blue-100 relative"
+          className="w-full flex justify-between items-center p-5 border-b bg-cvmhw-light hover:bg-blue-100 relative"
         >
-          <div className="flex items-center gap-3 text-roger-dark">
+          <div className="flex items-center gap-3 text-cvmhw-purple">
             <div className="relative">
-              <Info size={24} className="text-roger" />
+              <Info size={24} className="text-cvmhw-blue" />
               <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-roger opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-roger"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cvmhw-pink opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-cvmhw-pink"></span>
               </span>
             </div>
             <span className="font-semibold text-lg">Crisis Resources & Support</span>
             <div className="bg-blue-50 p-1 rounded-md flex items-center border border-blue-100 ml-2 animate-pulse">
-              <HelpCircle size={16} className="text-roger mr-1" />
-              <span className="text-xs text-roger-dark font-medium">Available 24/7</span>
+              <HelpCircle size={16} className="text-cvmhw-blue mr-1" />
+              <span className="text-xs text-cvmhw-purple font-medium">Available 24/7</span>
             </div>
           </div>
           <div className="flex items-center">
-            <div className="mr-3 bg-roger-surface p-1.5 rounded-full border border-roger">
-              <span className="text-xs text-roger-dark font-medium whitespace-nowrap">Click to view resources</span>
+            <div className="mr-3 bg-cvmhw-light p-1.5 rounded-full border border-cvmhw-blue">
+              <span className="text-xs text-cvmhw-purple font-medium whitespace-nowrap">Click to view resources</span>
             </div>
             {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </div>
@@ -125,11 +125,11 @@ interface ResourceItemProps {
 
 const ResourceItem: React.FC<ResourceItemProps> = ({ label, phone, extension }) => {
   return (
-    <div className="flex justify-between items-center py-2 px-3 text-sm hover:bg-gray-50 rounded transition-colors">
+    <div className="flex justify-between items-center py-2 px-3 text-sm hover:bg-cvmhw-light rounded transition-colors">
       <span className="font-medium">{label}</span>
       <a 
         href={`tel:${phone.replace(/\D/g, '')}`} 
-        className="flex items-center gap-2 text-roger hover:text-roger-dark"
+        className="flex items-center gap-2 text-cvmhw-blue hover:text-cvmhw-purple"
       >
         <Phone size={16} className="shrink-0" />
         <span>{phone}{extension ? `, ext. ${extension}` : ""}</span>
@@ -150,7 +150,7 @@ interface ResourceCategoryProps {
 const ResourceCategory: React.FC<ResourceCategoryProps> = ({ title, resources }) => {
   return (
     <div className="space-y-3 bg-white p-3 rounded-md border border-gray-100 shadow-sm">
-      <h3 className="font-medium text-roger-dark border-b border-gray-200 pb-2 text-lg">{title}</h3>
+      <h3 className="font-medium text-cvmhw-purple border-b border-gray-200 pb-2 text-lg">{title}</h3>
       <div className="grid gap-1">
         {resources.map((resource) => (
           <ResourceItem 
