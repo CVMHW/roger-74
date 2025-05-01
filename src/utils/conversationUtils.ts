@@ -1,4 +1,8 @@
+
 import { MessageType } from '../components/Message';
+
+// Store previously used responses to avoid repetition
+let previousResponses: string[] = [];
 
 // Detect potentially crisis-related keywords in user messages
 export const detectCrisisKeywords = (message: string): boolean => {
