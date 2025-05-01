@@ -23,7 +23,7 @@ const Header = () => {
               <h1 className="text-2xl font-semibold gradient-text">Cuyahoga Valley Mindful Health and Wellness</h1>
               <div className="flex items-center text-gray-600">
                 <BookOpen className="h-4 w-4 mr-1" />
-                <p className="text-sm">Specialized teen PTSD treatment with evidence-based approaches</p>
+                <p className="text-sm">Comprehensive mental health services for all ages - children to adults</p>
               </div>
             </div>
           </div>

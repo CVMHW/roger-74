@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
 import CrisisResources from '../components/CrisisResources';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Image, Users, Award, BookOpen, Heart } from 'lucide-react';
+import { Image, Users, Award, BookOpen, Heart, Shield, Star } from 'lucide-react';
 
 const Index = () => {
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -31,7 +31,7 @@ const Index = () => {
                 </div>
                 <CardTitle className="text-xl font-semibold text-cvmhw-purple">Welcome to Roger.AI</CardTitle>
               </div>
-              <CardDescription>Your teen PTSD treatment companion</CardDescription>
+              <CardDescription>Your mental health support companion</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">
@@ -71,9 +71,9 @@ const Index = () => {
                 </div>
                 <div>
                   <p className="text-gray-600">
-                    We are dedicated to supporting teen PTSD treatment through mindful, 
-                    evidence-based approaches. Our team of licensed professionals works 
-                    together to provide personalized care and guidance.
+                    We are dedicated to supporting mental health and wellness for clients of all ages, from children as young as 4 
+                    to adults and veterans. Our team of licensed professionals works together to provide personalized care 
+                    and evidence-based treatment.
                   </p>
                   <p className="text-gray-600 mt-2">
                     While Roger.AI is here to provide additional support, your relationship with 
@@ -87,7 +87,7 @@ const Index = () => {
                   <BookOpen className="text-cvmhw-purple h-6 w-6 mt-1" />
                   <div>
                     <h3 className="font-medium text-cvmhw-blue">Evidence-Based Approaches</h3>
-                    <p className="text-sm text-gray-600">Our therapists use cognitive-processing therapy, mindfulness techniques, and play therapy to address PTSD and related concerns.</p>
+                    <p className="text-sm text-gray-600">Our therapists use cognitive-processing therapy, mindfulness techniques, and play therapy to address mental health concerns across all ages.</p>
                   </div>
                 </div>
                 
@@ -95,20 +95,36 @@ const Index = () => {
                   <Heart className="text-cvmhw-pink h-6 w-6 mt-1" />
                   <div>
                     <h3 className="font-medium text-cvmhw-blue">Compassionate Care</h3>
-                    <p className="text-sm text-gray-600">Creating a safe, supportive environment where teens can feel heard and understood during their healing journey.</p>
+                    <p className="text-sm text-gray-600">Creating a safe, supportive environment where clients of all ages can feel heard and understood during their healing journey.</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-3">
                   <Users className="text-cvmhw-blue h-6 w-6 mt-1" />
                   <div>
-                    <h3 className="font-medium text-cvmhw-blue">Specialized Focus</h3>
-                    <p className="text-sm text-gray-600">Expert care for anxiety, depression, family dynamics, school issues, and trauma-related concerns.</p>
+                    <h3 className="font-medium text-cvmhw-blue">Diverse Specializations</h3>
+                    <p className="text-sm text-gray-600">Expert care for anxiety, depression, PTSD, family dynamics, school issues, and trauma-related concerns for children, teens, adults and veterans.</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-3">
-                  <Award className="text-cvmhw-orange h-6 w-6 mt-1" />
+                  <Shield className="text-cvmhw-orange h-6 w-6 mt-1" />
+                  <div>
+                    <h3 className="font-medium text-cvmhw-blue">Veteran Services</h3>
+                    <p className="text-sm text-gray-600">Specialized support for veterans dealing with military adjustment, PTSD, and finding balance in civilian life from counselors with military background.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <Star className="text-cvmhw-purple h-6 w-6 mt-1" />
+                  <div>
+                    <h3 className="font-medium text-cvmhw-blue">Child & Family Services</h3>
+                    <p className="text-sm text-gray-600">Play therapy, family counseling, and autism spectrum support for children as young as 4 years old in a welcoming environment.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <Award className="text-cvmhw-blue h-6 w-6 mt-1" />
                   <div>
                     <h3 className="font-medium text-cvmhw-blue">Insurance Accepted</h3>
                     <p className="text-sm text-gray-600">We work with most major insurance providers including Aetna, Anthem, Blue Cross, Medicaid, and more.</p>
