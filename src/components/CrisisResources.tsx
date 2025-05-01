@@ -35,7 +35,7 @@ const CrisisResources = () => {
         <ScrollArea className="h-64 p-4">
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              If you're experiencing a crisis or need immediate support, please contact one of these resources:
+              Please use the resources below for immediate relief of symptoms and contact one of the relevant crisis resources or 911 for immediate assistance.
             </p>
             
             <div className="space-y-2">
@@ -86,6 +86,22 @@ const CrisisResources = () => {
                   phone="216-664-2555" 
                 />
                 <ResourceItem 
+                  label="Cleveland Emily Program Eating Disorders Residential Admissions" 
+                  phone="888-272-0836" 
+                />
+                <ResourceItem 
+                  label="Cleveland Windsor-Laurelwood Residential Psychiatric Hospital" 
+                  phone="440-953-3000" 
+                />
+                <ResourceItem 
+                  label="Cleveland Highland Springs Residential Psychiatric Hospital" 
+                  phone="216-302-3070" 
+                />
+                <ResourceItem 
+                  label="Cleveland Bluestone Residential Pediatric Psychiatric Hospital" 
+                  phone="216-200-5030" 
+                />
+                <ResourceItem 
                   label="Cleveland Veteran's Affairs Louis Stokes Mental Healthcare" 
                   phone="216-791-3800" 
                   extension="61035" 
@@ -123,6 +139,10 @@ const CrisisResources = () => {
                 <ResourceItem 
                   label="National Suicide Prevention Hotline" 
                   phone="800-273-8255" 
+                />
+                <ResourceItem 
+                  label="Opiate Hotline" 
+                  phone="330-453-4357" 
                 />
                 <ResourceItem 
                   label="United Way of Ohio" 

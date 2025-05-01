@@ -8,6 +8,7 @@ export type MessageType = {
   sender: 'user' | 'roger';
   timestamp: Date;
   feedback?: 'positive' | 'negative' | null;
+  concernType?: 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | null;
 };
 
 interface MessageProps {
@@ -37,6 +38,26 @@ const Message: React.FC<MessageProps> = ({ message, onFeedback }) => {
     }, [])
     .filter(text => text.trim() !== '');
 
+  // Determine if this message should have a special concern styling
+  const getConcernClass = () => {
+    if (!message.concernType) return '';
+    
+    switch (message.concernType) {
+      case 'crisis':
+        return 'border-l-4 border-red-500 pl-2 bg-red-50';
+      case 'medical':
+        return 'border-l-4 border-amber-500 pl-2 bg-amber-50';
+      case 'mental-health':
+        return 'border-l-4 border-blue-500 pl-2 bg-blue-50';
+      case 'eating-disorder':
+        return 'border-l-4 border-purple-500 pl-2 bg-purple-50';
+      case 'substance-use':
+        return 'border-l-4 border-orange-500 pl-2 bg-orange-50';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className={`flex mb-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
       {message.sender === 'roger' && (
@@ -45,7 +66,7 @@ const Message: React.FC<MessageProps> = ({ message, onFeedback }) => {
         </div>
       )}
       <div 
-        className={`chat-bubble ${message.sender === 'user' ? 'user-message' : 'roger-message'}`}
+        className={`chat-bubble ${message.sender === 'user' ? 'user-message' : 'roger-message'} ${message.concernType ? getConcernClass() : ''}`}
       >
         <div>
           {textParagraphs.map((paragraph, index) => (

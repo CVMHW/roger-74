@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,9 +5,17 @@ import { Send } from 'lucide-react';
 import Message, { MessageType } from './Message';
 import { 
   detectCrisisKeywords, 
+  detectMedicalConcerns,
+  detectMentalHealthConcerns,
+  detectEatingDisorderConcerns,
+  detectSubstanceUseConcerns,
   createMessage, 
   getInitialMessages, 
   getCrisisMessage,
+  getMedicalConcernMessage,
+  getMentalHealthConcernMessage,
+  getEatingDisorderMessage,
+  getSubstanceUseMessage,
   generateConversationalResponse,
   storeFeedback
 } from '../utils/conversationUtils';
@@ -19,6 +26,10 @@ const ChatInterface = () => {
   const [userInput, setUserInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [shouldShowCrisisAlert, setShouldShowCrisisAlert] = useState(false);
+  const [shouldShowMedicalAlert, setShouldShowMedicalAlert] = useState(false);
+  const [shouldShowMentalHealthAlert, setShouldShowMentalHealthAlert] = useState(false);
+  const [shouldShowEatingDisorderAlert, setShouldShowEatingDisorderAlert] = useState(false);
+  const [shouldShowSubstanceUseAlert, setShouldShowSubstanceUseAlert] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -128,6 +139,37 @@ const ChatInterface = () => {
     });
   };
 
+  const showConcernToast = (concernType: string) => {
+    let title = "Important Notice";
+    let description = "";
+    
+    switch(concernType) {
+      case 'crisis':
+        description = "This appears to be a sensitive topic. Crisis resources are available below.";
+        break;
+      case 'medical':
+        description = "I notice you mentioned physical health concerns. Please consult a medical professional.";
+        break;
+      case 'mental-health':
+        description = "For bipolar symptoms or severe mental health concerns, please contact a professional.";
+        break;
+      case 'eating-disorder':
+        description = "For concerns about eating or body image, the Emily Program has specialists who can help.";
+        break;
+      case 'substance-use':
+        description = "For substance use concerns, specialized support is available in the resources below.";
+        break;
+      default:
+        description = "Please see the resources below for support with your concerns.";
+    }
+    
+    toast({
+      title,
+      description,
+      duration: 6000,
+    });
+  };
+
   const handleSendMessage = () => {
     if (!userInput.trim()) return;
 
@@ -135,15 +177,33 @@ const ChatInterface = () => {
     const newUserMessage = createMessage(userInput, 'user');
     setMessages(prevMessages => [...prevMessages, newUserMessage]);
     
-    // Check for crisis keywords
+    // Check for various concern keywords
     const containsCrisisKeywords = detectCrisisKeywords(userInput);
+    const containsMedicalConcerns = detectMedicalConcerns(userInput);
+    const containsMentalHealthConcerns = detectMentalHealthConcerns(userInput);
+    const containsEatingDisorderConcerns = detectEatingDisorderConcerns(userInput);
+    const containsSubstanceUseConcerns = detectSubstanceUseConcerns(userInput);
+    
+    // Show appropriate alerts based on detected concerns
     if (containsCrisisKeywords && !shouldShowCrisisAlert) {
       setShouldShowCrisisAlert(true);
-      toast({
-        title: "Important Notice",
-        description: "This appears to be a sensitive topic. Crisis resources are available below.",
-        duration: 6000,
-      });
+      showConcernToast('crisis');
+    }
+    else if (containsMedicalConcerns && !shouldShowMedicalAlert) {
+      setShouldShowMedicalAlert(true);
+      showConcernToast('medical');
+    }
+    else if (containsMentalHealthConcerns && !shouldShowMentalHealthAlert) {
+      setShouldShowMentalHealthAlert(true);
+      showConcernToast('mental-health');
+    }
+    else if (containsEatingDisorderConcerns && !shouldShowEatingDisorderAlert) {
+      setShouldShowEatingDisorderAlert(true);
+      showConcernToast('eating-disorder');
+    }
+    else if (containsSubstanceUseConcerns && !shouldShowSubstanceUseAlert) {
+      setShouldShowSubstanceUseAlert(true);
+      showConcernToast('substance-use');
     }
 
     // Clear input and show typing indicator
@@ -159,16 +219,36 @@ const ChatInterface = () => {
     // Generate Roger's response after a delay to simulate thinking
     setTimeout(() => {
       let responseText;
+      let concernType = null;
       
+      // Determine which response to use based on detected concerns
       if (containsCrisisKeywords) {
         responseText = getCrisisMessage();
-      } else {
+        concernType = 'crisis';
+      } 
+      else if (containsMedicalConcerns) {
+        responseText = getMedicalConcernMessage();
+        concernType = 'medical';
+      }
+      else if (containsMentalHealthConcerns) {
+        responseText = getMentalHealthConcernMessage();
+        concernType = 'mental-health';
+      }
+      else if (containsEatingDisorderConcerns) {
+        responseText = getEatingDisorderMessage();
+        concernType = 'eating-disorder';
+      }
+      else if (containsSubstanceUseConcerns) {
+        responseText = getSubstanceUseMessage();
+        concernType = 'substance-use';
+      } 
+      else {
         // Generate a conversational, human-like response
         responseText = generateConversationalResponse(currentMessage);
       }
       
       // Create temporary message object to update during typing simulation
-      const rogerResponse = createMessage('', 'roger');
+      const rogerResponse = createMessage('', 'roger', concernType);
       setMessages(prevMessages => [...prevMessages, rogerResponse]);
       
       // Simulate typing with a callback to update the message text
