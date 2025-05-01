@@ -64,17 +64,14 @@
 }
 
 /* Crisis Resources Scrollbar Styles */
-.crisis-resources-scroll [data-radix-scroll-area-thumb] {
-  background-color: #3b82f6;
-  border-radius: 9999px;
-  width: 12px;
-}
-
-.crisis-resources-scroll [data-radix-scroll-area-thumb]:hover {
-  background-color: #1d4ed8;
+.crisis-resources-scroll [data-radix-scroll-area-viewport] {
+  @apply px-1;
 }
 
 .crisis-resources-scroll [data-radix-scroll-area-scrollbar] {
-  width: 16px;
-  padding: 4px;
+  @apply w-5 p-1;
+}
+
+.crisis-resources-scroll [data-radix-scroll-area-thumb] {
+  @apply bg-roger hover:bg-roger-dark rounded-full w-3.5 transition-colors duration-200;
 }
