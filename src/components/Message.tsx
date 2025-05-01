@@ -18,9 +18,20 @@ const Message: React.FC<MessageProps> = ({ message }) => {
     minute: '2-digit' 
   });
   
-  // Split longer messages into separate paragraphs for better readability
+  // Use a more natural paragraph splitting approach
+  // This helps make Roger's responses look more like human typing patterns
   const textParagraphs = message.text
     .split(/(?<=\.|\?|\!) /) // Split at sentence endings
+    .reduce((acc: string[], sentence, index, array) => {
+      // Group related sentences into paragraphs (max 3 sentences per paragraph)
+      // This creates a more natural reading pattern
+      if (index % 3 === 0 || index === 0) {
+        acc.push(sentence);
+      } else {
+        acc[acc.length - 1] += ' ' + sentence;
+      }
+      return acc;
+    }, [])
     .filter(text => text.trim() !== '');
 
   return (
