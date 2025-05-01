@@ -62,3 +62,19 @@
 .chat-container {
   @apply h-[500px] overflow-y-auto p-4 flex flex-col space-y-3;
 }
+
+/* Crisis Resources Scrollbar Styles */
+.crisis-resources-scroll [data-radix-scroll-area-thumb] {
+  background-color: #3b82f6;
+  border-radius: 9999px;
+  width: 12px;
+}
+
+.crisis-resources-scroll [data-radix-scroll-area-thumb]:hover {
+  background-color: #1d4ed8;
+}
+
+.crisis-resources-scroll [data-radix-scroll-area-scrollbar] {
+  width: 16px;
+  padding: 4px;
+}

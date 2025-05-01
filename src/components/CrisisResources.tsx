@@ -47,7 +47,7 @@ const CrisisResources = () => {
       </CollapsibleTrigger>
       
       <CollapsibleContent>
-        <ScrollArea className="h-80 p-5">
+        <ScrollArea className="h-80 p-5 crisis-resources-scroll">
           <div className="space-y-6">
             <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md border border-blue-100">
               Please use the resources below for immediate relief of symptoms and contact one of the relevant crisis resources or 911 for immediate assistance.
