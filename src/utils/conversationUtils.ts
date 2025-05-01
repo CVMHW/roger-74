@@ -1,4 +1,3 @@
-
 import { MessageType } from '../components/Message';
 
 // Detect potentially crisis-related keywords in user messages
@@ -14,6 +13,52 @@ export const detectCrisisKeywords = (message: string): boolean => {
 
   const lowerCaseMessage = message.toLowerCase();
   return crisisKeywords.some(keyword => lowerCaseMessage.includes(keyword));
+};
+
+// Improved topic detection with broader context understanding
+export const detectTopics = (message: string): string[] => {
+  const topics = {
+    grief: ['died', 'death', 'passed away', 'loss', 'funeral', 'grave', 'miss', 'grief', 'mourning'],
+    pets: ['dog', 'cat', 'pet', 'animal', 'vet', 'veterinarian'],
+    sleep: ['sleep', 'tired', 'insomnia', 'rest', 'bed', 'nap', 'dream', 'nightmare'],
+    family: ['family', 'mom', 'dad', 'mother', 'father', 'sister', 'brother', 'parent', 'child', 'grandparent'],
+    relationships: ['relationship', 'partner', 'girlfriend', 'boyfriend', 'husband', 'wife', 'spouse', 'marriage', 'divorce', 'breakup'],
+    work: ['job', 'career', 'work', 'boss', 'coworker', 'colleague', 'workplace', 'office', 'fired', 'hired', 'promotion'],
+    cultural: ['culture', 'tradition', 'heritage', 'country', 'homeland', 'language', 'customs', 'immigrant', 'refugee', 'foreigner', 'migrated'],
+    food: ['food', 'meal', 'cook', 'recipe', 'cuisine', 'dish', 'restaurant', 'spice', 'taste', 'flavor', 'ingredient'],
+    religion: ['religion', 'faith', 'belief', 'god', 'spiritual', 'church', 'mosque', 'temple', 'pray', 'worship', 'ritual'],
+    weather: ['weather', 'temperature', 'cold', 'hot', 'rain', 'snow', 'sun', 'humid', 'climate']
+  };
+
+  const lowerCaseMessage = message.toLowerCase();
+  const detectedTopics: string[] = [];
+  
+  // Check for topics based on keywords
+  for (const [topic, keywords] of Object.entries(topics)) {
+    if (keywords.some(keyword => lowerCaseMessage.includes(keyword))) {
+      detectedTopics.push(topic);
+    }
+  }
+  
+  // Check for cultural-specific contexts - immigration mentions
+  if (lowerCaseMessage.includes('immigr') || 
+      lowerCaseMessage.includes('refugee') || 
+      lowerCaseMessage.includes('moved to this country') ||
+      lowerCaseMessage.includes('new country')) {
+    if (!detectedTopics.includes('cultural')) {
+      detectedTopics.push('cultural');
+    }
+  }
+  
+  // Add home context when detecting homesickness
+  if ((lowerCaseMessage.includes('miss') || lowerCaseMessage.includes('homesick')) && 
+      (lowerCaseMessage.includes('home') || lowerCaseMessage.includes('country') || lowerCaseMessage.includes('homeland'))) {
+    if (!detectedTopics.includes('cultural')) {
+      detectedTopics.push('cultural');
+    }
+  }
+
+  return detectedTopics;
 };
 
 // Detect emotions in user messages with broader context understanding
@@ -59,79 +104,142 @@ export const createMessage = (text: string, sender: 'user' | 'roger'): MessageTy
     id: generateId(),
     text,
     sender,
-    timestamp: new Date()
+    timestamp: new Date(),
+    feedback: null
   };
 };
 
-// Track conversation context to avoid repetition
-let previousTopics: string[] = [];
-let previousResponses: string[] = [];
+// Enhanced conversation context to track more topics
 let conversationContext: {
   personalDetails?: {[key: string]: string},
   currentEmotion?: string,
   mentionedPets?: boolean,
   mentionedSleep?: boolean,
   waitingForTherapist?: boolean,
-  topicHistory?: string[]
+  previousTopics?: string[],
+  culturalContext?: {
+    country?: string,
+    foodPreferences?: string[],
+    religion?: string,
+    language?: string
+  },
+  feedbackHistory?: {[messageId: string]: 'positive' | 'negative'}
 } = {
   personalDetails: {},
-  topicHistory: []
+  previousTopics: [],
+  culturalContext: {},
+  feedbackHistory: {}
 };
 
-// Get response based on detected emotion and conversation context
-export const getResponseBasedOnEmotion = (message: string): string => {
+// Extract cultural context from messages
+export const extractCulturalContext = (message: string): void => {
+  const lowerCaseMessage = message.toLowerCase();
+  
+  // Extract country of origin
+  const countryKeywords = [
+    'pakistan', 'india', 'china', 'japan', 'korea', 'mexico', 'syria', 
+    'iraq', 'iran', 'afghanistan', 'ukraine', 'russia', 'somalia', 
+    'ethiopia', 'nigeria', 'ghana', 'brazil', 'colombia', 'venezuela'
+  ];
+  
+  for (const country of countryKeywords) {
+    if (lowerCaseMessage.includes(country)) {
+      if (conversationContext.culturalContext) {
+        conversationContext.culturalContext.country = country;
+      }
+      break;
+    }
+  }
+  
+  // Extract food preferences
+  const foodKeywords = ['spicy', 'curry', 'rice', 'noodle', 'bread', 'tortilla', 'spice'];
+  const detectedFoods: string[] = [];
+  
+  for (const food of foodKeywords) {
+    if (lowerCaseMessage.includes(food)) {
+      detectedFoods.push(food);
+    }
+  }
+  
+  if (detectedFoods.length > 0 && conversationContext.culturalContext) {
+    conversationContext.culturalContext.foodPreferences = [
+      ...(conversationContext.culturalContext.foodPreferences || []),
+      ...detectedFoods
+    ];
+  }
+};
+
+// Store feedback on messages
+export const storeFeedback = (messageId: string, feedback: 'positive' | 'negative'): void => {
+  if (!conversationContext.feedbackHistory) {
+    conversationContext.feedbackHistory = {};
+  }
+  
+  conversationContext.feedbackHistory[messageId] = feedback;
+};
+
+// Get response based on detected topic and conversation context
+export const getResponseBasedOnTopic = (message: string): string => {
+  const topics = detectTopics(message);
   const emotion = detectEmotion(message);
   const lowerCaseMessage = message.toLowerCase();
   
-  // Update conversation context
-  if (conversationContext.topicHistory === undefined) {
-    conversationContext.topicHistory = [];
+  // Update conversation context with detected topics
+  if (!conversationContext.previousTopics) {
+    conversationContext.previousTopics = [];
   }
   
-  // Detect pet-related context
-  if (lowerCaseMessage.includes('dog') || lowerCaseMessage.includes('cat') || 
-      lowerCaseMessage.includes('pet') || lowerCaseMessage.includes('animal')) {
-    conversationContext.mentionedPets = true;
-    conversationContext.topicHistory?.push('pets');
-  }
+  conversationContext.previousTopics = [
+    ...conversationContext.previousTopics,
+    ...topics.filter(topic => !conversationContext.previousTopics?.includes(topic))
+  ];
   
-  // Detect sleep issues
-  if (lowerCaseMessage.includes('sleep') || lowerCaseMessage.includes('tired') || 
-      lowerCaseMessage.includes('insomnia') || lowerCaseMessage.includes('rest')) {
-    conversationContext.mentionedSleep = true;
-    conversationContext.topicHistory?.push('sleep');
-  }
+  // Extract any cultural context
+  extractCulturalContext(message);
   
-  // Check for therapist-waiting context
-  if (lowerCaseMessage.includes('therapist') && 
-    (lowerCaseMessage.includes('late') || lowerCaseMessage.includes('wait'))) {
-    conversationContext.waitingForTherapist = true;
-  }
-  
-  // Update current emotional state
+  // Update emotional state
   conversationContext.currentEmotion = emotion;
   
-  // Pet loss specific response
-  if (conversationContext.mentionedPets && 
-      (lowerCaseMessage.includes('died') || lowerCaseMessage.includes('passed') || 
-       lowerCaseMessage.includes('lost') || lowerCaseMessage.includes('miss'))) {
+  // Cultural adaptation responses
+  if (topics.includes('cultural')) {
+    // Homesickness and cultural adjustment
+    if (lowerCaseMessage.includes('miss') && 
+        (lowerCaseMessage.includes('home') || lowerCaseMessage.includes('country'))) {
+      
+      return `Being in a new place can feel really isolating sometimes. I've heard from others that missing home - the familiar sights, sounds, and especially people - can be really tough. What do you miss most about home? Some folks find that keeping small traditions from home helps, like cooking familiar foods or connecting with people who share your background. What's helped you feel connected so far?`;
+    }
     
+    // Food-related cultural adaptation
+    if (topics.includes('food') && 
+        (lowerCaseMessage.includes('spice') || lowerCaseMessage.includes('bland') || 
+         lowerCaseMessage.includes('miss') || lowerCaseMessage.includes('cook'))) {
+      
+      return `Food is such a core part of feeling at home somewhere. I've heard from many people that American food can seem really bland compared to the rich flavors from many other cultures. Have you found any restaurants or grocery stores that carry more familiar ingredients? Sometimes finding those small tastes of home can make a huge difference. What dishes do you miss the most?`;
+    }
+    
+    // General cultural adaptation
+    return `Adapting to a new culture can be such a complex experience - there are the obvious challenges like language, but also so many subtle differences in how people interact. Some days it probably feels overwhelming, and other days maybe you notice small wins. What's something that's felt particularly difficult lately? Or have you had any positive experiences connecting with people here?`;
+  }
+  
+  // Pet loss response
+  if (topics.includes('pets') && topics.includes('grief')) {
     return `I'm really sorry about your pet. Losing a companion like that is genuinely hard - they're family members in every way that matters. It's completely normal to be grieving. When my neighbor lost her dog last year, she said the house felt empty for weeks. Give yourself permission to feel sad about this loss - it's important and real.`;
   }
   
-  // Pet loss + sleep issues combined response
-  if (conversationContext.mentionedPets && conversationContext.mentionedSleep && 
-     (lowerCaseMessage.includes('died') || lowerCaseMessage.includes('miss'))) {
-    
+  // Combined pet loss and sleep issues
+  if (topics.includes('pets') && topics.includes('sleep') && topics.includes('grief')) {
     return `I'm so sorry about your loss. Pets are such important parts of our routines and comfort, especially at bedtime. That empty space beside you can make sleep really difficult. Have you tried keeping something of theirs nearby when you sleep? Some people find having their pet's favorite blanket or toy helps them feel connected. Sleep disruption after loss is completely normal, but it definitely adds to the difficulty because everything feels harder when you're tired.`;
   }
 
-  // Handle therapist being late context
-  if (conversationContext.waitingForTherapist && emotion === 'angry') {
+  // Waiting for therapist when frustrated
+  if (lowerCaseMessage.includes('therapist') && 
+      (lowerCaseMessage.includes('late') || lowerCaseMessage.includes('wait')) && 
+      emotion === 'angry') {
+    
     return `Yeah, I totally get the frustration of waiting when you've already set time aside for this appointment. It can feel disrespectful of your time. For what it's worth, sometimes therapists get caught in situations they can't easily step away from - like if someone's in crisis. But your time matters too, and it's completely valid to feel annoyed about this. Would it help to talk about what's been on your mind lately while we wait, or would you prefer I check how much longer it might be?`;
   }
 
-  // General responses based on emotion with more authentic language
+  // General responses based on emotion with authentic language
   switch (emotion) {
     case 'angry':
       return "I can definitely tell this is frustrating for you. Sometimes it helps to just vent it out - I'm all ears if you want to talk more about what's going on. No judgment here.";
@@ -221,10 +329,10 @@ export const getCrisisMessage = (): string => {
   return "Hey, I notice you mentioned something that sounds pretty serious. If you're in a crisis situation, there are some really good resources I can connect you with right away. Your wellbeing is super important, and getting immediate professional support would be the best move right now. Would you like me to ask your therapist to contact you ASAP?";
 };
 
-// Function to generate more natural, conversational responses
+// Function to generate more natural, conversational responses with cultural awareness
 export const generateConversationalResponse = (userMessage: string): string => {
-  // Get base response for emotion
-  let response = getResponseBasedOnEmotion(userMessage);
+  // Get base response for topic
+  let response = getResponseBasedOnTopic(userMessage);
   
   // Add natural speech patterns and avoid formulaic structure
   // Don't always use the same structure of acknowledgment + support + question

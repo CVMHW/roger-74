@@ -1,18 +1,21 @@
 
 import React from 'react';
+import { ThumbsUp, ThumbsDown } from 'lucide-react';
 
 export type MessageType = {
   id: string;
   text: string;
   sender: 'user' | 'roger';
   timestamp: Date;
+  feedback?: 'positive' | 'negative' | null;
 };
 
 interface MessageProps {
   message: MessageType;
+  onFeedback?: (messageId: string, feedback: 'positive' | 'negative') => void;
 }
 
-const Message: React.FC<MessageProps> = ({ message }) => {
+const Message: React.FC<MessageProps> = ({ message, onFeedback }) => {
   const formattedTime = message.timestamp.toLocaleTimeString([], { 
     hour: '2-digit', 
     minute: '2-digit' 
@@ -51,8 +54,27 @@ const Message: React.FC<MessageProps> = ({ message }) => {
             </p>
           ))}
         </div>
-        <div className={`text-xs mt-2 ${message.sender === 'user' ? 'text-gray-500' : 'text-roger-light'}`}>
-          {formattedTime}
+        <div className={`flex justify-between items-center mt-2 ${message.sender === 'user' ? 'text-gray-500' : 'text-roger-light'}`}>
+          <div className="text-xs">{formattedTime}</div>
+          
+          {message.sender === 'roger' && onFeedback && (
+            <div className="flex space-x-2">
+              <button 
+                onClick={() => onFeedback(message.id, 'positive')} 
+                className={`p-1 rounded-full hover:bg-gray-100 transition-colors ${message.feedback === 'positive' ? 'text-green-500' : 'text-gray-400'}`}
+                aria-label="Helpful response"
+              >
+                <ThumbsUp size={14} />
+              </button>
+              <button 
+                onClick={() => onFeedback(message.id, 'negative')} 
+                className={`p-1 rounded-full hover:bg-gray-100 transition-colors ${message.feedback === 'negative' ? 'text-red-500' : 'text-gray-400'}`}
+                aria-label="Unhelpful response"
+              >
+                <ThumbsDown size={14} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

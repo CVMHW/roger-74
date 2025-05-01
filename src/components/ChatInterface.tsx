@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,7 +9,8 @@ import {
   createMessage, 
   getInitialMessages, 
   getCrisisMessage,
-  generateConversationalResponse
+  generateConversationalResponse,
+  storeFeedback
 } from '../utils/conversationUtils';
 import { useToast } from "@/components/ui/use-toast";
 
@@ -41,7 +43,7 @@ const ChatInterface = () => {
     
     // Add extra time if it's an emotional or complex topic
     let complexityFactor = 0;
-    const complexTopics = ['died', 'death', 'grief', 'suicide', 'depression', 'anxiety', 'trauma'];
+    const complexTopics = ['died', 'death', 'grief', 'suicide', 'depression', 'anxiety', 'trauma', 'refugee', 'immigrant'];
     if (complexTopics.some(topic => message.toLowerCase().includes(topic))) {
       complexityFactor = 2000; // Add extra "thinking time" for sensitive topics
     }
@@ -102,6 +104,28 @@ const ChatInterface = () => {
     
     // Simulate "thinking" before typing begins
     setTimeout(addNextChar, 500 + Math.random() * 800);
+  };
+
+  // Handle feedback for Roger's messages
+  const handleFeedback = (messageId: string, feedback: 'positive' | 'negative') => {
+    // Update the message with feedback
+    setMessages(prevMessages => 
+      prevMessages.map(msg => 
+        msg.id === messageId ? { ...msg, feedback } : msg
+      )
+    );
+    
+    // Store feedback for learning
+    storeFeedback(messageId, feedback);
+    
+    // Show toast notification
+    toast({
+      title: feedback === 'positive' ? "Thank you for your feedback" : "We'll improve our responses",
+      description: feedback === 'positive' 
+        ? "We're glad this response was helpful." 
+        : "Thank you for helping us improve Roger's responses.",
+      duration: 3000,
+    });
   };
 
   const handleSendMessage = () => {
@@ -169,7 +193,11 @@ const ChatInterface = () => {
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="chat-container" id="chat-container">
         {messages.map(message => (
-          <Message key={message.id} message={message} />
+          <Message 
+            key={message.id} 
+            message={message} 
+            onFeedback={message.sender === 'roger' ? handleFeedback : undefined}
+          />
         ))}
         
         {isTyping && (
