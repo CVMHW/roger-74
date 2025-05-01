@@ -10,7 +10,7 @@ const Header = () => {
           <div className="flex items-center space-x-3">
             <div className="relative h-12 w-12">
               <img 
-                src="/logo.png" 
+                src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
                 alt="Cuyahoga Valley Mindful Health and Wellness Logo" 
                 className="h-full w-full object-contain logo-pulse"
                 onError={(e) => {

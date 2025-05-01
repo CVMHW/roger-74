@@ -23,7 +23,7 @@ const Index = () => {
               <div className="flex items-center gap-3">
                 <div className="relative w-10 h-10">
                   <img 
-                    src="/logo.png" 
+                    src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
                     alt="CVMHW Logo" 
                     className="w-full h-full object-contain"
                     onError={handleImageError}
@@ -63,7 +63,7 @@ const Index = () => {
               <div className="flex items-center space-x-4 mb-4">
                 <div className="relative w-16 h-16">
                   <img 
-                    src="/logo.png" 
+                    src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
                     alt="CVMHW Logo" 
                     className="w-full h-full object-contain logo-pulse"
                     onError={handleImageError}
@@ -91,7 +91,7 @@ const Index = () => {
           <div className="flex items-center justify-center gap-3 mb-3">
             <div className="relative w-8 h-8">
               <img 
-                src="/logo.png" 
+                src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
                 alt="CVMHW Logo" 
                 className="w-full h-full object-contain"
                 onError={handleImageError}
