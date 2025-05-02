@@ -25,9 +25,12 @@ export const generateSafetyResponse = (
   clientPreferences: ClientPreferences,
   conversationHistory: string[]
 ): string => {
+  // Get wealth indicators as boolean value instead of string
+  const wealthIndicators = detectWealthIndicators(userInput, conversationHistory);
+  
   return generateSafetyConcernResponse(userInput, concernType, {
     ...clientPreferences,
-    wealthIndicators: detectWealthIndicators(userInput, conversationHistory),
+    wealthIndicators: wealthIndicators === 'high', // Convert to boolean based on value
     previousMentalHealthExperience: !clientPreferences.isFirstTimeWithMentalHealth
   });
 };
