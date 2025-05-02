@@ -56,6 +56,12 @@ export const useResponseGenerator = ({
       }
     }
     
+    // FIRST PRIORITY: Process any personal sharing with explicit feelings
+    // This ensures we immediately acknowledge stated emotions before anything else
+    if (isPersonalSharing(userInput)) {
+      return generatePersonalSharingResponse(userInput);
+    }
+    
     // Enhanced social interaction flow based on master rules
     // Check for introductions and greetings - but only for initial messages
     if (isIntroduction(userInput) && !introductionMade) {
@@ -70,21 +76,13 @@ export const useResponseGenerator = ({
         return reflectionResponse;
       }
       
-      // If no reflection was generated, fall back to other response types
-      if (isPersonalSharing(userInput)) {
-        return generatePersonalSharingResponse(userInput);
-      }
-      else if (isSmallTalk(userInput)) {
+      // If no reflection was generated, fall back to small talk
+      if (isSmallTalk(userInput)) {
         return generateSmallTalkResponse(userInput);
       }
       else {
         return adaptiveResponseFn(userInput);
       }
-    }
-    
-    // Check for personal sharing - provide validating responses
-    if (isPersonalSharing(userInput)) {
-      return generatePersonalSharingResponse(userInput);
     }
     
     // Check for small talk - natural conversation flow

@@ -214,18 +214,18 @@ export const createFeelingReflection = (feelings: FeelingCategory[], userMessage
         
         // Add time context if available
         if (richContext.timeContext) {
-          personalizedReflection += ` This has been happening for ${richContext.timeContext}.`;
+          personalizedReflection += ` This has been happening ${richContext.timeContext}.`;
         }
         
-        // Add follow-up question based on the emotion
+        // Add follow-up question based on the emotion - NEVER ASK WHAT EMOTION THEY'RE FEELING
         if (richContext.feeling === 'sad') {
-          personalizedReflection += " Would you like to share more about how this is affecting you?";
+          personalizedReflection += " What aspects of this situation have been most difficult for you?";
         } else if (richContext.feeling === 'angry') {
-          personalizedReflection += " What aspects of this situation have been most frustrating for you?";
+          personalizedReflection += " What specifically has been most frustrating about this situation?";
         } else if (richContext.feeling === 'anxious') {
-          personalizedReflection += " What specifically has been causing you the most concern?";
+          personalizedReflection += " What particular aspects have been causing you the most concern?";
         } else {
-          personalizedReflection += " Would you like to talk more about this?";
+          personalizedReflection += " Would you like to share more about this?";
         }
         
         return personalizedReflection;
@@ -257,7 +257,7 @@ export const createFeelingReflection = (feelings: FeelingCategory[], userMessage
         
         // Incorporate context and/or significant phrases into the reflection
         if (context && significantPhrases) {
-          return `${basePhrase} I notice you mentioned ${context} and ${significantPhrases}. Would you like to talk more about that?`;
+          return `${basePhrase} I notice you mentioned ${context} and ${significantPhrases}. What about this has been most significant for you?`;
         } else if (context) {
           return `${basePhrase} I notice you mentioned ${context}. Can you tell me more about how that's affecting you?`;
         } else if (significantPhrases) {
