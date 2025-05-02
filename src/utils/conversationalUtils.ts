@@ -1,4 +1,3 @@
-
 /**
  * Utilities for generating conversational responses
  */
@@ -27,6 +26,7 @@ import {
   generateRhetoricalResponse,
   generateSarcasmResponse
 } from './conversationEnhancement/emotionalInputHandler';
+import { detectContentConcerns } from './conversationEnhancement/emotionalInputHandler';
 
 // Export all the imported functionality
 export * from './conversation/cvmhwInfo';
@@ -38,8 +38,15 @@ export * from './conversation/generalResponses';
 export * from './safetySupport';
 
 // Enhanced client preference detection
-export const detectClientPreferences = (userInput: string, conversationHistory: string[] = []) => {
-  const combinedText = [userInput, ...conversationHistory].join(" ").toLowerCase();
+export const detectClientPreferences = (
+  currentInput: string,
+  history: string[]
+): {
+  prefersFormalLanguage: boolean;
+  prefersDirectApproach: boolean;
+  isFirstTimeWithMentalHealth: boolean;
+} => {
+  const combinedText = [currentInput, ...history].join(" ").toLowerCase();
   
   const formalLanguageIndicators = [
     'formal', 'professional', 'business', 'proper', 'corporate',
@@ -203,194 +210,215 @@ export const generateMildSomaticResponse = (
  */
 export const detectSimpleNegativeState = (userInput: string): {
   isNegativeState: boolean;
-  intensity: 'mild' | 'moderate' | 'severe';
-  explicitFeelings: string[];
+  stateType: 'angry' | 'sad' | 'anxious' | 'frustrated' | 'overwhelmed' | null;
+  intensity: 'low' | 'medium' | 'high' | null;
+  explicitStatement: boolean;
 } => {
+  // Convert to lowercase for case-insensitive matching
   const lowerInput = userInput.toLowerCase();
   
-  // Check for simple negative expressions
-  const mildNegativePatterns = [
-    /been better/i,
-    /not (great|good)/i,
-    /feeling off/i,
-    /a little (down|off|low|bummed)/i,
-    /not myself/i,
-    /meh/i,
-    /so-so/i
-  ];
+  // Check for explicit "I am" statements about emotions
+  // These take highest priority as they are direct statements
   
-  const moderateNegativePatterns = [
-    /pretty (bad|rough|tough)/i,
-    /struggling/i,
-    /having a hard time/i,
-    /difficult (day|time|week)/i
-  ];
-  
-  const severeNegativePatterns = [
-    /terrible/i,
-    /awful/i,
-    /worst/i,
-    /really (bad|struggling)/i,
-    /can'?t (take|handle) (it|this)/i
-  ];
-  
-  // Check pattern matches
-  const hasMildNegative = mildNegativePatterns.some(pattern => pattern.test(lowerInput));
-  const hasModerateNegative = moderateNegativePatterns.some(pattern => pattern.test(lowerInput));
-  const hasSevereNegative = severeNegativePatterns.some(pattern => pattern.test(lowerInput));
-  
-  // Extract explicitly stated feelings with improved patterns
-  const explicitFeelings: string[] = [];
-  
-  // Expanded feeling words list
-  const feelingWords = [
-    'sad', 'upset', 'angry', 'mad', 'frustrated', 'annoyed', 'anxious', 'worried', 
-    'scared', 'fearful', 'happy', 'glad', 'joyful', 'excited', 'tired', 'exhausted', 
-    'confused', 'lost', 'lonely', 'alone', 'depressed', 'down', 'bummed', 'disappointed',
-    'furious', 'pissed', 'irritated', 'stressed', 'overwhelmed', 'nervous', 'uneasy',
-    'concerned', 'hurt', 'bothered', 'aggravated'
-  ];
-  
-  // More comprehensive patterns to catch feeling expressions
-  const feelingPatterns = [
-    // "I'm feeling X" / "I am feeling X" / "I feel X"
-    new RegExp(`(?:I(?:'m|\\s+am)\\s+(?:feeling|feel)|I\\s+feel)\\s+(?:a bit |a little |kind of |really |very |super |extremely )?(${feelingWords.join('|')})`, 'i'),
+  // Anger expressions
+  if (
+    /i('| a)m (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:angry|mad|furious|pissed|irate|enraged|livid)/i.test(lowerInput) ||
+    /i feel (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:angry|mad|furious|pissed|irate|enraged|livid)/i.test(lowerInput)
+  ) {
+    // Detect intensity
+    const highIntensity = /(?:really |very |so |absolutely |completely |totally |)(?:furious|enraged|livid|irate)/i.test(lowerInput);
+    const lowIntensity = /(?:kind of |a bit |just |slightly |a little |somewhat )(?:angry|mad|pissed)/i.test(lowerInput);
     
-    // "feeling X" (standalone phrase)
-    new RegExp(`\\bfeeling\\s+(?:a bit |a little |kind of |really |very |super |extremely )?(${feelingWords.join('|')})\\b`, 'i'),
-    
-    // "I'm X" / "I am X" for emotion words
-    new RegExp(`\\bI(?:'m|\\s+am)\\s+(?:a bit |a little |kind of |really |very |super |extremely )?(${feelingWords.join('|')})\\b`, 'i'),
-    
-    // "just X" expressions
-    new RegExp(`\\bjust\\s+(?:a bit |a little |kind of |really |very |super |extremely )?(${feelingWords.join('|')})\\b`, 'i')
-  ];
-  
-  // Check all patterns for feelings
-  for (const pattern of feelingPatterns) {
-    const match = lowerInput.match(pattern);
-    if (match && match[1]) {
-      explicitFeelings.push(match[1]);
-      break; // Stop after finding the first match to avoid duplicates
-    }
+    return {
+      isNegativeState: true,
+      stateType: 'angry',
+      intensity: highIntensity ? 'high' : (lowIntensity ? 'low' : 'medium'),
+      explicitStatement: true
+    };
   }
   
-  // Check for specific "frustrated" with context patterns
-  if (/\b(?:frustrated|annoyed|irritated|angry|mad|pissed)(?:\s+(?:at|with|about))?\s+(?:eric|therapist|doctor|appointment|waiting|late)/i.test(lowerInput)) {
-    if (!explicitFeelings.includes('frustrated')) {
-      explicitFeelings.push('frustrated');
-    }
+  // Sadness expressions
+  if (
+    /i('| a)m (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:sad|depressed|down|unhappy|miserable|heartbroken|devastated|upset|blue)/i.test(lowerInput) ||
+    /i feel (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:sad|depressed|down|unhappy|miserable|heartbroken|devastated|upset|blue)/i.test(lowerInput)
+  ) {
+    // Detect intensity
+    const highIntensity = /(?:really |very |so |absolutely |completely |totally |)(?:devastated|miserable|heartbroken)/i.test(lowerInput);
+    const lowIntensity = /(?:kind of |a bit |just |slightly |a little |somewhat )(?:sad|down|blue|unhappy)/i.test(lowerInput);
+    
+    return {
+      isNegativeState: true,
+      stateType: 'sad',
+      intensity: highIntensity ? 'high' : (lowIntensity ? 'low' : 'medium'),
+      explicitStatement: true
+    };
   }
   
-  // Determine intensity
-  let intensity: 'mild' | 'moderate' | 'severe' = 'mild';
-  if (hasSevereNegative) {
-    intensity = 'severe';
-  } else if (hasModerateNegative) {
-    intensity = 'moderate';
+  // Anxiety expressions
+  if (
+    /i('| a)m (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:anxious|nervous|worried|scared|afraid|terrified|panicking|fearful|stressed)/i.test(lowerInput) ||
+    /i feel (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:anxious|nervous|worried|scared|afraid|terrified|panicking|fearful|stressed)/i.test(lowerInput)
+  ) {
+    // Detect intensity
+    const highIntensity = /(?:really |very |so |absolutely |completely |totally |)(?:terrified|panicking)/i.test(lowerInput);
+    const lowIntensity = /(?:kind of |a bit |just |slightly |a little |somewhat )(?:anxious|nervous|worried)/i.test(lowerInput);
+    
+    return {
+      isNegativeState: true,
+      stateType: 'anxious',
+      intensity: highIntensity ? 'high' : (lowIntensity ? 'low' : 'medium'),
+      explicitStatement: true
+    };
   }
   
+  // Frustration expressions
+  if (
+    /i('| a)m (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:frustrated|annoyed|irritated|bothered|fed up)/i.test(lowerInput) ||
+    /i feel (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:frustrated|annoyed|irritated|bothered|fed up)/i.test(lowerInput)
+  ) {
+    // Detect intensity
+    const highIntensity = /(?:really |very |so |absolutely |completely |totally |)(?:fed up|extremely frustrated)/i.test(lowerInput);
+    const lowIntensity = /(?:kind of |a bit |just |slightly |a little |somewhat )(?:annoyed|bothered)/i.test(lowerInput);
+    
+    return {
+      isNegativeState: true,
+      stateType: 'frustrated',
+      intensity: highIntensity ? 'high' : (lowIntensity ? 'low' : 'medium'),
+      explicitStatement: true
+    };
+  }
+  
+  // Overwhelm expressions
+  if (
+    /i('| a)m (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:overwhelmed|burnt out|exhausted|at my limit|drained)/i.test(lowerInput) ||
+    /i feel (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:overwhelmed|burnt out|exhausted|at my limit|drained)/i.test(lowerInput)
+  ) {
+    // Detect intensity
+    const highIntensity = /(?:really |very |so |absolutely |completely |totally |)(?:at my limit|completely overwhelmed)/i.test(lowerInput);
+    const lowIntensity = /(?:kind of |a bit |just |slightly |a little |somewhat )(?:overwhelmed|tired|drained)/i.test(lowerInput);
+    
+    return {
+      isNegativeState: true,
+      stateType: 'overwhelmed',
+      intensity: highIntensity ? 'high' : (lowIntensity ? 'low' : 'medium'),
+      explicitStatement: true
+    };
+  }
+  
+  // No explicit emotional state detected
   return {
-    isNegativeState: hasMildNegative || hasModerateNegative || hasSevereNegative || explicitFeelings.length > 0,
-    intensity,
-    explicitFeelings
+    isNegativeState: false,
+    stateType: null,
+    intensity: null,
+    explicitStatement: false
   };
 };
 
 /**
- * Generate an immediate, human response to simple negative states
+ * Generates content-aware responses to explicit emotional states
+ * @param userInput User's message
+ * @param stateInfo Detected emotional state
+ * @param contentInfo Optional detected content/concerns
+ * @returns Appropriate response acknowledging both emotion and specific content
  */
 export const generateSimpleNegativeStateResponse = (
   userInput: string, 
-  negativeStateInfo: ReturnType<typeof detectSimpleNegativeState>
+  stateInfo: ReturnType<typeof detectSimpleNegativeState>,
+  contentInfo?: ReturnType<typeof detectContentConcerns>
 ): string => {
-  // If user has explicitly stated their feelings, acknowledge that directly first
-  if (negativeStateInfo.explicitFeelings.length > 0) {
-    const feeling = negativeStateInfo.explicitFeelings[0];
-    
-    // Check for waiting-related frustration
-    const isWaitingRelated = /\b(?:wait|waiting|late|appointment|therapist|doctor|eric|schedule)\b/i.test(userInput.toLowerCase());
-    
-    if (isWaitingRelated) {
-      const waitingAcknowledgments = [
-        `I hear that you're feeling ${feeling} about waiting for your appointment.`,
-        `I can understand feeling ${feeling} when your appointment is delayed.`,
-        `It sounds like you're ${feeling} about the wait time.`,
-        `I hear your frustration about waiting for your appointment.`
-      ];
-      
-      const waitingFollowUps = [
-        "Waiting can be really challenging. Would it help to talk about what's on your mind while you wait?",
-        "How long have you been waiting?",
-        "What would help make the waiting more bearable right now?",
-        "What's been the most difficult part about waiting today?"
-      ];
-      
-      // Select random acknowledgment and follow-up
-      const acknowledgment = waitingAcknowledgments[Math.floor(Math.random() * waitingAcknowledgments.length)];
-      const followUp = waitingFollowUps[Math.floor(Math.random() * waitingFollowUps.length)];
-      
-      // Combine them
-      return `${acknowledgment} ${followUp}`;
-    }
-    
-    // Generic acknowledgments for other contexts
-    const acknowledgeResponses = [
-      `I hear that you're feeling ${feeling}. That makes sense given what you've shared.`,
-      `Thanks for sharing that you're feeling ${feeling}. That's completely understandable.`,
-      `I understand you're feeling ${feeling} right now. That's an important emotion to recognize.`,
-      `It sounds like you're feeling ${feeling}. I appreciate you sharing that with me.`
-    ];
-    
-    // Select a random acknowledgment response
-    const acknowledgment = acknowledgeResponses[Math.floor(Math.random() * acknowledgeResponses.length)];
-    
-    const followUpQuestions = [
-      "What's contributing most to this feeling right now?",
-      "How long have you been feeling this way?",
-      "What might help support you through this feeling?",
-      "Would it help to talk more about what's going on?"
-    ];
-    
-    // Select a random follow-up question
-    const followUp = followUpQuestions[Math.floor(Math.random() * followUpQuestions.length)];
-    
-    // Combine acknowledgment and follow-up
-    return `${acknowledgment} ${followUp}`;
+  if (!stateInfo.isNegativeState) {
+    return "I hear you. What's been going on?";
   }
   
-  // Responses tailored to different intensity levels if no explicit feelings were stated
-  const mildResponses = [
-    "I'm sorry to hear you're not feeling your best. What's been going on?",
-    "Sounds like things aren't great right now. Would you like to talk about it?",
-    "I hear that you're feeling a bit off today. What's on your mind?",
-    "Thanks for sharing that with me. Want to tell me more about what's happening?",
-    "I understand that feeling. What's contributing to you feeling this way?"
-  ];
+  const contentAcknowledgment = contentInfo?.hasConcern 
+    ? ` about ${contentInfo.specificConcern || contentInfo.category}`
+    : '';
   
-  const moderateResponses = [
-    "I'm really sorry you're having a hard time. What's been most difficult for you?",
-    "That sounds tough. I'm here to listen if you want to talk more about it.",
-    "It can be really challenging when we're struggling. What might help you right now?",
-    "I appreciate you sharing that with me. What's weighing on you the most?",
-    "I'm here with you through this difficult time. What's been happening?"
-  ];
+  const { stateType, intensity } = stateInfo;
   
-  const severeResponses = [
-    "I'm genuinely sorry things are so difficult right now. I'm here to listen.",
-    "That sounds really hard to deal with. I'm here with you, and I'm listening.",
-    "When things get that overwhelming, it helps to take it one step at a time. What's the most pressing thing for you right now?",
-    "I hear how hard this is. Would it help to talk through what's happening?",
-    "I'm here with you through this. What's been most overwhelming?"
-  ];
-  
-  // Select appropriate response pool based on intensity
-  const responsePool = negativeStateInfo.intensity === 'severe' ? severeResponses :
-                      negativeStateInfo.intensity === 'moderate' ? moderateResponses :
-                      mildResponses;
-  
-  // Select a random response from the appropriate pool
-  return responsePool[Math.floor(Math.random() * responsePool.length)];
+  // Enhanced responses that acknowledge BOTH the emotional state AND specific content
+  switch (stateType) {
+    case 'angry':
+      if (intensity === 'high') {
+        if (contentInfo?.hasConcern && contentInfo.category === 'financial') {
+          return `I hear how angry you are about ${contentInfo.specificConcern || 'the payment issues'}. That's completely understandable - payment problems can be incredibly frustrating. What's your next step to address this?`;
+        }
+        if (contentInfo?.hasConcern && contentInfo.category === 'work') {
+          return `I understand you're feeling really angry about ${contentInfo.specificConcern || 'your work situation'}. That's a completely valid reaction. What aspect of this situation is most infuriating right now?`;
+        }
+        return `I understand you're feeling really angry${contentAcknowledgment}. That's a completely valid reaction. What's been happening that's triggered these feelings?`;
+      } else if (intensity === 'low') {
+        return `I hear that you're feeling a bit annoyed${contentAcknowledgment}. What specifically has been bothering you?`;
+      } else {
+        if (contentInfo?.hasConcern && contentInfo.category === 'financial') {
+          return `I hear that you're feeling angry about ${contentInfo.specificConcern || 'the payment issues'}. That makes complete sense - financial concerns can be really frustrating. What's been most difficult about this situation?`;
+        }
+        if (contentInfo?.hasConcern && contentInfo.category === 'work') {
+          return `I understand you're angry about ${contentInfo.specificConcern || 'your work situation'}. That's completely valid. Work challenges can be really frustrating. What's been most difficult to deal with?`;
+        }
+        return `I understand you're feeling angry${contentAcknowledgment}. That's completely valid. What's been happening that's led to these feelings?`;
+      }
+    
+    case 'sad':
+      if (intensity === 'high') {
+        return `I'm really sorry to hear you're feeling so deeply sad${contentAcknowledgment}. That sounds really difficult. Would it help to talk more about what's going on?`;
+      } else if (intensity === 'low') {
+        return `I hear that you're feeling a bit down${contentAcknowledgment}. Would you like to talk about what's contributing to that?`;
+      } else {
+        if (contentInfo?.hasConcern) {
+          return `I hear that you're feeling sad about ${contentInfo.specificConcern || contentInfo.category}. That's completely understandable. What aspect of this has been most difficult for you?`;
+        }
+        return `I hear that you're feeling sad${contentAcknowledgment}. That's completely valid. Would it help to talk more about what's going on?`;
+      }
+    
+    case 'anxious':
+      if (intensity === 'high') {
+        return `It sounds like you're feeling really anxious${contentAcknowledgment}. That can be really overwhelming. What's been most concerning for you?`;
+      } else if (intensity === 'low') {
+        return `I hear that you're feeling a bit anxious${contentAcknowledgment}. What's been on your mind about that?`;
+      } else {
+        if (contentInfo?.hasConcern) {
+          return `I understand you're feeling anxious about ${contentInfo.specificConcern || contentInfo.category}. That makes sense. What specific concerns do you have about this?`;
+        }
+        return `I understand you're feeling anxious${contentAcknowledgment}. That's completely understandable. What specific worries have been coming up?`;
+      }
+    
+    case 'frustrated':
+      if (intensity === 'high') {
+        if (contentInfo?.hasConcern && contentInfo.category === 'financial') {
+          return `I hear how frustrated you are with ${contentInfo.specificConcern || 'the payment issues'}. That makes complete sense - it's infuriating when financial matters aren't handled properly. What impact is this having on you right now?`;
+        }
+        if (contentInfo?.hasConcern && contentInfo.category === 'work') {
+          return `I understand you're really frustrated with ${contentInfo.specificConcern || 'your work situation'}. Work issues can be extremely aggravating. What's been most difficult to deal with?`;
+        }
+        return `I hear that you're really frustrated${contentAcknowledgment}. That's completely understandable. What's been most aggravating about this situation?`;
+      } else if (intensity === 'low') {
+        return `I understand you're somewhat annoyed${contentAcknowledgment}. What specifically has been bothering you?`;
+      } else {
+        if (contentInfo?.hasConcern) {
+          return `I hear that you're frustrated about ${contentInfo.specificConcern || contentInfo.category}. That makes sense. What's been most challenging about this?`;
+        }
+        return `I hear that you're frustrated${contentAcknowledgment}. That's completely valid. What's been happening?`;
+      }
+    
+    case 'overwhelmed':
+      if (intensity === 'high') {
+        return `It sounds like you're feeling completely overwhelmed${contentAcknowledgment}. That must be really difficult. What's been most challenging to manage?`;
+      } else if (intensity === 'low') {
+        return `I hear that you're feeling a bit overwhelmed${contentAcknowledgment}. What's been contributing to that?`;
+      } else {
+        if (contentInfo?.hasConcern) {
+          return `I understand you're feeling overwhelmed by ${contentInfo.specificConcern || contentInfo.category}. That's completely understandable. What aspect has been most difficult to handle?`;
+        }
+        return `I understand you're feeling overwhelmed${contentAcknowledgment}. That's completely valid. What's been the most challenging part?`;
+      }
+    
+    default:
+      if (contentInfo?.hasConcern) {
+        return `Thank you for sharing how you're feeling about ${contentInfo.specificConcern || contentInfo.category}. Would you like to tell me more about what's going on?`;
+      }
+      return "Thank you for sharing how you're feeling. Would you like to tell me more about what's going on?";
+  }
 };
 
 /**
@@ -400,8 +428,8 @@ export const generateSimpleNegativeStateResponse = (
  */
 export const detectPoliticalEmotions = (userInput: string): {
   isPolitical: boolean;
-  politicalFigure: string | null;
-  emotionExpressed: 'upset' | 'angry' | 'concerned' | 'supportive' | 'neutral' | null;
+  politicalTopic?: string;
+  emotionType?: string;
 } => {
   const lowerInput = userInput.toLowerCase();
   
@@ -437,8 +465,8 @@ export const detectPoliticalEmotions = (userInput: string): {
   if (!detectedPoliticalFigure) {
     return {
       isPolitical: false,
-      politicalFigure: null,
-      emotionExpressed: null
+      politicalTopic: null,
+      emotionType: null
     };
   }
   
@@ -459,8 +487,8 @@ export const detectPoliticalEmotions = (userInput: string): {
   
   return {
     isPolitical: true,
-    politicalFigure: detectedPoliticalFigure,
-    emotionExpressed: detectedEmotion
+    politicalTopic: detectedPoliticalFigure,
+    emotionType: detectedEmotion
   };
 };
 
@@ -477,7 +505,7 @@ export const generatePoliticalEmotionResponse = (
   }
   
   // Focus on the emotion rather than the political topic
-  switch (politicalInfo.emotionExpressed) {
+  switch (politicalInfo.emotionType) {
     case 'upset':
       return "I hear that you're feeling upset about this. Politics can definitely bring up strong emotions for many of us. Would you like to talk more about how it's affecting you?";
     case 'angry':

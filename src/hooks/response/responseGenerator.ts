@@ -36,19 +36,30 @@ import {
   detectPoliticalEmotions,
   generatePoliticalEmotionResponse
 } from '../../utils/conversationalUtils';
+import {
+  detectEmotionalPatterns,
+  detectSarcasm,
+  detectContentConcerns,
+  detectRepetition,
+  generateEmotionalResponse,
+  generateSarcasmResponse,
+  generateRepetitionAcknowledgment
+} from '../../utils/conversationEnhancement/emotionalInputHandler';
 
 interface ResponseGeneratorParams {
   conversationStage: ConversationStage;
   messageCount: number;
   introductionMade: boolean;
   adaptiveResponseFn: (userInput: string) => string;
+  conversationHistory: string[];
 }
 
 export const useResponseGenerator = ({
   conversationStage,
   messageCount,
   introductionMade,
-  adaptiveResponseFn
+  adaptiveResponseFn,
+  conversationHistory
 }: ResponseGeneratorParams) => {
   
   const EARLY_CONVERSATION_MESSAGE_THRESHOLD = 10;
@@ -222,17 +233,56 @@ export const useResponseGenerator = ({
     concernType: ConcernType
   ): string => {
     try {
+      // First check if the user is repeating themselves because Roger didn't address their concern
+      if (conversationHistory.length >= 2) {
+        const repetitionInfo = detectRepetition(userInput, conversationHistory.slice(-3));
+        const contentInfo = detectContentConcerns(userInput);
+        
+        // If user is repeating themselves at least twice and showing signs of frustration, acknowledge it
+        if (repetitionInfo.isRepeating && repetitionInfo.repetitionCount >= 2) {
+          const isUserFrustrated = detectSarcasm(userInput) || 
+                                  userInput.toUpperCase() === userInput ||
+                                  userInput.includes('!');
+          
+          if (isUserFrustrated) {
+            return generateRepetitionAcknowledgment(repetitionInfo, contentInfo);
+          }
+        }
+      }
+      
+      // Check for sarcasm or frustration with Roger's responses
+      if (detectSarcasm(userInput)) {
+        const contentInfo = detectContentConcerns(userInput);
+        return generateSarcasmResponse(contentInfo);
+      }
+      
       // HIGHEST PRIORITY: Check for explicitly stated feelings first
+      // Now enhanced to include specific concern detection
       const negativeStateInfo = detectSimpleNegativeState(userInput);
       if (negativeStateInfo.isNegativeState) {
+        // Enhanced to detect specific content concerns in the message
+        const contentInfo = detectContentConcerns(userInput);
+        
         // Always acknowledge explicitly stated feelings or emotional states first
-        return generateSimpleNegativeStateResponse(userInput, negativeStateInfo);
+        // But now with awareness of specific mentioned topics/concerns
+        return generateSimpleNegativeStateResponse(userInput, negativeStateInfo, contentInfo);
       }
       
       // SECOND HIGHEST: Direct response to political emotions - addressing what a user explicitly mentions
       const politicalInfo = detectPoliticalEmotions(userInput);
       if (politicalInfo.isPolitical) {
         return generatePoliticalEmotionResponse(userInput, politicalInfo);
+      }
+      
+      // Check for emotional patterns and content simultaneously
+      const emotionalInfo = detectEmotionalPatterns(userInput);
+      const contentInfo = detectContentConcerns(userInput);
+      
+      // If we detect emotion and specific content, generate a response that acknowledges both
+      if (emotionalInfo.hasEmotionalContent && contentInfo.hasConcern) {
+        return generateEmotionalResponse(emotionalInfo, contentInfo);
+      } else if (emotionalInfo.hasEmotionalContent) {
+        return generateEmotionalResponse(emotionalInfo);
       }
       
       // Check for defensive reactions to mental health suggestions

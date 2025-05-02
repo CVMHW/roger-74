@@ -17,6 +17,12 @@ import {
 import { generateSafetyConcernResponse, explainInpatientProcess } from '../utils/safetyConcernManager';
 import { ConcernType } from '../utils/reflection/reflectionTypes';
 import { DeceptionAnalysis } from '../utils/detectionUtils/deceptionDetection';
+import {
+  detectContentConcerns,
+  detectSarcasm,
+  detectRepetition,
+  generateSarcasmResponse
+} from '../utils/conversationEnhancement/emotionalInputHandler';
 
 // Import generateSmallTalkResponse directly from smallTalkUtils
 import { generateSmallTalkResponse } from '../utils/conversation/smallTalkUtils';
@@ -49,6 +55,9 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     isFirstTimeWithMentalHealth: false
   });
   
+  // Track repeated responses to prevent repetition loop
+  const [recentResponses, setRecentResponses] = useState<string[]>([]);
+  
   // Hook for adaptive response generation strategy
   const { generateAdaptiveResponse, currentApproach } = useAdaptiveResponse();
   
@@ -67,11 +76,13 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
   const { calculateResponseTime, simulateTypingResponse } = useTypingEffect();
   
   // Hook for response generation - pass messageCount to respect the 30-minute rule
+  // Now also passing conversation history for context awareness
   const { generateResponse } = useResponseGenerator({
     conversationStage,
     messageCount,
     introductionMade,
-    adaptiveResponseFn: generateAdaptiveResponse
+    adaptiveResponseFn: generateAdaptiveResponse,
+    conversationHistory
   });
   
   // Hook for response processing
@@ -81,6 +92,72 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     calculateResponseTime,
     simulateTypingResponse
   });
+  
+  // Effect to prevent response repetition
+  useEffect(() => {
+    // Keep only the last 5 responses to compare against
+    if (recentResponses.length > 5) {
+      setRecentResponses(prev => prev.slice(-5));
+    }
+  }, [recentResponses]);
+  
+  // Check if a response is too similar to recent responses
+  const isResponseRepetitive = (response: string): boolean => {
+    // Skip very short responses
+    if (response.length < 20) return false;
+    
+    for (const prevResponse of recentResponses) {
+      // Calculate similarity (very basic implementation)
+      const similarity = calculateResponseSimilarity(response, prevResponse);
+      if (similarity > 0.7) {
+        return true;
+      }
+    }
+    return false;
+  };
+  
+  // Calculate similarity between two responses (basic implementation)
+  const calculateResponseSimilarity = (a: string, b: string): number => {
+    // Convert to lowercase and remove punctuation
+    const cleanA = a.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+    const cleanB = b.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+    
+    // Split into words
+    const wordsA = cleanA.split(/\s+/);
+    const wordsB = cleanB.split(/\s+/);
+    
+    // Count shared words
+    let sharedWords = 0;
+    for (const word of wordsA) {
+      if (wordsB.includes(word)) {
+        sharedWords++;
+      }
+    }
+    
+    // Calculate Jaccard similarity
+    return sharedWords / (wordsA.length + wordsB.length - sharedWords);
+  };
+  
+  // Alternative response generation when default is too repetitive
+  const generateAlternativeResponse = (userInput: string): string => {
+    // Detect if there's a specific content to focus on
+    const contentInfo = detectContentConcerns(userInput);
+    
+    if (contentInfo.hasConcern) {
+      return `Let's focus on what you said about ${contentInfo.specificConcern || contentInfo.category}. Can you tell me more about what's most important about this for you right now?`;
+    }
+    
+    // If no specific content, use one of these varied responses
+    const alternatives = [
+      "I want to make sure I understand what's most important to you right now. What would be most helpful for us to discuss?",
+      "Let's take a step back. What aspect of what you've shared would be most useful to explore?",
+      "I'd like to shift our focus to what matters most to you right now. What's your priority?",
+      "Let's make sure I'm focusing on what's most important. What specifically are you hoping to get from our conversation today?",
+      "I want to be sure I'm addressing what matters to you. What's the main concern you'd like us to focus on?"
+    ];
+    
+    return alternatives[Math.floor(Math.random() * alternatives.length)];
+  };
   
   // Update conversation history when user messages are received
   const updateConversationHistory = (userInput: string) => {
@@ -166,16 +243,65 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     // Update conversation history and client preferences
     updateConversationHistory(userInput);
     
-    // HIGHEST PRIORITY: Check for explicitly stated feelings first
+    // HIGHEST PRIORITY: Check for sarcasm or frustration directed at Roger
+    if (detectSarcasm(userInput) && userInput.toLowerCase().includes("robot") || 
+        userInput.toLowerCase().includes("stupid") ||
+        userInput.toUpperCase() === userInput) {
+      const contentInfo = detectContentConcerns(userInput);
+      const sarcasmResponse = generateSarcasmResponse(contentInfo);
+      
+      // Update conversation stage
+      updateStage();
+      
+      // Process with sarcasm response
+      return baseProcessUserMessage(
+        userInput,
+        () => sarcasmResponse,
+        () => null
+      );
+    }
+    
+    // Check for repeated user concerns that aren't being addressed
+    if (conversationHistory.length >= 2) {
+      const repetitionInfo = detectRepetition(userInput, conversationHistory.slice(-3));
+      const contentInfo = detectContentConcerns(userInput);
+      
+      // If user has repeated the same concern multiple times, acknowledge it directly
+      if (repetitionInfo.isRepeating && repetitionInfo.repetitionCount >= 2 &&
+          (userInput.toUpperCase() === userInput || userInput.includes('!') || 
+          userInput.toLowerCase().includes("listen") || 
+          userInput.toLowerCase().includes("not hearing"))) {
+        
+        // Update conversation stage
+        updateStage();
+        
+        // Generate a response that directly acknowledges what they've been repeating
+        const acknowledgeResponse = contentInfo.hasConcern
+          ? `I apologize for not properly addressing your concern about ${contentInfo.specificConcern || contentInfo.category}. I'm listening now. What specific aspect of this is most important for us to focus on?`
+          : `I'm sorry for not properly addressing what you've been trying to tell me. I'd like to make sure I understand correctly. Could you help me focus on what's most important?`;
+        
+        // Process with acknowledgment response
+        return baseProcessUserMessage(
+          userInput,
+          () => acknowledgeResponse,
+          detectConcerns
+        );
+      }
+    }
+    
+    // NEXT PRIORITY: Check for explicitly stated feelings first
     const negativeStateInfo = detectSimpleNegativeState(userInput);
     if (negativeStateInfo.isNegativeState) {
       // User has explicitly stated how they feel or is in a negative state - always acknowledge this first
       updateStage();
       
-      // Generate response that acknowledges their stated feelings
+      // Also detect any specific content/concerns mentioned
+      const contentInfo = detectContentConcerns(userInput);
+      
+      // Generate response that acknowledges their stated feelings AND the specific concern
       return baseProcessUserMessage(
         userInput,
-        (input) => generateSimpleNegativeStateResponse(input, negativeStateInfo),
+        (input) => generateSimpleNegativeStateResponse(input, negativeStateInfo, contentInfo),
         () => null // No concern needed here as we're handling the emotional state directly
       );
     }
