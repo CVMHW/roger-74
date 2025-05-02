@@ -61,3 +61,57 @@ export const detectSubstanceUseConcerns = (message: string): boolean => {
   const lowerMessage = message.toLowerCase();
   return substanceUseKeywords.some(keyword => lowerMessage.includes(keyword));
 };
+
+// Tentative harmful language detection
+export const detectTentativeHarmLanguage = (message: string): boolean => {
+  const lowerMessage = message.toLowerCase();
+  
+  // Detect tentative language combined with harmful content
+  const tentativeMarkers = [
+    'maybe', 'perhaps', 'i think', 'possibly', 'might', 'could', 
+    'i guess', 'not sure if', 'potentially', 'sort of', 
+    'kind of', 'thinking about', 'considering', 
+    'wondering if', 'what if', 'probably', 
+    'weighing', 'contemplating'
+  ];
+  
+  const harmfulActions = [
+    'hurt', 'harm', 'kill', 'shoot', 'stab', 'attack', 
+    'gun', 'weapon', 'knife', 'violence', 'violent', 
+    'hit', 'beat', 'suicide', 'self-harm', 'die', 'dying',
+    'end my life', 'take my life', 'take their life',
+    'murder', 'bomb', 'explode', 'strangle', 'assault',
+    'molest', 'abuse', 'rape'
+  ];
+  
+  // Check for phrases that combine tentative language with harmful actions
+  for (const tentative of tentativeMarkers) {
+    for (const harmful of harmfulActions) {
+      // Look for phrases within 10 words of each other
+      const pattern = new RegExp(`${tentative}[^.!?]{0,80}${harmful}|${harmful}[^.!?]{0,80}${tentative}`, 'i');
+      if (pattern.test(lowerMessage)) {
+        return true;
+      }
+    }
+  }
+  
+  // Also check for specific patterns of tentative harmful language
+  const tentativeHarmPhrases = [
+    'not sure if i should hurt', 
+    'thinking about hurting', 
+    'might harm', 
+    'could kill', 
+    'wondering if i should end',
+    'what if i hurt',
+    'maybe i will get a gun',
+    'i think there is potential',
+    'not sure if i will',
+    'or maybe i won\'t',
+    'haven\'t decided',
+    'still deciding',
+    'might do something bad',
+    'could do something harmful'
+  ];
+  
+  return tentativeHarmPhrases.some(phrase => lowerMessage.includes(phrase));
+};

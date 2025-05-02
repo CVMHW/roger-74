@@ -52,35 +52,8 @@ const ChatInterface: React.FC = () => {
       // Add the empty response message first (will be updated during typing simulation)
       setMessages(prevMessages => [...prevMessages, rogerResponse]);
       
-      // Generate appropriate response text based on the message context
-      let responseText = '';
-      
-      if (rogerResponse.concernType === 'crisis') {
-        responseText = getCrisisMessage();
-      } 
-      else if (rogerResponse.concernType === 'medical') {
-        responseText = getMedicalConcernMessage();
-      }
-      else if (rogerResponse.concernType === 'mental-health') {
-        responseText = getMentalHealthConcernMessage();
-      }
-      else if (rogerResponse.concernType === 'eating-disorder') {
-        responseText = getEatingDisorderMessage();
-      }
-      else if (rogerResponse.concernType === 'substance-use') {
-        responseText = getSubstanceUseMessage();
-      } 
-      else {
-        // For non-concern responses, we've already generated adaptive response in the hook
-        // Let's log the approach being used for debugging purposes
-        console.log(`Using ${currentApproach} approach for response`);
-        
-        // Generate a conversational, human-like response
-        responseText = generateConversationalResponse(userInput);
-      }
-      
       // Simulate typing with a callback to update the message text
-      simulateTypingResponse(responseText, (text) => {
+      simulateTypingResponse(rogerResponse.text, (text) => {
         setMessages(prevMessages => 
           prevMessages.map(msg => 
             msg.id === rogerResponse.id ? { ...msg, text } : msg
@@ -110,7 +83,8 @@ import {
   getMedicalConcernMessage,
   getMentalHealthConcernMessage,
   getEatingDisorderMessage,
-  getSubstanceUseMessage
+  getSubstanceUseMessage,
+  getTentativeHarmMessage
 } from '../utils/responseUtils';
 import { generateConversationalResponse } from '../utils/conversationalUtils';
 

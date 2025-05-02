@@ -7,6 +7,7 @@ import {
   detectMentalHealthConcerns,
   detectEatingDisorderConcerns,
   detectSubstanceUseConcerns,
+  detectTentativeHarmLanguage
 } from '../utils/detectionUtils';
 import {
   createMessage
@@ -16,7 +17,8 @@ import {
   getMedicalConcernMessage,
   getMentalHealthConcernMessage,
   getEatingDisorderMessage,
-  getSubstanceUseMessage
+  getSubstanceUseMessage,
+  getTentativeHarmMessage
 } from '../utils/responseUtils';
 import { useToast } from '@/components/ui/use-toast';
 import useTypingEffect from './useTypingEffect';
@@ -28,6 +30,7 @@ interface ConcernState {
   mentalHealth: boolean;
   eatingDisorder: boolean;
   substanceUse: boolean;
+  tentativeHarm: boolean;
 }
 
 interface UseRogerianResponseReturn {
@@ -44,7 +47,8 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     medical: false,
     mentalHealth: false,
     eatingDisorder: false,
-    substanceUse: false
+    substanceUse: false,
+    tentativeHarm: false
   });
   const { toast } = useToast();
   const { calculateResponseTime, simulateTypingResponse } = useTypingEffect();
@@ -70,6 +74,9 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
       case 'substance-use':
         description = "For substance use concerns, specialized support is available in the resources below.";
         break;
+      case 'tentative-harm':
+        description = "I've noticed concerning language that requires professional support. Please see scheduling link below.";
+        break;
       default:
         description = "Please see the resources below for support with your concerns.";
     }
@@ -91,9 +98,14 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     const containsMentalHealthConcerns = detectMentalHealthConcerns(userInput);
     const containsEatingDisorderConcerns = detectEatingDisorderConcerns(userInput);
     const containsSubstanceUseConcerns = detectSubstanceUseConcerns(userInput);
+    const containsTentativeHarmLanguage = detectTentativeHarmLanguage(userInput);
     
     // Show appropriate alerts based on detected concerns
-    if (containsCrisisKeywords && !concernsShown.crisis) {
+    if (containsTentativeHarmLanguage && !concernsShown.tentativeHarm) {
+      setConcernsShown(prev => ({ ...prev, tentativeHarm: true }));
+      showConcernToast('tentative-harm');
+    }
+    else if (containsCrisisKeywords && !concernsShown.crisis) {
       setConcernsShown(prev => ({ ...prev, crisis: true }));
       showConcernToast('crisis');
     }
@@ -124,7 +136,11 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
         let concernType = null;
         
         // Determine which response to use based on detected concerns
-        if (containsCrisisKeywords) {
+        if (containsTentativeHarmLanguage) {
+          responseText = getTentativeHarmMessage();
+          concernType = 'tentative-harm';
+        }
+        else if (containsCrisisKeywords) {
           responseText = getCrisisMessage();
           concernType = 'crisis';
         } 

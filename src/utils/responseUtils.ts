@@ -1,4 +1,3 @@
-
 /**
  * Utilities for generating appropriate responses
  */
@@ -91,4 +90,16 @@ export const getSubstanceUseMessage = (): string => {
   
   // Select a random response
   return substanceUseResponses[Math.floor(Math.random() * substanceUseResponses.length)];
+};
+
+// We need to add the function getTentativeHarmMessage() to the existing responseUtils.ts file
+
+export const getTentativeHarmMessage = (): string => {
+  return `I notice that you're expressing some thoughts that concern me. Your safety is my top priority, and what you're describing requires professional support.
+
+Please schedule an appointment immediately with a therapist who can provide appropriate help: [calendly.com/ericmriesterer](https://calendly.com/ericmriesterer/)
+
+In the meantime, please also refer to the crisis resources below if you need immediate support.
+
+I want to emphasize that any thoughts of harm to yourself or others should be taken seriously, even if they feel uncertain or tentative. A trained professional can help you work through these thoughts in a safe environment.`;
 };
