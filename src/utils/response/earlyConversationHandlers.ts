@@ -1,4 +1,3 @@
-
 import { isIntroduction, generateIntroductionResponse, isSmallTalk, isPersonalSharing, generatePersonalSharingResponse } from '../../utils/masterRules';
 import { generateReflectionResponse } from '../reflection';
 import { generateSmallTalkResponse, isLikelyChild, isLikelyNewcomer } from '../conversation/smallTalk';
@@ -6,7 +5,7 @@ import { ConversationStage } from '../../hooks/response/conversationStageManager
 import { detectDevelopmentalStage } from '../reflection/reflectionStrategies';
 import { shouldUseConversationStarter, generateConversationStarterResponse } from '../reflection/ageAppropriateConversation';
 import { getRogerPerspectivePhrase } from './personalityHelpers';
-import { createOhioContextResponse } from './handlers/ohioContextHandler';
+import { createOhioContextResponse } from './handlers/ohio/ohioContextHandler';
 
 /**
  * Handles the logic for early conversation responses
