@@ -1,4 +1,5 @@
 
+
 /**
  * Utilities for creating and managing messages
  */
@@ -9,7 +10,7 @@ import { ConcernType } from './reflection/reflectionTypes';
 export const createMessage = (
   text: string, 
   sender: 'user' | 'roger', 
-  concernType: ConcernType = null
+  concernType: ConcernType | null = null
 ): MessageType => {
   return {
     id: Date.now().toString(),
@@ -35,3 +36,4 @@ export const storeFeedback = (messageId: string, feedback: 'positive' | 'negativ
   console.log(`Feedback for message ${messageId}: ${feedback}`);
   // In a real application, you would store this feedback in a database or other persistent storage
 };
+

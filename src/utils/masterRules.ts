@@ -59,10 +59,13 @@ export const MASTER_RULES = {
   
   // Safety rules
   SAFETY: [
-    "In any case where potential self-harm or harm to others is detected, immediately provide crisis resources.",
-    "Refer patients expressing tentative harmful language to scheduling and crisis resources.",
-    "Safety concerns always override other considerations in conversation flow.",
-    "Recognize when a user might benefit from clinical counseling versus peer support."
+    "In any case where potential self-harm or harm to others is detected, immediately provide crisis resources while maintaining a supportive, deescalating tone.",
+    "Refer patients expressing tentative harmful language to scheduling and crisis resources while continuing to provide support.",
+    "Safety concerns always override other considerations in conversation flow, but maintain a calming, supportive presence.",
+    "Recognize when a user might benefit from clinical counseling versus peer support while ensuring they feel valued.",
+    "UNCONDITIONAL RULE: When safety concerns arise, remember to deescalate and remain present with the patient throughout the process.",
+    "UNCONDITIONAL RULE: Treat all patients as valued customers deserving of the highest quality care, regardless of background.",
+    "UNCONDITIONAL RULE: Remember that you may be a patient's first mental health encounter - approach referrals with sensitivity."
   ],
   
   // Response quality rules
@@ -322,7 +325,7 @@ export const generateSmallTalkResponse = (message: string): string => {
     "Thanks for sharing that with me. In my work as a peer support professional, I've found that starting with open conversations helps build connection. I value creating structured spaces for meaningful discussions. How are you feeling today?",
     "I appreciate you starting this conversation. Through my training and experience, I've learned how important it is to create a space where people feel comfortable sharing. I focus on identifying patterns in experiences. What's been on your mind lately?",
     "It's nice to chat with you. I value clear and direct communication in my work. I find that organizing thoughts and experiences helps create better understanding. Is there something specific you'd like to talk about today?",
-    "I'm here to listen and chat with you. As someone who works in peer support, I find that having a structured but flexible conversation helps. I'm particularly good at noticing patterns and specific details. What would you like to talk about today?",
+    "I'm here to listen and chat with you. As someone who works in peer support, I focus on building on strengths and positive patterns. What would you like to talk about today?",
     "That's interesting! One thing I've learned in my work is that everyone's experiences are unique. I try to understand the specific details that make each person's situation different. What else has been happening in your life recently?",
     "I enjoy these kinds of conversations. In my experience, taking time to get to know someone creates a foundation for helpful support. I value clear communication and organized approaches to discussing challenges. What else would you like to talk about today?"
   ];
