@@ -1,3 +1,4 @@
+
 import { isIntroduction, generateIntroductionResponse, isSmallTalk, isPersonalSharing, generatePersonalSharingResponse } from '../../utils/masterRules';
 import { generateReflectionResponse } from '../reflection';
 import { generateSmallTalkResponse, isLikelyChild, isLikelyNewcomer } from '../conversation/smallTalk';
@@ -10,7 +11,14 @@ import {
   shouldUseWaitingRoomEngagement, 
   generateWaitingRoomEngagement, 
   generateCulturalConnectionPrompt, 
-  incorporateRogerPersonality 
+  incorporateRogerPersonality,
+  isLikelyTeen,
+  isLikelyMale,
+  isLikelyBlueCollar,
+  mightPreferSimpleLanguage,
+  getAppropriateConversationStyle,
+  generateConnectionStatement,
+  generateTransitionToEric
 } from '../conversation/earlyEngagement';
 
 /**
@@ -31,6 +39,13 @@ export const handleEarlyConversation = (
   // Check for child or newcomer patterns to adapt our response approach
   const isChild = isLikelyChild(userInput);
   const isNewcomer = isLikelyNewcomer(userInput);
+  const isTeen = isLikelyTeen(userInput);
+  const isMale = isLikelyMale(userInput);
+  const isBlueCollar = isLikelyBlueCollar(userInput);
+  const preferSimpleLanguage = mightPreferSimpleLanguage(userInput);
+  
+  // Get the appropriate conversation style
+  const conversationStyle = getAppropriateConversationStyle(userInput);
   
   // Check for Ohio-specific contexts to create more locally-aware responses
   // This helps Roger connect through regional knowledge
@@ -54,10 +69,22 @@ export const handleEarlyConversation = (
       return `${waitingRoomResponse} ${culturalPrompt}`;
     }
     
-    // Add a personality note if no cultural prompt was added
+    // Add a connection statement if no cultural prompt was added
+    const connectionStatement = generateConnectionStatement(userInput, messageCount);
+    if (connectionStatement) {
+      return `${waitingRoomResponse} ${connectionStatement}`;
+    }
+    
+    // Add a personality note if no other additions were made
     const personalityNote = incorporateRogerPersonality(userInput, messageCount);
     if (personalityNote) {
       return `${waitingRoomResponse} ${personalityNote}`;
+    }
+    
+    // Add a transition statement if approaching end of waiting time
+    const transitionNote = generateTransitionToEric(messageCount);
+    if (transitionNote) {
+      return `${waitingRoomResponse} ${transitionNote}`;
     }
     
     return waitingRoomResponse;
@@ -71,6 +98,12 @@ export const handleEarlyConversation = (
     const culturalPrompt = generateCulturalConnectionPrompt(userInput, messageCount);
     if (culturalPrompt && messageCount <= 7) {
       return `${personalResponse} ${culturalPrompt}`;
+    }
+    
+    // Add connection statement if appropriate
+    const connectionStatement = generateConnectionStatement(userInput, messageCount);
+    if (connectionStatement) {
+      return `${personalResponse} ${connectionStatement}`;
     }
     
     // Occasionally add Roger's perspective to personal sharing responses
@@ -99,6 +132,12 @@ export const handleEarlyConversation = (
       if (personalityNote) {
         return `${reflectionResponse} ${personalityNote}`;
       }
+      
+      // Add connection statement if appropriate
+      const connectionStatement = generateConnectionStatement(userInput, messageCount);
+      if (connectionStatement) {
+        return `${reflectionResponse} ${connectionStatement}`;
+      }
     }
     return reflectionResponse;
   }
@@ -112,6 +151,12 @@ export const handleEarlyConversation = (
   // Use adaptive response as last resort in early conversation
   const response = adaptiveResponseFn(userInput);
   
+  // Add connection statement if appropriate
+  const connectionStatement = generateConnectionStatement(userInput, messageCount);
+  if (connectionStatement) {
+    return `${response} ${connectionStatement}`;
+  }
+  
   // Occasionally add Roger's perspective
   const perspectivePhrase = getRogerPerspectivePhrase(userInput, messageCount);
   if (perspectivePhrase && !isChild) { // Skip perspective phrases for children
@@ -120,3 +165,4 @@ export const handleEarlyConversation = (
   
   return response;
 };
+
