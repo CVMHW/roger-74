@@ -85,24 +85,27 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
       );
     }
     
-    // Check for grief and existential loneliness themes to adjust response time
+    // Check for grief themes to adjust response time and approach
     const griefThemes = detectGriefThemes(userInput);
     let responseGenerator = generateResponse;
     
-    // If intense grief themes are detected, potentially use existential approach
-    // and ensure adequate response time for sensitive topic
-    if (griefThemes.themeIntensity >= 7) {
-      // The generateResponse function will handle the grief response internally
-      // but we can adjust how we call processUserMessage to account for the sensitivity
-      
+    // If grief themes are detected, adjust response time based on severity
+    if (griefThemes.themeIntensity >= 2) {
+      // For all grief messages, ensure proper response time
       // Update conversation stage before processing
       updateStage();
       
-      // For intense grief messages, ensure proper response time
+      // Adjust response time based on grief severity
+      const griefResponseTimeMultiplier = 
+        griefThemes.griefSeverity === 'severe' || griefThemes.griefSeverity === 'existential' ? 1.5 :
+        griefThemes.griefSeverity === 'moderate' ? 1.3 :
+        griefThemes.griefSeverity === 'mild' ? 1.2 : 1.0;
+      
       return baseProcessUserMessage(
         userInput,
         responseGenerator,
-        detectConcerns
+        detectConcerns,
+        griefResponseTimeMultiplier // Pass the multiplier to adjust response time
       );
     }
     

@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { MessageType } from '../../components/Message';
 import { createMessage } from '../../utils/messageUtils';
@@ -22,7 +23,8 @@ export const useResponseProcessing = ({
   const processUserMessage = async (
     userInput: string,
     generateResponseFn: (userInput: string, concernType: ConcernType) => string,
-    detectConcernsFn: (userInput: string) => ConcernType
+    detectConcernsFn: (userInput: string) => ConcernType,
+    responseTimeMultiplier: number = 1.0 // New parameter for response time adjustment
   ): Promise<MessageType> => {
     setIsTyping(true);
     
@@ -52,6 +54,9 @@ export const useResponseProcessing = ({
     
     // Ensure response time meets the minimum requirement
     responseTime = Math.max(responseTime, minimumTime);
+    
+    // Apply the response time multiplier for grief or other special cases
+    responseTime = Math.round(responseTime * responseTimeMultiplier);
     
     // Return a promise that resolves with the appropriate response
     return new Promise(resolve => {

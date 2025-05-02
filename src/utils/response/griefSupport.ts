@@ -22,6 +22,14 @@ export type ExistentialLonelinessType =
   | 'identity-reflection-loss' // Loss of seeing yourself through another's eyes
   | 'general-loneliness';     // General existential loneliness
 
+// Levels of grief severity
+export type GriefSeverity = 
+  | 'very-mild'     // Minor disappointments or temporary losses
+  | 'mild'          // Noticeable losses that cause discomfort but are manageable
+  | 'moderate'      // Significant losses that disrupt emotional well-being
+  | 'severe'        // Profound losses that significantly impair functioning
+  | 'existential';  // Losses tied to meaning, purpose, or existence
+
 // Key themes related to grief and loneliness
 const griefThemes = {
   spouseLoss: [
@@ -30,6 +38,18 @@ const griefThemes = {
     'after they died', 'years together', 'decades together',
     'marriage ended', 'died before', 'long marriage', 
     'nobody knows me', 'knew me best', 'knew everything about me'
+  ],
+  
+  familyLoss: [
+    'lost my mother', 'lost my father', 'lost my son', 'lost my daughter',
+    'mom died', 'dad died', 'child died', 'brother died', 'sister died',
+    'grandparent died', 'funeral', 'buried', 'cremated'
+  ],
+  
+  petLoss: [
+    'pet died', 'dog died', 'cat died', 'put down my pet', 'euthanized',
+    'lost my dog', 'lost my cat', 'miss my pet', 'animal died',
+    'rainbow bridge', 'veterinarian', 'put to sleep'
   ],
   
   intimacyLoss: [
@@ -55,6 +75,40 @@ const griefThemes = {
     'decades', 'years together', 'long relationship', 'memories',
     'remembered', 'history together', 'grew together', 'life together',
     'shared past', 'knowing everything about'
+  ],
+
+  // New themes for different grief severity levels
+  veryMildGrief: [
+    'lost my pen', 'missed a party', 'bummed out', 'disappointed',
+    'minor setback', 'small issue', 'annoying', 'frustrating',
+    'missed opportunity', 'lost my chance'
+  ],
+
+  mildGrief: [
+    'lost my favorite', 'broke my', 'friendship ended', 'missed deadline',
+    'lost an opportunity', 'small loss', 'sad about', 'too bad',
+    'messed up', 'failed at', 'didn\'t work out'
+  ],
+
+  moderateGrief: [
+    'lost my job', 'broke up', 'relationship ended', 'pet died',
+    'failed exam', 'moved away', 'going through breakup',
+    'heartbroken', 'devastated', 'really hurting',
+    'can\'t focus', 'having trouble sleeping'
+  ],
+
+  severeGrief: [
+    'lost my parent', 'lost my child', 'divorce', 'terminal illness',
+    'died suddenly', 'suicide', 'accident', 'tragedy',
+    'can\'t go on', 'overwhelming loss', 'unbearable pain',
+    'can\'t eat', 'can\'t sleep', 'can\'t function'
+  ],
+
+  existentialGrief: [
+    'no meaning', 'what\'s the point', 'purpose in life',
+    'why go on', 'everything is empty', 'nothing matters',
+    'lost my faith', 'questioning everything', 'crisis of belief',
+    'feel lost', 'identity crisis', 'who am I now'
   ]
 };
 
@@ -66,6 +120,7 @@ const griefThemes = {
 export const detectGriefThemes = (message: string): {
   griefType: GriefType | null,
   existentialLonelinessType: ExistentialLonelinessType | null,
+  griefSeverity: GriefSeverity | null,
   themeIntensity: number, // 0-10 scale of how intensely grief themes are present
   mentionsTimeFrame: boolean, // Whether long-term relationship is mentioned
   mentionsIrreplaceability: boolean // Whether irreplaceability is mentioned
@@ -76,6 +131,7 @@ export const detectGriefThemes = (message: string): {
   const result = {
     griefType: null as GriefType | null,
     existentialLonelinessType: null as ExistentialLonelinessType | null,
+    griefSeverity: null as GriefSeverity | null,
     themeIntensity: 0,
     mentionsTimeFrame: false,
     mentionsIrreplaceability: false
@@ -88,9 +144,19 @@ export const detectGriefThemes = (message: string): {
   if (hasSpouseLossTheme) {
     result.griefType = 'spousal-loss';
     result.themeIntensity += 5; // Base intensity for spousal loss
+    result.griefSeverity = 'severe'; // Default to severe for spousal loss
+  } else if (griefThemes.familyLoss.some(theme => lowerMessage.includes(theme))) {
+    result.griefType = 'family-loss';
+    result.themeIntensity += 4;
+    result.griefSeverity = 'severe';
+  } else if (griefThemes.petLoss.some(theme => lowerMessage.includes(theme))) {
+    result.griefType = 'pet-loss';
+    result.themeIntensity += 3;
+    result.griefSeverity = 'moderate';
   } else if (lowerMessage.includes('died') || lowerMessage.includes('passed away')) {
     result.griefType = 'general';
     result.themeIntensity += 3;
+    result.griefSeverity = 'moderate';
   }
   
   // Check for intimacy loss themes
@@ -112,6 +178,11 @@ export const detectGriefThemes = (message: string): {
       result.existentialLonelinessType = 'general-loneliness';
     }
     result.themeIntensity += 2;
+    // If existential themes are present and no grief severity is set yet,
+    // assume existential grief severity
+    if (!result.griefSeverity) {
+      result.griefSeverity = 'existential';
+    }
   }
   
   // Check for identity loss themes
@@ -121,6 +192,12 @@ export const detectGriefThemes = (message: string): {
   if (hasIdentityLossTheme) {
     result.existentialLonelinessType = 'identity-reflection-loss';
     result.themeIntensity += 2;
+    result.griefType = result.griefType || 'identity-loss';
+    // If no grief severity is set yet but identity loss is present,
+    // set to existential
+    if (!result.griefSeverity) {
+      result.griefSeverity = 'existential';
+    }
   }
   
   // Check for shared history/time themes
@@ -145,12 +222,47 @@ export const detectGriefThemes = (message: string): {
     result.mentionsIrreplaceability = true;
     result.themeIntensity += 1;
   }
+
+  // If no grief type or severity has been determined yet, check for different grief severity levels
+  if (!result.griefSeverity) {
+    // Check for very mild grief
+    if (griefThemes.veryMildGrief.some(theme => lowerMessage.includes(theme))) {
+      result.griefSeverity = 'very-mild';
+      result.themeIntensity += 1;
+      result.griefType = result.griefType || 'general';
+    } 
+    // Check for mild grief
+    else if (griefThemes.mildGrief.some(theme => lowerMessage.includes(theme))) {
+      result.griefSeverity = 'mild';
+      result.themeIntensity += 2;
+      result.griefType = result.griefType || 'general';
+    }
+    // Check for moderate grief
+    else if (griefThemes.moderateGrief.some(theme => lowerMessage.includes(theme))) {
+      result.griefSeverity = 'moderate';
+      result.themeIntensity += 3;
+      result.griefType = result.griefType || 'general';
+    }
+    // Check for severe grief
+    else if (griefThemes.severeGrief.some(theme => lowerMessage.includes(theme))) {
+      result.griefSeverity = 'severe';
+      result.themeIntensity += 4;
+      result.griefType = result.griefType || 'general';
+    }
+    // Check for existential grief
+    else if (griefThemes.existentialGrief.some(theme => lowerMessage.includes(theme))) {
+      result.griefSeverity = 'existential';
+      result.themeIntensity += 4;
+      result.griefType = result.griefType || 'meaning-loss';
+    }
+  }
   
   // Additional intensity for combinations that indicate deep existential grief
   if (result.griefType === 'spousal-loss' && 
       (result.existentialLonelinessType === 'intimacy-loneliness' || 
        result.existentialLonelinessType === 'shared-history-loss')) {
     result.themeIntensity += 2;
+    result.griefSeverity = 'existential';
   }
   
   // Cap intensity at 10
@@ -189,8 +301,8 @@ export const generateGriefReflection = (message: string): string => {
         "I'm hearing how the years of shared history with your spouse created something irreplaceable. That loss of someone who witnessed so much of your life journey creates a very particular kind of loneliness.",
         "The loneliness you're describing seems connected to losing that shared history - all those years of memories and experiences that were witnessed together. That creates a void that's hard to articulate.",
         "You're touching on something profound - how losing your spouse means losing the person who carried your shared history. That creates an existential loneliness that's different from simply being alone.",
-        "What you're describing about losing decades of shared life with your spouse resonates with what many have called 'existential loneliness' - that unique emptiness of no longer having the person who witnessed your journey.",
-        "I hear that you're grappling with the loss of not just your spouse, but all the years of shared experiences and memories that you built together. That creates a very special kind of loneliness."
+        "What you're sharing about losing your spouse suggests you're also experiencing that loss of being seen through the eyes of someone who knew you so completely. That creates a unique kind of existential loneliness that's hard to describe.",
+        "I hear that beyond missing your spouse, there's also that profound loss of how you experienced yourself through their understanding of you. That's a form of existential loneliness that goes beyond just being alone."
       ];
       return responses[Math.floor(Math.random() * responses.length)];
     }
@@ -200,8 +312,8 @@ export const generateGriefReflection = (message: string): string => {
         "I'm hearing how losing your spouse also means losing the person who reflected back to you who you are. That can be disorienting - losing that mirror that helped form your sense of self.",
         "The loneliness you're describing seems connected to losing not just your spouse, but also part of how you understood yourself through their eyes. That's a profound existential challenge.",
         "You're touching on something many grieving spouses experience - that disorientation of no longer being seen through the eyes of someone who knew you so completely. It can feel like losing part of your identity.",
-        "What you're sharing about losing your spouse suggests you're also experiencing that loss of being known and reflected back to yourself. That creates a unique kind of existential loneliness that's hard to describe.",
-        "I hear that beyond missing your spouse, there's also that profound loss of how you experienced yourself through their understanding of you. That's a form of existential loneliness that goes beyond just being alone."
+        "What you're sharing about losing your spouse suggests you're feeling the absence of that special witness to your life - the person who saw the full arc of your experiences in a way no one else did or will.",
+        "I hear that beyond the general grief, there's that profound loss of the person who witnessed your life so intimately. That creates an existential loneliness that's hard for others to fully understand."
       ];
       return responses[Math.floor(Math.random() * responses.length)];
     }
@@ -226,6 +338,78 @@ export const generateGriefReflection = (message: string): string => {
       "You're touching on something profound about the unique loneliness that comes with losing a spouse - it's not just about being alone, but about losing that special kind of connection.",
       "What you're describing about losing your spouse resonates with what many call the 'existential loneliness' of grief - that sense that something irreplaceable has been lost.",
       "I'm hearing how the absence of your spouse creates a loneliness that's different in quality from other kinds of aloneness. That deep connection you had created something unique that can't simply be substituted."
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+  
+  // Very mild grief responses
+  if (themes.griefSeverity === 'very-mild') {
+    const responses = [
+      "I notice you're feeling a bit disappointed about that. It's okay to acknowledge even small letdowns.",
+      "That sounds a bit frustrating. Even minor disappointments can affect our day.",
+      "I hear that you're feeling a little down about that. Those small bumps can still matter.",
+      "Sometimes those little disappointments can still affect us. How are you handling it?",
+      "I understand that even small losses can cause some momentary sadness. Would you like to talk about it?"
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+
+  // Mild grief responses
+  if (themes.griefSeverity === 'mild') {
+    const responses = [
+      "I can hear that this loss is causing you some sadness. It's completely valid to feel that way.",
+      "That kind of disappointment can stick with us for a while. How has it been affecting you?",
+      "I understand this is bringing up some difficult feelings for you. Would it help to talk more about it?",
+      "It sounds like you're processing a loss that matters to you. Even if others might see it as small, your feelings about it are important.",
+      "I'm hearing how this situation has caused you some genuine sadness. Would you like to share more about what it meant to you?"
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+
+  // Moderate grief responses (including pet loss)
+  if (themes.griefSeverity === 'moderate') {
+    // Special case for pet loss
+    if (themes.griefType === 'pet-loss') {
+      const responses = [
+        "Losing a pet can be deeply painful. They're family members who offer unconditional love. I'm truly sorry for your loss.",
+        "The grief of losing a pet is very real. They share our daily lives and create a special bond that's meaningful and significant.",
+        "I hear how much your pet meant to you. That kind of love creates a special kind of grief when we lose them.",
+        "Losing a pet can create a significant void in our lives. Their constant presence and unconditional love is irreplaceable in many ways.",
+        "The loss of a pet is a genuine grief that deserves to be acknowledged. They're family members who touch our lives in profound ways."
+      ];
+      return responses[Math.floor(Math.random() * responses.length)];
+    }
+
+    const responses = [
+      "This sounds like a significant loss that's really affecting you. It's completely understandable to be struggling with something this important.",
+      "I can hear how deeply this is impacting you. Losses like this can really shake our sense of stability for a while.",
+      "What you're going through sounds genuinely difficult. It makes sense that you'd be feeling the weight of this loss.",
+      "I'm hearing how important this was to you, and how its loss has created a real sense of grief. That's entirely valid.",
+      "This kind of significant change can create a genuine grief response. Your feelings make complete sense given what you're going through."
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+
+  // Severe grief responses (family loss, etc.)
+  if (themes.griefSeverity === 'severe' && themes.griefType !== 'spousal-loss') {
+    const responses = [
+      "I'm so sorry for your profound loss. This kind of grief touches every part of our lives and can feel overwhelming.",
+      "The loss you're describing is truly significant. I want to acknowledge the depth of what you're going through right now.",
+      "I hear how devastating this loss has been. When someone this important to us is gone, it affects everything.",
+      "This kind of profound loss creates grief that can feel all-consuming. I want you to know I'm here to listen as you navigate this difficult journey.",
+      "What you're going through is one of life's most difficult experiences. The depth of this loss is something that takes time and support to process."
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+
+  // Existential grief responses
+  if (themes.griefSeverity === 'existential' && themes.griefType !== 'spousal-loss') {
+    const responses = [
+      "I'm hearing how you're grappling with some of life's deepest questions. These existential questions often arise during significant transitions or losses.",
+      "The questions you're asking about meaning and purpose are profound ones. Sometimes our foundations shift, and we need to rebuild our understanding of ourselves and the world.",
+      "That sense of emptiness or questioning everything can be a deeply challenging space to be in. These existential concerns often emerge when our previous understandings no longer seem sufficient.",
+      "I hear you questioning some fundamental aspects of life and meaning. These profound questions are part of the human experience, though they can feel isolating.",
+      "The existential questions you're raising touch on our deepest needs for meaning and purpose. It takes courage to face these kinds of fundamental uncertainties."
     ];
     return responses[Math.floor(Math.random() * responses.length)];
   }
@@ -276,7 +460,7 @@ export const generateGriefResponse = (message: string): string | null => {
   const themes = detectGriefThemes(message);
   
   // Only respond if grief themes are present with sufficient intensity
-  if (themes.themeIntensity < 3) {
+  if (themes.themeIntensity < 2) {
     return null;
   }
   
@@ -291,6 +475,30 @@ export const generateGriefResponse = (message: string): string | null => {
       " How have you been navigating this unique form of loneliness?",
       " Has anyone in your life been able to understand or acknowledge this specific kind of loneliness?",
       " What aspects of that connection do you find yourself missing most deeply?"
+    ];
+    
+    response += followUps[Math.floor(Math.random() * followUps.length)];
+  }
+  // For moderate intensity grief, add a supportive follow-up
+  else if (themes.themeIntensity >= 4) {
+    const followUps = [
+      " Would you like to share more about how you've been coping?",
+      " How have you been taking care of yourself during this difficult time?",
+      " Is there anything that's been particularly helpful for you as you process this?",
+      " Would it be helpful to talk about what this loss means for you?",
+      " How has your day-to-day life been affected by this experience?"
+    ];
+    
+    response += followUps[Math.floor(Math.random() * followUps.length)];
+  }
+  // For lower intensity grief, add a gentle acknowledgment
+  else {
+    const followUps = [
+      " How are you managing with this?",
+      " Would you like to talk more about it?",
+      " How have you been feeling about this recently?",
+      " Is there anything specific about this that's been on your mind?",
+      " What thoughts have you been having about this situation?"
     ];
     
     response += followUps[Math.floor(Math.random() * followUps.length)];
