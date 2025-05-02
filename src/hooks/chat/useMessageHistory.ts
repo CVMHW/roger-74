@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 
 /**
@@ -12,6 +13,11 @@ export const useMessageHistory = () => {
   
   // Update user message history for context-awareness
   const updateUserMessageHistory = useCallback((message: string) => {
+    if (!message || typeof message !== 'string') {
+      console.error("Invalid message passed to updateUserMessageHistory:", message);
+      return;
+    }
+    
     setUserMessageHistory(prev => {
       const newHistory = [...prev, message];
       // Keep only the last 10 messages
@@ -21,6 +27,11 @@ export const useMessageHistory = () => {
 
   // Update Roger's response history
   const updateRogerResponseHistory = useCallback((responseText: string) => {
+    if (!responseText || typeof responseText !== 'string') {
+      console.error("Invalid response text passed to updateRogerResponseHistory:", responseText);
+      return;
+    }
+    
     setRogerResponseHistory(prev => [...prev, responseText]);
   }, []);
 

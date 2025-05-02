@@ -17,7 +17,6 @@ import { useRogerianState } from './stateManagement';
 import { handleEmotionalPatterns } from './emotionalResponseHandlers';
 import { processUserMessage as processMessage } from './messageProcessor';
 import { RecentCrisisMessage, UseRogerianResponseReturn } from './types';
-import { extractConversationContext } from '../../utils/conversationEnhancement/repetitionDetector';
 
 /**
  * Hook for generating Rogerian responses to user messages
@@ -97,42 +96,51 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
   
   // Process user message with stage update and special cases
   const processUserMessage = useCallback(async (userInput: string): Promise<MessageType> => {
-    // Update conversation history and client preferences
-    updateConversationHistory(userInput);
-    
-    // Check if the user is indicating Roger isn't listening or is stuck in a loop
-    const feedbackLoopResponse = handleFeedbackLoop(userInput, conversationHistory);
-    if (feedbackLoopResponse) {
-      // Update conversation stage
-      updateStage();
+    try {
+      // Update conversation history and client preferences
+      updateConversationHistory(userInput);
       
-      // Create a message with the recovery response
-      return Promise.resolve(createMessage(feedbackLoopResponse, 'roger'));
+      // Check if the user is indicating Roger isn't listening or is stuck in a loop
+      const feedbackLoopResponse = handleFeedbackLoop(userInput, conversationHistory);
+      if (feedbackLoopResponse) {
+        // Update conversation stage
+        updateStage();
+        
+        // Create a message with the recovery response
+        return Promise.resolve(createMessage(feedbackLoopResponse, 'roger'));
+      }
+      
+      // Handle emotional patterns and special cases
+      const emotionalResponse = await handleEmotionalPatterns(
+        userInput, 
+        conversationHistory,
+        baseProcessUserMessage,
+        detectConcerns,
+        updateStage
+      );
+      
+      if (emotionalResponse) {
+        return emotionalResponse;
+      }
+      
+      // Process standard messages
+      return processMessage(
+        userInput,
+        detectConcerns,
+        generateResponse,
+        baseProcessUserMessage,
+        conversationHistory,
+        clientPreferences,
+        updateStage
+      );
+    } catch (error) {
+      console.error("Error in processUserMessage:", error);
+      // Return a fallback response if an error occurs
+      return Promise.resolve(createMessage(
+        "I'm sorry, I'm having trouble responding right now. Could you try again?", 
+        'roger'
+      ));
     }
-    
-    // Handle emotional patterns and special cases
-    const emotionalResponse = await handleEmotionalPatterns(
-      userInput, 
-      conversationHistory,
-      baseProcessUserMessage,
-      detectConcerns,
-      updateStage
-    );
-    
-    if (emotionalResponse) {
-      return emotionalResponse;
-    }
-    
-    // Process standard messages
-    return processMessage(
-      userInput,
-      detectConcerns,
-      generateResponse,
-      baseProcessUserMessage,
-      conversationHistory,
-      clientPreferences,
-      updateStage
-    );
   }, [
     updateConversationHistory,
     handleFeedbackLoop,

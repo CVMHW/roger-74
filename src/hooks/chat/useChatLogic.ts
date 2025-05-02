@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { MessageType } from '../../components/Message';
 import { useToast } from '@/components/ui/use-toast';
 import { getInitialMessages, createMessage } from '../../utils/messageUtils';
@@ -17,6 +17,7 @@ import { useMessageProcessor } from './useMessageProcessor';
 export const useChatLogic = () => {
   // Core state
   const [messages, setMessages] = useState<MessageType[]>(getInitialMessages());
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   
   // Toast notification
   const { toast } = useToast();
@@ -53,40 +54,62 @@ export const useChatLogic = () => {
 
   // Main function to handle sending messages
   const handleSendMessage = useCallback((userInput: string) => {
-    if (!userInput.trim()) return;
+    if (!userInput.trim() || isProcessing) return;
+    
+    setIsProcessing(true);
 
-    // Add user message
-    const newUserMessage = createMessage(userInput, 'user');
-    setMessages(prevMessages => [...prevMessages, newUserMessage]);
-    
-    // Update user message history for context awareness
-    updateUserMessageHistory(userInput);
-    
-    // Check if user is indicating that Roger is in a feedback loop
-    if (checkFeedbackLoop(userInput, userMessageHistory)) {
-      return;
-    }
-    
-    // Check if this message might contain location data if we're currently asking for it
-    if (handleLocationData(userInput, activeLocationConcern)) {
-      // Process the user's message normally since they've provided location data
+    try {
+      // Add user message
+      const newUserMessage = createMessage(userInput, 'user');
+      setMessages(prevMessages => [...prevMessages, newUserMessage]);
+      
+      // Update user message history for context awareness
+      updateUserMessageHistory(userInput);
+      
+      // Check if user is indicating that Roger is in a feedback loop
+      if (checkFeedbackLoop(userInput, userMessageHistory)) {
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Check if this message might contain location data if we're currently asking for it
+      if (handleLocationData(userInput, activeLocationConcern)) {
+        // Process the user's message normally since they've provided location data
+        processResponse(userInput);
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Check for deception if we have a recent crisis message
+      if (checkDeception(userInput, recentCrisisMessage, simulateTypingResponse, setMessages)) {
+        setIsProcessing(false);
+        return;
+      }
+      
+      // If we previously detected a feedback loop, reset the flag
+      if (feedbackLoopDetected) {
+        setFeedbackLoopDetected(false);
+      }
+      
+      // Process user input normally
       processResponse(userInput);
-      return;
+      
+    } catch (error) {
+      console.error("Error in handleSendMessage:", error);
+      
+      // Add fallback error response
+      const errorResponse = createMessage(
+        "I'm sorry, I'm having trouble responding right now. Could you try again?",
+        'roger'
+      );
+      
+      setMessages(prevMessages => [...prevMessages, errorResponse]);
+      
+    } finally {
+      setIsProcessing(false);
     }
-    
-    // Check for deception if we have a recent crisis message
-    if (checkDeception(userInput, recentCrisisMessage, simulateTypingResponse, setMessages)) {
-      return;
-    }
-    
-    // If we previously detected a feedback loop, reset the flag
-    if (feedbackLoopDetected) {
-      setFeedbackLoopDetected(false);
-    }
-    
-    // Process user input normally
-    processResponse(userInput);
   }, [
+    isProcessing,
     setMessages,
     updateUserMessageHistory,
     checkFeedbackLoop,
@@ -100,10 +123,18 @@ export const useChatLogic = () => {
     setFeedbackLoopDetected,
     processResponse
   ]);
+
+  // Reset processing state when typing indicator changes
+  useEffect(() => {
+    if (!isTyping && isProcessing) {
+      setIsProcessing(false);
+    }
+  }, [isTyping, isProcessing]);
   
   return {
     messages,
     isTyping,
+    isProcessing,
     handleSendMessage,
     handleFeedback
   };

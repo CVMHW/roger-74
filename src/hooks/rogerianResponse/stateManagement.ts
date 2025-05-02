@@ -35,10 +35,11 @@ export const useRogerianState = () => {
       if (context && context.hasContext) {
         // Create an object with relevant context information that we want to store
         const contextInfo = {
-          topics: context.topics,
-          locations: context.locations,
-          emotions: context.emotions,
-          keyPhrases: context.keyPhrases
+          topics: context.topics || [],
+          locations: context.locations || [],
+          emotions: context.emotions || [],
+          keyPhrases: context.keyPhrases || [],
+          people: context.people || []
         };
         
         setClientPreferences(prev => ({
@@ -58,6 +59,7 @@ export const useRogerianState = () => {
     feedbackLoopRecoveryMode,
     updateConversationHistory,
     setRecentResponses,
-    setFeedbackLoopRecoveryMode
+    setFeedbackLoopRecoveryMode,
+    setClientPreferences
   };
 };
