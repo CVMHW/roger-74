@@ -1,3 +1,4 @@
+
 // Define the type for concerns that might need special responses
 export type ConcernType = 
   | 'tentative-harm' 
@@ -12,7 +13,7 @@ export type ConcernType =
   | 'trauma-response'
   | 'cultural-adjustment'
   | 'weather-related'
-  | 'pet-illness';  // Add the new type here
+  | 'pet-illness';
 
 // Define the stages of conversation
 export type ConversationStage = 'initial' | 'early' | 'established';
