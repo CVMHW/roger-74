@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 
@@ -8,7 +7,7 @@ export type MessageType = {
   sender: 'user' | 'roger';
   timestamp: Date;
   feedback?: 'positive' | 'negative' | null;
-  concernType?: 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | null;
+  concernType?: 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | null;
 };
 
 interface MessageProps {
@@ -53,6 +52,8 @@ const Message: React.FC<MessageProps> = ({ message, onFeedback }) => {
         return 'border-l-4 border-purple-500 pl-2 bg-purple-50';
       case 'substance-use':
         return 'border-l-4 border-orange-500 pl-2 bg-orange-50';
+      case 'tentative-harm':
+        return 'border-l-4 border-yellow-500 pl-2 bg-yellow-50';
       default:
         return '';
     }
