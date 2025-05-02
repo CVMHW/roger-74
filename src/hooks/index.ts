@@ -1,6 +1,6 @@
 
 // Export all hooks from this file for easy importing
-export { default as useRogerianResponse } from './useRogerianResponse';
+export { default as useRogerianResponse } from './rogerianResponse';
 export { default as useTypingEffect } from './useTypingEffect';
 export { default as useAdaptiveResponse } from './useAdaptiveResponse';
 export { useConversationStage } from './response/conversationStageManager';
