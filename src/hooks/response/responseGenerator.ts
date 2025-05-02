@@ -169,28 +169,20 @@ export const useResponseGenerator = ({
    */
   const createTraumaResponseMessage = (userInput: string): string | null => {
     try {
-      // Dynamic import to avoid require
-      const traumaResponseModule = import('../../utils/response/traumaResponsePatterns');
+      // Import the module synchronously instead of asynchronously
+      const traumaModule = require('../../utils/response/traumaResponsePatterns');
       
-      return traumaResponseModule.then(module => {
-        const analysis = module.detectTraumaResponsePatterns(userInput);
-        
-        // If we have a valid analysis, generate a trauma-informed response
-        if (analysis && analysis.dominant4F) {
-          return module.generateTraumaInformedResponse(analysis);
-        }
-        return null;
-      }).catch(e => {
-        console.log("Error in trauma response generation:", e);
-        return null;
-      });
+      const analysis = traumaModule.detectTraumaResponsePatterns(userInput);
+      
+      // If we have a valid analysis, generate a trauma-informed response
+      if (analysis && analysis.dominant4F) {
+        return traumaModule.generateTraumaInformedResponse(analysis);
+      }
+      return null;
     } catch (e) {
       console.log("Error in trauma response generation:", e);
       return null;
     }
-    
-    // If module not available or analysis failed, return null to use other response types
-    return null;
   };
   
   /**

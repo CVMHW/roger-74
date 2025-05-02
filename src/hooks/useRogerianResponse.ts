@@ -12,6 +12,7 @@ import { detectGriefThemes } from '../utils/response/griefSupport';
 import { 
   detectClientPreferences,
   detectSimpleNegativeState,
+  generateSimpleNegativeStateResponse,
   detectPoliticalEmotions
 } from '../utils/conversationalUtils';
 import { generateSafetyConcernResponse, explainInpatientProcess } from '../utils/safetyConcernManager';
