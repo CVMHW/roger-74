@@ -74,7 +74,9 @@ export const mightPreferSimpleLanguage = (userInput: string): boolean => {
 /**
  * Returns an appropriate conversation style based on detected user characteristics
  */
-export const getAppropriateConversationStyle = (userInput: string): string => {
+export const getAppropriateConversationStyle = (
+  userInput: string
+): string => {
   if (isLikelyTeen(userInput)) {
     return "teen";
   } else if (isLikelyMale(userInput) && isLikelyBlueCollar(userInput)) {
@@ -89,4 +91,3 @@ export const getAppropriateConversationStyle = (userInput: string): string => {
   
   return "general";
 };
-

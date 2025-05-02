@@ -9,17 +9,21 @@ import { getRogerPerspectivePhrase } from './personalityHelpers';
 import { createOhioContextResponse } from './handlers';
 import { 
   shouldUseWaitingRoomEngagement, 
-  generateWaitingRoomEngagement, 
-  generateCulturalConnectionPrompt, 
-  incorporateRogerPersonality,
+  generateWaitingRoomEngagement,
   isLikelyTeen,
   isLikelyMale,
   isLikelyBlueCollar,
   mightPreferSimpleLanguage,
-  getAppropriateConversationStyle,
+  getAppropriateConversationStyle
+} from '../conversation/earlyEngagement';
+
+// Import the functions from their specific modules to avoid conflicts
+import { generateCulturalConnectionPrompt } from '../conversation/earlyEngagement/culturalConnector';
+import { 
+  incorporateRogerPersonality,
   generateConnectionStatement,
   generateTransitionToEric
-} from '../conversation/earlyEngagement';
+} from '../conversation/earlyEngagement/personalityUtilization';
 
 /**
  * Handles the logic for early conversation responses
@@ -165,4 +169,3 @@ export const handleEarlyConversation = (
   
   return response;
 };
-

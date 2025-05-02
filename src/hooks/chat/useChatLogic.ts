@@ -17,7 +17,7 @@ import {
   generateSmallTalkTransition,
   enhanceRapportInEarlyConversation,
   generateFirstMessageResponse
-} from '../utils/conversation/theSmallStuff';
+} from '../../utils/conversation/theSmallStuff';
 
 /**
  * Hook that contains the main chat business logic
