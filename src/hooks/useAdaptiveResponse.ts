@@ -38,7 +38,7 @@ export const useAdaptiveResponse = () => {
                                        lowerInput.includes('hollow') ||
                                        lowerInput.includes('going through motions') ||
                                        lowerInput.includes('waiting for life') ||
-                                       lowerInput.includes('someday i'll');
+                                       lowerInput.includes('someday i\'ll');
     
     // Enhanced detection for existential vacuum and hyperreflection (from lecture materials)
     const containsExistentialVacuum = lowerInput.includes('empty inside') ||
