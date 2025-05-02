@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -34,7 +35,7 @@ const Index = () => {
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">
-                I'm Roger, your peer support companion at Cuyahoga Valley Mindful Health and Wellness. 
+                I'm Roger, your Peer Support companion at Cuyahoga Valley Mindful Health and Wellness. 
                 I'm here to chat with you while you wait for your therapist. I'm not a licensed professional, 
                 but I can provide a listening ear and supportive perspective.
               </p>
@@ -43,7 +44,7 @@ const Index = () => {
                   <span className="text-white font-bold">R</span>
                 </div>
                 <p className="text-sm text-gray-600">
-                  <span className="font-medium">Remember:</span> Our conversation is meant to provide peer support only. 
+                  <span className="font-medium">Remember:</span> Our conversation is meant to provide Peer Support only. 
                   If you need immediate assistance, please use the crisis resources below.
                 </p>
               </div>
@@ -161,7 +162,7 @@ const Index = () => {
           </div>
           <div className="text-center text-gray-600 text-sm">
             <p>© {new Date().getFullYear()} Cuyahoga Valley Mindful Health and Wellness</p>
-            <p className="mt-1">Roger.AI is a peer support companion and is not a substitute for professional mental health services.</p>
+            <p className="mt-1">Roger.AI is a Peer Support companion and is not a substitute for professional mental health services.</p>
           </div>
         </div>
       </footer>
