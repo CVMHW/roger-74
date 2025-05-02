@@ -5,17 +5,7 @@
  * Central export point for all master rules that govern Roger's behavior
  */
 
-// Export unconditional rule protections
-export {
-  isEmergency,
-  handleEmergency,
-  isDirectMedicalAdvice,
-  handleDirectMedicalAdvice,
-  isSuicidalIdeation,
-  handleSuicidalIdeation,
-} from './unconditionalRuleProtections';
-
-// Re-export with explicit naming to resolve ambiguity
+// Only export functions that actually exist in unconditionalRuleProtections
 import {
   isIntroduction as isIntroductionUnconditional,
   isSmallTalk as isSmallTalkUnconditional,
