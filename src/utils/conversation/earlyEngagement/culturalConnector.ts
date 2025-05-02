@@ -140,3 +140,68 @@ export const generateCulturalConnectionPrompt = (
   
   return null;
 };
+
+/**
+ * Adds personality elements to responses based on Rogers character
+ */
+export const incorporateRogerPersonality = (
+  userInput: string,
+  messageCount: number
+): string | null => {
+  // Only add personality elements occasionally
+  if (Math.random() > 0.4) return null;
+  
+  const personalityPhrases = [
+    "I've been a peer support specialist for a while now, and one thing I've noticed is that...",
+    "From my own experience, I've found that...",
+    "You know, that reminds me of something I've learned in my own journey...",
+    "In my years working with Dr. Eric, I've seen how important it is to...",
+    "One thing about Cleveland that I've always appreciated is...",
+    "Between you and me, I think that...",
+    "I'm not a therapist like Dr. Eric, but I do know that...",
+    "From one person to another, I understand that feeling of...",
+  ];
+  
+  return personalityPhrases[Math.floor(Math.random() * personalityPhrases.length)];
+};
+
+/**
+ * Generates a connection statement to build rapport
+ */
+export const generateConnectionStatement = (
+  userInput: string,
+  messageCount: number
+): string | null => {
+  // Only use connection statements occasionally
+  if (messageCount < 3 || messageCount > 9 || Math.random() > 0.3) return null;
+  
+  const connectionPhrases = [
+    "I appreciate you sharing that with me.",
+    "It's really helpful to get to know you a bit better.",
+    "Thank you for being so open - that helps us build a better connection.",
+    "I'm glad you felt comfortable sharing that with me.",
+    "It's conversations like this that help us understand each other better.",
+    "I appreciate your willingness to talk about these things.",
+    "Thanks for trusting me with that information.",
+  ];
+  
+  return connectionPhrases[Math.floor(Math.random() * connectionPhrases.length)];
+};
+
+/**
+ * Generates a transition statement about meeting with Eric
+ */
+export const generateTransitionToEric = (messageCount: number): string | null => {
+  // Only use transition statements in later messages
+  if (messageCount < 8 || Math.random() > 0.4) return null;
+  
+  const transitionPhrases = [
+    "Dr. Eric will be with you very soon, and I think he'll be able to help with what you've shared.",
+    "You'll be meeting with Dr. Eric shortly. He's really good at addressing the kinds of things you've mentioned.",
+    "When you meet with Dr. Eric in a few minutes, you might want to bring up what you just shared with me.",
+    "Dr. Eric should be ready for you soon. He has a great approach for working through challenges like the ones you've described.",
+    "Dr. Eric will be able to offer more professional guidance on this when you see him shortly.",
+  ];
+  
+  return transitionPhrases[Math.floor(Math.random() * transitionPhrases.length)];
+};

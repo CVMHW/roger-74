@@ -91,3 +91,10 @@ export const getAppropriateConversationStyle = (
   
   return "general";
 };
+
+/**
+ * Explicit exports of the functions that were previously implicitly exported
+ * from waitingRoomEngagement.ts to avoid naming conflicts
+ */
+export { identifyImmediateConcern as identifyEarlyEngagementConcern } from './waitingRoomEngagement';
+export { generateImmediateConcernResponse as generateEarlyEngagementConcernResponse } from './waitingRoomEngagement';

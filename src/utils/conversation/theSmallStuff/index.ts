@@ -1,3 +1,4 @@
+
 /**
  * The Small Stuff - Non-Clinical Conversation Handling
  * 
@@ -178,9 +179,7 @@ export const enhanceRapportInEarlyConversation = (
   return baseResponse;
 };
 
-/**
- * Import from everydayFrustrations to fix reference error
- */
+// Import the everydayFrustrations function explicitly
 import { detectEverydayFrustration } from './everydayFrustrations';
 
 /**
@@ -191,7 +190,7 @@ export const identifyImmediateConcern = (userInput: string): string | null => {
   // Check for everyday frustrations first
   const frustrationInfo = detectEverydayFrustration(userInput);
   if (frustrationInfo.isFrustration) {
-    return frustrationInfo.category || 'general_frustration';
+    return frustrationInfo.topic || 'general_frustration';
   }
   
   // Check for specific scenarios
