@@ -1,10 +1,9 @@
-
 import React from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
 import CrisisResources from '../components/CrisisResources';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Image, Users, Award, BookOpen, Heart, Shield, Star } from 'lucide-react';
+import { Image, Users, Award, BookOpen, Heart, Shield, Star, Calendar } from 'lucide-react';
 
 const Index = () => {
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -133,7 +132,15 @@ const Index = () => {
               </div>
             </CardContent>
             <CardFooter className="border-t pt-4 text-sm text-gray-500">
-              <p>For appointments or questions, please contact your provider directly.</p>
+              <a 
+                href="https://calendly.com/cvmhw" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center gap-2 text-cvmhw-blue hover:text-cvmhw-purple transition-colors"
+              >
+                <Calendar size={16} />
+                <span>Schedule an appointment online</span>
+              </a>
             </CardFooter>
           </Card>
         </div>
