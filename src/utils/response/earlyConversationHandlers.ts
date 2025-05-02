@@ -1,4 +1,3 @@
-
 import { isIntroduction, generateIntroductionResponse, isSmallTalk, isPersonalSharing, generatePersonalSharingResponse } from '../../utils/masterRules';
 import { generateReflectionResponse } from '../reflection';
 import { generateSmallTalkResponse, isLikelyChild, isLikelyNewcomer } from '../conversation/smallTalk';
@@ -10,8 +9,8 @@ import { createOhioContextResponse } from './handlers';
 import { 
   shouldUseWaitingRoomEngagement, 
   generateWaitingRoomEngagement,
-  identifyImmediateConcern,
-  generateImmediateConcernResponse,
+  identifyEarlyEngagementConcern as identifyImmediateConcern,
+  generateEarlyEngagementConcernResponse as generateImmediateConcernResponse,
   isLikelyTeen,
   isLikelyMale,
   isLikelyBlueCollar,
@@ -25,7 +24,7 @@ import {
   incorporateRogerPersonality,
   generateConnectionStatement,
   generateTransitionToEric
-} from '../conversation/earlyEngagement/personalityUtilization';
+} from '../conversation/earlyEngagement/culturalConnector';
 
 /**
  * Handles the logic for early conversation responses

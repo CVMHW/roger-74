@@ -43,7 +43,7 @@ export const identifyImmediateConcern = (userInput: string): string | null => {
   // Check for everyday frustrations first
   const frustrationInfo = detectEverydayFrustration(userInput);
   if (frustrationInfo.isFrustration) {
-    return frustrationInfo.category || 'general_frustration';
+    return frustrationInfo.topic || 'general_frustration';
   }
   
   // Check for specific scenarios
@@ -153,8 +153,8 @@ export const generateWaitingRoomEngagement = (
     // Handle case where appointment is running behind
     if (isRunningBehind) {
       const delayResponses = [
-        "I see you're wondering about the wait time. Dr. Eric is running a bit behind schedule, but he'll be with you as soon as he can. While we wait, tell me more about what's been going on with you - anything notable happen recently?",
-        "Thanks for your patience. Sessions sometimes run longer than expected when patients need extra time. While we wait, I'd love to hear more about your day so far - any highlights or challenges?",
+        "I see you're wondering about the wait time. Dr. Eric is running a bit behind schedule, but he'll be with you as soon as possible. While we wait, tell me more about what's been going on with you - anything notable happen recently?",
+        "Thanks for your patience. Sessions sometimes run longer than expected when patients need extra time. While we wait, I'd love to hear more about your day so far - has anything notable happened?",
         "I understand waiting can be frustrating. Dr. Eric is finishing up with another patient and will be with you as soon as possible. In the meantime, how has your week been going? Anything you'd like to talk about?",
         "I appreciate you being patient. Dr. Eric tries to keep to schedule, but sometimes conversations need more time. While we wait, what's been on your mind lately? Anything interesting happen in your world?",
         "Thanks for your understanding about the wait. Dr. Eric gives each person his full attention, which sometimes means appointments run over. So tell me, how have things been going for you outside of what brought you here today?"

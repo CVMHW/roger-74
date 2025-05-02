@@ -11,8 +11,20 @@ export * from './collaborativeSupportPrinciples';
 export * from './contextAware';
 export * from './cvmhwInfo';
 export * from './cvmhwResponseGenerator';
-export * from './earlyEngagement';
-export * from './generalResponses';
+
+// Re-export theSmallStuff functions explicitly to avoid name conflicts
+export {
+  detectCommunicationStyle,
+  detectDemographicPatterns,
+  adaptResponseStyle,
+  generateFirstMessageResponse,
+  enhanceRapportInEarlyConversation,
+  // Rename these to avoid conflicts
+  identifyImmediateConcern as identifySmallStuffConcern,
+  generateImmediateConcernResponse as generateSmallStuffConcernResponse,
+  generateSmallTalkTransition
+} from './theSmallStuff';
+
 // Export smallTalk with explicit naming to avoid conflicts
 export { 
   isLikelyChild,
@@ -22,6 +34,30 @@ export {
   conversationStarters,
   turnTakingPrompts
 } from './smallTalk';
+
+// Export specific functions from earlyEngagement to avoid conflicts
+export {
+  isLikelyTeen,
+  isLikelyMale,
+  isLikelyBlueCollar,
+  mightPreferSimpleLanguage,
+  getAppropriateConversationStyle,
+  shouldUseWaitingRoomEngagement,
+  // Rename these to avoid conflicts
+  identifyImmediateConcern as identifyEarlyEngagementConcern,
+  generateImmediateConcernResponse as generateEarlyEngagementConcernResponse,
+} from './earlyEngagement';
+
+// Export other functions from earlyEngagement directly
+export {
+  generateCulturalConnectionPrompt,
+  incorporateRogerPersonality,
+  generateConnectionStatement,
+  generateTransitionToEric
+} from './earlyEngagement/culturalConnector';
+export {
+  generateWaitingRoomEngagement
+} from './earlyEngagement/waitingRoomEngagement';
+
 // Export everything else from smallTalkUtils directly
 export * from './smallTalkUtils';
-export * from './theSmallStuff';

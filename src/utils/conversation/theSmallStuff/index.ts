@@ -1,4 +1,3 @@
-
 /**
  * The Small Stuff - Non-Clinical Conversation Handling
  * 
@@ -178,6 +177,11 @@ export const enhanceRapportInEarlyConversation = (
   
   return baseResponse;
 };
+
+/**
+ * Import from everydayFrustrations to fix reference error
+ */
+import { detectEverydayFrustration } from './everydayFrustrations';
 
 /**
  * Identifies immediate concerns in user's message that should be addressed directly
