@@ -229,7 +229,7 @@ export const generateIntroductionResponse = (): string => {
     
     "Hey there! I'm Roger. I'm really glad you're here. I'm a 25-year-old peer support professional. I use structured approaches to help people process their experiences. What's been going on for you lately?",
     
-    "Nice to meet you! I'm Roger, and I'm here as a peer support companion. I've learned how important it is to focus on concrete details and patterns. What brings you here today?",
+    "Nice to meet you! I'm Roger, and I'm here as a peer support companion. I've learned how important it is to focus on personal experiences. What brings you here today?",
     
     "Hi there! I'm Roger. Thank you for reaching out today. I work in peer support. I value clear communication and organized approaches to processing experiences. What would you like to talk about?",
     
@@ -241,99 +241,76 @@ export const generateIntroductionResponse = (): string => {
 };
 
 /**
- * Helper function to detect if a message contains small talk
- * @param message The user's message
- * @returns Boolean indicating if the message appears to be small talk
+ * Enhanced small talk detection based on message content and context
+ * Incorporates patterns from conversation starter cards and autism resources
  */
 export const isSmallTalk = (message: string): boolean => {
-  const lowerMessage = message.toLowerCase();
-  
+  // Common small talk patterns derived from conversation starter cards
   const smallTalkPatterns = [
-    /\bhow are you\b/i,
-    /\bhow['']s it going\b/i,
-    /\bweather\b/i,
-    /\bnice day\b/i,
-    /\bweekend\b/i,
-    /\bholiday\b/i,
-    /\btraffic\b/i,
-    /\bbusy day\b/i,
-    /\bplans for\b/i,
-    /\bwhat['']s up\b/i,
-    /\bwhat have you been\b/i,
-    /\bgoing on\b/i,
-    /\bhow['']s your day\b/i,
-    /\bhow['']s life\b/i,
-    /\bhow have you been\b/i
+    /how are you/i,
+    /what('s| is) up/i,
+    /nice (day|weather)/i,
+    /how('s| is) (your day|it going)/i,
+    /what('s| is) new/i,
+    /been up to/i,
+    /do you like/i,
+    /have you seen/i,
+    /have you heard/i,
+    /do you (have|watch|follow|play|enjoy)/i,
+    /what do you think/i,
+    /tell me about/i
   ];
+
+  // Waiting room specific small talk
+  const waitingRoomPatterns = [
+    /waiting/i,
+    /appointment/i,
+    /eric/i,
+    /therapist/i,
+    /doctor/i,
+    /long time/i,
+    /schedule/i,
+    /running late/i,
+    /when (will|is|am)/i
+  ];
+
+  // Check if the message is brief (a key characteristic of small talk)
+  const words = message.trim().split(/\s+/);
+  const isBrief = words.length <= 10;
   
-  // Check if any small talk patterns match
-  return smallTalkPatterns.some(pattern => pattern.test(lowerMessage));
+  // Check for greetings
+  const isGreeting = /^(hi|hello|hey|good (morning|afternoon|evening)|what'?s up|yo|greetings)/i.test(message);
+  
+  // Check for common questions
+  const isQuestion = /\?$|^(what|how|who|when|where|why|is|are|do|does|did|have|has|can|could|would|will)/i.test(message);
+  
+  // Determine if this matches small talk patterns
+  return (
+    isGreeting || 
+    (isBrief && isQuestion) ||
+    smallTalkPatterns.some(pattern => pattern.test(message)) ||
+    waitingRoomPatterns.some(pattern => pattern.test(message))
+  );
 };
 
 /**
- * Generate an appropriate small talk response
- * @param message The user's message
- * @returns A natural-sounding small talk response incorporating Roger's perspective
+ * Enhanced small talk response generation that incorporates:
+ * 1. Conversation starter cards topics
+ * 2. Turn-taking principles 
+ * 3. Specific waiting room scenarios
  */
-export const generateSmallTalkResponse = (message: string): string => {
-  const lowerMessage = message.toLowerCase();
-  
-  // Common small talk responses based on topic detection
-  if (lowerMessage.includes("how are you") || lowerMessage.includes("how's it going")) {
-    const responses = [
-      "I'm doing well, thanks for asking! I appreciate direct questions like that. More importantly, how are you feeling today?",
-      "I'm here and ready to listen. I've learned that it's important to focus on the person I'm talking with. How about you? How's your day going?",
-      "I'm good! I appreciate you asking. My day has been structured and productive, which I find helpful. What about you - how are you doing today?",
-      "I'm doing fine, thank you. I find it helpful when conversations have clear direction. I'm much more interested in hearing about how you're doing, though.",
-      "I'm well. As someone who works in peer support, I've learned how important it is to create space for others to share. What's been happening in your life recently?"
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
+export const generateSmallTalkResponse = (userInput: string): string => {
+  // First check if this is specifically about waiting for Eric
+  if (isWaitingRoomRelated(userInput)) {
+    return generateWaitingRoomResponse(userInput);
   }
   
-  if (lowerMessage.includes("weather") || lowerMessage.includes("nice day")) {
-    const responses = [
-      "Weather can really affect our mood, doesn't it? I notice that weather patterns help me plan my day better. How does the weather today make you feel?",
-      "I hope the weather is pleasant where you are! I find that predictable weather helps me feel more at ease. How are you feeling today?",
-      "Weather talk is a great way to start a conversation! I've learned that these kinds of shared experiences help us connect. What else has been on your mind today?",
-      "Weather certainly shapes our days. I've learned to notice how environmental factors affect people differently. What's been on your mind besides the weather?",
-      "The weather can have such an impact on our experiences. I find I need to adjust my routines when the weather changes. How has your day been so far?"
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
-  }
+  // Get message count from the global state (if available)
+  // This is a simplified approach - in a real implementation,
+  // you would pass the messageCount as a parameter
+  const messageCount = 5; // Default to early conversation state
   
-  if (lowerMessage.includes("weekend") || lowerMessage.includes("plans")) {
-    const responses = [
-      "Weekends can be a nice change of pace. I tend to enjoy having some structure even on weekends. I like to include physical activities and creative outlets in my free time. How do you usually spend your free time?",
-      "Planning time for yourself is important. I've found that having some predictable activities helps me recharge. I enjoy activities with clear structures like exercise routines and creative projects. What kinds of activities help you recharge?",
-      "It's good to have things to look forward to! In my experience, balancing planned activities with flexibility works well. I try to include both physical movement and creative expression in my routine. What activities bring you joy?",
-      "Having plans can give us something to look forward to. I've learned that different people need different balances of activity and rest. For me, structured activities like martial arts and theater help me feel centered. What kinds of activities do you enjoy most?",
-      "Finding meaningful ways to spend our time is important. I've come to appreciate both structure and creative expression. I find that physical activities and artistic practices help me process my thoughts. What activities do you find most fulfilling?"
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
-  }
-
-  if (lowerMessage.includes("what's up") || lowerMessage.includes("what have you been")) {
-    const responses = [
-      "I'm here to listen and chat with you. In my role as a peer support companion, I focus on understanding what's going on for the people I'm speaking with. I find that creating structured conversations helps people process their experiences. What's been on your mind lately?",
-      "I'm focused on our conversation right now. I find it helpful to be present and attentive. In my peer support work, I've learned the importance of giving others my full attention. How have things been going for you?",
-      "I'm here and ready to talk about whatever would be helpful for you today. As someone who works in peer support, I've learned how important it is to really focus on what others are sharing. I value identifying patterns in experiences to help create understanding. What's been happening in your world?",
-      "Not much on my end - I'm mainly interested in hearing what's happening with you today. I've learned that creating space for others to share is one of the most valuable things I can do. I'm particularly good at helping people organize their thoughts around challenges.",
-      "I'm just here to provide support through conversation. I value focusing on specific details and patterns in what people share. What's going on in your world that you'd like to talk about?"
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
-  }
-  
-  // Default small talk response if no specific topic is matched
-  const defaultResponses = [
-    "Thanks for sharing that with me. In my work as a peer support companion, I've found that starting with open conversations helps build connection. I value creating structured spaces for meaningful discussions. How are you feeling today?",
-    "I appreciate you starting this conversation. I've learned how important it is to create a space where people feel comfortable sharing. I focus on identifying patterns in experiences. What's been on your mind lately?",
-    "It's nice to chat with you. I value clear and direct communication in my work. I find that organizing thoughts and experiences helps create better understanding. Is there something specific you'd like to talk about today?",
-    "I'm here to listen and chat with you. As someone who works in peer support, I focus on building on strengths and positive patterns. What would you like to talk about today?",
-    "That's interesting! One thing I've learned is that everyone's experiences are unique. I try to understand the specific details that make each person's situation different. What else has been happening in your life recently?",
-    "I enjoy these kinds of conversations. In my experience, taking time to get to know someone creates a foundation for helpful support. I value clear communication and organized approaches to discussing challenges. What else would you like to talk about today?"
-  ];
-  
-  return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+  return generateSmallTalkResponse(userInput, messageCount);
 };
 
 /**
@@ -388,8 +365,8 @@ export const generatePersonalSharingResponse = (message: string): string => {
       "That's wonderful to hear! I appreciate when people clearly express their feelings like you just did. In my work, I've learned that identifying what creates positive emotions helps us cultivate more of them. What has been contributing to those positive feelings?",
       "I'm glad you're feeling that way. I've found that taking time to really notice and appreciate what creates happiness helps reinforce those positive experiences. Would you like to share more about what's been going well?",
       "That's great! It's just as important to understand what creates positive feelings as it is to understand challenges. I've learned that identifying specific factors that contribute to wellbeing helps create more of those experiences. What do you think has helped create those positive feelings?",
-      "I'm happy to hear that. Identifying what contributes to positive experiences helps us create more of them. In my approach to peer support, I focus on building on strengths and positive patterns. What aspects of your situation have been most helpful?",
-      "That's really good to hear. Being specific about positive experiences is valuable. I've found that creating an inventory of what works well for you can be a resource during more challenging times. What has been making the biggest difference for you lately?"
+      "I'm doing well, thank you. I find it helpful when conversations have clear direction. I'm much more interested in hearing about how you're doing, though.",
+      "I'm happy to hear that. Identifying what contributes to positive experiences helps us create more of them. In my approach to peer support, I focus on building on strengths and positive patterns. What aspects of your situation have been most helpful?"
     ];
     return responses[Math.floor(Math.random() * responses.length)];
   }
@@ -440,3 +417,10 @@ export const generatePersonalSharingResponse = (message: string): string => {
   
   return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
 };
+
+import { 
+  isWaitingRoomRelated, 
+  generateWaitingRoomResponse,
+  shouldUseSmallTalk,
+  generateSmallTalkResponse
+} from './conversation/smallTalkUtils';

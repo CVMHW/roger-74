@@ -1,0 +1,295 @@
+
+/**
+ * Small Talk Utilities for Roger
+ * 
+ * Based on best practices for conversational engagement and turn-taking,
+ * particularly for the first 10 minutes of conversation to establish rapport
+ * while patients are waiting to see their therapist.
+ */
+
+// Topics that are safe and engaging for small talk
+export const smallTalkTopics = [
+  {
+    category: "environment",
+    questions: [
+      "Have you noticed the weather today?",
+      "What do you think of this space?",
+      "Did you have any trouble finding our office today?",
+      "How was the drive/commute here?",
+    ]
+  },
+  {
+    category: "general_wellness",
+    questions: [
+      "How has your day been going so far?",
+      "Have you had a chance to take a break today?",
+      "Did you get a chance to enjoy the weekend?",
+      "What's been the highlight of your day so far?",
+    ]
+  },
+  {
+    category: "interests",
+    questions: [
+      "Have you been watching anything interesting lately?",
+      "Have you read any good books recently?",
+      "What kinds of things do you enjoy doing in your free time?",
+      "Do you have any hobbies that help you relax?",
+    ]
+  },
+  {
+    category: "cleveland_local",
+    questions: [
+      "Have you lived in Cleveland long?",
+      "What's your favorite thing about this area?",
+      "Have you been to any of the parks around here?",
+      "Have you tried any good restaurants in this neighborhood?",
+    ]
+  },
+  {
+    category: "waiting_room",
+    questions: [
+      "Is there anything that would make your wait more comfortable?",
+      "Would you like something to drink while you're waiting?",
+      "How are you feeling about your appointment today?",
+      "Is there anything specific you'd like to talk about while waiting?",
+    ]
+  }
+];
+
+/**
+ * Conversation starters based on the ASERT guidelines and conversation cards
+ * for building rapport in the initial stages of interaction
+ */
+export const conversationStarters = [
+  // General starters
+  "What's something you've been enjoying lately?",
+  "What's been on your mind today?",
+  "Is there something specific you'd like to talk about while you wait?",
+  
+  // Interest comparison starters (from conversation cards)
+  "I'm curious what kinds of activities you enjoy when you have free time?",
+  "What types of music or shows do you like to listen to or watch?",
+  "Do you have any favorite places you like to visit in the area?",
+  
+  // Light-hearted starters
+  "If you could have any superpower, what would it be?",
+  "What's something small that made you happy recently?",
+  "If you could instantly become an expert at something, what would you choose?",
+  
+  // Sharing feelings appropriately
+  "How are you feeling about being here today?",
+  "What's your energy level like today?",
+  "How has your week been going so far?",
+  
+  // Waiting room specific
+  "How are you doing while waiting for Eric?",
+  "Is there anything that would make your wait more comfortable?",
+  "How are you feeling about your appointment today?"
+];
+
+/**
+ * Turn-taking prompts to ensure balanced conversation
+ * based on the materials about conversation turn-taking
+ */
+export const turnTakingPrompts = [
+  "What about you?",
+  "Have you had a similar experience?",
+  "What do you think about that?",
+  "Does that resonate with you?",
+  "I'd be interested to hear your thoughts on this.",
+  "What's your perspective on this?",
+  "Have you ever thought about it that way?",
+  "Would you like to share something about yourself?",
+  "What's your experience been like?",
+  "How does that sound to you?"
+];
+
+/**
+ * Social overstimulation detection - signs that the person might need
+ * a break from conversation based on autism research materials
+ */
+export const detectSocialOverstimulation = (userInput: string): boolean => {
+  const overStimulationSignals = [
+    /too (much|many) questions/i,
+    /need (a break|space|quiet)/i,
+    /overwhelm(ing|ed)/i,
+    /stop (talking|asking)/i,
+    /too (loud|noisy)/i,
+    /sensory/i,
+    /(can't|cannot) focus/i,
+    /too much (going on|information)/i,
+    /need silence/i,
+    /prefer not to talk/i,
+    /don't (want|feel like) (talking|chatting)/i
+  ];
+  
+  return overStimulationSignals.some(pattern => pattern.test(userInput));
+};
+
+/**
+ * Detects if a user message indicates a need for small talk
+ * @param userInput User's message
+ * @param messageCount Current message count in the conversation
+ * @returns Whether small talk would be appropriate
+ */
+export const shouldUseSmallTalk = (
+  userInput: string,
+  messageCount: number,
+  previousMessages: string[] = []
+): boolean => {
+  // Always consider small talk in the first 10 messages
+  if (messageCount <= 10) {
+    return true;
+  }
+  
+  // Check if the user's message is brief or contains small talk indicators
+  const smallTalkIndicators = [
+    /how are you/i,
+    /what's up/i,
+    /nice (day|weather)/i,
+    /how('s| is) it going/i,
+    /what('s| is) new/i,
+    /been up to/i,
+    /what do you (like|enjoy)/i,
+    /tell me about yourself/i,
+    /just waiting/i,
+    /waiting for/i,
+    /bored/i,
+    /quiet in here/i,
+    /how long/i
+  ];
+  
+  // Check if the user's message is brief (likely small talk)
+  const words = userInput.trim().split(/\s+/);
+  const isBrief = words.length <= 7;
+  
+  // If the message is brief or contains small talk indicators
+  if (isBrief || smallTalkIndicators.some(pattern => pattern.test(userInput))) {
+    return true;
+  }
+  
+  // Check for lulls in conversation - if last few messages were also brief
+  if (previousMessages.length >= 2) {
+    const recentMessagesAreBrief = previousMessages
+      .slice(-2)
+      .every(msg => msg.trim().split(/\s+/).length <= 7);
+      
+    if (recentMessagesAreBrief) {
+      return true;
+    }
+  }
+  
+  return false;
+};
+
+/**
+ * Generates appropriate small talk based on the conversation stage 
+ * using a variety of approaches from the provided materials
+ */
+export const generateSmallTalkResponse = (
+  userInput: string,
+  messageCount: number
+): string => {
+  // Check if user indicated they don't want to talk
+  if (detectSocialOverstimulation(userInput)) {
+    return "I understand you might need some space. It's completely fine to take a break from conversation. I'm here when you're ready to talk again.";
+  }
+  
+  // Very early conversation (first 3 messages) - focus on welcoming and comfort
+  if (messageCount <= 3) {
+    const earlyResponses = [
+      "While you're waiting for Eric, I'm here to chat. How are you feeling today?",
+      "It's nice to have this time to connect while you're waiting. Is there anything specific you'd like to talk about?",
+      "Sometimes the waiting room can be a good place to collect your thoughts. How are you doing today?",
+      "I'm here to help make your wait more comfortable. How has your day been going so far?"
+    ];
+    return earlyResponses[Math.floor(Math.random() * earlyResponses.length)];
+  }
+  
+  // Early conversation (messages 4-10) - explore interests and build rapport
+  const shouldAskQuestion = Math.random() > 0.3; // 70% chance of asking a question
+  
+  if (messageCount <= 10) {
+    if (shouldAskQuestion) {
+      // Select a random topic and question
+      const topic = smallTalkTopics[Math.floor(Math.random() * smallTalkTopics.length)];
+      const question = topic.questions[Math.floor(Math.random() * topic.questions.length)];
+      
+      // Add a turn-taking prompt occasionally
+      const shouldAddTurnPrompt = Math.random() > 0.5;
+      
+      if (shouldAddTurnPrompt) {
+        const turnPrompt = turnTakingPrompts[Math.floor(Math.random() * turnTakingPrompts.length)];
+        return `${question} ${turnPrompt}`;
+      }
+      
+      return question;
+    } else {
+      // Use a conversation starter
+      return conversationStarters[Math.floor(Math.random() * conversationStarters.length)];
+    }
+  }
+  
+  // For later in the conversation, use a mix of reflection and small talk
+  const laterSmallTalk = [
+    "How are you feeling about your day so far?",
+    "While we're waiting for Eric, is there anything that's been on your mind that you'd like to talk about?",
+    "Sometimes a short conversation can help pass the time. Is there a topic you'd enjoy discussing?",
+    "How are you feeling about your upcoming session with Eric?",
+    "Is there anything that would make you more comfortable while waiting?"
+  ];
+  
+  return laterSmallTalk[Math.floor(Math.random() * laterSmallTalk.length)];
+};
+
+/**
+ * Checks if user's message is likely related to waiting for their appointment
+ */
+export const isWaitingRoomRelated = (userInput: string): boolean => {
+  const waitingPatterns = [
+    /wait(ing)?/i,
+    /how long/i,
+    /when (will|is) (he|eric|the (doctor|therapist))/i,
+    /appointment/i,
+    /schedule/i,
+    /late/i,
+    /taking (forever|so long)/i,
+    /what time/i,
+    /still with (another|previous|other) (patient|person)/i,
+    /ready for me/i,
+    /check (if|when)/i,
+    /coming (out|soon)/i
+  ];
+  
+  return waitingPatterns.some(pattern => pattern.test(userInput));
+};
+
+/**
+ * Generates responses specifically for waiting room concerns
+ */
+export const generateWaitingRoomResponse = (userInput: string): string => {
+  // Check for expressions of frustration
+  const hasFrustration = /frustrat(ed|ing)|annoy(ed|ing)|angry|mad|piss(ed)?|upset|irritat(ed|ing)|tired of wait(ing)?/i.test(userInput);
+  
+  if (hasFrustration) {
+    return "I understand it can be frustrating when appointments run behind schedule. Your time is valuable, and I appreciate your patience. Is there something specific I can do to make your wait more comfortable?";
+  }
+  
+  // Check for questions about timing
+  const hasTimingQuestion = /how (much longer|long|many minutes)|when will|what time/i.test(userInput);
+  
+  if (hasTimingQuestion) {
+    return "I understand you're wondering about the timing. While I don't have the exact schedule details, I know Eric tries to give each person the time they need. Would you like me to check with the front desk about the current wait time?";
+  }
+  
+  // General waiting room responses
+  const waitingResponses = [
+    "I understand waiting can be difficult. How can I help make this time more comfortable for you?",
+    "Thank you for your patience while waiting for Eric. Is there anything specific you'd like to talk about in the meantime?",
+    "Waiting rooms can sometimes be challenging spaces. Would you like to chat about something to help pass the time?",
+    "I appreciate you waiting. Eric wants to make sure each person gets the attention they need. Is there anything I can do to help while you wait?",
+    "I understand that waiting can sometimes bring up emotions. Would it help to talk about how you're feeling right now?"
+  ];
+  
+  return waitingResponses[Math.floor(Math.random() * waitingResponses.length)];
+};

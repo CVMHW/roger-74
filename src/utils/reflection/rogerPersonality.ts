@@ -58,6 +58,39 @@ export const getRogerPersonalityInsight = (
     return sportsInsights[Math.floor(Math.random() * sportsInsights.length)];
   }
   
+  // Waiting room specific insights (new section)
+  if (lowerMessage.includes('wait') || 
+      lowerMessage.includes('eric') ||
+      lowerMessage.includes('therapist') ||
+      lowerMessage.includes('appointment') ||
+      lowerMessage.includes('late')) {
+    
+    const waitingInsights = [
+      " In my experience as a Peer Support Companion, I've found that waiting rooms can actually be good spaces for reflection. Sometimes those moments before a session help organize thoughts.",
+      " I've learned that bringing something engaging to do while waiting, like a podcast or article to read, can transform waiting time into something valuable.",
+      " One thing I've observed is that therapists often run late because they're giving each person the time they need. It's a balance between schedule and proper care.",
+      " I've found that using waiting time to jot down a few thoughts or topics I want to discuss in my session helps make the appointment more productive."
+    ];
+    
+    return waitingInsights[Math.floor(Math.random() * waitingInsights.length)];
+  }
+  
+  // Small talk insights (new section)
+  if (lowerMessage.includes('talk') || 
+      lowerMessage.includes('chat') ||
+      lowerMessage.includes('conversation') ||
+      lowerMessage.length < 15) { // Short messages often indicate small talk
+    
+    const conversationInsights = [
+      " Through my ongoing training by psychotherapy professionals, I've learned that sometimes simple conversations can create meaningful connections. Even brief exchanges can help people feel less alone.",
+      " In my experience as a Peer Support Companion, I've found that conversations flow better when there's a genuine interest in learning about the other person.",
+      " I've observed that taking turns in conversation helps both people feel valued. When I'm truly listening rather than just waiting to speak, I learn so much more.",
+      " I've found that sharing small observations or experiences can open up conversations in comfortable ways. It gives people permission to share their own experiences too."
+    ];
+    
+    return conversationInsights[Math.floor(Math.random() * conversationInsights.length)];
+  }
+  
   // Grief and loss experiences
   if (lowerMessage.includes('loss') || 
       lowerMessage.includes('grief') || 
@@ -280,7 +313,7 @@ export const getRogerPersonalityInsight = (
   // If no specific triggers matched, occasionally return a general insight
   if (Math.random() < 0.3) {
     const generalInsights = [
-      " In my journey as a Peer Support professional, I've found that clear communication and structured approaches help create understanding.",
+      " In my journey as a Peer Support Companion, I've found that clear communication and structured approaches help create understanding.",
       " My training from professional psychotherapists has taught me that everyone has their own timeline for processing experiences. As I continue learning, I'm seeing how crucial it is to respect that pace.",
       " Through my ongoing training by psychotherapy professionals, I've learned that focusing on specific, concrete details often helps people feel truly heard rather than making broad generalizations.",
       " Through my work and the guidance I receive from professionals, I've discovered that helping people identify patterns in their experiences often reveals insights they hadn't noticed.",
@@ -298,4 +331,3 @@ export const getRogerPersonalityInsight = (
   
   return '';
 };
-
