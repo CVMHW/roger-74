@@ -29,7 +29,7 @@ const Index = () => {
                     onError={handleImageError}
                   />
                 </div>
-                <CardTitle className="text-xl font-semibold text-cvmhw-purple">Welcome to Roger.AI</CardTitle>
+                <CardTitle className="text-xl font-semibold text-cvmhw-purple">Welcome from Roger at Cuyahoga Valley Mindful Health & Wellness</CardTitle>
               </div>
               <CardDescription>Your mental health support companion</CardDescription>
             </CardHeader>
