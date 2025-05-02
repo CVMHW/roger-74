@@ -35,6 +35,39 @@
 
     --radius: 0.5rem;
   }
+  
+  /* Modern Theme Variables */
+  .roger-modern {
+    --background: 220 33% 99%;
+    --foreground: 225 25% 20%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 225 25% 20%;
+    
+    --primary: 224 76% 48%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 262 83% 58%;
+    --secondary-foreground: 0 0% 100%;
+    
+    --accent: 340 82% 52%;
+    --accent-foreground: 0 0% 100%;
+    
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 40%;
+    
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 224 76% 48%;
+    
+    --radius: 0.75rem;
+    
+    /* Roger specific colors */
+    --roger-color: 224 76% 48%;
+    --roger-light: 214 100% 85%;
+    --roger-dark: 224 85% 30%;
+    --roger-surface: 214 100% 98%;
+  }
 }
 
 @layer base {
@@ -99,4 +132,62 @@
 /* Gradient text for headings */
 .gradient-text {
   @apply bg-gradient-to-r from-cvmhw-purple via-cvmhw-pink to-cvmhw-orange bg-clip-text text-transparent;
+}
+
+/* Modern Theme Styles */
+.roger-modern .chat-container {
+  @apply rounded-xl border border-transparent bg-white shadow-lg;
+}
+
+.roger-modern .chat-bubble {
+  @apply shadow-sm;
+}
+
+.roger-modern .roger-message {
+  @apply bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md;
+}
+
+.roger-modern .user-message {
+  @apply bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-100 shadow-sm;
+}
+
+.roger-modern .card {
+  @apply shadow-lg border-transparent transition-all duration-300 hover:shadow-xl;
+}
+
+.roger-modern .gradient-text {
+  @apply bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-600 bg-clip-text text-transparent;
+}
+
+.roger-modern input, 
+.roger-modern textarea, 
+.roger-modern button {
+  @apply transition-all duration-200;
+}
+
+.roger-modern button[type="submit"], 
+.roger-modern button.primary {
+  @apply bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700;
+}
+
+.roger-modern :is(h1, h2, h3, h4, h5) {
+  @apply text-blue-900;
+}
+
+.roger-modern .logo-pulse {
+  filter: drop-shadow(0 4px 6px rgba(37, 99, 235, 0.1));
+}
+
+/* Enhanced card animation on hover */
+.roger-modern .card {
+  @apply transform transition-all duration-300;
+}
+
+.roger-modern .card:hover {
+  @apply -translate-y-1;
+}
+
+/* Enhanced footer styling */
+.roger-modern footer {
+  @apply bg-gradient-to-b from-white to-blue-50 border-t border-blue-100;
 }
