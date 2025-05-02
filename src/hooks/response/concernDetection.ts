@@ -5,6 +5,8 @@ import { ConcernType } from '../../utils/reflection/reflectionTypes';
 import { detectPTSDConcerns } from '../../utils/detectionUtils';
 import { detectSpecificIllness, detectPetIllnessConcerns } from '../../utils/detectionUtils';
 import { detectAllProblems } from '../../utils/detectionUtils/problemDetection';
+import { isLikelyTeenMessage } from '../../utils/response/teenResponseUtils';
+import { isLikelyChildMessage } from '../../utils/responseUtils';
 
 export const useConcernDetection = () => {
   // Track previous concerns to maintain consistency
@@ -29,6 +31,15 @@ export const useConcernDetection = () => {
         const commonProblems = require('../../utils/detectionUtils/problemDetection').detectCommonProblems(message);
         if (commonProblems && commonProblems.ageGroup) {
           setDetectedAgeGroup(commonProblems.ageGroup);
+        } else {
+          // Use the more precise age detection functions if available
+          if (isLikelyTeenMessage(message)) {
+            setDetectedAgeGroup('teen');
+          } else if (isLikelyChildMessage(message)) {
+            setDetectedAgeGroup('child');
+          } else {
+            setDetectedAgeGroup('adult');
+          }
         }
       } catch (error) {
         console.error("Error detecting age group:", error);
