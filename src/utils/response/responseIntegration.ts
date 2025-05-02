@@ -3,6 +3,7 @@
  * Response Integration
  * 
  * Advanced utilities for enhancing response quality and consistency
+ * with improved prioritization of early conversation acknowledgments
  */
 
 import { identifyImmediateConcern } from '../conversation/theSmallStuff/immediateConcrernHandler';
@@ -11,6 +12,7 @@ import { extractConversationContext } from '../conversationEnhancement/repetitio
 
 /**
  * Apply unconditional rules to ensure responses follow core principles
+ * Enhanced with stronger enforcement of early conversation acknowledgment
  * @param response Initial response
  * @param userInput Original user input
  * @param messageCount Current message count
@@ -23,7 +25,8 @@ export const applyUnconditionalRules = (
   messageCount: number,
   conversationHistory: string[] = []
 ): string => {
-  // Early conversation requires acknowledging everyday concerns first
+  // HIGHEST PRIORITY: Early conversation requires acknowledging everyday concerns first
+  // This is crucial for the first 10 interactions
   if (messageCount <= 10) {
     // Extract topics from user input for accurate acknowledgment
     const topics = extractTopicsFromInput(userInput);
@@ -32,6 +35,7 @@ export const applyUnconditionalRules = (
     const hasAcknowledgment = /sounds|seems|understand|hear you|that's|frustrating|challenging|difficult|tough|stressful|I understand/i.test(response);
     
     // For very early messages (first 3), ensure we directly acknowledge the main topic
+    // This directly addresses the issue in the examples provided
     if (messageCount <= 3 && topics.length > 0 && !hasAcknowledgment) {
       const mainTopic = topics[0];
       const acknowledgment = getTopicAcknowledgment(mainTopic);
@@ -46,6 +50,7 @@ export const applyUnconditionalRules = (
 
 /**
  * Enhance response with rapport-building elements based on conversation state
+ * Now with stronger priority on emotional acknowledgment in early conversation
  * @param response Initial response
  * @param userInput Original user input
  * @param messageCount Current message count
@@ -61,12 +66,13 @@ export const enhanceResponseWithRapport = (
   // First identify any immediate concerns that need addressing
   const immediateConcern = identifyImmediateConcern(userInput);
   
-  // For early conversation (first 5 messages), prioritize precision and warmth
-  if (messageCount <= 5) {
+  // CRITICAL: For early conversation (first 3 messages), prioritize precision and warmth
+  if (messageCount <= 3) {
     // Detect emotional state for more accurate responses
     const emotionalState = detectSimpleNegativeState(userInput);
     
     // If user expresses a clear emotional state, ensure it's acknowledged
+    // This directly addresses the issue in the examples provided
     if (emotionalState.isNegativeState && 
         emotionalState.explicitFeelings && 
         emotionalState.explicitFeelings.length > 0) {
@@ -102,8 +108,8 @@ export const enhanceResponseWithRapport = (
     }
   }
   
-  // For slightly more established conversations (messages 6-10), add more personalization
-  if (messageCount > 5 && messageCount <= 10) {
+  // For slightly more established conversations (messages 4-10), add more personalization
+  if (messageCount > 3 && messageCount <= 10) {
     // Extract any context from previous messages to ensure continuity
     try {
       const context = extractConversationContext(userInput, conversationHistory);
@@ -131,20 +137,24 @@ export const enhanceResponseWithRapport = (
 
 /**
  * Extract key topics from user input for contextual responses
+ * Enhanced with more precise pattern matching for better topic extraction
  */
 const extractTopicsFromInput = (input: string): string[] => {
   const topics = [];
+  
+  // Enhanced topic patterns with more specific and comprehensive matches
   const topicPatterns = [
-    { regex: /wrench|tool|lost|find|found|missing/i, topic: "losing your wrench" },
-    { regex: /storm|electricity|power|outage/i, topic: "the power outage" },
-    { regex: /presentation|work|job|boss|meeting|deadline/i, topic: "your work situation" },
-    { regex: /laptop|computer|device|phone|mobile/i, topic: "technology issues" },
-    { regex: /frustrat(ed|ing)|upset|angry|mad|stress(ed|ful)/i, topic: "your frustration" },
-    { regex: /anxious|anxiety|worry|concern/i, topic: "your anxiety" },
-    { regex: /sad|down|depress(ed|ing)|unhappy/i, topic: "your feelings" },
-    { regex: /spill(ed)?|drink|accident|mess/i, topic: "spilling your drink" },
-    { regex: /guilt(y)?|embarrass(ed|ing)|ashamed|regret/i, topic: "feeling guilty" },
-    { regex: /bad day|rough day|terrible day|awful day/i, topic: "having a bad day" }
+    { regex: /wrench|tool|lost|find|found|missing|misplaced|can't find/i, topic: "losing your wrench" },
+    { regex: /storm|electricity|power|outage|utility|electric company/i, topic: "the power outage" },
+    { regex: /presentation|work|job|boss|meeting|deadline|project|career|office/i, topic: "your work situation" },
+    { regex: /laptop|computer|device|phone|mobile|tech|technology/i, topic: "technology issues" },
+    { regex: /frustrat(ed|ing)|upset|angry|mad|stress(ed|ful)|irritated|annoyed/i, topic: "your frustration" },
+    { regex: /anxious|anxiety|worry|concern|nervous|on edge|tension/i, topic: "your anxiety" },
+    { regex: /sad|down|depress(ed|ing)|unhappy|blue|low|melancholy/i, topic: "your feelings" },
+    { regex: /spill(ed)?|drink|accident|mess|knocked over|clumsy/i, topic: "spilling your drink" },
+    { regex: /guilt(y)?|embarrass(ed|ing)|ashamed|regret|sorry|apology/i, topic: "feeling guilty" },
+    { regex: /bad day|rough day|terrible day|awful day|tough day|difficult day/i, topic: "having a bad day" },
+    { regex: /wait(ing)?|late|delay|appointment|doctor|eric|how long/i, topic: "waiting for your appointment" }
   ];
   
   for (const pattern of topicPatterns) {
@@ -167,25 +177,30 @@ const extractTopicsFromInput = (input: string): string[] => {
 
 /**
  * Extract everyday topics that need immediate acknowledgment
+ * Enhanced with more comprehensive pattern matching
  */
 const extractEverydayTopics = (input: string): string[] => {
   const topics = [];
   
-  // Check for common everyday topics
-  if (/work|job|career|office|colleague|coworker|boss|supervisor|meeting/i.test(input)) {
+  // Check for common everyday topics with expanded patterns
+  if (/\b(work|job|career|office|colleague|coworker|boss|supervisor|meeting|presentation|deadline|project)\b/i.test(input)) {
     topics.push("work");
   }
-  if (/school|class|teacher|professor|assignment|homework|exam|test|study/i.test(input)) {
+  if (/\b(school|class|teacher|professor|assignment|homework|exam|test|study|grade|college|university)\b/i.test(input)) {
     topics.push("school");
   }
-  if (/family|parent|mom|dad|mother|father|sibling|brother|sister|child|kid|son|daughter/i.test(input)) {
+  if (/\b(family|parent|mom|dad|mother|father|sibling|brother|sister|child|kid|son|daughter)\b/i.test(input)) {
     topics.push("family");
   }
-  if (/relationship|partner|spouse|husband|wife|boyfriend|girlfriend|date|dating|marriage/i.test(input)) {
+  if (/\b(relationship|partner|spouse|husband|wife|boyfriend|girlfriend|date|dating|marriage|couple|romantic)\b/i.test(input)) {
     topics.push("relationship");
   }
-  if (/friend|buddy|pal|friendship|social|hang out|gathering|party/i.test(input)) {
+  if (/\b(friend|buddy|pal|friendship|social|hang out|gathering|party|meetup)\b/i.test(input)) {
     topics.push("friends");
+  }
+  // New pattern for spilling
+  if (/\b(spill|drink|accident|mess|knocked over|clumsy)\b/i.test(input)) {
+    topics.push("accident");
   }
   
   return topics;
@@ -193,8 +208,23 @@ const extractEverydayTopics = (input: string): string[] => {
 
 /**
  * Get an appropriate acknowledgment for a topic
+ * Enhanced with more empathetic and specific acknowledgments
  */
 const getTopicAcknowledgment = (topic: string): string => {
+  // More specific acknowledgments for common scenarios
+  if (topic === "spilling your drink") {
+    return "I hear that you're upset about spilling your drink. That kind of small accident can definitely bring up feelings of embarrassment or guilt.";
+  }
+  
+  if (topic === "feeling guilty") {
+    return "I hear that you're feeling guilty. Those feelings can be really uncomfortable to sit with.";
+  }
+  
+  if (topic === "having a bad day") {
+    return "I'm sorry to hear you're having a bad day. Sometimes days just don't go as planned.";
+  }
+  
+  // General acknowledgments with more warmth and precision
   const acknowledgments = [
     `I hear that you're dealing with ${topic}.`,
     `It sounds like ${topic} is on your mind right now.`,
@@ -207,38 +237,52 @@ const getTopicAcknowledgment = (topic: string): string => {
 
 /**
  * Get an acknowledgment for an immediate concern
+ * Enhanced with more specific and empathetic responses
  */
 const getConcernAcknowledgment = (concern: string): string => {
   switch (concern) {
     case "wait_time":
-      return "I understand waiting can be frustrating.";
+      return "I understand waiting can be frustrating. Thanks for your patience.";
     case "pre_session_anxiety":
-      return "It's completely normal to feel nervous before a session.";
+      return "It's completely normal to feel nervous before a session. Many people experience that.";
     case "first_visit":
-      return "First visits can bring up a mix of emotions.";
+      return "First visits can bring up a mix of emotions. I'm glad you're here.";
     case "payment_concerns":
-      return "Financial considerations are definitely important.";
+      return "Financial considerations are definitely important. I understand your concern about that.";
+    case "spill_incident":
+      return "Accidents like spills happen to everyone. I understand that can be frustrating.";
+    case "spill_emotional_impact":
+      return "I hear that you're upset about the spill. Those small accidents can sometimes trigger bigger feelings.";
+    case "feeling_guilty":
+      return "Feeling guilty can be really uncomfortable. Thank you for sharing that with me.";
+    case "bad_day":
+      return "I'm sorry to hear you're having a rough day. That's never easy.";
+    case "lost_item":
+      return "Losing something important can be really frustrating. I understand why that would be upsetting.";
     default:
-      return "I hear your concern.";
+      return "I hear your concern. Thank you for sharing that with me.";
   }
 };
 
 /**
  * Get an acknowledgment for everyday topics
+ * Enhanced with more specific and empathetic responses
  */
 const getEverydayTopicAcknowledgment = (topic: string): string => {
   switch (topic) {
     case "work":
-      return "Work situations can definitely be challenging.";
+      return "Work situations can definitely be challenging. I understand why that would be on your mind.";
     case "school":
-      return "School pressures can really add up.";
+      return "School pressures can really add up. That sounds stressful.";
     case "family":
-      return "Family dynamics can be complex.";
+      return "Family dynamics can be complex. I appreciate you sharing about that.";
     case "relationship":
-      return "Relationships take a lot of navigation.";
+      return "Relationships take a lot of navigation. I understand why that would be important to you.";
     case "friends":
-      return "Friendship situations can be meaningful and sometimes difficult.";
+      return "Friendship situations can be meaningful and sometimes difficult. I hear that's on your mind.";
+    case "accident":
+      return "Even small accidents like spills can bring up strong feelings. I understand why that would be bothering you.";
     default:
-      return `That sounds like an important aspect of your life.`;
+      return `That sounds like an important aspect of your life. I'd like to hear more about it.`;
   }
 };
