@@ -239,20 +239,47 @@ export const detectSimpleNegativeState = (userInput: string): {
   const hasModerateNegative = moderateNegativePatterns.some(pattern => pattern.test(lowerInput));
   const hasSevereNegative = severeNegativePatterns.some(pattern => pattern.test(lowerInput));
   
-  // Extract explicitly stated feelings
+  // Extract explicitly stated feelings with improved patterns
   const explicitFeelings: string[] = [];
+  
+  // Expanded feeling words list
   const feelingWords = [
     'sad', 'upset', 'angry', 'mad', 'frustrated', 'annoyed', 'anxious', 'worried', 
     'scared', 'fearful', 'happy', 'glad', 'joyful', 'excited', 'tired', 'exhausted', 
-    'confused', 'lost', 'lonely', 'alone', 'depressed', 'down', 'bummed', 'disappointed'
+    'confused', 'lost', 'lonely', 'alone', 'depressed', 'down', 'bummed', 'disappointed',
+    'furious', 'pissed', 'irritated', 'stressed', 'overwhelmed', 'nervous', 'uneasy',
+    'concerned', 'hurt', 'bothered', 'aggravated'
   ];
   
-  // Look for feeling words preceded by "feeling" or "feel"
-  const feelingRegex = new RegExp(`(?:feel(?:ing)?|am) (?:a bit |a little |kind of |really |very |super |extremely )?(${feelingWords.join('|')})`, 'i');
-  const match = lowerInput.match(feelingRegex);
+  // More comprehensive patterns to catch feeling expressions
+  const feelingPatterns = [
+    // "I'm feeling X" / "I am feeling X" / "I feel X"
+    new RegExp(`(?:I(?:'m|\\s+am)\\s+(?:feeling|feel)|I\\s+feel)\\s+(?:a bit |a little |kind of |really |very |super |extremely )?(${feelingWords.join('|')})`, 'i'),
+    
+    // "feeling X" (standalone phrase)
+    new RegExp(`\\bfeeling\\s+(?:a bit |a little |kind of |really |very |super |extremely )?(${feelingWords.join('|')})\\b`, 'i'),
+    
+    // "I'm X" / "I am X" for emotion words
+    new RegExp(`\\bI(?:'m|\\s+am)\\s+(?:a bit |a little |kind of |really |very |super |extremely )?(${feelingWords.join('|')})\\b`, 'i'),
+    
+    // "just X" expressions
+    new RegExp(`\\bjust\\s+(?:a bit |a little |kind of |really |very |super |extremely )?(${feelingWords.join('|')})\\b`, 'i')
+  ];
   
-  if (match && match[1]) {
-    explicitFeelings.push(match[1]);
+  // Check all patterns for feelings
+  for (const pattern of feelingPatterns) {
+    const match = lowerInput.match(pattern);
+    if (match && match[1]) {
+      explicitFeelings.push(match[1]);
+      break; // Stop after finding the first match to avoid duplicates
+    }
+  }
+  
+  // Check for specific "frustrated" with context patterns
+  if (/\b(?:frustrated|annoyed|irritated|angry|mad|pissed)(?:\s+(?:at|with|about))?\s+(?:eric|therapist|doctor|appointment|waiting|late)/i.test(lowerInput)) {
+    if (!explicitFeelings.includes('frustrated')) {
+      explicitFeelings.push('frustrated');
+    }
   }
   
   // Determine intensity
@@ -281,21 +308,48 @@ export const generateSimpleNegativeStateResponse = (
   if (negativeStateInfo.explicitFeelings.length > 0) {
     const feeling = negativeStateInfo.explicitFeelings[0];
     
+    // Check for waiting-related frustration
+    const isWaitingRelated = /\b(?:wait|waiting|late|appointment|therapist|doctor|eric|schedule)\b/i.test(userInput.toLowerCase());
+    
+    if (isWaitingRelated) {
+      const waitingAcknowledgments = [
+        `I hear that you're feeling ${feeling} about waiting for your appointment.`,
+        `I can understand feeling ${feeling} when your appointment is delayed.`,
+        `It sounds like you're ${feeling} about the wait time.`,
+        `I hear your frustration about waiting for your appointment.`
+      ];
+      
+      const waitingFollowUps = [
+        "Waiting can be really challenging. Would it help to talk about what's on your mind while you wait?",
+        "How long have you been waiting?",
+        "What would help make the waiting more bearable right now?",
+        "What's been the most difficult part about waiting today?"
+      ];
+      
+      // Select random acknowledgment and follow-up
+      const acknowledgment = waitingAcknowledgments[Math.floor(Math.random() * waitingAcknowledgments.length)];
+      const followUp = waitingFollowUps[Math.floor(Math.random() * waitingFollowUps.length)];
+      
+      // Combine them
+      return `${acknowledgment} ${followUp}`;
+    }
+    
+    // Generic acknowledgments for other contexts
     const acknowledgeResponses = [
-      `I hear that you're feeling ${feeling}. That makes sense, especially with moving to a new country.`,
-      `Thanks for sharing that you're feeling ${feeling}. Moving to a new place can bring up a lot of emotions.`,
-      `I understand you're feeling ${feeling} right now. Moving to America must be quite an adjustment.`,
-      `It sounds like you're feeling ${feeling}. Moving to a new country can be really challenging.`
+      `I hear that you're feeling ${feeling}. That makes sense given what you've shared.`,
+      `Thanks for sharing that you're feeling ${feeling}. That's completely understandable.`,
+      `I understand you're feeling ${feeling} right now. That's an important emotion to recognize.`,
+      `It sounds like you're feeling ${feeling}. I appreciate you sharing that with me.`
     ];
     
     // Select a random acknowledgment response
     const acknowledgment = acknowledgeResponses[Math.floor(Math.random() * acknowledgeResponses.length)];
     
     const followUpQuestions = [
-      "What's been the hardest part of the transition so far?",
-      "How long have you been here?",
-      "What aspects of this change have been most difficult for you?",
-      "Would it help to talk more about what's been going on?"
+      "What's contributing most to this feeling right now?",
+      "How long have you been feeling this way?",
+      "What might help support you through this feeling?",
+      "Would it help to talk more about what's going on?"
     ];
     
     // Select a random follow-up question

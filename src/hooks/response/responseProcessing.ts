@@ -31,6 +31,17 @@ export const useResponseProcessing = ({
   ): Promise<MessageType> => {
     setIsTyping(true);
     
+    // Check for explicitly stated feelings as highest priority
+    const negativeStateInfo = detectSimpleNegativeState(userInput);
+    const hasExplicitFeelings = negativeStateInfo.isNegativeState && 
+                               negativeStateInfo.explicitFeelings.length > 0;
+    
+    // Prioritize response to explicit feelings
+    if (hasExplicitFeelings) {
+      // Give explicit feeling responses slightly faster response time
+      responseTimeMultiplier = 0.9;
+    }
+    
     // Detect any concerns in the user message
     const concernType = detectConcernsFn(userInput);
     

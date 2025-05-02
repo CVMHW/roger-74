@@ -1,9 +1,20 @@
 
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
-import { detectMildSomaticComplaints } from '../../utils/conversationalUtils';
+import { detectMildSomaticComplaints, detectSimpleNegativeState } from '../../utils/conversationalUtils';
 
 export const useConcernDetection = () => {
   const detectConcerns = (userInput: string): ConcernType | null => {
+    // First check for explicit feelings related to waiting/appointments
+    const negativeStateInfo = detectSimpleNegativeState(userInput);
+    const isWaitingFrustration = 
+      negativeStateInfo.explicitFeelings.length > 0 && 
+      /\b(?:wait|waiting|late|appointment|therapist|doctor|eric|schedule)\b/i.test(userInput.toLowerCase());
+    
+    if (isWaitingFrustration) {
+      // This is not a clinical concern but an appropriate frustration
+      return null;
+    }
+    
     // Check if this is a mild somatic complaint from overwork
     const somaticInfo = detectMildSomaticComplaints(userInput);
     if (somaticInfo.isMildSomatic && somaticInfo.likelyFromOverwork) {

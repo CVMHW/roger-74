@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { MessageType } from '../components/Message';
 import useTypingEffect from './useTypingEffect';
@@ -166,20 +165,14 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     
     // HIGHEST PRIORITY: Check for explicitly stated feelings first
     const negativeStateInfo = detectSimpleNegativeState(userInput);
-    if (negativeStateInfo.isNegativeState && 
-        (negativeStateInfo.explicitFeelings.length > 0 || negativeStateInfo.intensity !== 'mild')) {
-      // User has explicitly stated how they feel - always acknowledge this first
+    if (negativeStateInfo.isNegativeState) {
+      // User has explicitly stated how they feel or is in a negative state - always acknowledge this first
       updateStage();
       
       // Generate response that acknowledges their stated feelings
       return baseProcessUserMessage(
         userInput,
-        (input) => {
-          // Always prioritize the explicitly stated feeling
-          return detectSimpleNegativeState(input).explicitFeelings.length > 0
-            ? generateSimpleNegativeStateResponse(input, detectSimpleNegativeState(input))
-            : generateResponse(input, null);
-        },
+        (input) => generateSimpleNegativeStateResponse(input, negativeStateInfo),
         () => null // No concern needed here as we're handling the emotional state directly
       );
     }

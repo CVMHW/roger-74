@@ -221,8 +221,8 @@ export const useResponseGenerator = ({
     try {
       // HIGHEST PRIORITY: Check for explicitly stated feelings first
       const negativeStateInfo = detectSimpleNegativeState(userInput);
-      if (negativeStateInfo.isNegativeState && negativeStateInfo.explicitFeelings.length > 0) {
-        // Always acknowledge explicitly stated feelings first
+      if (negativeStateInfo.isNegativeState) {
+        // Always acknowledge explicitly stated feelings or emotional states first
         return generateSimpleNegativeStateResponse(userInput, negativeStateInfo);
       }
       
@@ -230,11 +230,6 @@ export const useResponseGenerator = ({
       const politicalInfo = detectPoliticalEmotions(userInput);
       if (politicalInfo.isPolitical) {
         return generatePoliticalEmotionResponse(userInput, politicalInfo);
-      }
-      
-      // THIRD HIGHEST: Check for simple negative state expressions without explicit feelings
-      if (negativeStateInfo.isNegativeState) {
-        return generateSimpleNegativeStateResponse(userInput, negativeStateInfo);
       }
       
       // Check for defensive reactions to mental health suggestions
