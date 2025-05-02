@@ -94,6 +94,36 @@ export const miPrinciples = {
         ]
       }
     ]
+  },
+  
+  misconceptions: {
+    description: "Common misconceptions about MI and their clarifications",
+    items: [
+      {
+        misconception: "MI is a form of nondirective, Rogerian therapy.",
+        clarification: "MI shares many principles of the humanistic, person-centered approach pioneered by Rogers, but it is not Rogerian therapy. Characteristics that differentiate MI include clearly identified target behaviors and change goals and differential evoking and strengthening of clients' motivation for changing target behavior. Unlike Rogerian therapy, MI has a strategic component that emphasizes helping clients move toward a specific behavioral change goal."
+      },
+      {
+        misconception: "MI is a counseling technique.",
+        clarification: "Although there are specific MI counseling strategies, MI is not a counseling technique. It is a style of being with people that uses specific clinical skills to foster motivation to change."
+      },
+      {
+        misconception: "MI is a 'school' of counseling or psychotherapy.",
+        clarification: "Some psychological theories underlie the spirit and style of MI, but it was not meant to be a theory of change with a comprehensive set of associated clinical skills."
+      },
+      {
+        misconception: "MI and the SOC approach are the same.",
+        clarification: "MI and the Stages of Change (SOC) were developed around the same time, and people confuse the two approaches. MI is not the SOC. MI is not an essential part of the SOC and vice versa. They are compatible and complementary. MI is also compatible with counseling approaches like cognitive-behavioral therapy (CBT)."
+      },
+      {
+        misconception: "MI always uses assessment feedback.",
+        clarification: "Assessment feedback delivered in the MI style was an adaptation of MI that became motivational enhancement therapy (MET). Although personalized feedback may be helpful to enhance motivation with clients who are on the lower end of the readiness to change spectrum, it is not a necessary part of MI."
+      },
+      {
+        misconception: "Counselors can motivate clients to change.",
+        clarification: "You cannot manufacture motivation that is not already in clients. MI does not motive clients to change or to move toward a predetermined treatment goal. It is a collaborative partnership between you and clients to discover their motivation to change. It respects client autonomy and self-determination about goals for behavior change."
+      }
+    ]
   }
 };
 
@@ -108,7 +138,24 @@ export const miSkills = {
         "What brings you here today?",
         "How would you like things to be different?",
         "What have you tried before that was helpful?",
-        "How do you feel about making this change?"
+        "How do you feel about making this change?",
+        "How can I help you with ___?",
+        "Help me understand ___?",
+        "What are the good things about ___ and what are the less good things about it?",
+        "When would you be most likely to___?",
+        "What do you think you will lose if you give up ___?",
+        "What have you tried before to make a change?",
+        "What do you want to do next?"
+      ],
+      contrastWithClosed: [
+        {
+          closed: "Did you have a good relationship with your parents?",
+          open: "What can you tell me about your relationship with your parents?"
+        },
+        {
+          closed: "Do you want to change this behavior?",
+          open: "What thoughts do you have about this behavior?"
+        }
       ]
     },
     {
@@ -118,27 +165,43 @@ export const miSkills = {
         "You've shown a lot of persistence in facing these challenges.",
         "That took a lot of courage to share.",
         "You're clearly someone who cares deeply about your family.",
-        "You've put a lot of thought into this decision."
-      ]
+        "You've put a lot of thought into this decision.",
+        "I appreciate that you are willing to meet with me today.",
+        "You are clearly a very resourceful person.",
+        "You handled yourself really well in that situation.",
+        "That's a good suggestion.",
+        "If I were in your shoes, I don't know if I could have managed nearly so well.",
+        "I've enjoyed talking with you today."
+      ],
+      purpose: "Affirmations build confidence in one's ability to change. To be effective, affirmations must be genuine and congruent."
     },
     {
       name: "Reflective Listening",
       description: "Statements that convey understanding of what the person has said and often add meaning or emphasis.",
+      importance: "Reflective listening is a primary skill in outreach. It is the pathway for engaging others in relationships, building trust, and fostering motivation to change. It takes hard work and skill to do well.",
       types: [
         {
-          name: "Simple Reflection",
-          description: "Repeats or slightly rephrases what the person said.",
+          name: "Simple Reflection (Repeating or rephrasing)",
+          description: "Listener repeats or substitutes synonyms or phrases, and stays close to what the speaker has said.",
           examples: [
             "So you're finding it hard to manage your time.",
             "You're worried about how this might affect your relationship."
           ]
         },
         {
-          name: "Complex Reflection",
-          description: "Makes a guess about unspoken meaning, feeling, or implies what might come next.",
+          name: "Paraphrasing",
+          description: "Listener makes a restatement in which the speaker's meaning is inferred.",
           examples: [
-            "It sounds like you're feeling torn between what you want and what others expect of you.",
-            "Underneath that frustration, there seems to be a real desire to improve this situation."
+            "What I hear you saying is that this has been difficult but you're determined to get through it.",
+            "It seems like you're torn between wanting to help and feeling overwhelmed."
+          ]
+        },
+        {
+          name: "Reflection of feeling",
+          description: "Listener emphasizes emotional aspects of communication through feeling statements. This is the deepest form of listening.",
+          examples: [
+            "You're feeling hopeful about these changes.",
+            "It sounds like you're frustrated that progress isn't happening faster."
           ]
         }
       ],
@@ -148,7 +211,21 @@ export const miSkills = {
         "So you're saying that...",
         "You're feeling like...",
         "From your point of view...",
-        "It seems to you that..."
+        "It seems to you that...",
+        "So you feel…",
+        "It sounds like you…",
+        "You're wondering if…"
+      ],
+      breakdowns: [
+        "Speaker does not say what is meant",
+        "Listener does not hear correctly",
+        "Listener gives a different interpretation to what the words mean"
+      ],
+      techniques: [
+        "Voice turns down at the end of a reflective listening statement",
+        "Varying the levels of reflection is effective in listening",
+        "Overstating a reflection may cause a person to back away from their position",
+        "Understating a reflection may help a person explore a deeper commitment"
       ]
     },
     {
@@ -159,6 +236,27 @@ export const miSkills = {
         "To link together related ideas the person has expressed",
         "To transition to a new topic",
         "To highlight change talk that's been expressed"
+      ],
+      structure: [
+        "Begin with a statement indicating you are making a summary (e.g., 'Let me see if I understand so far…')",
+        "Give special attention to Change Statements",
+        "If the person expresses ambivalence, include both sides ('On the one hand...on the other hand...')",
+        "Include objective information when relevant",
+        "Be concise",
+        "End with an invitation (e.g., 'Did I miss anything?')",
+        "Based on response, may lead to planning concrete steps"
+      ],
+      starters: [
+        "Let me see if I understand so far…",
+        "Here is what I've heard. Tell me if I've missed anything.",
+        "Let me try to summarize what we've discussed...",
+        "So far you've shared..."
+      ],
+      endInvitations: [
+        "Did I miss anything?",
+        "If that's accurate, what other points are there to consider?",
+        "Is there anything you want to add or correct?",
+        "How does that sound to you?"
       ]
     }
   ]
@@ -219,6 +317,27 @@ export const changeLanguage = {
       "I've tried before and it didn't work.",
       "I enjoy it too much to give it up.",
       "I don't think I can do it."
+    ]
+  },
+  changeStatements: {
+    description: "Four types of change statements identified by Miller and Rollnick",
+    types: [
+      {
+        name: "Problem recognition",
+        example: "My use has gotten a little out of hand at times."
+      },
+      {
+        name: "Concern",
+        example: "If I don't stop, something bad is going to happen."
+      },
+      {
+        name: "Intent to change",
+        example: "I'm going to do something, I'm just not sure what it is yet."
+      },
+      {
+        name: "Optimism",
+        example: "I know I can get a handle on this problem."
+      }
     ]
   }
 };
@@ -394,6 +513,24 @@ export const miForPeerSupport = {
         integration: "MI modifies nondirectiveness by strategically guiding toward change talk while still honoring autonomy."
       }
     ]
+  },
+  
+  patientAsOwnExpert: {
+    description: "Core belief that the patient/client is the ultimate expert on their own life",
+    principles: [
+      "The person has unique insights into their own experiences that no practitioner can fully understand",
+      "The person has the right to self-determination and making their own decisions",
+      "The person brings their own wisdom, values, and perspective that should be honored",
+      "The practitioner's role is to help the person access and apply their own expertise",
+      "Enhancing the person's sense of autonomy increases their engagement and motivation"
+    ],
+    practices: [
+      "Ask the person what has worked for them in the past",
+      "Follow their lead when setting priorities and goals",
+      "Explicitly acknowledge their unique expertise about their own situation",
+      "View resistance as a sign that the practitioner may be imposing their own agenda",
+      "Always check how suggestions or information fits with the person's understanding"
+    ]
   }
 };
 
@@ -405,14 +542,20 @@ export const generateMIResponse = (userMessage: string): string | null => {
   const containsChangeTalk = detectChangeTalk(lowerMessage);
   const containsAmbivalence = detectAmbivalence(lowerMessage);
   const containsReasons = detectReasons(lowerMessage);
+  const containsQuestionsAboutChange = detectQuestionsAboutChange(lowerMessage);
+  const containsDoubtOrLackOfConfidence = detectDoubtOrLackOfConfidence(lowerMessage);
   
   // Generate appropriate MI-style responses based on what's detected
-  if (containsChangeTalk) {
+  if (containsQuestionsAboutChange) {
+    return respondToQuestionsAboutChange(lowerMessage);
+  } else if (containsChangeTalk) {
     return respondToChangeTalk(lowerMessage);
   } else if (containsAmbivalence) {
     return respondToAmbivalence(lowerMessage);
   } else if (containsReasons) {
     return respondToReasons(lowerMessage);
+  } else if (containsDoubtOrLackOfConfidence) {
+    return respondToDoubtOrLackOfConfidence(lowerMessage);
   }
   
   return null; // Return null if no MI-specific response is appropriate
@@ -451,6 +594,26 @@ function detectReasons(message: string): boolean {
   return reasonPatterns.some(pattern => message.includes(pattern));
 }
 
+function detectQuestionsAboutChange(message: string): boolean {
+  const questionPatterns = [
+    'how can i', 'how do i', 'what should i', 'what could i', 'how would i',
+    'how to', 'what if i', 'is it possible', 'do you think i should',
+    'wondering if', 'not sure how', 'don\'t know how', 'help me'
+  ];
+  
+  return questionPatterns.some(pattern => message.includes(pattern));
+}
+
+function detectDoubtOrLackOfConfidence(message: string): boolean {
+  const doubtPatterns = [
+    'don\'t think i can', 'not sure if i can', 'tried before', 'failed', 'difficult',
+    'hard to', 'challenging', 'struggle', 'worried', 'fear', 'afraid', 'doubt',
+    'not confident', 'impossible', 'too much', 'overwhelming'
+  ];
+  
+  return doubtPatterns.some(pattern => message.includes(pattern));
+}
+
 function respondToChangeTalk(message: string): string {
   // Responses that reinforce change talk
   const changeTalkResponses = [
@@ -459,7 +622,9 @@ function respondToChangeTalk(message: string): string {
     "It seems like you're considering some changes. What do you think would be different if you decided to move forward with this?",
     "You've mentioned some reasons why change might be beneficial. What else would improve in your life if you made this change?",
     "It sounds like you have some thoughts about making changes. What steps have you considered taking?",
-    "I'm noticing your determination coming through. What gives you confidence that you could succeed with this change if you decided to move forward?"
+    "I'm noticing your determination coming through. What gives you confidence that you could succeed with this change if you decided to move forward?",
+    "You're starting to think about making a change. What might be some of the benefits if you decide to move in that direction?",
+    "I appreciate you sharing your thoughts about making a change. What would success look like for you?"
   ];
   
   return changeTalkResponses[Math.floor(Math.random() * changeTalkResponses.length)];
@@ -473,7 +638,9 @@ function respondToAmbivalence(message: string): string {
     "You seem to be weighing both the benefits and the challenges of making a change. What feels most important to you as you consider this decision?",
     "I'm hearing some uncertainty in your thoughts about this. What would help you gain more clarity about what you want to do?",
     "It's completely normal to have these mixed feelings when considering a change. What are the main things pulling you in different directions?",
-    "You're noticing both reasons to change and reasons to stay the same. If we put those on a scale, which way does it tip for you right now?"
+    "You're noticing both reasons to change and reasons to stay the same. If we put those on a scale, which way does it tip for you right now?",
+    "It makes sense that you'd have some mixed feelings about this. What's one thing that makes you think change might be beneficial?",
+    "You've shared some thoughtful points both for and against making a change. What matters most to you when you think about your options?"
   ];
   
   return ambivalenceResponses[Math.floor(Math.random() * ambivalenceResponses.length)];
@@ -487,9 +654,42 @@ function respondToReasons(message: string): string {
     "Thank you for sharing those reasons with me. What else matters to you about making this change?",
     "Those are important considerations. How do these reasons connect to what you value most in life?",
     "I appreciate you explaining your thinking behind this. Of all the reasons you mentioned, which one feels most significant to you?",
-    "Those are thoughtful reasons. How long have these matters been important to you?"
+    "Those are thoughtful reasons. How long have these matters been important to you?",
+    "You've given this careful thought. How do these reasons align with your broader goals?",
+    "It sounds like you have several reasons for considering this change. How do these reasons affect your motivation to move forward?"
   ];
   
   return reasonResponses[Math.floor(Math.random() * reasonResponses.length)];
 }
 
+function respondToQuestionsAboutChange(message: string): string {
+  // Responses that empower the person to explore their own answers
+  const questionResponses = [
+    "That's an important question. What ideas have you already considered?",
+    "You're thinking about how to approach this situation. What has worked for you in similar situations in the past?",
+    "I'm wondering what your thoughts are about that question. What options seem most promising to you?",
+    "That's something many people wonder about. What would you see as a good first step?",
+    "You're exploring how to move forward. What would be most important to you in finding an approach that works?",
+    "It's great that you're thinking about these questions. What would success look like to you?",
+    "You're considering how to approach this. What strengths do you have that might help you with this?",
+    "That's a thoughtful question. What factors do you think would be most important to consider?"
+  ];
+  
+  return questionResponses[Math.floor(Math.random() * questionResponses.length)];
+}
+
+function respondToDoubtOrLackOfConfidence(message: string): string {
+  // Responses that explore and build confidence
+  const confidenceResponses = [
+    "It sounds like you have some concerns about whether you can make this change. What would help you feel more confident?",
+    "Many people have doubts when they're considering a change. What's one small step that would feel manageable for you?",
+    "You've mentioned some challenges you anticipate. What strengths or resources do you have that might help you overcome these?",
+    "It's completely normal to have doubts. What's helped you succeed with difficult changes in the past?",
+    "You're recognizing that this might be challenging. On a scale of 1 to 10, how confident do you feel that you could make this change if you decided to?",
+    "When you've faced obstacles in the past, what strategies have helped you push through?",
+    "It sounds like you're concerned about how difficult this might be. What would make this feel more doable for you?",
+    "You're recognizing some barriers to change. Which of these feels most important to address first?"
+  ];
+  
+  return confidenceResponses[Math.floor(Math.random() * confidenceResponses.length)];
+}

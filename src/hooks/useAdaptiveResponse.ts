@@ -19,18 +19,38 @@ export const useAdaptiveResponse = () => {
     // Look for indicators that might suggest which approach is most helpful
     const containsChangeTalk = userInput.toLowerCase().includes('change') || 
                                userInput.toLowerCase().includes('want to') ||
-                               userInput.toLowerCase().includes('thinking about');
+                               userInput.toLowerCase().includes('thinking about') ||
+                               userInput.toLowerCase().includes('goal') ||
+                               userInput.toLowerCase().includes('plan') ||
+                               userInput.toLowerCase().includes('should') ||
+                               userInput.toLowerCase().includes('need to');
                                
     const containsAmbivalence = userInput.toLowerCase().includes('but') ||
                                 userInput.toLowerCase().includes('not sure') ||
-                                userInput.toLowerCase().includes('conflicted');
+                                userInput.toLowerCase().includes('conflicted') ||
+                                userInput.toLowerCase().includes('part of me') ||
+                                userInput.toLowerCase().includes('on the other hand') ||
+                                userInput.toLowerCase().includes('might');
                                 
     const containsExploration = userInput.toLowerCase().includes('feel') ||
                                 userInput.toLowerCase().includes('understand') ||
                                 userInput.toLowerCase().includes('why');
     
-    // First try a Motivational Interviewing response if change talk is detected
-    if (containsChangeTalk || containsAmbivalence) {
+    const containsQuestionsAboutChange = userInput.toLowerCase().includes('how can i') ||
+                                         userInput.toLowerCase().includes('how do i') ||
+                                         userInput.toLowerCase().includes('what should i') ||
+                                         userInput.toLowerCase().includes('help me') ||
+                                         userInput.toLowerCase().includes('not sure how');
+    
+    const containsDoubtOrLackOfConfidence = userInput.toLowerCase().includes('can\'t') ||
+                                            userInput.toLowerCase().includes('hard') ||
+                                            userInput.toLowerCase().includes('difficult') ||
+                                            userInput.toLowerCase().includes('tried before') ||
+                                            userInput.toLowerCase().includes('failed') ||
+                                            userInput.toLowerCase().includes('worried');
+    
+    // First try a Motivational Interviewing response if change talk, ambivalence or questions about change are detected
+    if (containsChangeTalk || containsAmbivalence || containsQuestionsAboutChange || containsDoubtOrLackOfConfidence) {
       const miResponse = generateMIResponse(userInput);
       if (miResponse) {
         setCurrentApproach('mi');
