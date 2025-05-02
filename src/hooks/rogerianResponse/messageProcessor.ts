@@ -22,6 +22,40 @@ export const processUserMessage = async (
   updateStage: () => void
 ): Promise<MessageType> => {
   try {
+    // CRITICAL: Check for suicide/self-harm mentions first, with highest priority
+    // This ensures these messages are never missed
+    const concernType = detectConcerns(userInput);
+    
+    // Immediately handle suicide/self-harm concerns
+    if (concernType === 'tentative-harm') {
+      console.log("CRITICAL: Processing suicide/self-harm concern");
+      // Update conversation stage
+      updateStage();
+      
+      // Always use safety response generator for these critical messages
+      return baseProcessUserMessage(
+        userInput,
+        () => generateSafetyResponse(userInput, 'tentative-harm', clientPreferences, conversationHistory),
+        () => 'tentative-harm' as ConcernType,
+        1.0 // No delay for critical concerns
+      );
+    }
+    
+    // Similarly prioritize crisis concerns
+    if (concernType === 'crisis') {
+      console.log("CRITICAL: Processing crisis concern");
+      // Update conversation stage
+      updateStage();
+      
+      // Always use safety response generator for these critical messages
+      return baseProcessUserMessage(
+        userInput,
+        () => generateSafetyResponse(userInput, 'crisis', clientPreferences, conversationHistory),
+        () => 'crisis' as ConcernType,
+        1.0 // No delay for critical concerns
+      );
+    }
+    
     // Check for special case patterns
     const { detectSpecialCasePatterns } = await import('./specialCaseDetection');
     const {
@@ -45,7 +79,7 @@ export const processUserMessage = async (
       return baseProcessUserMessage(
         userInput,
         () => inpatientInfoResponse,
-        () => detectConcerns(userInput)
+        () => concernType
       );
     }
     
@@ -111,9 +145,6 @@ export const processUserMessage = async (
       console.error("Error checking for illness mentions:", error);
     }
     
-    // Check for safety concerns to prioritize deescalation and customer service
-    const concernType = detectConcerns(userInput);
-    
     // For weather-related concerns, use our specialized response generator
     if (concernType === 'weather-related') {
       const weatherResponse = generateWeatherRelatedResponse(userInput);
@@ -138,7 +169,7 @@ export const processUserMessage = async (
         userInput,
         () => generateSafetyResponse(userInput, concernType, clientPreferences, conversationHistory),
         () => concernType,
-        1.3 // Increase response time for safety concerns
+        1.0 // No delay for critical concerns
       );
     }
     
@@ -160,9 +191,9 @@ export const processUserMessage = async (
     );
   } catch (error) {
     console.error("Error in processUserMessage:", error);
-    // Return a fallback response if an error occurs
+    // Return a fallback response if an error occurs - even in error, provide a supportive response
     return Promise.resolve(createMessage(
-      "I'm sorry, I'm having trouble responding right now. Could you try again?", 
+      "I'm here to listen and support you. What's been going on?", 
       'roger'
     ));
   }

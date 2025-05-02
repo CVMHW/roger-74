@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { MessageType } from '../../components/Message';
 import { isLocationDataNeeded } from '../../utils/messageUtils';
 import { createMessage } from '../../utils/messageUtils';
+import { ConcernType } from '../../utils/reflection/reflectionTypes';
 
 interface MessageProcessorProps {
   processUserMessage: (userInput: string) => Promise<MessageType>;
@@ -27,7 +28,16 @@ export const useMessageProcessor = ({
   updateRogerResponseHistory
 }: MessageProcessorProps) => {
   
+  // Function to check for critical keywords in user input
+  const containsCriticalKeywords = (text: string): boolean => {
+    const lowerText = text.toLowerCase().trim();
+    return /suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)|don'?t want to (live|be alive)|take my (own )?life|killing myself|commit suicide|die by suicide|fatal overdose|hang myself|jump off|i wish i was dead|i want to die|i might kill|crisis|emergency|urgent|need help now|immediate danger/.test(lowerText);
+  };
+  
   const processResponse = useCallback((userInput: string) => {
+    // Check if this is a potentially critical message
+    const isCritical = containsCriticalKeywords(userInput);
+    
     // Process user input to generate Roger's response
     processUserMessage(userInput)
       .then(rogerResponse => {
@@ -53,6 +63,9 @@ export const useMessageProcessor = ({
             });
           }
           
+          // For critical messages, use a faster typing simulation
+          const typingDuration = isCritical ? 500 : undefined; // Faster typing for critical messages
+          
           // Simulate typing with a callback to update the message text
           simulateTypingResponse(rogerResponse.text, (text) => {
             setMessages(prevMessages => 
@@ -60,30 +73,53 @@ export const useMessageProcessor = ({
                 msg.id === rogerResponse.id ? { ...msg, text } : msg
               )
             );
-          });
+          }, typingDuration);
         } catch (innerError) {
           console.error("Error processing Roger's response:", innerError);
+          
+          // Critical fallback for error cases
+          const fallbackResponse = createMessage(
+            isCritical 
+              ? "I'm concerned about what you're sharing. If you're in crisis or having thoughts about harming yourself, please reach out to a crisis hotline or emergency services immediately." 
+              : "I'm here to listen. What would you like to talk about?",
+            'roger',
+            isCritical ? ('crisis' as ConcernType) : null
+          );
+          
+          setMessages(prevMessages => [...prevMessages, fallbackResponse]);
+          
+          // Simulate typing for the error response
+          simulateTypingResponse(fallbackResponse.text, (text) => {
+            setMessages(prevMessages => 
+              prevMessages.map(msg => 
+                msg.id === fallbackResponse.id ? { ...msg, text } : msg
+              )
+            );
+          }, isCritical ? 500 : undefined);
         }
       })
       .catch(error => {
         console.error("Error generating response:", error);
         
-        // Add a fallback response in case of error
+        // Add a fallback response in case of error - more urgent for critical messages
         const errorResponse = createMessage(
-          "I'm sorry, I'm having trouble responding right now. Could you try again?",
-          'roger'
+          isCritical 
+            ? "I notice you may be in crisis. If you're having thoughts of harming yourself, please reach out to a crisis hotline or emergency services immediately. I'm here to support you." 
+            : "I'm sorry, I'm having trouble responding right now. I'm here to listen when you're ready to continue.",
+          'roger',
+          isCritical ? ('crisis' as ConcernType) : null
         );
         
         setMessages(prevMessages => [...prevMessages, errorResponse]);
         
-        // Simulate typing for the error response
+        // Simulate typing for the error response - faster for critical messages
         simulateTypingResponse(errorResponse.text, (text) => {
           setMessages(prevMessages => 
             prevMessages.map(msg => 
               msg.id === errorResponse.id ? { ...msg, text } : msg
             )
           );
-        });
+        }, isCritical ? 500 : undefined);
       });
   }, [
     processUserMessage, 

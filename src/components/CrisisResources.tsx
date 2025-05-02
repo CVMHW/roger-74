@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
@@ -7,10 +7,21 @@ import {
   CollapsibleContent,
   CollapsibleTrigger
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Phone, Info, HelpCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, Phone, Info, HelpCircle, AlertTriangle } from 'lucide-react';
 
-const CrisisResources = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface CrisisResourcesProps {
+  forceOpen?: boolean;
+}
+
+const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) => {
+  const [isOpen, setIsOpen] = useState(forceOpen);
+  
+  // If forceOpen prop changes, update isOpen state
+  useEffect(() => {
+    if (forceOpen) {
+      setIsOpen(true);
+    }
+  }, [forceOpen]);
 
   return (
     <Collapsible 
@@ -21,25 +32,33 @@ const CrisisResources = () => {
       <CollapsibleTrigger asChild>
         <Button 
           variant="outline" 
-          className="w-full flex justify-between items-center p-5 border-b bg-cvmhw-light hover:bg-blue-100 relative"
+          className={`w-full flex justify-between items-center p-5 border-b ${forceOpen ? 'bg-red-50 hover:bg-red-100' : 'bg-cvmhw-light hover:bg-blue-100'} relative`}
         >
           <div className="flex items-center gap-3 text-cvmhw-purple">
             <div className="relative">
-              <Info size={24} className="text-cvmhw-blue" />
+              {forceOpen ? (
+                <AlertTriangle size={24} className="text-red-500" />
+              ) : (
+                <Info size={24} className="text-cvmhw-blue" />
+              )}
               <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cvmhw-pink opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-cvmhw-pink"></span>
+                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${forceOpen ? 'bg-red-500' : 'bg-cvmhw-pink'} opacity-75`}></span>
+                <span className={`relative inline-flex rounded-full h-3 w-3 ${forceOpen ? 'bg-red-500' : 'bg-cvmhw-pink'}`}></span>
               </span>
             </div>
-            <span className="font-semibold text-lg">Crisis Resources & Support</span>
-            <div className="bg-blue-50 p-1 rounded-md flex items-center border border-blue-100 ml-2 animate-pulse">
-              <HelpCircle size={16} className="text-cvmhw-blue mr-1" />
-              <span className="text-xs text-cvmhw-purple font-medium">Available 24/7</span>
+            <span className={`font-semibold text-lg ${forceOpen ? 'text-red-700' : ''}`}>
+              {forceOpen ? 'IMMEDIATE Crisis Resources & Support' : 'Crisis Resources & Support'}
+            </span>
+            <div className={`${forceOpen ? 'bg-red-100' : 'bg-blue-50'} p-1 rounded-md flex items-center border ${forceOpen ? 'border-red-200' : 'border-blue-100'} ml-2 animate-pulse`}>
+              <HelpCircle size={16} className={forceOpen ? 'text-red-600 mr-1' : 'text-cvmhw-blue mr-1'} />
+              <span className={`text-xs font-medium ${forceOpen ? 'text-red-700' : 'text-cvmhw-purple'}`}>Available 24/7</span>
             </div>
           </div>
           <div className="flex items-center">
-            <div className="mr-3 bg-cvmhw-light p-1.5 rounded-full border border-cvmhw-blue">
-              <span className="text-xs text-cvmhw-purple font-medium whitespace-nowrap">Click to view resources</span>
+            <div className={`mr-3 ${forceOpen ? 'bg-red-50' : 'bg-cvmhw-light'} p-1.5 rounded-full border ${forceOpen ? 'border-red-300' : 'border-cvmhw-blue'}`}>
+              <span className={`text-xs font-medium whitespace-nowrap ${forceOpen ? 'text-red-700' : 'text-cvmhw-purple'}`}>
+                {isOpen ? 'Click to hide resources' : 'Click to view resources'}
+              </span>
             </div>
             {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </div>
@@ -49,6 +68,19 @@ const CrisisResources = () => {
       <CollapsibleContent>
         <ScrollArea className="h-80 p-5 crisis-resources-scroll">
           <div className="space-y-6">
+            {forceOpen && (
+              <div className="p-4 bg-red-50 border border-red-300 rounded-lg mb-4">
+                <h3 className="text-red-700 font-bold flex items-center gap-2 mb-2">
+                  <AlertTriangle size={20} />
+                  <span>Immediate Help Available</span>
+                </h3>
+                <p className="text-red-700">
+                  If you or someone you know is in immediate danger, please call 911 or your local emergency services immediately.
+                  You can also call or text 988 to reach the Suicide and Crisis Lifeline, available 24/7.
+                </p>
+              </div>
+            )}
+            
             <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md border border-blue-100">
               Please use the resources below for immediate relief of symptoms and contact one of the relevant crisis resources or 911 for immediate assistance.
             </p>
@@ -88,13 +120,13 @@ const CrisisResources = () => {
             <ResourceCategory 
               title="Ohio State & National"
               resources={[
+                { label: "National Suicide Prevention Hotline", phone: "988", isPrimary: true },
                 { label: "Ohio Gambling Hotline", phone: "888-532-3500" },
                 { label: "Ohio Veteran Crisis Line", phone: "800-273-8255" },
                 { label: "Ohio Crisis Text Line", phone: "Text 241-241" },
                 { label: "Trevor Project LGBTQ+ Sensitive Crisis Emergencies", phone: "866-488-7386" },
                 { label: "Ohio Trans Lifeline", phone: "877-565-8860" },
                 { label: "Domestic Violence Lifeline", phone: "330-453-7233" },
-                { label: "National Suicide Prevention Hotline", phone: "800-273-8255" },
                 { label: "Opiate Hotline", phone: "330-453-4357" },
                 { label: "United Way of Ohio", phone: "211" }
               ]}
@@ -121,15 +153,16 @@ interface ResourceItemProps {
   label: string;
   phone: string;
   extension?: string;
+  isPrimary?: boolean;
 }
 
-const ResourceItem: React.FC<ResourceItemProps> = ({ label, phone, extension }) => {
+const ResourceItem: React.FC<ResourceItemProps> = ({ label, phone, extension, isPrimary }) => {
   return (
-    <div className="flex justify-between items-center py-2 px-3 text-sm hover:bg-cvmhw-light rounded transition-colors">
-      <span className="font-medium">{label}</span>
+    <div className={`flex justify-between items-center py-2 px-3 text-sm ${isPrimary ? 'bg-red-50 rounded-md border border-red-200' : 'hover:bg-cvmhw-light rounded transition-colors'}`}>
+      <span className={`font-medium ${isPrimary ? 'text-red-700' : ''}`}>{label}</span>
       <a 
         href={`tel:${phone.replace(/\D/g, '')}`} 
-        className="flex items-center gap-2 text-cvmhw-blue hover:text-cvmhw-purple"
+        className={`flex items-center gap-2 ${isPrimary ? 'text-red-600 hover:text-red-800' : 'text-cvmhw-blue hover:text-cvmhw-purple'}`}
       >
         <Phone size={16} className="shrink-0" />
         <span>{phone}{extension ? `, ext. ${extension}` : ""}</span>
@@ -144,6 +177,7 @@ interface ResourceCategoryProps {
     label: string;
     phone: string;
     extension?: string;
+    isPrimary?: boolean;
   }>;
 }
 
@@ -158,6 +192,7 @@ const ResourceCategory: React.FC<ResourceCategoryProps> = ({ title, resources })
             label={resource.label}
             phone={resource.phone}
             extension={resource.extension}
+            isPrimary={resource.isPrimary}
           />
         ))}
       </div>

@@ -3,7 +3,23 @@ import { ConcernType } from '../../utils/reflection/reflectionTypes';
 import { detectMildSomaticComplaints, detectSimpleNegativeState } from '../../utils/conversationalUtils';
 
 export const useConcernDetection = () => {
-  const detectConcerns = (userInput: string): ConcernType | null => {
+  const detectConcerns = (userInput: string): ConcernType => {
+    // Normalize input for more consistent detection
+    const lowerInput = userInput.toLowerCase().trim();
+    
+    // HIGHEST PRIORITY: Check for suicidal ideation or self-harm - make this check first
+    // and ensure it's very sensitive to catch any potential mentions
+    if (/suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)|don'?t want to (live|be alive)|take my (own )?life|killing myself|commit suicide|die by suicide|fatal overdose|hang myself|jump off|i wish i was dead|i want to die|i might kill/i.test(lowerInput)) {
+      console.log("CRITICAL: Detected suicide concern in message:", lowerInput);
+      return 'tentative-harm';
+    }
+    
+    // Check for crisis situations - also high sensitivity
+    if (/crisis|emergency|urgent|need help now|immediate danger|threat|safety risk/i.test(lowerInput)) {
+      console.log("CRITICAL: Detected crisis concern in message:", lowerInput);
+      return 'crisis';
+    }
+    
     // First check for explicit feelings related to waiting/appointments
     const negativeStateInfo = detectSimpleNegativeState(userInput);
     const isWaitingFrustration = 
@@ -24,7 +40,6 @@ export const useConcernDetection = () => {
     }
     
     // Check for weather-related concerns
-    const lowerInput = userInput.toLowerCase();
     const hasWeatherRelatedConcerns = (
       // Check for mentions of severe weather events
       (/\b(snow|blizzard|storm|hurricane|tornado|flood|ice|weather|power outage|electricity|internet down)\b/i.test(lowerInput)) &&
@@ -50,17 +65,12 @@ export const useConcernDetection = () => {
       return 'cultural-adjustment';
     }
     
+    // Check for general negative emotions or statements indicating sadness/depression
+    if (/\b(depress|sad|down|upset|low|unhappy|hopeless|lost|empty|numb|blue|miserable|despair|dejected|despondent)\b/i.test(lowerInput)) {
+      return 'mental-health';
+    }
+    
     // Continue with regular detection for more serious medical concerns
-    // Check for suicidal ideation or self-harm
-    if (/suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)/.test(lowerInput)) {
-      return 'tentative-harm';
-    }
-    
-    // Check for crisis situations
-    if (/crisis|emergency|urgent|need help now|immediate danger|threat|safety risk/.test(lowerInput)) {
-      return 'crisis';
-    }
-    
     // Check for medical concerns (only for specific serious symptoms)
     const medicalPatterns = [
       /severe (pain|bleeding|headache|injury|symptoms)/i,

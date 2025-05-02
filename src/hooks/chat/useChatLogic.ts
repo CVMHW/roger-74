@@ -18,6 +18,7 @@ export const useChatLogic = () => {
   // Core state
   const [messages, setMessages] = useState<MessageType[]>(getInitialMessages());
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [showCrisisResources, setShowCrisisResources] = useState<boolean>(false);
   
   // Toast notification
   const { toast } = useToast();
@@ -51,6 +52,19 @@ export const useChatLogic = () => {
     simulateTypingResponse,
     updateRogerResponseHistory
   });
+  
+  // Function to check for crisis-related content in user input
+  const checkForCrisisContent = (userInput: string): boolean => {
+    const lowerInput = userInput.toLowerCase().trim();
+    const crisisPatterns = [
+      /suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)/,
+      /don'?t want to (live|be alive)|take my (own )?life|killing myself|commit suicide|die by suicide/,
+      /fatal overdose|hang myself|jump off|i wish i was dead|i want to die|i might kill/,
+      /crisis|emergency|urgent|need help now|immediate danger|severe (depression|anxiety|panic)/
+    ];
+    
+    return crisisPatterns.some(pattern => pattern.test(lowerInput));
+  };
 
   // Main function to handle sending messages
   const handleSendMessage = useCallback((userInput: string) => {
@@ -62,6 +76,11 @@ export const useChatLogic = () => {
       // Add user message
       const newUserMessage = createMessage(userInput, 'user');
       setMessages(prevMessages => [...prevMessages, newUserMessage]);
+      
+      // Check for crisis content and show resources if needed
+      if (checkForCrisisContent(userInput)) {
+        setShowCrisisResources(true);
+      }
       
       // Update user message history for context awareness
       updateUserMessageHistory(userInput);
@@ -99,7 +118,7 @@ export const useChatLogic = () => {
       
       // Add fallback error response
       const errorResponse = createMessage(
-        "I'm sorry, I'm having trouble responding right now. Could you try again?",
+        "I'm here to listen and support you. What would you like to talk about?",
         'roger'
       );
       
@@ -136,6 +155,7 @@ export const useChatLogic = () => {
     isTyping,
     isProcessing,
     handleSendMessage,
-    handleFeedback
+    handleFeedback,
+    showCrisisResources
   };
 };

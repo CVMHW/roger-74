@@ -1,31 +1,35 @@
-
 import React from 'react';
 import MessageList from '../MessageList';
 import MessageInput from '../MessageInput';
-import { useToast } from '@/components/ui/use-toast';
 import { useChatLogic } from '../../hooks/chat/useChatLogic';
+import CrisisResources from '../CrisisResources';
 
-/**
- * Container component for the chat interface
- * Responsible for the overall chat UI
- */
 const ChatContainer: React.FC = () => {
   const { 
     messages, 
     isTyping, 
     handleSendMessage, 
-    handleFeedback 
+    handleFeedback,
+    showCrisisResources
   } = useChatLogic();
-  
+
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <MessageList 
-        messages={messages} 
-        isTyping={isTyping} 
-        onFeedback={handleFeedback}
-      />
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-hidden">
+        <MessageList 
+          messages={messages} 
+          isTyping={isTyping} 
+          onFeedback={handleFeedback}
+        />
+      </div>
       
-      <MessageInput onSendMessage={handleSendMessage} />
+      <div className="mt-4 mb-4">
+        <CrisisResources forceOpen={showCrisisResources} />
+      </div>
+      
+      <div>
+        <MessageInput onSendMessage={handleSendMessage} />
+      </div>
     </div>
   );
 };
