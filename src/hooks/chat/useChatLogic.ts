@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { MessageType } from '../../components/Message';
 import { useToast } from '@/components/ui/use-toast';
@@ -14,9 +15,9 @@ import {
   generateEverydayFrustrationResponse,
   detectSmallTalkCategory,
   generateSmallTalkResponse,
-  generateSmallTalkTransition,
   enhanceRapportInEarlyConversation,
-  generateFirstMessageResponse
+  generateFirstMessageResponse,
+  generateSmallTalkTransition
 } from '../../utils/conversation/theSmallStuff';
 
 /**

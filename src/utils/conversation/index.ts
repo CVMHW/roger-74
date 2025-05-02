@@ -1,3 +1,4 @@
+
 /**
  * Conversation Utilities
  * 
@@ -11,6 +12,18 @@ export * from './contextAware';
 export * from './cvmhwInfo';
 export * from './cvmhwResponseGenerator';
 
+// Import the functions we need from theSmallStuff
+import {
+  detectCommunicationStyle,
+  detectDemographicPatterns,
+  adaptResponseStyle,
+  generateFirstMessageResponse,
+  enhanceRapportInEarlyConversation,
+  identifyImmediateConcern,
+  generateImmediateConcernResponse,
+  generateSmallTalkTransition
+} from './theSmallStuff';
+
 // Re-export theSmallStuff functions explicitly to avoid name conflicts
 export {
   detectCommunicationStyle,
@@ -18,11 +31,10 @@ export {
   adaptResponseStyle,
   generateFirstMessageResponse,
   enhanceRapportInEarlyConversation,
-  // Rename these to avoid conflicts
   identifyImmediateConcern as identifySmallStuffConcern,
   generateImmediateConcernResponse as generateSmallStuffConcernResponse,
   generateSmallTalkTransition
-} from './theSmallStuff';
+};
 
 // Export smallTalk with explicit naming to avoid conflicts
 export { 

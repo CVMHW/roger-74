@@ -1,4 +1,3 @@
-
 /**
  * Small Talk Topics Handler
  * 

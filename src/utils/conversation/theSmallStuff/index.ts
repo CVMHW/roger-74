@@ -299,3 +299,151 @@ export const enhanceRapportInEarlyConversation = (
   
   return response;
 };
+
+/**
+ * Detects communication style from user's message
+ */
+export const detectCommunicationStyle = (userInput: string): string => {
+  const lowerInput = userInput.toLowerCase();
+  
+  if (lowerInput.includes('technical') || /\b(code|programming|algorithm|function)\b/i.test(userInput)) {
+    return 'technical';
+  } else if (userInput.length > 200 && /\b(feel|feeling|felt|emotion|sad|happy|angry)\b/i.test(userInput)) {
+    return 'emotional';
+  } else if (userInput.length < 50 && !userInput.includes('?')) {
+    return 'brief';
+  } else if (userInput.includes('?') && userInput.split('?').length > 2) {
+    return 'inquisitive';
+  }
+  
+  return 'standard';
+};
+
+/**
+ * Detects demographic patterns in user messages
+ */
+export const detectDemographicPatterns = (userInput: string): {
+  likelyAge?: 'teen' | 'young_adult' | 'adult' | 'senior';
+  likelyBackground?: 'technical' | 'medical' | 'general';
+} => {
+  const result: {
+    likelyAge?: 'teen' | 'young_adult' | 'adult' | 'senior';
+    likelyBackground?: 'technical' | 'medical' | 'general';
+  } = {};
+  
+  // Age detection
+  if (/\b(school|homework|mom|dad|teacher)\b/i.test(userInput)) {
+    result.likelyAge = 'teen';
+  } else if (/\b(college|university|dorm|roommate|dating|apartment)\b/i.test(userInput)) {
+    result.likelyAge = 'young_adult';
+  } else if (/\b(mortgage|kids|career|promotion|marriage)\b/i.test(userInput)) {
+    result.likelyAge = 'adult';
+  } else if (/\b(retirement|grandchildren|arthritis|medicare)\b/i.test(userInput)) {
+    result.likelyAge = 'senior';
+  }
+  
+  // Background detection
+  if (/\b(code|program|engineer|developer|software|tech)\b/i.test(userInput)) {
+    result.likelyBackground = 'technical';
+  } else if (/\b(patient|doctor|nurse|diagnosis|symptom|treatment)\b/i.test(userInput)) {
+    result.likelyBackground = 'medical';
+  } else {
+    result.likelyBackground = 'general';
+  }
+  
+  return result;
+};
+
+/**
+ * Adapts response style based on user's communication preferences
+ */
+export const adaptResponseStyle = (
+  baseResponse: string, 
+  style: string
+): string => {
+  switch (style) {
+    case 'technical':
+      return baseResponse.replace(/feelings/g, 'psychological state')
+                         .replace(/worried/g, 'concerned')
+                         .replace(/happy/g, 'satisfied');
+    case 'emotional':
+      return baseResponse + " How are you feeling about that?";
+    case 'brief':
+      // For brief communicators, keep responses concise
+      return baseResponse.split('. ').slice(0, 2).join('. ');
+    case 'inquisitive':
+      // For question-askers, add thoughtful questions
+      return baseResponse + " What are your thoughts on this?";
+    default:
+      return baseResponse;
+  }
+};
+
+/**
+ * Generates a response for the first message in a conversation
+ */
+export const generateFirstMessageResponse = (): string => {
+  const firstMessageResponses = [
+    "Hi there! I'm Roger, here to chat while you wait for Dr. Eric. How are you doing today?",
+    "Hello! Welcome to Cuyahoga Valley Mindful Health and Wellness. I'm Roger, and I'm here to help make your wait a bit more comfortable. How's your day going?",
+    "Hey there! I'm Roger. Dr. Eric will be with you shortly. How are you feeling today?",
+    "Welcome! I'm Roger, and I'm here to chat with you while you wait for Dr. Eric. How has your day been so far?"
+  ];
+  
+  return firstMessageResponses[Math.floor(Math.random() * firstMessageResponses.length)];
+};
+
+/**
+ * Identifies immediate concerns that need addressing in early conversation
+ */
+export const identifyImmediateConcern = (userInput: string): string | null => {
+  const concernPatterns = [
+    { pattern: /wait(ing)?|how long|when|delayed|late/i, concern: "wait_time" },
+    { pattern: /anxious|nervous|worried|scared|afraid/i, concern: "pre_session_anxiety" },
+    { pattern: /first time|never been|new patient|new here/i, concern: "first_visit" },
+    { pattern: /cost|payment|insurance|afford|expensive|price/i, concern: "payment_concerns" }
+  ];
+
+  for (const { pattern, concern } of concernPatterns) {
+    if (pattern.test(userInput)) {
+      return concern;
+    }
+  }
+
+  return null;
+};
+
+/**
+ * Generates responses for immediate concerns in early conversation
+ */
+export const generateImmediateConcernResponse = (userInput: string, concernType: string): string => {
+  const responses: Record<string, string[]> = {
+    wait_time: [
+      "I understand waiting can be difficult. Dr. Eric tries to give each person the time they need, which sometimes means a short delay. Is there anything specific you'd like to talk about while we wait?",
+      "Waiting can be frustrating, I get that. Dr. Eric values giving each person his full attention, so occasionally appointments run a bit long. How are you feeling about your upcoming session?"
+    ],
+    pre_session_anxiety: [
+      "It's completely normal to feel nervous before a session. Many people feel that way at first. Would it help to talk about what specifically you're feeling anxious about?",
+      "Those pre-session jitters are really common. Just sharing what's on your mind with me might help take the edge off a bit. What's your biggest concern right now?"
+    ],
+    first_visit: [
+      "First visits can feel a bit uncertain. Dr. Eric has a very approachable style - he'll start by getting to know you and understanding what brought you in. Is there anything specific you're wondering about?",
+      "Welcome! First times can be a mix of emotions. Dr. Eric focuses on creating a comfortable space where you can share at your own pace. What made you decide to come in today?"
+    ],
+    payment_concerns: [
+      "I understand financial considerations are important. The practice offers several payment options, including a sliding scale for those who need it. Would you like me to share more specific information about that?",
+      "Money matters can add extra stress, and that's the last thing you need. The practice tries to work with people on payment options. Have you had a chance to discuss your specific situation with the office staff yet?"
+    ]
+  };
+
+  const defaultResponses = [
+    "I appreciate you sharing that. While we're waiting for Dr. Eric, I'm here to listen. What else has been on your mind lately?",
+    "That sounds important. I'm glad you brought it up. Is there anything specific about it you'd like to discuss while we wait for Dr. Eric?"
+  ];
+
+  const responseOptions = responses[concernType] || defaultResponses;
+  return responseOptions[Math.floor(Math.random() * responseOptions.length)];
+};
+
+// Export from smallTalkTopics
+export { generateSmallTalkTransition } from './smallTalkTopics';
