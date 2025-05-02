@@ -7,7 +7,7 @@ interface MessageListProps {
   messages: MessageType[];
   isTyping: boolean;
   processingContext?: string | null; // Add processing context
-  onFeedback?: (messageId: string, isLike: boolean) => void;
+  onFeedback?: (messageId: string, feedback: 'positive' | 'negative') => void;
 }
 
 const MessageList: React.FC<MessageListProps> = ({ 
