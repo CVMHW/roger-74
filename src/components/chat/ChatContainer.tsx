@@ -1,3 +1,4 @@
+
 import React from 'react';
 import MessageList from '../MessageList';
 import MessageInput from '../MessageInput';
@@ -15,6 +16,13 @@ const ChatContainer: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Show crisis resources at the top when triggered */}
+      {showCrisisResources && (
+        <div className="mt-2 mb-4 sticky top-0 z-10">
+          <CrisisResources forceOpen={true} />
+        </div>
+      )}
+      
       <div className="flex-1 overflow-hidden">
         <MessageList 
           messages={messages} 
@@ -23,6 +31,7 @@ const ChatContainer: React.FC = () => {
         />
       </div>
       
+      {/* Show crisis resources at the bottom as well */}
       <div className="mt-4 mb-4">
         <CrisisResources forceOpen={showCrisisResources} />
       </div>
