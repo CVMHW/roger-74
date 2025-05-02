@@ -36,7 +36,22 @@ export const useAdaptiveResponse = () => {
                                        lowerInput.includes('why is this happening') ||
                                        lowerInput.includes('empty') ||
                                        lowerInput.includes('hollow') ||
-                                       lowerInput.includes('going through motions');
+                                       lowerInput.includes('going through motions') ||
+                                       lowerInput.includes('waiting for life') ||
+                                       lowerInput.includes('someday i'll');
+    
+    // Enhanced detection for existential vacuum and hyperreflection (from lecture materials)
+    const containsExistentialVacuum = lowerInput.includes('empty inside') ||
+                                     lowerInput.includes('just existing') ||
+                                     lowerInput.includes('no direction') ||
+                                     lowerInput.includes('bored with everything') ||
+                                     lowerInput.includes('nothing excites me') ||
+                                     lowerInput.includes('no purpose');
+                                     
+    const containsHyperreflection = lowerInput.includes('overthinking') ||
+                                   lowerInput.includes('analyzing myself') ||
+                                   lowerInput.includes('too self-aware') ||
+                                   lowerInput.includes('obsessing over');
     
     // Look for indicators that might suggest which approach is most helpful
     const containsChangeTalk = lowerInput.includes('change') || 
@@ -72,7 +87,8 @@ export const useAdaptiveResponse = () => {
                                             lowerInput.includes('worried');
     
     // First try an Existential response if existential concerns are detected
-    if (containsExistentialConcerns) {
+    // Enhanced to detect more nuanced existential themes from lecture materials
+    if (containsExistentialConcerns || containsExistentialVacuum || containsHyperreflection) {
       const existentialResponse = generateExistentialResponse(userInput);
       if (existentialResponse) {
         setCurrentApproach('existential');
