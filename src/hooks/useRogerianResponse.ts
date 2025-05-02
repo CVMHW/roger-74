@@ -9,14 +9,16 @@ import { useResponseGenerator } from './response/responseGenerator';
 import { useResponseProcessing } from './response/responseProcessing';
 import { detectGriefThemes } from '../utils/response/griefSupport';
 import { detectClientPreferences } from '../utils/conversationalUtils';
-import { generateSafetyConcernResponse } from '../utils/safetyConcernManager';
+import { generateSafetyConcernResponse, explainInpatientProcess } from '../utils/safetyConcernManager';
 import { ConcernType } from '../utils/reflection/reflectionTypes';
+import { DeceptionAnalysis } from '../utils/detectionUtils/deceptionDetection';
 
 interface UseRogerianResponseReturn {
   isTyping: boolean;
   processUserMessage: (userInput: string) => Promise<MessageType>;
   simulateTypingResponse: (response: string, callback: (text: string) => void) => void;
   currentApproach: 'rogerian' | 'mi' | 'existential' | 'conversational' | 'socratic';
+  handlePotentialDeception?: (originalMessage: string, followUpMessage: string) => Promise<MessageType | null>;
 }
 
 export const useRogerianResponse = (): UseRogerianResponseReturn => {
@@ -89,6 +91,55 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     }));
   };
   
+  // Handle potential deception in crisis communication
+  const handlePotentialDeception = async (
+    originalMessage: string,
+    followUpMessage: string
+  ): Promise<MessageType | null> => {
+    try {
+      // Dynamically import the deception detection module
+      const deceptionModule = await import('../utils/detectionUtils/deceptionDetection');
+      
+      // Analyze for potential deception
+      const deceptionAnalysis = deceptionModule.detectPotentialDeception(
+        originalMessage, 
+        followUpMessage
+      );
+      
+      // If we detect deception with medium-high confidence, handle according to the unconditional law
+      if (deceptionAnalysis.isPotentialDeception && deceptionAnalysis.confidence !== 'low') {
+        // Generate appropriate response that explains inpatient stays
+        const responseText = deceptionModule.generateDeceptionResponseMessage(deceptionAnalysis);
+        
+        // Create the message object
+        const concernType = mapDeceptionConcernType(deceptionAnalysis);
+        const responseMessage = createMessage(responseText, 'roger', concernType);
+        
+        // Add to response history
+        addToResponseHistory(responseText);
+        
+        return responseMessage;
+      }
+    } catch (error) {
+      console.error("Error in deception detection:", error);
+    }
+    
+    return null;
+  };
+  
+  // Map deception concern types to valid ConcernType values
+  const mapDeceptionConcernType = (analysis: DeceptionAnalysis): ConcernType => {
+    switch (analysis.originalConcern) {
+      case 'suicide':
+      case 'self-harm':
+        return 'tentative-harm';
+      case 'harm-to-others':
+        return 'crisis';
+      default:
+        return 'crisis';
+    }
+  };
+  
   // Specialized response generator for safety concerns that incorporates
   // customer-centric deescalation
   const generateSafetyResponse = (
@@ -126,6 +177,35 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
       return baseProcessUserMessage(
         userInput,
         () => redirectResponse,
+        detectConcerns
+      );
+    }
+    
+    // Check for statements about wanting to understand inpatient stays
+    const inpatientQuestionPatterns = [
+      /how long (is|are) inpatient/i,
+      /what (is|are|happens in) inpatient/i,
+      /(will|would) I be locked up/i,
+      /how long (would|will) they keep me/i,
+      /(don't|do not) want to (be|get) committed/i,
+      /stay in (hospital|psych ward|mental hospital)/i,
+      /(worried|concerned|scared) about (inpatient|hospitalization)/i
+    ];
+    
+    if (inpatientQuestionPatterns.some(pattern => pattern.test(userInput))) {
+      // If the user is asking about inpatient stays, provide accurate information
+      // Get location data if available
+      const locationData = extractUserLocation(userInput, conversationHistory);
+      
+      const inpatientInfoResponse = explainInpatientProcess(locationData);
+      
+      // Update conversation stage before processing
+      updateStage();
+      
+      // Process the usual way but with our specific response
+      return baseProcessUserMessage(
+        userInput,
+        () => inpatientInfoResponse,
         detectConcerns
       );
     }
@@ -212,6 +292,47 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     );
   };
   
+  // Helper function to extract location information from user messages
+  const extractUserLocation = (currentInput: string, history: string[]): { city?: string; state?: string } | undefined => {
+    // Check the current message for location data
+    let locationData = extractPossibleLocation(currentInput);
+    
+    // If no location found in current message, check history
+    if (!locationData && history.length > 0) {
+      for (let i = history.length - 1; i >= 0; i--) {
+        locationData = extractPossibleLocation(history[i]);
+        if (locationData) break;
+      }
+    }
+    
+    return locationData;
+  };
+  
+  // Helper function to extract location from text (simplified version)
+  const extractPossibleLocation = (text: string): { state?: string; city?: string } | undefined => {
+    if (!text) return undefined;
+    
+    try {
+      // Try to use the existing function from messageUtils
+      const messageUtils = require('../utils/messageUtils');
+      if (messageUtils.extractPossibleLocation) {
+        return messageUtils.extractPossibleLocation(text);
+      }
+    } catch (e) {
+      console.log("Error using messageUtils for location extraction:", e);
+    }
+    
+    // Fallback implementation
+    const lowerText = text.toLowerCase();
+    
+    // Simple check for Cleveland specifically
+    if (lowerText.includes('cleveland')) {
+      return { city: 'Cleveland', state: 'Ohio' };
+    }
+    
+    return undefined;
+  };
+  
   // Helper function to detect potential wealth indicators in conversation
   const detectWealthIndicators = (currentInput: string, history: string[]): boolean => {
     const wealthKeywords = [
@@ -226,11 +347,28 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     return wealthKeywords.some(keyword => combinedText.includes(keyword));
   };
   
+  // Helper function to create a message (duplicated from messageUtils to avoid circular imports)
+  const createMessage = (
+    text: string, 
+    sender: 'user' | 'roger', 
+    concernType: any = null
+  ): MessageType => {
+    return {
+      id: Date.now().toString(),
+      text,
+      sender,
+      timestamp: new Date(),
+      concernType,
+      locationData: null
+    };
+  };
+  
   return {
     isTyping,
     processUserMessage,
     simulateTypingResponse,
-    currentApproach
+    currentApproach,
+    handlePotentialDeception
   };
 };
 

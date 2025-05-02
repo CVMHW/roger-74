@@ -1,3 +1,4 @@
+
 /**
  * Manager for handling safety concerns in a customer-centric, adaptive way
  * Implements the unconditional rule about deescalation and treating patients as valued customers
@@ -59,13 +60,13 @@ export const generateSafetyConcernResponse = (
   } else {
     switch (concernType) {
       case 'crisis':
-        baseResponse = getCrisisMessage();
+        baseResponse = getCrisisMessage() + " If you're experiencing thoughts of harming yourself or others, inpatient treatment is an option that typically lasts 3-7 days and focuses on stabilization and safety.";
         break;
       case 'medical':
         baseResponse = getMedicalConcernMessage();
         break;
       case 'mental-health':
-        baseResponse = getMentalHealthConcernMessage();
+        baseResponse = getMentalHealthConcernMessage() + " If hospitalization is recommended, these stays are typically brief, lasting 3-7 days, and focused on stabilization and developing a follow-up care plan.";
         break;
       case 'eating-disorder':
         baseResponse = getEatingDisorderMessage();
@@ -74,7 +75,7 @@ export const generateSafetyConcernResponse = (
         baseResponse = getSubstanceUseMessage();
         break;
       case 'tentative-harm':
-        baseResponse = getTentativeHarmMessage();
+        baseResponse = getTentativeHarmMessage() + " Inpatient treatment, when needed, typically involves short stays of 3-7 days focused on safety and stabilization rather than long-term confinement.";
         break;
       case 'ptsd':
         baseResponse = getPTSDMessage();
@@ -125,6 +126,29 @@ export const generateSafetyConcernResponse = (
   
   return baseResponse;
 };
+
+// Function to explain inpatient stays for crisis situations
+export const explainInpatientProcess = (locationInfo?: { city?: string; state?: string }): string => {
+  // Base explanation
+  let explanation = "I want to address any concerns you might have about inpatient mental health treatment. Typical stays last just 3-7 days and are focused on stabilization, safety, and creating a support plan. ";
+  
+  // Add location-specific information if available
+  if (locationInfo) {
+    const location = locationInfo.city || locationInfo.state || "";
+    if (location) {
+      // Customize based on location if possible
+      if (location.toLowerCase() === "cleveland") {
+        explanation += `In Cleveland, facilities like the Cleveland Clinic and University Hospitals offer supportive inpatient programs designed to help during crisis periods. `;
+      } else {
+        explanation += `In ${location}, there are facilities that provide compassionate inpatient care designed to help during crisis periods. `;
+      }
+    }
+  }
+  
+  explanation += "The focus is always on getting you the support you need, not on restriction or confinement. Many people find these brief stays helpful for regaining stability during difficult times.";
+  
+  return explanation;
+}
 
 /**
  * Determines if a concern type requires both referral and continued support

@@ -25,6 +25,7 @@ import {
   isPersonalSharing,
   generatePersonalSharingResponse
 } from '../utils/masterRules';
+import { detectPotentialDeception } from '../utils/detectionUtils/deceptionDetection';
 
 const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<MessageType[]>(getInitialMessages());
@@ -39,6 +40,13 @@ const ChatInterface: React.FC = () => {
     concernType: string | null;
     messageId: string;
     askedForLocation: boolean;
+  } | null>(null);
+  
+  // Track potential crisis messaging for deception detection
+  const [recentCrisisMessage, setRecentCrisisMessage] = useState<{
+    message: string;
+    timestamp: Date;
+    concernType: string;
   } | null>(null);
   
   // On component mount, extract existing Roger responses for the history
@@ -100,6 +108,40 @@ const ChatInterface: React.FC = () => {
       }
     }
     
+    // Check for deception if we have a recent crisis message
+    if (recentCrisisMessage && 
+        (new Date().getTime() - recentCrisisMessage.timestamp.getTime() < 5 * 60 * 1000)) {
+      // Analyze for potential deception/backtracking on crisis statements
+      const deceptionAnalysis = detectPotentialDeception(recentCrisisMessage.message, userInput);
+      
+      if (deceptionAnalysis.isPotentialDeception && deceptionAnalysis.confidence !== 'low') {
+        // We've detected potential deception - handle according to the unconditional law
+        // Import and use the response generator for deception
+        import('../utils/detectionUtils/deceptionDetection').then(module => {
+          const deceptionResponse = module.generateDeceptionResponseMessage(deceptionAnalysis);
+          
+          // Create Roger's response to the potential deception
+          const rogerResponse = createMessage(deceptionResponse, 'roger', recentCrisisMessage.concernType as any);
+          
+          // Add the response
+          setMessages(prevMessages => [...prevMessages, rogerResponse]);
+          
+          // Simulate typing
+          simulateTypingResponse(deceptionResponse, (text) => {
+            setMessages(prevMessages => 
+              prevMessages.map(msg => 
+                msg.id === rogerResponse.id ? { ...msg, text } : msg
+              )
+            );
+          });
+          
+          // Clear the crisis tracking since we've addressed it
+          setRecentCrisisMessage(null);
+        });
+        return;
+      }
+    }
+    
     // Process user input normally
     processResponse(userInput);
   };
@@ -109,6 +151,16 @@ const ChatInterface: React.FC = () => {
     processUserMessage(userInput).then(rogerResponse => {
       // Add the response to history to prevent future repetition
       setRogerResponseHistory(prev => [...prev, rogerResponse.text]);
+      
+      // Check if this is a crisis-related response and store it for deception detection
+      const crisisConcernTypes = ['crisis', 'tentative-harm', 'suicide', 'self-harm'];
+      if (rogerResponse.concernType && crisisConcernTypes.includes(rogerResponse.concernType)) {
+        setRecentCrisisMessage({
+          message: userInput,
+          timestamp: new Date(),
+          concernType: rogerResponse.concernType
+        });
+      }
       
       // Add the empty response message first (will be updated during typing simulation)
       setMessages(prevMessages => [...prevMessages, rogerResponse]);
