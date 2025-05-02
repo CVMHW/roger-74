@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { MessageType } from './Message';
 import MessageList from './MessageList';
@@ -14,7 +15,7 @@ import useRogerianResponse from '../hooks/useRogerianResponse';
 
 const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<MessageType[]>(getInitialMessages());
-  const { isTyping, processUserMessage, simulateTypingResponse } = useRogerianResponse();
+  const { isTyping, processUserMessage, simulateTypingResponse, currentApproach } = useRogerianResponse();
   const { toast } = useToast();
 
   // Handle feedback for Roger's messages
@@ -70,6 +71,10 @@ const ChatInterface: React.FC = () => {
         responseText = getSubstanceUseMessage();
       } 
       else {
+        // For non-concern responses, we've already generated adaptive response in the hook
+        // Let's log the approach being used for debugging purposes
+        console.log(`Using ${currentApproach} approach for response`);
+        
         // Generate a conversational, human-like response
         responseText = generateConversationalResponse(userInput);
       }

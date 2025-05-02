@@ -18,11 +18,9 @@ import {
   getEatingDisorderMessage,
   getSubstanceUseMessage
 } from '../utils/responseUtils';
-import {
-  generateConversationalResponse
-} from '../utils/conversationalUtils';
 import { useToast } from '@/components/ui/use-toast';
 import useTypingEffect from './useTypingEffect';
+import useAdaptiveResponse from './useAdaptiveResponse';
 
 interface ConcernState {
   crisis: boolean;
@@ -36,6 +34,7 @@ interface UseRogerianResponseReturn {
   isTyping: boolean;
   processUserMessage: (userInput: string) => Promise<MessageType>;
   simulateTypingResponse: (response: string, callback: (text: string) => void) => void;
+  currentApproach: 'rogerian' | 'mi' | 'conversational';
 }
 
 export const useRogerianResponse = (): UseRogerianResponseReturn => {
@@ -49,6 +48,7 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
   });
   const { toast } = useToast();
   const { calculateResponseTime, simulateTypingResponse } = useTypingEffect();
+  const { generateAdaptiveResponse, currentApproach } = useAdaptiveResponse();
 
   const showConcernToast = (concernType: string) => {
     let title = "Important Notice";
@@ -145,8 +145,8 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
           concernType = 'substance-use';
         } 
         else {
-          // Generate a conversational, human-like response
-          responseText = generateConversationalResponse(userInput);
+          // Generate an adaptive response based on the client's input
+          responseText = generateAdaptiveResponse(userInput);
         }
         
         // Create response message
@@ -159,7 +159,8 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
   return {
     isTyping,
     processUserMessage,
-    simulateTypingResponse
+    simulateTypingResponse,
+    currentApproach
   };
 };
 
