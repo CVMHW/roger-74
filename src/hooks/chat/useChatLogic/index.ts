@@ -1,15 +1,15 @@
 
 import { useState, useCallback, useEffect } from 'react';
-import { MessageType } from '../../components/Message';
+import { MessageType } from '../../../components/Message';
 import { useToast } from '@/components/ui/use-toast';
-import { getInitialMessages, createMessage } from '../../utils/messageUtils';
-import useRogerianResponse from '../useRogerianResponse';
-import { useLocationConcern } from './useLocationConcern';
-import { useCrisisDetection } from './useCrisisDetection';
-import { useFeedbackLoop } from './useFeedbackLoop';
-import { useMessageHistory } from './useMessageHistory';
-import { useFeedbackHandler } from './useFeedbackHandler';
-import { useMessageProcessor } from './useMessageProcessor';
+import { getInitialMessages, createMessage } from '../../../utils/messageUtils';
+import useRogerianResponse from '../../useRogerianResponse';
+import { useLocationConcern } from '../useLocationConcern';
+import { useCrisisDetection } from '../useCrisisDetection';
+import { useFeedbackLoop } from '../useFeedbackLoop';
+import { useMessageHistory } from '../useMessageHistory';
+import { useFeedbackHandler } from '../useFeedbackHandler';
+import { useMessageProcessor } from '../useMessageProcessor';
 import { 
   detectEverydayFrustration, 
   generateEverydayFrustrationResponse,
@@ -18,22 +18,26 @@ import {
   enhanceRapportInEarlyConversation,
   generateFirstMessageResponse,
   generateSmallTalkTransition
-} from '../../utils/conversation/theSmallStuff';
+} from '../../../utils/conversation/theSmallStuff';
+
+// Import our new modularized hooks
+import { useProcessContext } from './useProcessContext';
+import { useGenericResponseDetection } from './useGenericResponseDetection';
+import { useResponseValidator } from './useResponseValidator';
+import { useCrisisDetector } from './useCrisisDetector';
+import { useSpecificResponseGenerator } from './useSpecificResponseGenerator';
+import { ChatLogicReturn } from './types';
 
 /**
  * Hook that contains the main chat business logic
  * UNCONDITIONAL RULE: Roger will answer inquiries with pinpoint accuracy
  * UNCONDITIONAL RULE: Roger listens first, then responds, never automatic
  */
-export const useChatLogic = () => {
+export const useChatLogic = (): ChatLogicReturn => {
   // Core state
   const [messages, setMessages] = useState<MessageType[]>(getInitialMessages());
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [showCrisisResources, setShowCrisisResources] = useState<boolean>(false);
-  const [consecutiveGenericResponses, setConsecutiveGenericResponses] = useState(0);
-  
-  // Add processing context to show what Roger is "thinking" about
-  const [processingContext, setProcessingContext] = useState<string | null>(null);
   
   // Toast notification
   const { toast } = useToast();
@@ -44,16 +48,6 @@ export const useChatLogic = () => {
   // Import needed hooks for specific functionality
   const { activeLocationConcern, handleLocationData, setActiveLocationConcern } = useLocationConcern();
   const { recentCrisisMessage, handleCrisisMessage, checkDeception } = useCrisisDetection(simulateTypingResponse, setMessages);
-  
-  // Enhanced feedback loop prevention system
-  const { 
-    feedbackLoopDetected, 
-    checkFeedbackLoop, 
-    setFeedbackLoopDetected,
-    trackRogerResponse,
-    shouldThrottleResponse,
-    getResponseDelay
-  } = useFeedbackLoop(simulateTypingResponse, setMessages);
   
   // Message history hooks
   const { 
@@ -66,46 +60,22 @@ export const useChatLogic = () => {
   // Hook to handle feedback
   const { handleFeedback } = useFeedbackHandler(setMessages, toast);
   
-  // Function to detect if a response is too generic
-  const isGenericResponse = useCallback((response: string): boolean => {
-    const genericPatterns = [
-      /I'm here to listen and support you/i,
-      /What's been going on\??$/i,
-      /I'm listening\. What would you like to talk about\??$/i,
-      /I'm here for you\. What's on your mind\??$/i,
-      /I'm sorry, I'm having trouble responding/i,
-    ];
-    
-    return genericPatterns.some(pattern => pattern.test(response));
-  }, []);
+  // Enhanced feedback loop prevention system
+  const { 
+    feedbackLoopDetected, 
+    checkFeedbackLoop, 
+    setFeedbackLoopDetected,
+    trackRogerResponse,
+    shouldThrottleResponse,
+    getResponseDelay
+  } = useFeedbackLoop(simulateTypingResponse, setMessages);
   
-  // Double check if a response is appropriate based on conversation context
-  const validateResponse = useCallback((response: string, userInput: string, userHistory: string[]): boolean => {
-    // Check for repetitive responses
-    if (rogerResponseHistory.length > 0) {
-      const lastRogerResponse = rogerResponseHistory[rogerResponseHistory.length - 1];
-      if (lastRogerResponse && lastRogerResponse.toLowerCase().includes(response.toLowerCase())) {
-        console.warn("RESPONSE VALIDATION: Detected potential repetition");
-        return false;
-      }
-    }
-    
-    // Check for inappropriate generic responses to specific topics
-    const isAboutPet = /pet|dog|cat|animal|died|passed|molly/i.test(userInput);
-    if (isAboutPet && isGenericResponse(response)) {
-      console.warn("RESPONSE VALIDATION: Generic response to pet topic");
-      return false;
-    }
-    
-    // Check for responses that don't acknowledge user's explicit mentions
-    const mentionedPetDeath = /my pet (died|passed)/i.test(userInput);
-    if (mentionedPetDeath && !/(sorry|pet|loss|died|passed)/i.test(response)) {
-      console.warn("RESPONSE VALIDATION: Failed to acknowledge pet death");
-      return false;
-    }
-    
-    return true;
-  }, [rogerResponseHistory, isGenericResponse]);
+  // Our new modularized hooks
+  const { processingContext, setProcessingContext } = useProcessContext();
+  const { consecutiveGenericResponses, setConsecutiveGenericResponses, isGenericResponse } = useGenericResponseDetection();
+  const { validateResponse } = useResponseValidator(rogerResponseHistory, isGenericResponse);
+  const { checkForCrisisContent } = useCrisisDetector();
+  const { createSpecificResponse } = useSpecificResponseGenerator();
   
   // Message processing hook with enhanced repetition detection
   const { processResponse } = useMessageProcessor({
@@ -172,46 +142,6 @@ export const useChatLogic = () => {
       updateRogerResponseHistory(responseText);
     }
   });
-  
-  // Function to create a specific response based on user input
-  const createSpecificResponse = (userInput: string, userHistory: string[]): string => {
-    // Extract meaningful content from user input
-    const lowerInput = userInput.toLowerCase();
-    
-    // Check for pet-related content
-    if (/pet|dog|cat|animal|died|passed away|molly/i.test(lowerInput)) {
-      return "I'm truly sorry to hear about your pet. Losing a pet is incredibly painful - they're family members. Could you tell me more about them and what they meant to you?";
-    }
-    // Check for personal loss
-    else if (/died|death|passed away|funeral|grieving|grief/i.test(lowerInput)) {
-      return "I'm very sorry about your loss. Grief can be overwhelming. Would you like to share more about the person and what they meant to you?";
-    }
-    // Check for sadness
-    else if (/sad|upset|down|depressed|blue/i.test(lowerInput)) {
-      return "I hear that you're feeling sad. That's really hard. Would you like to share more about what's contributing to those feelings?";
-    }
-    // Check for anxiety
-    else if (/anxious|worried|nervous|anxiety|stress/i.test(lowerInput)) {
-      return "It sounds like you're experiencing some anxiety. What specific things have been causing you to feel this way?";
-    }
-    // Generic but specific fallback
-    else {
-      return "I want to make sure I understand what matters most to you right now. Could you share a bit more about what's been on your mind?";
-    }
-  };
-  
-  // Function to check for crisis-related content in user input
-  const checkForCrisisContent = (userInput: string): boolean => {
-    const lowerInput = userInput.toLowerCase().trim();
-    const crisisPatterns = [
-      /suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)/,
-      /don'?t want to (live|be alive)|take my (own )?life|killing myself|commit suicide|die by suicide/,
-      /fatal overdose|hang myself|jump off|i wish i was dead|i want to die|i might kill/,
-      /crisis|emergency|urgent|need help now|immediate danger|severe (depression|anxiety|panic)/
-    ];
-    
-    return crisisPatterns.some(pattern => pattern.test(lowerInput));
-  };
 
   // Main function to handle sending messages
   const handleSendMessage = useCallback((userInput: string) => {
@@ -295,9 +225,6 @@ export const useChatLogic = () => {
         // Clear the processing context
         setProcessingContext(null);
       }, 1500);
-      
-    } finally {
-      // setIsProcessing(false) will be called after response is generated
     }
   }, [
     isProcessing,
@@ -313,7 +240,8 @@ export const useChatLogic = () => {
     feedbackLoopDetected,
     setFeedbackLoopDetected,
     processResponse,
-    setProcessingContext
+    setProcessingContext,
+    checkForCrisisContent
   ]);
 
   // Reset processing state when typing indicator changes
@@ -338,3 +266,6 @@ export const useChatLogic = () => {
     processingContext
   };
 };
+
+// Export the default hook
+export default useChatLogic;

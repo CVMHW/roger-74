@@ -3,7 +3,7 @@ import React, { useRef } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import MessageList from '../MessageList';
 import MessageInput from '../MessageInput';
-import { useChatLogic } from '../../hooks/chat/useChatLogic';
+import useChatLogic from '../../hooks/chat/useChatLogic';
 import CrisisResources from '../CrisisResources';
 
 const ChatContainer: React.FC = () => {
