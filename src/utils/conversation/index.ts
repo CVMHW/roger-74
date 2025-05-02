@@ -12,7 +12,7 @@ export * from './contextAware';
 export * from './cvmhwInfo';
 export * from './cvmhwResponseGenerator';
 
-// Import the functions we need from theSmallStuff
+// Import and re-export from theSmallStuff
 import {
   detectCommunicationStyle,
   detectDemographicPatterns,
