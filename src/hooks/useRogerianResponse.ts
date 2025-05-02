@@ -66,6 +66,9 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
   // Track conversation stage
   const [conversationStage, setConversationStage] = useState<'initial' | 'early' | 'established'>('initial');
   
+  // New flag to track if an introduction has already been made
+  const [introductionMade, setIntroductionMade] = useState(false);
+  
   const { toast } = useToast();
   const { calculateResponseTime, simulateTypingResponse } = useTypingEffect();
   const { generateAdaptiveResponse, currentApproach } = useAdaptiveResponse();
@@ -146,6 +149,8 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     // Update conversation stage based on previous messages
     if (conversationStage === 'initial') {
       setConversationStage('early');
+      // Mark that an introduction has been made after the first message
+      setIntroductionMade(true);
     } else if (conversationStage === 'early' && previousResponses.length >= 3) {
       setConversationStage('established');
     }
@@ -225,9 +230,10 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
           concernType = 'substance-use';
         } 
         // Enhanced social interaction flow based on master rules
-        // Check for introductions and greetings - prioritize human-like interaction
-        else if (isIntroduction(userInput)) {
+        // Check for introductions and greetings - but only for initial messages
+        else if (isIntroduction(userInput) && !introductionMade) {
           responseText = generateIntroductionResponse();
+          setIntroductionMade(true);
         }
         // Check for personal sharing - provide validating responses
         else if (isPersonalSharing(userInput)) {

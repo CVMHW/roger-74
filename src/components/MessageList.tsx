@@ -15,6 +15,8 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onFeedbac
   const [autoScroll, setAutoScroll] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [prevMessagesLength, setPrevMessagesLength] = useState(messages.length);
+  // Track if the typing indicator was previously shown to prevent unwanted scrolling
+  const [wasTyping, setWasTyping] = useState(isTyping);
   
   // Function to check if user has manually scrolled up
   const checkIfUserScrolledUp = () => {
@@ -36,13 +38,26 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onFeedbac
     setPrevMessagesLength(messages.length);
   }, [messages]);
 
+  // Track typing state changes
+  useEffect(() => {
+    // Only update wasTyping after the effect runs
+    setWasTyping(isTyping);
+  }, [isTyping]);
+
   // Scroll to bottom only in specific conditions
   useEffect(() => {
     // Only scroll if:
     // 1. User is already at the bottom (autoScroll is true)
     // 2. A new message has been added (not just updating an existing typing message)
     // 3. The chat end ref exists
-    if (autoScroll && chatEndRef.current && messages.length > prevMessagesLength) {
+    // 4. Not scrolling just because typing state changed
+    const isNewMessage = messages.length > prevMessagesLength;
+    const shouldScrollForNewMessage = autoScroll && chatEndRef.current && isNewMessage;
+    
+    // Special case: User sent a message (should always scroll to view their own message)
+    const isUserSentMessage = isNewMessage && messages[messages.length - 1]?.sender === 'user';
+    
+    if (shouldScrollForNewMessage || isUserSentMessage) {
       // Use a small timeout to ensure DOM updates before scrolling
       const timeoutId = setTimeout(() => {
         scrollToBottom();
@@ -51,7 +66,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onFeedbac
       // Clean up timeout if component unmounts or effect re-runs
       return () => clearTimeout(timeoutId);
     }
-  }, [messages, autoScroll, prevMessagesLength]);
+  }, [messages, autoScroll, prevMessagesLength, isTyping]);
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
