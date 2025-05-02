@@ -41,4 +41,3 @@ export interface PersonalizedTopic {
   mentionCount: number; // How many times this has been brought up
   lastMentioned: Date; // When this was last discussed
 }
-

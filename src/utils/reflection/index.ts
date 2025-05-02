@@ -15,33 +15,47 @@ import { shouldUseReflection } from './reflectionStrategies';
  * @returns A reflection response
  */
 export const generateReflectionResponse = (userMessage: string, conversationStage: ConversationStage): string => {
-  // First 10 minutes (early stages) - use more reflections
-  if (conversationStage === 'initial' || conversationStage === 'early') {
-    const feelings = identifyFeelings(userMessage);
+  try {
+    // Input validation
+    if (!userMessage || typeof userMessage !== 'string') {
+      return "I'm here to listen. What's on your mind today?";
+    }
     
-    // Alternate between feeling and meaning reflections
-    if (feelings.length > 0) {
-      return createFeelingReflection(feelings, userMessage);
-    } else {
-      return createMeaningReflection(userMessage);
+    // First 10 minutes (early stages) - use more reflections
+    if (conversationStage === 'initial' || conversationStage === 'early') {
+      const feelings = identifyFeelings(userMessage);
+      
+      // Alternate between feeling and meaning reflections
+      if (feelings.length > 0) {
+        const feelingReflection = createFeelingReflection(feelings, userMessage);
+        return feelingReflection || createGeneralReflection(userMessage);
+      } else {
+        const meaningReflection = createMeaningReflection(userMessage);
+        return meaningReflection || createGeneralReflection(userMessage);
+      }
+    } 
+    
+    // In established conversations, mix reflections with other response types
+    const feelings = identifyFeelings(userMessage);
+    const useReflection = shouldUseReflection(userMessage, conversationStage);
+    
+    if (useReflection) {
+      // Randomly choose between feeling and meaning reflections
+      if (feelings.length > 0 && Math.random() > 0.5) {
+        const feelingReflection = createFeelingReflection(feelings, userMessage);
+        return feelingReflection || createGeneralReflection(userMessage);
+      } else {
+        const meaningReflection = createMeaningReflection(userMessage);
+        return meaningReflection || createGeneralReflection(userMessage);
+      }
     }
-  } 
-  
-  // In established conversations, mix reflections with other response types
-  const feelings = identifyFeelings(userMessage);
-  const useReflection = shouldUseReflection(userMessage, conversationStage);
-  
-  if (useReflection) {
-    // Randomly choose between feeling and meaning reflections
-    if (feelings.length > 0 && Math.random() > 0.5) {
-      return createFeelingReflection(feelings, userMessage);
-    } else {
-      return createMeaningReflection(userMessage);
-    }
+    
+    // If not using a reflection, return empty string to allow other response types
+    return "";
+  } catch (error) {
+    console.error("Error generating reflection response:", error);
+    return "I'm listening. Could you tell me more?";
   }
-  
-  // If not using a reflection, return empty string to allow other response types
-  return "";
 };
 
 // Export all submodules for direct access

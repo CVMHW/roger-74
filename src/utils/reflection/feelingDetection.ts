@@ -12,6 +12,10 @@ import { feelingCategories } from './feelingCategories';
  * @returns Array of detected feelings
  */
 export const identifyFeelings = (userMessage: string): FeelingCategory[] => {
+  if (!userMessage || typeof userMessage !== 'string') {
+    return [];
+  }
+  
   const lowerMessage = userMessage.toLowerCase();
   const detectedFeelings: FeelingCategory[] = [];
   
@@ -35,7 +39,10 @@ export const identifyFeelings = (userMessage: string): FeelingCategory[] => {
         lowerMessage.includes('gone') || 
         lowerMessage.includes('moving') || 
         lowerMessage.includes('leaving') ||
-        lowerMessage.includes('away')) {
+        lowerMessage.includes('away') ||
+        lowerMessage.includes('bad') ||
+        lowerMessage.includes('don\'t get to') ||
+        lowerMessage.includes('rain')) {
       detectedFeelings.push('sad');
     }
     
@@ -81,7 +88,7 @@ export const identifyFeelings = (userMessage: string): FeelingCategory[] => {
     }
   }
   
-  return detectedFeelings;
+  return detectedFeelings.slice(0, 2); // Limit to top 2 feelings to avoid overwhelm
 };
 
 /**
@@ -90,6 +97,10 @@ export const identifyFeelings = (userMessage: string): FeelingCategory[] => {
  * @returns Object with extracted contextual elements
  */
 export const extractContextualElements = (userMessage: string) => {
+  if (!userMessage || typeof userMessage !== 'string') {
+    return { sportTeams: [], locations: [], timeContext: null, relationshipContext: null };
+  }
+  
   const lowerMessage = userMessage.toLowerCase();
   
   // Extract sports teams or specific entities
@@ -104,13 +115,13 @@ export const extractContextualElements = (userMessage: string) => {
   // Extract locations
   const locations = [
     'cleveland', 'akron', 'baltimore', 'pittsburgh', 'cincinnati', 'columbus',
-    'ohio', 'cuyahoga', 'home', 'work', 'school', 'office', 'hospital'
+    'ohio', 'cuyahoga', 'home', 'work', 'school', 'office', 'hospital', 'outside'
   ];
   
   const foundLocations = locations.filter(location => lowerMessage.includes(location));
   
   // Extract time references
-  const timeRegex = /\b(yesterday|today|tomorrow|last week|next week|soon|later|morning|evening|night|afternoon)\b/i;
+  const timeRegex = /\b(yesterday|today|tomorrow|last week|next week|soon|later|morning|evening|night|afternoon|days|weeks)\b/i;
   const timeMatches = userMessage.match(timeRegex);
   const timeContext = timeMatches ? timeMatches[0] : null;
   
@@ -126,4 +137,3 @@ export const extractContextualElements = (userMessage: string) => {
     relationshipContext
   };
 };
-
