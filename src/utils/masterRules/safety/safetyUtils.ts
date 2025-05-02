@@ -1,79 +1,76 @@
 
 /**
- * Safety-related detection and handling utilities
+ * Safety utilities for handling emergency and crisis situations
  */
 
 /**
- * Emergency detection function
- * @param userInput The user's message
- * @returns Whether the input indicates an emergency situation
+ * Checks if user input indicates an emergency situation
+ * @param userInput User message
+ * @returns Whether an emergency is detected
  */
 export const isEmergency = (userInput: string): boolean => {
   const emergencyPatterns = [
-    /emergency|urgent|crisis|critical|life.threatening|immediate danger/i,
-    /need (immediate|urgent|emergency) (help|assistance|care)/i,
-    /can'?t breathe|having (a|an) (heart attack|seizure|stroke)/i,
-    /bleeding (heavily|severely|profusely|uncontrollably)/i,
-    /dying|about to die|going to die/i
+    /emergency|crisis|911|urgent|need help now|immediate danger|hurt(ing)? (myself|someone)|harm(ing)? (myself|someone)/i,
+    /suicide|kill (myself|me)|end (my|this) life|don'?t want to (live|be alive)|take my (own )?life/i,
+    /overdos(e|ing)|jump(ing)? (off|from)|hang(ing)? myself|slit(ting)? (my )?wrist/i
   ];
   
   return emergencyPatterns.some(pattern => pattern.test(userInput));
 };
 
 /**
- * Emergency handling function
- * @returns Emergency response with appropriate resources
+ * Generates an appropriate response for emergency situations
+ * @returns Emergency response message
  */
 export const handleEmergency = (): string => {
-  return "I detect this might be a medical emergency. If you or someone else is in immediate danger, please call 911 or your local emergency number right away. Don't wait. If you're able to safely get to an emergency room, please do so immediately. Your safety is the absolute priority right now.";
+  return "I'm concerned about what you're sharing. If you're in immediate danger or experiencing a mental health emergency, please reach out to emergency services by calling 911 or a crisis hotline like the 988 Suicide & Crisis Lifeline (call or text 988). Would you like me to share more crisis resources with you?";
 };
 
 /**
- * Medical advice detection function
- * @param userInput The user's message
- * @returns Whether the input is asking for direct medical advice
+ * Checks if user input is requesting direct medical advice
+ * @param userInput User message
+ * @returns Whether medical advice is being requested
  */
 export const isDirectMedicalAdvice = (userInput: string): boolean => {
   const medicalAdvicePatterns = [
-    /should I take|should I stop taking|should I switch|what (medication|medicine|drug|dosage)/i,
-    /is it safe to (take|use|combine|mix)|drug interaction/i,
-    /diagnosis|diagnose|medical condition|medical advice|treatment (for|plan|option)/i,
-    /what (is|are) (the|my) (symptoms|condition|illness|disease|diagnosis)/i,
-    /what (medication|medicine|drug|treatment|therapy) (should|would|could|can) (I|me|someone)/i
+    /should I take (this|my|these) (medication|med|pill|drug)/i,
+    /what (medication|med|pill|drug) should I (take|use)/i,
+    /diagnos(e|is)/i,
+    /correct (dosage|dose)/i,
+    /medical (advice|opinion|diagnosis)/i,
+    /change (my|the) (medication|med|dosage)/i
   ];
   
   return medicalAdvicePatterns.some(pattern => pattern.test(userInput));
 };
 
 /**
- * Direct medical advice handling function
- * @returns Medical advice disclaimer response
+ * Generates a response for requests for medical advice
+ * @returns Medical advice boundary response
  */
 export const handleDirectMedicalAdvice = (): string => {
-  return "I notice you're asking about a medical issue. I'm not a medical professional and can't provide medical advice, diagnoses, or treatment recommendations. For specific medical questions, please consult with a qualified healthcare provider. Would it be helpful to discuss general wellness topics or stress management strategies instead?";
+  return "I understand you're asking about medical advice, but I'm not qualified to give medical or medication guidance. These questions are best directed to your healthcare provider who knows your full medical history and can give you proper advice. Would it be helpful to talk about strategies for discussing this with your doctor?";
 };
 
 /**
- * Suicidal ideation detection function
- * @param userInput The user's message
- * @returns Whether the input indicates suicidal ideation
+ * Checks if user input indicates suicidal ideation
+ * @param userInput User message
+ * @returns Whether suicidal ideation is detected
  */
 export const isSuicidalIdeation = (userInput: string): boolean => {
   const suicidalIdeationPatterns = [
-    /suicid(e|al)|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)/i,
-    /don'?t want to (live|be alive)|take my (own )?life|killing myself|commit suicide|die by suicide/i,
-    /fatal overdose|hang myself|jump off|i wish i was dead|i want to die|i might kill/i,
-    /no (reason|point) (in|to) (living|life)|better off dead|can'?t go on/i,
-    /plan to (kill|end|hurt|harm)/i
+    /suicid(e|al)|kill (myself|me)|end (my|this) life|don'?t want to (live|be alive)|take my (own )?life/i,
+    /no (point|reason) (in|to) (living|life)|better off dead|can'?t (go on|continue)/i,
+    /want to die|dying seems|death wish|planning (my )?suicide|goodbye (forever|for good)/i
   ];
   
   return suicidalIdeationPatterns.some(pattern => pattern.test(userInput));
 };
 
 /**
- * Suicidal ideation handling function
- * @returns Crisis response with appropriate resources
+ * Generates a response for suicidal ideation
+ * @returns Suicidal ideation response with resources
  */
 export const handleSuicidalIdeation = (): string => {
-  return "I'm concerned about what you've shared. If you're having thoughts about harming yourself, please reach out for immediate help. The National Suicide Prevention Lifeline is available 24/7 at 988 or 1-800-273-8255. You can also text HOME to the Crisis Text Line at 741741. If you're in immediate danger, please call 911 or go to your nearest emergency room. Your life matters, and trained professionals are ready to support you through this difficult time.";
+  return "I'm really concerned about what you're sharing. Your life matters, and there are people who want to help. Please consider calling the 988 Suicide & Crisis Lifeline (call or text 988) to speak with a trained counselor, or go to your nearest emergency room. Would it be helpful if I shared some additional crisis resources with you?";
 };

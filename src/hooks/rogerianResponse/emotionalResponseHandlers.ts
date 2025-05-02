@@ -14,6 +14,32 @@ export const handleEmotionalPatterns = async (
   updateStage: () => void
 ): Promise<MessageType | null> => {
   try {
+    // HIGHEST PRIORITY: Check if user is pointing out that we're not listening
+    const notListeningPattern = /already told you|just said that|weren't listening|not listening|didn't hear|didn't read|ignoring|pay attention|listen to me|read what i wrote|i just told you|i said|i mentioned|you asked|you're repeating|you just asked|you already asked/i;
+    
+    if (notListeningPattern.test(userInput)) {
+      // Generate an acknowledgment response with content from previous messages
+      let acknowledgmentResponse = "I apologize for not properly acknowledging what you've already shared. ";
+      
+      // Extract relevant topics from previous messages
+      const topics = extractRelevantTopics(conversationHistory);
+      if (topics.length > 0) {
+        acknowledgmentResponse += `I understand that you mentioned ${topics.join(", ")}. `;
+      }
+      
+      acknowledgmentResponse += "Which aspect of this would be most helpful to focus on right now?";
+      
+      // Update conversation stage
+      updateStage();
+      
+      // Process with acknowledgment response
+      return baseProcessUserMessage(
+        userInput,
+        () => acknowledgmentResponse,
+        () => null
+      );
+    }
+    
     // HIGHEST PRIORITY: Check for sarcasm or frustration directed at Roger
     const { detectSarcasm, generateSarcasmResponse, detectContentConcerns } = require('../../utils/conversationEnhancement/emotionalInputHandler');
     if (detectSarcasm(userInput) && 
@@ -160,4 +186,45 @@ export const handleEmotionalPatterns = async (
     console.error("Error in handleEmotionalPatterns:", error);
     return null;
   }
+};
+
+/**
+ * Helper function to extract relevant topics from conversation history
+ */
+const extractRelevantTopics = (history: string[]): string[] => {
+  // Only consider user messages (not Roger's responses)
+  const userMessages = history.filter(msg => 
+    !msg.includes("Roger is") && 
+    !msg.includes("I apologize for not") &&
+    !msg.includes("I'm here to listen") &&
+    !msg.includes("I understand") &&
+    !msg.includes("I hear what")
+  );
+  
+  if (userMessages.length === 0) {
+    return [];
+  }
+  
+  const topics = [];
+  const topicPatterns = [
+    { regex: /storm|electricity|power|outage/i, topic: "the power outage" },
+    { regex: /presentation|work|job|boss|meeting|deadline/i, topic: "your work presentation" },
+    { regex: /laptop|computer|device|phone|mobile/i, topic: "technology issues" },
+    { regex: /frustrat(ed|ing)|upset|angry|mad|stress(ed|ful)/i, topic: "your frustration" },
+    { regex: /anxious|anxiety|worry|concern/i, topic: "your anxiety" },
+    { regex: /sad|down|depress(ed|ing)|unhappy/i, topic: "your feelings" },
+    { regex: /family|relationship|partner|spouse|marriage/i, topic: "your relationships" },
+    { regex: /sleep|tired|exhausted|fatigue/i, topic: "your sleep concerns" }
+  ];
+  
+  // Check each user message for topics
+  for (const message of userMessages) {
+    for (const pattern of topicPatterns) {
+      if (pattern.regex.test(message) && !topics.includes(pattern.topic)) {
+        topics.push(pattern.topic);
+      }
+    }
+  }
+  
+  return topics;
 };

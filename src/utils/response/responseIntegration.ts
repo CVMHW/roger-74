@@ -18,6 +18,12 @@ import {
   isSmallTalk,
   isPersonalSharing,
   generatePersonalSharingResponse,
+  isEmergency,
+  handleEmergency,
+  isDirectMedicalAdvice,
+  handleDirectMedicalAdvice,
+  isSuicidalIdeation,
+  handleSuicidalIdeation
 } from '../masterRules/unconditionalRuleProtections';
 
 import {
@@ -46,12 +52,22 @@ export const applyUnconditionalRules = (
   userInput: string,
   messageCount: number
 ): string => {
+  // HIGHEST PRIORITY: Check for emergencies first
+  if (isEmergency(userInput) || isSuicidalIdeation(userInput)) {
+    return isEmergency(userInput) ? handleEmergency() : handleSuicidalIdeation();
+  }
+  
+  // Check for medical advice requests (second highest priority)
+  if (isDirectMedicalAdvice(userInput)) {
+    return handleDirectMedicalAdvice();
+  }
+  
   // Skip rule processing for introduction messages
   if (isIntroduction(userInput)) {
     return generateIntroductionResponse();
   }
   
-  // Check for personal sharing first
+  // Check for personal sharing
   if (isPersonalSharing(userInput)) {
     return generatePersonalSharingResponse(userInput);
   }
@@ -140,7 +156,8 @@ const extractUserTopics = (input: string): string[] => {
   const potentialTopics = [
     "work", "job", "school", "family", "relationship", "health", 
     "sleep", "anxiety", "stress", "depression", "friend", 
-    "partner", "spouse", "child", "parent"
+    "partner", "spouse", "child", "parent", "storm", "electricity",
+    "power", "outage", "presentation", "laptop", "frustration"
   ];
   
   for (const topic of potentialTopics) {

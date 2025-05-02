@@ -48,12 +48,20 @@ export const useMessageProcessor = ({
     return /pet|dog|cat|animal|died|passed away|molly|death|lost|grave|euthan/.test(lowerText);
   };
   
+  // Function to check if Roger is being non-responsive or repetitive
+  const isUserPointingOutNonResponsiveness = (text: string): boolean => {
+    const lowerText = text.toLowerCase().trim();
+    return /already told you|just said that|weren't listening|not listening|didn't hear|didn't read|ignoring|pay attention|listen to me|read what i wrote|i just told you|i said|i mentioned|you asked|you're repeating|you just asked|you already asked/.test(lowerText);
+  };
+  
   // Function to determine appropriate processing context based on user input
   const determineProcessingContext = (userInput: string): string => {
     if (containsCriticalKeywords(userInput)) {
       return "Roger is carefully considering your message about self-harm...";
     } else if (isPetLossContent(userInput)) {
       return "Roger is reflecting on what you shared about your pet...";
+    } else if (isUserPointingOutNonResponsiveness(userInput)) {
+      return "Roger is reviewing your previous messages...";
     } else {
       // Choose from various "thinking" contexts
       const contexts = [
@@ -73,6 +81,9 @@ export const useMessageProcessor = ({
     // Add user input to conversation history
     conversationHistory.push(userInput);
     
+    // Check if user is pointing out that Roger didn't listen/is repeating
+    const isPointingOutNonResponsiveness = isUserPointingOutNonResponsiveness(userInput);
+    
     // Check if this is a potentially critical message
     const isCritical = containsCriticalKeywords(userInput);
     const isPetLoss = isPetLossContent(userInput);
@@ -83,6 +94,42 @@ export const useMessageProcessor = ({
     
     // Calculate appropriate delay time based on message content
     const responseDelay = getResponseDelay(userInput);
+    
+    // If user is pointing out that Roger didn't listen, prioritize addressing this
+    if (isPointingOutNonResponsiveness && conversationHistory.length >= 3) {
+      setTimeout(() => {
+        // Generate a special acknowledgment response
+        const acknowledgmentResponse = createMessage(
+          "I apologize for not properly acknowledging what you've already shared. Looking back at our conversation, I see that you mentioned " + 
+          extractTopicsFromHistory(conversationHistory.slice(-3)) + 
+          ". Could you help me understand which aspects of this are most important for us to focus on right now?",
+          'roger'
+        );
+        
+        // Add the response
+        setMessages(prevMessages => [...prevMessages, acknowledgmentResponse]);
+        
+        // Add response to conversation history
+        conversationHistory.push(acknowledgmentResponse.text);
+        
+        // Update the response history to prevent future repetition
+        updateRogerResponseHistory(acknowledgmentResponse.text);
+        
+        // Simulate typing with a callback to update the message text
+        simulateTypingResponse(acknowledgmentResponse.text, (text) => {
+          setMessages(prevMessages => 
+            prevMessages.map(msg => 
+              msg.id === acknowledgmentResponse.id ? { ...msg, text } : msg
+            )
+          );
+          
+          // Clear the processing context once response is complete
+          setProcessingContext(null);
+        });
+      }, Math.min(responseDelay, 1000)); // Respond faster to acknowledgment requests
+      
+      return;
+    }
     
     // Double-check throttling for non-critical messages
     if (shouldThrottleResponse() && !isCritical) {
@@ -106,14 +153,20 @@ export const useMessageProcessor = ({
               conversationHistory.slice(-5)
             );
             
+            // Make sure Roger isn't asking "what's going on" if the user already explained
+            const responseWithHistoryCheck = preventRedundantQuestions(
+              enhancedResponse, 
+              conversationHistory.slice(-5)
+            );
+            
             // Update the response with enhanced text that has contextual awareness
             const updatedResponse = {
               ...rogerResponse,
-              text: enhancedResponse
+              text: responseWithHistoryCheck
             };
             
             // Add the response to history to prevent future repetition
-            updateRogerResponseHistory(enhancedResponse);
+            updateRogerResponseHistory(responseWithHistoryCheck);
             
             // Check if this is a crisis-related response and store it for deception detection
             handleCrisisMessage(userInput, updatedResponse);
@@ -134,10 +187,10 @@ export const useMessageProcessor = ({
             }
             
             // Add response to conversation history for better context
-            conversationHistory.push(enhancedResponse);
+            conversationHistory.push(responseWithHistoryCheck);
             
             // Simulate typing with a callback to update the message text
-            simulateTypingResponse(enhancedResponse, (text) => {
+            simulateTypingResponse(responseWithHistoryCheck, (text) => {
               setMessages(prevMessages => 
                 prevMessages.map(msg => 
                   msg.id === updatedResponse.id ? { ...msg, text } : msg
@@ -154,7 +207,7 @@ export const useMessageProcessor = ({
             const fallbackResponse = createMessage(
               isCritical 
                 ? "I'm concerned about what you're sharing. If you're in crisis or having thoughts about harming yourself, please reach out to a crisis hotline or emergency services immediately." 
-                : "I'm here to listen. What would you like to talk about?",
+                : "I hear what you've shared. What would be most helpful for us to talk about right now?",
               'roger',
               isCritical ? ('crisis' as ConcernType) : null
             );
@@ -181,7 +234,7 @@ export const useMessageProcessor = ({
           const errorResponse = createMessage(
             isCritical 
               ? "I notice you may be in crisis. If you're having thoughts of harming yourself, please reach out to a crisis hotline or emergency services immediately. I'm here to support you." 
-              : "I'm sorry, I'm having trouble responding right now. I'm here to listen when you're ready to continue.",
+              : "I'm hearing that you're dealing with a frustrating situation. What would be most helpful to focus on right now?",
             'roger',
             isCritical ? ('crisis' as ConcernType) : null
           );
@@ -213,6 +266,56 @@ export const useMessageProcessor = ({
     getResponseDelay,
     setProcessingContext
   ]);
+
+  // Helper function to extract key topics from conversation history
+  const extractTopicsFromHistory = (history: string[]): string => {
+    if (!history || history.length === 0) return "your concerns";
+    
+    const lastUserMessage = history.filter(msg => 
+      !msg.includes("Roger is") && 
+      !msg.includes("I apologize for not") &&
+      !msg.includes("I'm here to listen")
+    )[0] || "";
+    
+    // Extract key nouns and topics from the message
+    const topics = [];
+    const topicPatterns = [
+      { regex: /storm|electricity|power|outage/i, topic: "the power outage" },
+      { regex: /presentation|work|job|boss|meeting|deadline/i, topic: "your work presentation" },
+      { regex: /laptop|computer|device|phone|mobile/i, topic: "technology issues" },
+      { regex: /frustrat(ed|ing)|upset|angry|mad|stress(ed|ful)/i, topic: "your frustration" },
+      { regex: /anxious|anxiety|worry|concern/i, topic: "your anxiety" },
+      { regex: /sad|down|depress(ed|ing)|unhappy/i, topic: "your feelings" },
+      { regex: /family|relationship|partner|spouse|marriage/i, topic: "your relationships" },
+      { regex: /sleep|tired|exhausted|fatigue/i, topic: "your sleep concerns" }
+    ];
+    
+    for (const pattern of topicPatterns) {
+      if (pattern.regex.test(lastUserMessage)) {
+        topics.push(pattern.topic);
+      }
+    }
+    
+    return topics.length > 0 ? topics.join(" and ") : "your concerns";
+  };
+
+  // Helper function to prevent redundant questions
+  const preventRedundantQuestions = (response: string, history: string[]): string => {
+    // Check if Roger is asking what's going on after user already explained
+    if (history.length >= 2 && 
+        (response.includes("What's been going on?") || 
+         response.includes("What's going on?") ||
+         response.includes("What's been happening?"))) {
+      
+      // Replace the redundant question with acknowledgment
+      return response.replace(
+        /(What's been going on\?|What's going on\?|What's been happening\?)/,
+        "I'd like to understand more about how this is affecting you."
+      );
+    }
+    
+    return response;
+  };
 
   return { processResponse };
 };
