@@ -64,8 +64,6 @@ export const useMessageProcessor = ({
           }
           
           // For critical messages, use a faster typing simulation
-          const typingDuration = isCritical ? 500 : undefined; // Faster typing for critical messages
-          
           // Simulate typing with a callback to update the message text
           simulateTypingResponse(rogerResponse.text, (text) => {
             setMessages(prevMessages => 
@@ -73,7 +71,7 @@ export const useMessageProcessor = ({
                 msg.id === rogerResponse.id ? { ...msg, text } : msg
               )
             );
-          }, typingDuration);
+          });
         } catch (innerError) {
           console.error("Error processing Roger's response:", innerError);
           
@@ -95,7 +93,7 @@ export const useMessageProcessor = ({
                 msg.id === fallbackResponse.id ? { ...msg, text } : msg
               )
             );
-          }, isCritical ? 500 : undefined);
+          });
         }
       })
       .catch(error => {
@@ -119,7 +117,7 @@ export const useMessageProcessor = ({
               msg.id === errorResponse.id ? { ...msg, text } : msg
             )
           );
-        }, isCritical ? 500 : undefined);
+        });
       });
   }, [
     processUserMessage, 
