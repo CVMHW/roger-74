@@ -244,6 +244,43 @@ const cvmhwInfo = {
   contactInfo: "For appointments or questions, please contact your provider directly."
 };
 
+// Collaborative support principles from person-centered and collaborative psychotherapy
+const collaborativeSupportPrinciples = {
+  core: {
+    description: "The collaborative relationship in peer support is guided by principles from Carl Rogers' person-centered approach and collaborative psychotherapy, as described by Peggy Natiello and others.",
+    values: [
+      "Human nature is basically trustworthy and positive - individuals can be trusted to make decisions and solve problems given an appropriately supportive climate",
+      "Collaborative relationships are more growth-promoting than authoritarian or power-over relationships",
+      "In a collaborative relationship, both persons may be positively changed by the interaction",
+      "Psychological health includes the capacity for healthy interdependence and connectedness",
+      "In collaborative support, the person seeking help influences the process as much as the helper does"
+    ]
+  },
+  characteristics: [
+    "Commitment to being real, transparent, and fully present as a person rather than acting as the expert",
+    "Openness, responsiveness, and dignity in interactions",
+    "Personal empowerment and alternating influence",
+    "Cooperation rather than control",
+    "Being responsible to each other rather than for each other",
+    "Fostering trust in the person's capacity for self-direction"
+  ],
+  approach: [
+    "Creating a safe space for exploration without judgment",
+    "Listening deeply to understand rather than to diagnose or fix",
+    "Respecting the person's wisdom about their own life",
+    "Sharing personal experience when appropriate to demonstrate shared humanity",
+    "Recognizing that healing happens through authentic connection",
+    "Trusting in the person's natural movement toward growth"
+  ],
+  quotes: [
+    "A collaborative relationship is defined as a relationship in which the capacity to act or effect change is shared by all persons in the relationship rather than being assigned to one person who is seen as the authority or expert.",
+    "Rogers clearly appreciated the value of the relationship and the potential for growth in both persons that comes from the connectedness present in the relationship.",
+    "Collaborative relationships are characterized by openness, responsiveness, dignity, personal empowerment, alternating influence, and cooperation.",
+    "Healing responses cannot be taught, but they become clear as the collaborative relationship matures and as helpers enhance their self-awareness and their understanding of collaboration.",
+    "It is important to convey that we are in this journey together, and the person will ultimately be the one who has the answers for themselves."
+  ]
+};
+
 // Function to generate appropriate responses about CVMHW
 const generateCVMHWInfoResponse = (userInput: string): string | null => {
   const lowerInput = userInput.toLowerCase();
@@ -280,6 +317,35 @@ const generateCVMHWInfoResponse = (userInput: string): string | null => {
   return `Cuyahoga Valley Mindful Health and Wellness (CVMHW) provides comprehensive mental health services for clients of all ages, from children as young as 4 to adults and veterans. Led by Eric Riesterer, a Licensed Professional Counselor, they offer evidence-based therapies including cognitive-processing therapy, mindfulness techniques, and play therapy. They specialize in anxiety, depression, trauma treatment, family counseling, and military adjustment issues. They accept most major insurance providers and also offer Life Coaching and Athletic Coaching services.`;
 };
 
+// Function to generate collaborative support responses
+const generateCollaborativeResponse = (userInput: string): string | null => {
+  const lowerInput = userInput.toLowerCase();
+  
+  // Check if the user is asking about the approach or relationship
+  if (lowerInput.includes('approach') || lowerInput.includes('relationship') || 
+      lowerInput.includes('collaborate') || lowerInput.includes('rogers') || 
+      lowerInput.includes('person-centered') || lowerInput.includes('how do you help')) {
+    
+    // Generate response based on collaborative principles
+    if (lowerInput.includes('listen') || lowerInput.includes('understand')) {
+      return "I believe in listening deeply to understand rather than to diagnose or fix. My approach is based on Carl Rogers' person-centered principles, where I trust in your natural capacity to move toward growth and healing if given the right supportive environment. I'm here to listen and understand your perspective without judgment.";
+    }
+    
+    if (lowerInput.includes('expert') || lowerInput.includes('advice') || lowerInput.includes('tell me what to do')) {
+      return "Rather than positioning myself as an expert on your life, I believe in a collaborative approach where we work together. I trust that you have wisdom about your own life and experiences. My role is to provide a supportive space where you can explore your thoughts and feelings, not to direct your decisions or provide expert advice.";
+    }
+    
+    if (lowerInput.includes('helpful') || lowerInput.includes('benefit')) {
+      return "In our conversations, I aim to create a supportive environment characterized by authenticity, deep listening, and respect for your self-direction. I believe that healing happens through genuine connection and that you have within yourself the capacity to work through challenges when given the right supportive climate.";
+    }
+    
+    // General response about the approach
+    return "My approach is collaborative and based on person-centered principles developed by Carl Rogers and elaborated by practitioners like Peggy Natiello. I believe that you are the expert on your own life and that my role is to provide genuine presence, deep listening, and a supportive climate where you can explore your thoughts and feelings. I trust in your natural capacity for growth and self-direction.";
+  }
+  
+  return null;
+};
+
 // Function to generate appropriate conversational responses based on user input context
 export const generateConversationalResponse = (userInput: string): string => {
   // Check if the user is asking about CVMHW specifically
@@ -288,15 +354,26 @@ export const generateConversationalResponse = (userInput: string): string => {
     return cvmhwResponse;
   }
   
-  // Basic conversational responses - can be expanded
+  // Check if the user is asking about the collaborative approach
+  const collaborativeResponse = generateCollaborativeResponse(userInput);
+  if (collaborativeResponse) {
+    return collaborativeResponse;
+  }
+  
+  // More human-like and collaborative responses based on person-centered principles
   const responses = [
-    "That's interesting, tell me more.",
-    "I understand. How does that make you feel?",
-    "Thank you for sharing that with me.",
-    "I'm here to listen. Please go on.",
-    "I appreciate you being so open."
+    "I'm interested in understanding more about what that's like for you.",
+    "That sounds challenging. How are you feeling about it right now?",
+    "Thank you for sharing that with me. I appreciate your openness.",
+    "I'm here to listen without judgment. Would you like to tell me more?",
+    "I can see this matters deeply to you. What aspects feel most important?",
+    "I'm wondering how this experience has affected you.",
+    "I'm here with you in this conversation. What would be most helpful for you right now?",
+    "That's a lot to carry. How have you been managing with all of this?",
+    "I'm curious about what you're hoping for as you work through this.",
+    "I notice you mentioned [word]. Could you share more about what that means for you?"
   ];
 
-  // Select a random response for general conversation
+  // Select a response that feels more engaging and collaborative
   return responses[Math.floor(Math.random() * responses.length)];
 };
