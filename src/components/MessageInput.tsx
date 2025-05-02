@@ -36,8 +36,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
           rows={2}
         />
         <Button 
-          type="button"
-          onClick={handleSendMessage} 
+          onClick={handleSendMessage}
           className="bg-roger hover:bg-roger-dark"
         >
           <Send size={18} />

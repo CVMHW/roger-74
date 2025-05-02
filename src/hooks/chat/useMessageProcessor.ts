@@ -1,6 +1,7 @@
 
 import { useCallback } from 'react';
 import { MessageType } from '../../components/Message';
+import { isLocationDataNeeded } from '../../utils/messageUtils';
 
 interface MessageProcessorProps {
   processUserMessage: (userInput: string) => Promise<MessageType>;
@@ -38,9 +39,8 @@ export const useMessageProcessor = ({
       setMessages(prevMessages => [...prevMessages, rogerResponse]);
       
       // Set up to request location after this message if needed
-      const messageUtils = require('../../utils/messageUtils');
       if (rogerResponse.concernType && 
-          messageUtils.isLocationDataNeeded(rogerResponse.concernType) && 
+          isLocationDataNeeded(rogerResponse.concernType) && 
           !activeLocationConcern) {
         
         setActiveLocationConcern({

@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { MessageType } from '../../components/Message';
 import { useToast } from '@/components/ui/use-toast';
-import { getInitialMessages, storeFeedback } from '../../utils/messageUtils';
+import { getInitialMessages } from '../../utils/messageUtils';
 import useRogerianResponse from '../useRogerianResponse';
 import { useLocationConcern } from './useLocationConcern';
 import { useCrisisDetection } from './useCrisisDetection';
