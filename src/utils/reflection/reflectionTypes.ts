@@ -10,6 +10,15 @@ export type FeelingCategory =
 
 export type ConversationStage = 'initial' | 'early' | 'established';
 
+// New type for developmental stages based on age groups
+export type DevelopmentalStage = 
+  'infant_toddler' |      // Ages 0-3
+  'young_child' |         // Ages 4-7
+  'middle_childhood' |    // Ages 8-12
+  'adolescent' |          // Ages 13-18
+  'young_adult' |         // Ages 19-25
+  'adult';                // Ages 26+
+
 export type ReflectionPhrases = Record<FeelingCategory, string[]>;
 
 export interface ReflectionPrinciple {
@@ -31,6 +40,7 @@ export interface ContextAwareReflection {
   timeContext?: string; // Temporal context if mentioned (e.g., "yesterday", "next week")
   locationContext?: string; // Location context if mentioned (e.g., "at work", "in Cleveland")
   userConcern?: string; // The primary concern expressed by the user
+  developmentalStage?: DevelopmentalStage; // The developmental stage of the user
 }
 
 // Interface for tracking personalized topics for better follow-up

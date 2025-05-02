@@ -1,12 +1,11 @@
-
 /**
  * Main reflection module that integrates all reflection utilities
  */
 
-import { ConversationStage } from './reflectionTypes';
+import { ConversationStage, DevelopmentalStage } from './reflectionTypes';
 import { identifyFeelings } from './feelingDetection';
 import { createFeelingReflection, createMeaningReflection, createGeneralReflection } from './reflectionGenerators';
-import { shouldUseReflection } from './reflectionStrategies';
+import { shouldUseReflection, detectDevelopmentalStage, generateAgeAppropriateReflection } from './reflectionStrategies';
 
 /**
  * Generates an appropriate reflection response based on user's message
@@ -21,11 +20,20 @@ export const generateReflectionResponse = (userMessage: string, conversationStag
       return "I'm here to listen. What's on your mind today?";
     }
     
-    // First 10 minutes (early stages) - prioritize directly acknowledging stated feelings
+    // Detect developmental stage for age-appropriate responses
+    const developmentalStage = detectDevelopmentalStage(userMessage);
+    
+    // First identify any feelings that are explicitly stated
     const feelings = identifyFeelings(userMessage);
     
     // If feelings were explicitly shared, always acknowledge them first
     if (feelings.length > 0) {
+      // If we detected a developmental stage, use age-appropriate reflection
+      if (developmentalStage && developmentalStage !== 'adult') {
+        return generateAgeAppropriateReflection(userMessage, feelings[0], developmentalStage);
+      }
+      
+      // Otherwise use standard feeling reflection
       const feelingReflection = createFeelingReflection(feelings, userMessage);
       // Only fall back if reflection creation fails completely
       return feelingReflection || createGeneralReflection(userMessage);
@@ -33,6 +41,11 @@ export const generateReflectionResponse = (userMessage: string, conversationStag
     
     // If no feelings were explicitly detected, try a meaning reflection
     if (conversationStage === 'initial' || conversationStage === 'early') {
+      // Check for developmental stage for age-appropriate response
+      if (developmentalStage && developmentalStage !== 'adult') {
+        return generateAgeAppropriateReflection(userMessage, '', developmentalStage);
+      }
+      
       const meaningReflection = createMeaningReflection(userMessage);
       return meaningReflection || createGeneralReflection(userMessage);
     }
@@ -41,6 +54,11 @@ export const generateReflectionResponse = (userMessage: string, conversationStag
     const useReflection = shouldUseReflection(userMessage, conversationStage);
     
     if (useReflection) {
+      // Check for developmental stage for age-appropriate response
+      if (developmentalStage && developmentalStage !== 'adult') {
+        return generateAgeAppropriateReflection(userMessage, '', developmentalStage);
+      }
+      
       const meaningReflection = createMeaningReflection(userMessage);
       return meaningReflection || createGeneralReflection(userMessage);
     }
@@ -61,4 +79,3 @@ export * from './reflectionStrategies';
 export * from './feelingCategories';
 export * from './reflectionPhrases';
 export * from './reflectionPrinciples';
-

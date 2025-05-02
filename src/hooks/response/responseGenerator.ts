@@ -56,16 +56,15 @@ export const useResponseGenerator = ({
       }
     }
     
-    // FIRST PRIORITY: Process any personal sharing with explicit feelings
+    // HIGHEST PRIORITY: Check for introductions if this is the first interaction
+    if (isIntroduction(userInput) && !introductionMade) {
+      return generateIntroductionResponse();
+    }
+    
+    // SECOND PRIORITY: Process any personal sharing with explicit feelings
     // This ensures we immediately acknowledge stated emotions before anything else
     if (isPersonalSharing(userInput)) {
       return generatePersonalSharingResponse(userInput);
-    }
-    
-    // Enhanced social interaction flow based on master rules
-    // Check for introductions and greetings - but only for initial messages
-    if (isIntroduction(userInput) && !introductionMade) {
-      return generateIntroductionResponse();
     }
     
     // Implementation of the 10-minute rule for reflections - prioritize in early conversation
@@ -76,21 +75,24 @@ export const useResponseGenerator = ({
         return reflectionResponse;
       }
       
-      // If no reflection was generated, fall back to small talk
+      // If no reflection was generated, check for small talk
       if (isSmallTalk(userInput)) {
         return generateSmallTalkResponse(userInput);
       }
       else {
+        // Use adaptive response as last resort in early conversation
         return adaptiveResponseFn(userInput);
       }
     }
     
-    // Check for small talk - natural conversation flow
+    // For established conversations:
+    
+    // Check for small talk
     if (isSmallTalk(userInput)) {
       return generateSmallTalkResponse(userInput);
     }
     
-    // Try a reflection response first (but less frequently in established conversation)
+    // Try a reflection response (but less frequently in established conversation)
     const reflectionResponse = generateReflectionResponse(userInput, conversationStage);
     if (reflectionResponse) {
       return reflectionResponse;
