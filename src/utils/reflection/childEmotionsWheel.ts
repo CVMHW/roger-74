@@ -75,7 +75,7 @@ export const childEmotionsWheel: ChildEmotionSection[] = [
     color: '#8A508F', // Purple
     emotions: [
       { name: 'worried', synonyms: ['nervous', 'concerned', 'unsure'], description: 'Thinking something bad might happen' },
-      { name: 'overwhelmed', synonyms: ['too much', 'too busy'], description: 'Feeling like there's too much happening' },
+      { name: 'overwhelmed', synonyms: ['too much', 'too busy'], description: 'Feeling like there is too much happening' },
       { name: 'shy', synonyms: ['quiet', 'timid'], description: 'Feeling nervous around others' }
     ]
   },
@@ -83,7 +83,7 @@ export const childEmotionsWheel: ChildEmotionSection[] = [
     name: 'confused',
     color: '#553772', // Dark purple
     emotions: [
-      { name: 'confused', synonyms: ['mixed up', 'don\'t understand', 'lost'], description: 'Not understanding what's happening' },
+      { name: 'confused', synonyms: ['mixed up', 'don\'t understand', 'lost'], description: 'Not understanding what\'s happening' },
       { name: 'surprised', synonyms: ['shocked', 'didn\'t expect'], description: 'Something unexpected happened' }
     ]
   },
@@ -93,7 +93,7 @@ export const childEmotionsWheel: ChildEmotionSection[] = [
     emotions: [
       { name: 'sad', synonyms: ['unhappy', 'blue', 'down'], description: 'Feeling down inside' },
       { name: 'lonely', synonyms: ['alone', 'no friends'], description: 'Feeling like you have no one to talk to' },
-      { name: 'disappointed', synonyms: ['let down', 'upset'], description: 'Something didn't go how you wanted' }
+      { name: 'disappointed', synonyms: ['let down', 'upset'], description: 'Something didn\'t go how you wanted' }
     ]
   },
   {
@@ -261,7 +261,7 @@ export const getChildFriendlyEmotionExplanation = (emotion: string): string => {
     'scared': 'Feeling afraid of something',
     'worried': 'Thinking something bad might happen',
     'excited': 'Feeling really happy about something',
-    'confused': 'Not understanding what's happening',
+    'confused': 'Not understanding what\'s happening',
     'tired': 'Needing some rest',
     'bored': 'Nothing feels fun right now',
     'loved': 'Feeling that people care about you'
