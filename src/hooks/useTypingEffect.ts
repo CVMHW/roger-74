@@ -1,85 +1,92 @@
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 /**
- * Hook for creating a realistic typing effect for Roger's responses
+ * Hook for creating realistic typing effects in chat interfaces
  */
-export const useTypingEffect = () => {
-  // Calculate dynamic response time based on message length and complexity
-  const calculateResponseTime = (message: string): number => {
-    // Base time (milliseconds)
-    const baseTime = 1500;
+const useTypingEffect = () => {
+  const [isTyping, setIsTyping] = useState(false);
+  const typingTimeout = useRef<NodeJS.Timeout | null>(null);
+  
+  // Clean up any timeouts when component unmounts
+  useEffect(() => {
+    return () => {
+      if (typingTimeout.current) {
+        clearTimeout(typingTimeout.current);
+      }
+    };
+  }, []);
+
+  /**
+   * Calculate a realistic response time based on input length and complexity
+   * @param input - User input to calculate response time for
+   * @returns Number of milliseconds to wait before starting to type
+   */
+  const calculateResponseTime = useCallback((input: string): number => {
+    // Base response time between 1-2 seconds
+    const baseTime = Math.floor(Math.random() * 1000) + 1000;
     
-    // Factor in message length (30ms per character with a cap)
-    const lengthFactor = Math.min(message.length * 30, 5000);
-    
-    // Add randomness for more human-like timing (±30% variation)
-    const randomVariation = (Math.random() * 0.6 + 0.7);
-    
-    // Add extra time if it's an emotional or complex topic
-    let complexityFactor = 0;
-    const complexTopics = ['died', 'death', 'grief', 'suicide', 'depression', 'anxiety', 'trauma', 'refugee', 'immigrant'];
-    if (complexTopics.some(topic => message.toLowerCase().includes(topic))) {
-      complexityFactor = 2000; // Add extra "thinking time" for sensitive topics
+    // For very short messages, respond a bit faster
+    if (input.length < 10) {
+      return baseTime;
     }
     
-    return Math.round((baseTime + lengthFactor + complexityFactor) * randomVariation);
-  };
-
-  // Simulate realistic typing with variable speed and pauses
-  const simulateTypingResponse = (response: string, callback: (text: string) => void) => {
-    let currentIndex = 0;
-    let fullResponse = '';
+    // For medium length messages add some extra time
+    if (input.length < 50) {
+      return baseTime + Math.floor(Math.random() * 1000);
+    }
     
-    // Function to add next character with variable speed
-    const addNextChar = () => {
-      if (currentIndex < response.length) {
-        fullResponse += response[currentIndex];
+    // For longer messages, simulate more thinking time
+    return baseTime + Math.floor(Math.random() * 2000) + 1000;
+  }, []);
+
+  /**
+   * Simulate typing a response with realistic timing
+   * @param response - The full response text
+   * @param callback - Function called on each letter typed with current text
+   */
+  const simulateTypingResponse = useCallback((response: string, callback: (text: string) => void) => {
+    if (!response) {
+      return;
+    }
+    
+    setIsTyping(true);
+    
+    const words = response.split(' ');
+    let currentIndex = 0;
+    let displayedText = '';
+    
+    const typeWord = () => {
+      if (currentIndex < words.length) {
+        // Add the next word (with a space if not first word)
+        displayedText += (currentIndex === 0 ? '' : ' ') + words[currentIndex];
+        callback(displayedText);
         currentIndex++;
         
-        // Variable typing speed with more human-like patterns
-        let delay = 35 + Math.random() * 70; // Base variable typing speed
+        // Calculate delay based on word length and some randomness
+        const nextWord = words[currentIndex];
+        const delay = nextWord ? 
+                    // Longer words take longer to type (30-80ms per character)
+                    Math.max(150, Math.min(nextWord.length * (Math.random() * 50 + 30), 400)) : 
+                    200;
         
-        const currentChar = response[currentIndex - 1];
+        // Add occasional longer pauses (15% chance)
+        const randomPause = Math.random() < 0.15 ? 
+                          Math.floor(Math.random() * 300) + 200 : 0;
         
-        // Add natural typing rhythm and pauses
-        if (['.', '!', '?'].includes(currentChar)) {
-          delay += 500 + Math.random() * 300; // Longer varied pause at end of sentences
-        } else if ([',', ';', ':'].includes(currentChar)) {
-          delay += 250 + Math.random() * 150; // Medium varied pause at punctuation
-        } else if (currentChar === ' ') {
-          // Occasionally add a longer pause between words (like thinking)
-          if (Math.random() < 0.08) {
-            delay += 400 + Math.random() * 300;
-          }
-        }
-        
-        // Sometimes add "typing errors" and corrections for realism
-        if (Math.random() < 0.005 && currentChar !== ' ' && currentIndex < response.length - 2) {
-          const wrongChar = String.fromCharCode(currentChar.charCodeAt(0) + 1);
-          fullResponse += wrongChar;
-          
-          // Show the error briefly, then remove it
-          callback(fullResponse);
-          
-          setTimeout(() => {
-            fullResponse = fullResponse.slice(0, -1); // Remove the wrong character
-            callback(fullResponse);
-            setTimeout(addNextChar, 80 + Math.random() * 120); // Continue after a short delay
-          }, 200 + Math.random() * 300);
-          return;
-        }
-        
-        callback(fullResponse);
-        setTimeout(addNextChar, delay);
+        // Type the next word after the delay
+        typingTimeout.current = setTimeout(typeWord, delay + randomPause);
+      } else {
+        setIsTyping(false);
       }
     };
     
-    // Simulate "thinking" before typing begins
-    setTimeout(addNextChar, 500 + Math.random() * 800);
-  };
+    // Start typing the first word
+    typeWord();
+  }, []);
 
   return {
+    isTyping,
     calculateResponseTime,
     simulateTypingResponse
   };

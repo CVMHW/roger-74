@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { MessageType } from '../../components/Message';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
@@ -16,6 +17,7 @@ import { useRogerianState } from './stateManagement';
 import { handleEmotionalPatterns } from './emotionalResponseHandlers';
 import { processUserMessage as processMessage } from './messageProcessor';
 import { RecentCrisisMessage, UseRogerianResponseReturn } from './types';
+import { extractConversationContext } from '../../utils/conversationEnhancement/repetitionDetector';
 
 /**
  * Hook for generating Rogerian responses to user messages
@@ -83,18 +85,18 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
     if (recentResponses.length > 5) {
       setRecentResponses(prev => prev.slice(-5));
     }
-  }, [recentResponses]);
+  }, [recentResponses, setRecentResponses]);
   
   // Handle potential deception with our custom deception handler
-  const handlePotentialDeceptionWrapper = async (
+  const handlePotentialDeceptionWrapper = useCallback(async (
     originalMessage: string,
     followUpMessage: string
   ): Promise<MessageType | null> => {
     return handlePotentialDeception(originalMessage, followUpMessage, addToResponseHistory);
-  };
+  }, [addToResponseHistory]);
   
   // Process user message with stage update and special cases
-  const processUserMessage = async (userInput: string): Promise<MessageType> => {
+  const processUserMessage = useCallback(async (userInput: string): Promise<MessageType> => {
     // Update conversation history and client preferences
     updateConversationHistory(userInput);
     
@@ -131,7 +133,16 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
       clientPreferences,
       updateStage
     );
-  };
+  }, [
+    updateConversationHistory,
+    handleFeedbackLoop,
+    conversationHistory,
+    updateStage,
+    baseProcessUserMessage,
+    detectConcerns,
+    clientPreferences,
+    generateResponse
+  ]);
   
   return {
     isTyping,

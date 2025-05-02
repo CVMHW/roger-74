@@ -58,6 +58,17 @@ export const useMessageProcessor = ({
           )
         );
       });
+    }).catch(error => {
+      console.error("Error processing response:", error);
+      // Add a fallback response in case of error
+      const errorResponse = {
+        id: Date.now().toString(),
+        text: "I'm sorry, I'm having trouble responding right now. Could you try again?",
+        sender: 'roger' as const,
+        timestamp: new Date(),
+        concernType: null
+      };
+      setMessages(prevMessages => [...prevMessages, errorResponse]);
     });
   }, [
     processUserMessage, 

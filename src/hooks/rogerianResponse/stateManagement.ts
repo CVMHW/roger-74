@@ -1,53 +1,54 @@
-import { useState } from 'react';
-import { ClientPreferences } from './types';
+import { useState, useCallback } from 'react';
+import { RecentCrisisMessage } from './types';
+import { extractConversationContext } from '../../utils/conversationEnhancement/repetitionDetector';
 
 /**
- * Hook for managing Rogerian response state
+ * Hook for managing Rogerian state
  */
 export const useRogerianState = () => {
-  // Store conversation history for context awareness
+  // Conversation history
   const [conversationHistory, setConversationHistory] = useState<string[]>([]);
   
-  // Track detected client preferences
-  const [clientPreferences, setClientPreferences] = useState<ClientPreferences>({
-    prefersFormalLanguage: false,
-    prefersDirectApproach: false,
-    isFirstTimeWithMentalHealth: false
-  });
+  // Client preferences (collected during conversation)
+  const [clientPreferences, setClientPreferences] = useState<{[key: string]: any}>({});
   
-  // Track repeated responses to prevent repetition loop
+  // Recent response storage to detect repetition
   const [recentResponses, setRecentResponses] = useState<string[]>([]);
   
-  // Track if we're in recovery mode after a feedback loop
-  const [feedbackLoopRecoveryMode, setFeedbackLoopRecoveryMode] = useState(false);
+  // Track if we're in feedback loop recovery mode
+  const [feedbackLoopRecoveryMode, setFeedbackLoopRecoveryMode] = useState<boolean>(false);
   
-  // Update conversation history when user messages are received
-  const updateConversationHistory = (userInput: string) => {
+  // Update conversation history
+  const updateConversationHistory = useCallback((userInput: string) => {
     setConversationHistory(prev => {
       const newHistory = [...prev, userInput];
-      // Keep last 10 messages for context
-      return newHistory.length > 10 ? newHistory.slice(-10) : newHistory;
+      // Keep last 15 messages for context
+      return newHistory.length > 15 ? newHistory.slice(-15) : newHistory;
     });
     
-    // Update detected client preferences
-    const { detectClientPreferences } = require('../../utils/conversationalUtils');
-    const newPreferences = detectClientPreferences(userInput, conversationHistory);
-    setClientPreferences(prev => ({
-      prefersFormalLanguage: prev.prefersFormalLanguage || newPreferences.prefersFormalLanguage,
-      prefersDirectApproach: prev.prefersDirectApproach || newPreferences.prefersDirectApproach,
-      isFirstTimeWithMentalHealth: prev.isFirstTimeWithMentalHealth || newPreferences.isFirstTimeWithMentalHealth
-    }));
-  };
+    try {
+      // Extract conversation context if available
+      const context = extractConversationContext(userInput, conversationHistory);
+      
+      // Update client preferences if we have new information
+      if (context && context.hasContext) {
+        setClientPreferences(prev => ({
+          ...prev,
+          ...context.contextualInfo
+        }));
+      }
+    } catch (error) {
+      console.error("Error updating conversation context:", error);
+    }
+  }, [conversationHistory]);
   
   return {
     conversationHistory,
-    setConversationHistory,
     clientPreferences,
-    setClientPreferences,
     recentResponses,
-    setRecentResponses,
     feedbackLoopRecoveryMode,
-    setFeedbackLoopRecoveryMode,
-    updateConversationHistory
+    updateConversationHistory,
+    setRecentResponses,
+    setFeedbackLoopRecoveryMode
   };
 };
