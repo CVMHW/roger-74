@@ -1,273 +1,301 @@
-
 /**
- * The Small Stuff - Non-Clinical Conversation Handling
+ * theSmallStuff: Everyday Frustrations and Small Talk
  * 
- * This module helps Roger respond appropriately to everyday frustrations,
- * complaints, and small talk that aren't clinical concerns but are important
- * for building rapport in the first 5 minutes of conversation.
+ * This module focuses on detecting and responding to minor, everyday
+ * frustrations and engaging in appropriate small talk.
  * 
- * UNCONDITIONAL RULE: Follow the patient's concerns and stories completely in early conversation
- * UNCONDITIONAL RULE: Prioritize deep engagement with non-clinical concerns to build rapport
- * UNCONDITIONAL RULE: Only crisis concerns take precedence over following the patient's narrative
+ * It helps Roger build rapport by acknowledging the "little things"
+ * and engaging in light conversation.
  */
 
-export * from './everydayFrustrations';
-export * from './smallTalkTopics';
-export * from './rapportBuilding';
-
-/**
- * Detects everyday communication styles to adapt responses appropriately
- */
-export const detectCommunicationStyle = (userInput: string): string => {
-  const lowerInput = userInput.toLowerCase();
-  
-  // Detect various communication preferences
-  if (/\b(direct|straight|blunt|honest|candid|straightforward|no bs)\b/i.test(lowerInput)) {
-    return "direct";
-  }
-  
-  if (/\b(detail|specific|precise|exact|thorough|comprehensive)\b/i.test(lowerInput)) {
-    return "detailed";
-  }
-  
-  if (/\b(simple|plain|easy|clear|basic|straightforward)\b/i.test(lowerInput)) {
-    return "simple";
-  }
-  
-  if (/\b(story|tale|narrative|experience|anecdote)\b/i.test(lowerInput)) {
-    return "narrative";
-  }
-  
-  if (/\b(fact|evidence|study|research|data|statistics)\b/i.test(lowerInput)) {
-    return "factual";
-  }
-  
-  // Default style
-  return "balanced";
-};
+import {
+  isSubclinicalConcern,
+  validatesSubclinicalConcerns,
+  shouldPrioritizeSmallTalk
+} from '../../masterRules/unconditionalRuleProtections';
 
 /**
- * Detects demographic patterns to adapt responses appropriately
+ * Detects everyday frustrations in user input
+ * @param input User message
+ * @returns Information about detected frustrations
  */
-export const detectDemographicPatterns = (userInput: string): Record<string, boolean> => {
+export const detectEverydayFrustration = (input: string): {
+  isFrustration: boolean;
+  frustrationType: string | null;
+} => {
+  const frustrationTriggers = [
+    { type: "technology", pattern: /(computer|internet|phone|app|software) (slow|crash|freeze|broken|glitch)/i },
+    { type: "errand", pattern: /(waiting in line|long queue|store was out|forgot my wallet)/i },
+    { type: "housework", pattern: /(cleaning|laundry|dishes) (pile up|never ends|so much)/i },
+    { type: "cooking", pattern: /(burnt|overcooked|undercooked|recipe failed)/i },
+    { type: "weather", pattern: /(rainy day|too hot|too cold|windy) (ruined my plans|stuck inside)/i },
+    { type: "traffic", pattern: /(traffic jam|late because of traffic|missed the bus)/i },
+    { type: "noise", pattern: /(noisy neighbors|loud construction|can't concentrate)/i },
+    { type: "junk_mail", pattern: /(spam|junk mail|too many emails)/i },
+    { type: "lost_item", pattern: /(lost my keys|can't find my phone|misplaced my glasses)/i },
+    { type: "annoying_person", pattern: /(rude customer|obnoxious coworker|noisy seatmate)/i }
+  ];
+  
+  for (const trigger of frustrationTriggers) {
+    if (trigger.pattern.test(input)) {
+      return {
+        isFrustration: true,
+        frustrationType: trigger.type
+      };
+    }
+  }
+  
   return {
-    isLikelyYoung: /\b(college|university|class|school|dorm|roommate|professor|campus|major|exam|homework)\b/i.test(userInput),
-    isLikelyParent: /\b(my (kid|child|son|daughter|children|baby)|parent|mom|dad|family|bedtime|daycare|school)\b/i.test(userInput),
-    isLikelyWorking: /\b(work|job|career|boss|coworker|office|company|business|client|customer|shift)\b/i.test(userInput),
-    isLikelyOlder: /\b(retire|pension|grandchild|AARP|senior|aging|older|elder|arthritis|Medicare)\b/i.test(userInput)
+    isFrustration: false,
+    frustrationType: null
   };
 };
 
 /**
- * Adapts response style based on detected communication preferences
+ * Generates responses to everyday frustrations
+ * @param input User message
+ * @param frustrationInfo Information about the detected frustration
+ * @returns Appropriate response to the frustration
  */
-export const adaptResponseStyle = (
-  baseResponse: string,
-  communicationStyle: string
+export const generateEverydayFrustrationResponse = (
+  input: string,
+  frustrationInfo: { isFrustration: boolean; frustrationType: string | null }
 ): string => {
-  let result = baseResponse;
-  
-  switch (communicationStyle) {
-    case "direct":
-      // Make response more direct and concise
-      result = result
-        .replace(/I think perhaps |It seems like maybe |It's possible that /g, '')
-        .replace(/might be |could be |may be /g, 'is ');
-      break;
-      
-    case "detailed":
-      // No changes needed if already detailed
-      break;
-      
-    case "simple":
-      // Simplify language
-      result = result
-        .replace(/nevertheless|furthermore|additionally|consequently/gi, 'also')
-        .replace(/utilize|employ/gi, 'use')
-        .replace(/sufficient/gi, 'enough')
-        .replace(/inquire/gi, 'ask')
-        .replace(/attempt/gi, 'try');
-      break;
-      
-    case "narrative":
-      // Add more personal touches
-      if (!result.includes('reminds me')) {
-        result += " This reminds me of conversations I've had with others who've shared similar experiences.";
-      }
-      break;
-      
-    case "factual":
-      // Add fact-oriented language
-      if (!result.includes('research') && !result.includes('studies') && !result.includes('data')) {
-        result += " Many people report similar experiences when facing these situations.";
-      }
-      break;
-      
-    default:
-      // Balanced approach, no changes needed
-      break;
+  if (!frustrationInfo.isFrustration) {
+    return "";
   }
   
-  return result;
-};
-
-/**
- * Generates a first message response that is welcoming and engaging
- */
-export const generateFirstMessageResponse = (): string => {
-  const firstResponses = [
-    "Hello! I'm Roger, a Peer Support Companion. I'm here to chat with you while you wait to see Dr. Eric. How are you doing today?",
-    "Welcome! I'm Roger. I help out here by talking with people before they see Dr. Eric. How's your day been going so far?",
-    "Hi there! I'm Roger, and I'm here to make your wait a bit more comfortable before you see Dr. Eric. How are you feeling today?",
-    "Hello and welcome! I'm Roger, a Peer Support Companion. While you wait for Dr. Eric, I'm here to talk about whatever's on your mind. How are you doing?",
-    "Hi! I'm Roger, and I'm here to chat with you before your time with Dr. Eric. How has your day been going?"
+  const { frustrationType } = frustrationInfo;
+  
+  const frustrationResponses = {
+    technology: [
+      "Ugh, technology frustrations are the worst! It always seems to happen at the least convenient time. What were you trying to do when it glitched out?",
+      "Oh man, tech issues can be such a pain. I totally get how frustrating that is. Did you lose any important work?",
+      "Tech problems, am I right? It's like they have a sixth sense for when you're already stressed. What exactly went wrong?"
+    ],
+    errand: [
+      "Ugh, errands are the worst sometimes. It's like the universe conspires to make them take longer. What errand were you trying to run?",
+      "Oh no, that's so annoying! I hate when errands turn into a whole ordeal. What were you trying to get done?",
+      "Ugh, I feel your pain. Errands can be such a time suck. What was on your list?"
+    ],
+    housework: [
+      "Housework is the never-ending story, isn't it? It's like you clean one thing and three more messes pop up. What's the most annoying chore for you?",
+      "Oh man, I feel you. Housework can be so draining. What are you tackling today?",
+      "Housework, the gift that keeps on giving... said no one ever. What's on your cleaning agenda?"
+    ],
+    cooking: [
+      "Oh no! Cooking mishaps can be so frustrating, especially when you're hungry. What were you trying to make?",
+      "Ugh, cooking fails are the worst. I totally get how annoying that is. What went wrong?",
+      "Cooking can be so unpredictable! What were you hoping to create?"
+    ],
+    weather: [
+      "Ugh, weather ruining plans is the worst! It's like Mother Nature has a personal vendetta. What did you have planned?",
+      "Oh man, I feel you. Weather can be so disappointing. What were you hoping to do?",
+      "Weather, the ultimate mood killer. What were you looking forward to?"
+    ],
+    traffic: [
+      "Traffic jams are the absolute worst! It's like time just stops. Where were you headed?",
+      "Oh man, I feel you. Traffic can be so stressful. Where were you trying to go?",
+      "Traffic, the ultimate time thief. What was your destination?"
+    ],
+    noise: [
+      "Ugh, noise distractions are the worst when you're trying to focus! It's like the world is conspiring against you. What were you trying to concentrate on?",
+      "Oh man, I feel you. Noise can be so disruptive. What were you trying to get done?",
+      "Noise, the ultimate concentration killer. What were you working on?"
+    ],
+    junk_mail: [
+      "Junk mail is such a waste of time and paper! It's like they're personally attacking your mailbox. What kind of spam did you get?",
+      "Oh man, I feel you. Junk mail can be so annoying. What's the worst kind you get?",
+      "Junk mail, the ultimate inbox invader. What's clogging up your mailbox?"
+    ],
+    lost_item: [
+      "Losing things is so frustrating! It's like they vanish into thin air. What did you lose?",
+      "Oh man, I feel you. Losing things can be so stressful. What are you looking for?",
+      "Losing things, the ultimate hide-and-seek game. What's missing?"
+    ],
+    annoying_person: [
+      "Ugh, dealing with annoying people is the worst! It's like they're deliberately trying to push your buttons. Who were you dealing with?",
+      "Oh man, I feel you. Annoying people can be so draining. What happened?",
+      "Annoying people, the ultimate patience testers. What did they do?"
+    ]
+  };
+  
+  const normalizingResponses = [
+    "Oh no, that stinks!",
+    "Ugh, that's the worst!",
+    "Oh man, I feel you.",
+    "That's so frustrating!",
+    "I totally get how annoying that is."
   ];
   
-  return firstResponses[Math.floor(Math.random() * firstResponses.length)];
+  const specificResponses = frustrationResponses[frustrationType as keyof typeof frustrationResponses] || [];
+  
+  // Combine normalizing and specific responses
+  const combinedResponses = [...normalizingResponses, ...specificResponses];
+  
+  // Select a random response
+  const selectedResponse = combinedResponses[Math.floor(Math.random() * combinedResponses.length)];
+  
+  // Add normalizing language for subclinical concerns
+  if (isSubclinicalConcern(input) && !validatesSubclinicalConcerns(selectedResponse)) {
+    return `${selectedResponse} It's normal to feel that way sometimes.`;
+  }
+  
+  return selectedResponse;
 };
 
 /**
- * Enhances rapport in early conversation by adding personalization
- * and following up on the patient's immediate concerns
+ * Detects small talk categories in user input
+ * @param input User message
+ * @returns Information about detected small talk category
+ */
+export const detectSmallTalkCategory = (input: string): {
+  isSmallTalk: boolean;
+  category: string | null;
+} => {
+  const smallTalkCategories = [
+    { category: "greeting", pattern: /^(hi|hello|hey|good morning|good afternoon|good evening)/i },
+    { category: "weather", pattern: /(weather|rain|snow|sun|cloudy|windy)/i },
+    { category: "current_events", pattern: /(news|headlines|what's happening)/i },
+    { category: "hobbies", pattern: /(hobbies|interests|what do you do for fun)/i },
+    { category: "weekend_plans", pattern: /(weekend plans|what are you doing this weekend)/i },
+    { category: "sports", pattern: /(sports|football|basketball|baseball|game)/i },
+    { category: "travel", pattern: /(travel|vacation|where have you been)/i },
+    { category: "food", pattern: /(food|eating|cooking|restaurants)/i },
+    { category: "music", pattern: /(music|bands|concerts|songs)/i },
+    { category: "movies", pattern: /(movies|films|what have you seen)/i }
+  ];
+  
+  if (shouldPrioritizeSmallTalk(input)) {
+    for (const category of smallTalkCategories) {
+      if (category.pattern.test(input)) {
+        return {
+          isSmallTalk: true,
+          category: category.category
+        };
+      }
+    }
+  }
+  
+  return {
+    isSmallTalk: false,
+    category: null
+  };
+};
+
+/**
+ * Generates responses to small talk
+ * @param userInput User message
+ * @param smallTalkCategory Detected small talk category
+ * @param messageCount Current message count
+ * @returns Appropriate small talk response
+ */
+export const generateSmallTalkResponse = (
+  userInput: string,
+  smallTalkCategory: string,
+  messageCount: number
+): string => {
+  const smallTalkResponses = {
+    greeting: [
+      "Hi there! How's your day going?",
+      "Hello! What's been keeping you busy today?",
+      "Hey! Anything interesting happen to you today?"
+    ],
+    weather: [
+      "The weather's been a bit crazy lately, hasn't it? What do you think of it?",
+      "I hope you're enjoying the weather today. What are you planning to do?",
+      "The weather's been quite something. How has it affected your plans?"
+    ],
+    current_events: [
+      "Have you been following any interesting news lately? What's caught your attention?",
+      "What's been the most interesting thing you've heard about recently?",
+      "Anything newsworthy on your radar?"
+    ],
+    hobbies: [
+      "What do you like to do for fun? Any hobbies you're passionate about?",
+      "What are your favorite ways to unwind and relax?",
+      "What activities bring you the most joy?"
+    ],
+    weekend_plans: [
+      "Do you have any exciting plans for the weekend? What are you looking forward to?",
+      "What's on your agenda for the weekend? Anything fun in store?",
+      "What are you hoping to do this weekend?"
+    ],
+    sports: [
+      "Are you following any sports teams right now? What games have you been watching?",
+      "What's your favorite sport to watch or play?",
+      "What sporting events have you been keeping up with?"
+    ],
+    travel: [
+      "Have you been on any interesting trips lately? Where have you traveled?",
+      "What's your favorite place to visit?",
+      "Where are you hoping to travel next?"
+    ],
+    food: [
+      "What's your favorite food to eat or cook? Any restaurants you'd recommend?",
+      "What have you been cooking lately?",
+      "What are your favorite places to eat?"
+    ],
+    music: [
+      "What kind of music do you enjoy listening to? Any bands or concerts you'd recommend?",
+      "What's been on your playlist lately?",
+      "What kind of music do you find most enjoyable?"
+    ],
+    movies: [
+      "Have you seen any good movies lately? What films would you recommend?",
+      "What are your favorite movies of all time?",
+      "What movies have you been watching recently?"
+    ]
+  };
+  
+  const normalizingResponses = [
+    "Oh, that's interesting!",
+    "That's cool!",
+    "I can relate to that.",
+    "I understand.",
+    "That makes sense."
+  ];
+  
+  const specificResponses = smallTalkResponses[smallTalkCategory as keyof typeof smallTalkResponses] || [];
+  
+  // Combine normalizing and specific responses
+  const combinedResponses = [...normalizingResponses, ...specificResponses];
+  
+  // Select a random response
+  const selectedResponse = combinedResponses[Math.floor(Math.random() * combinedResponses.length)];
+  
+  return selectedResponse;
+};
+
+/**
+ * Enhances rapport in early conversation by adding personal touch
+ * @param response The generated response
+ * @param userInput The original user input
+ * @param messageCount Current message count
+ * @returns Enhanced response with rapport-building elements
  */
 export const enhanceRapportInEarlyConversation = (
-  baseResponse: string,
+  response: string,
   userInput: string,
   messageCount: number
 ): string => {
-  // For very early messages, ensure we're encouraging detailed sharing
-  if (messageCount <= 3) {
-    if (!baseResponse.includes('?')) {
-      return baseResponse + " I'd really like to hear more about what's been going on with you. Could you share a bit more?";
-    }
+  // Add personal touch for minor concerns
+  if (messageCount <= 5 && detectEverydayFrustration(userInput).isFrustration) {
+    const personalTouches = [
+      "I've been there!",
+      "That happens to me too!",
+      "I get that!",
+      "That stinks!"
+    ];
+    
+    const selectedTouch = personalTouches[Math.floor(Math.random() * personalTouches.length)];
+    return `${selectedTouch} ${response}`;
   }
   
-  // For messages 4-7, ensure we're acknowledging their specific concerns
-  if (messageCount <= 7) {
-    const immediateConcern = identifyImmediateConcern(userInput);
-    if (immediateConcern) {
-      switch(immediateConcern) {
-        case 'physical_mishap':
-          return baseResponse + " By the way, I hope you didn't hurt yourself when you slipped earlier. Those kinds of accidents can be both physically and emotionally jarring.";
-        case 'clothing_issue':
-          return baseResponse + " And about your clothes from earlier - sometimes club soda can help with fresh stains if you're still dealing with that.";
-        case 'commuting_problem':
-          return baseResponse + " I hope the rest of your day goes more smoothly than your commute here did.";
-        case 'weather_issue':
-          return baseResponse + " This Cleveland weather can really throw a wrench in our plans sometimes, can't it?";
-        default:
-          // No additional enhancement needed
-          break;
-      }
-    }
+  // Add follow-up questions to encourage sharing
+  if (messageCount <= 3 && !response.includes("?")) {
+    return `${response} What else has been going on?`;
   }
   
-  // For messages 8-10, ensure we're building continuity
-  if (messageCount <= 10 && messageCount > 7) {
-    if (!baseResponse.includes('mentioned earlier') && !baseResponse.includes('you said')) {
-      // Look for themes to callback to
-      if (/stress|worry|anxiety|concern/i.test(userInput)) {
-        return baseResponse + " And circling back to what you were sharing earlier - how have you been managing those stressful situations?";
-      }
-      
-      if (/sad|down|blue|depress/i.test(userInput)) {
-        return baseResponse + " I also wanted to check back about those feelings of sadness you mentioned. How long have you been experiencing that?";
-      }
-    }
-  }
-  
-  return baseResponse;
-};
-
-// Import the everydayFrustrations function explicitly
-import { detectEverydayFrustration } from './everydayFrustrations';
-
-/**
- * Identifies immediate concerns in user's message that should be addressed directly
- * before any redirection to clinical topics
- */
-export const identifyImmediateConcern = (userInput: string): string | null => {
-  // Check for everyday frustrations first
-  const frustrationInfo = detectEverydayFrustration(userInput);
-  if (frustrationInfo.isFrustration) {
-    return frustrationInfo.topic || 'general_frustration';
-  }
-  
-  // Check for specific scenarios
-  const patterns = [
-    { regex: /(slip(ped)?|fell|trip(ped)?|stumble(d)?)\s.*(puddle|mud|wet|floor|ground|ice|snow)/i, category: 'physical_mishap' },
-    { regex: /(dirty|stain(ed)?|mess(y|ed)?|wet)\s.*(cloth(es|ing)|outfit|shirt|pants|dress|shoes)/i, category: 'clothing_issue' },
-    { regex: /(traffic|jam|late|rush hour|bus|train|subway|car|drive|driving|commut)/i, category: 'commuting_problem' },
-    { regex: /(rain(ing|ed)?|snow(ing|ed)?|weather|storm|cold|hot|humid|freez(e|ing))/i, category: 'weather_issue' },
-    { regex: /(miss(ed)?|cancel(led)?|reschedule(d)?)\s.*(appointment|meeting|class|event)/i, category: 'missed_appointment' },
-    { regex: /(lost|can'?t find|misplaced|forget)\s.*(keys|phone|wallet|purse|bag|item)/i, category: 'lost_item' },
-    { regex: /(spill(ed)?|drop(ped)?|knock(ed)?|broke)\s.*(coffee|drink|food|cup|glass|plate|mug)/i, category: 'spill_accident' },
-    { regex: /(headache|migraine|tired|exhaust(ed)?|sleep|insomnia|rest)/i, category: 'physical_discomfort' },
-    { regex: /(forgot|remember|deadline|due|assign(ed|ment)|project)/i, category: 'work_stress' }
-  ];
-  
-  for (const pattern of patterns) {
-    if (pattern.regex.test(userInput)) {
-      return pattern.category;
-    }
-  }
-  
-  return null;
-};
-
-/**
- * Generates an empathetic response to immediate concerns
- */
-export const generateImmediateConcernResponse = (userInput: string, concernType: string): string => {
-  switch(concernType) {
-    case 'physical_mishap':
-      return `That sounds frustrating. Slipping in public can be both physically painful and embarrassing. Are you feeling okay physically? And don't worry about appearances - we've all been there at some point.`;
-      
-    case 'clothing_issue':
-      return `Oh no, that stinks! I hope it wasn't your favorite outfit. Stains can be really hard to get out once they dry. Do you think it's something that will come out in the wash, or might it need special cleaning?`;
-      
-    case 'commuting_problem':
-      return `Traffic can really start the day off on the wrong foot. Was your commute particularly bad today? It seems like the roads around Cleveland have been extra congested lately.`;
-      
-    case 'weather_issue':
-      return `The weather in Cleveland can be so unpredictable! It sounds like it affected your day. Did you get caught without the right gear for today's conditions?`;
-      
-    case 'missed_appointment':
-      return `Missing appointments can throw off your whole schedule. Was this something important, or were you able to reschedule easily?`;
-      
-    case 'lost_item':
-      return `Losing something important is so stressful. Have you had any luck finding it? Sometimes retracing steps helps, but I know that can be frustrating too.`;
-      
-    case 'spill_accident':
-      return `Spills always seem to happen at the worst times, don't they? Did it cause much of a mess or damage anything important?`;
-      
-    case 'physical_discomfort':
-      return `I'm sorry you're not feeling well physically. That can make everything else harder to deal with. Has this been going on for a while, or is it something that just started today?`;
-      
-    case 'work_stress':
-      return `Work stress can really follow you everywhere. Is this about a specific project or deadline that's been weighing on you?`;
-      
-    case 'general_frustration':
-      return `That sounds really frustrating. Those kinds of day-to-day annoyances can really add up and affect your mood. Would it help to tell me more about what happened?`;
-      
-    default:
-      return `That sounds like it was challenging to deal with. Would you like to tell me more about what happened? I'm here to listen.`;
-  }
-};
-
-/**
- * Generates small talk transition that maintains focus on the user's concerns
- * rather than redirecting to clinical topics too quickly
- */
-export const generateSmallTalkTransition = (userInput: string): string => {
-  // Only generate transitions after establishing sufficient rapport
-  const transitionPhrases = [
-    "That's really interesting. Thanks for sharing that with me. Is there anything else on your mind today?",
-    "I appreciate you telling me about that. What else has been going on for you lately?",
-    "Thanks for sharing that with me. Is there anything else you'd like to talk about while we wait?",
-    "That gives me a better sense of what you've been experiencing. Is there anything else you'd like to discuss?",
-    "I'm glad you shared that with me. What else has been on your mind recently?"
-  ];
-  
-  return transitionPhrases[Math.floor(Math.random() * transitionPhrases.length)];
+  return response;
 };

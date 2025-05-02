@@ -62,13 +62,13 @@ export const detectEmotionalContent = (input: string): {
   
   // Check for implicit emotional content through situations
   const implicitEmotionPatterns = [
-    { situation: /(lost|died|passed away|death|funeral)/i, emotion: 'sadness', intensity: 'medium' },
-    { situation: /(broke up|divorce|separated|left me|ending relationship)/i, emotion: 'sadness', intensity: 'medium' },
-    { situation: /(fired|laid off|unemployed|lost job|can't find work)/i, emotion: 'sadness', intensity: 'medium' },
-    { situation: /(test|exam|interview|presentation|deadline|meeting)/i, emotion: 'anxiety', intensity: 'medium' },
-    { situation: /(fight|argument|disagreement|conflict|confrontation)/i, emotion: 'anger', intensity: 'medium' },
-    { situation: /(promotion|succeeded|accomplished|achieved|won|graduated)/i, emotion: 'joy', intensity: 'medium' },
-    { situation: /(mistake|error|forgot|failed to|didn't mean to|accident)/i, emotion: 'shame', intensity: 'low' }
+    { situation: /(lost|died|passed away|death|funeral)/i, emotion: 'sadness', intensity: 'medium' as const },
+    { situation: /(broke up|divorce|separated|left me|ending relationship)/i, emotion: 'sadness', intensity: 'medium' as const },
+    { situation: /(fired|laid off|unemployed|lost job|can't find work)/i, emotion: 'sadness', intensity: 'medium' as const },
+    { situation: /(test|exam|interview|presentation|deadline|meeting)/i, emotion: 'anxiety', intensity: 'medium' as const },
+    { situation: /(fight|argument|disagreement|conflict|confrontation)/i, emotion: 'anger', intensity: 'medium' as const },
+    { situation: /(promotion|succeeded|accomplished|achieved|won|graduated)/i, emotion: 'joy', intensity: 'medium' as const },
+    { situation: /(mistake|error|forgot|failed to|didn't mean to|accident)/i, emotion: 'shame', intensity: 'low' as const }
   ];
   
   for (const pattern of implicitEmotionPatterns) {

@@ -18,15 +18,21 @@ import {
   isSmallTalk,
   isPersonalSharing,
   generatePersonalSharingResponse,
+} from '../masterRules/unconditionalRuleProtections';
+
+import {
   requiresClinicianReferral,
   generateClinicianReferral,
   mightNeedNormalizingLanguage,
   generateNormalizingResponse,
+} from '../masterRules/clinicalProtections';
+
+import {
   detectEmotionalContent,
   generateEmotionallyAttunedResponse,
   detectEverydaySituation,
   generatePracticalSupportResponse
-} from '../masterRules';
+} from '../masterRules/emotionalAttunementRules';
 
 /**
  * Process response through UnconditionalRuleProtections
