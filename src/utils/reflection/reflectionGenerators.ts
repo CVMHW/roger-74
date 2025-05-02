@@ -1,4 +1,3 @@
-
 /**
  * Utilities for generating reflections based on detected emotions
  * Enhanced with Feelings Wheel data for more nuanced reflections
@@ -112,15 +111,33 @@ export const createRichContextReflection = (userMessage: string): ContextAwareRe
   
   // Add feelings wheel data if available
   if (wheelData) {
-    const intensity = wheelData.intensity ? 
-      (wheelData.intensity as 'low' | 'medium' | 'high') : 
-      'medium';
+    // Convert any numerical intensity to a string value
+    let intensityValue: 'low' | 'medium' | 'high' = 'medium'; // Default to medium
+    
+    if (wheelData.intensity) {
+      // Handle the case where intensity might be a number
+      if (typeof wheelData.intensity === 'number') {
+        // Convert numerical intensity to the appropriate string value
+        if (wheelData.intensity <= 0.33) {
+          intensityValue = 'low';
+        } else if (wheelData.intensity <= 0.66) {
+          intensityValue = 'medium';
+        } else {
+          intensityValue = 'high';
+        }
+      } else if (typeof wheelData.intensity === 'string') {
+        // If it's already a string, validate and use it directly
+        if (['low', 'medium', 'high'].includes(wheelData.intensity)) {
+          intensityValue = wheelData.intensity as 'low' | 'medium' | 'high';
+        }
+      }
+    }
       
     reflection.wheelFeelingData = {
       detectedFeeling: detectedWord,
       coreEmotion: wheelData.coreEmotion,
       relatedFeelings: wheelData.relatedFeelings,
-      intensity: intensity
+      intensity: intensityValue
     };
   }
   
