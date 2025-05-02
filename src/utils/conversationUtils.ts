@@ -1,4 +1,5 @@
 import { MessageType } from '../components/Message';
+import { rogerianPrinciples, rogerianApplications, generateRogerianResponse } from './rogerianPrinciples';
 
 // Initial messages for the chat
 export const getInitialMessages = (): MessageType[] => [
@@ -226,11 +227,18 @@ const cvmhwInfo = {
     coaching: "Track & Field/Cross-Country Coach in Hudson, Louisville, Burton, and Jefferson",
     military: "6 years in the US Army Reserves working in petroleum/oil engineering"
   },
-  insurance: [
-    "Aetna", "AmeriHealth", "Anthem", "Blue Cross", "Blue Shield", "BlueCross and BlueShield", 
-    "Buckeye", "Carelon Behavioral Health", "CareSource", "FrontPath", "Humana", 
-    "Medicaid", "Medical Mutual", "Molina Healthcare", "Paramount", "UnitedHealthcare"
-  ],
+  insurance: {
+    accepted: [
+      "Aetna", "AmeriHealth", "Anthem", "Blue Cross", "Blue Shield", "BlueCross and BlueShield", 
+      "Buckeye", "Carelon Behavioral Health", "CareSource", "FrontPath", "Humana", 
+      "Medicaid", "Medical Mutual", "Molina Healthcare", "Paramount", "UnitedHealthcare"
+    ],
+    additionalInfo: [
+      "Copays Waived for Low-Income Families upon Demonstration of Financial Need",
+      "Sliding Fee Scale Available for Low-Income Families",
+      "OH Medicaid Healthcare Insurance Enrollment Assistance available FREE of charge for eligible families"
+    ]
+  },
   fees: {
     individual: "$120 per session",
     couples: "$120 per session",
@@ -294,15 +302,15 @@ const generateCVMHWInfoResponse = (userInput: string): string | null => {
   
   // Generate response based on specific topics
   if (lowerInput.includes('insurance') || lowerInput.includes('payment') || lowerInput.includes('cost')) {
-    return `Cuyahoga Valley Mindful Health and Wellness accepts many major insurance providers including ${cvmhwInfo.insurance.slice(0, 5).join(', ')}, and many more. Individual sessions cost ${cvmhwInfo.fees.individual}, with sliding scale options available for qualifying families. They accept various payment methods including ${cvmhwInfo.fees.payment}.`;
+    return `Cuyahoga Valley Mindful Health and Wellness accepts many major insurance providers including ${cvmhwInfo.insurance.accepted.slice(0, 5).join(', ')}, and many more. Individual sessions cost ${cvmhwInfo.fees.individual}, with sliding scale options available for qualifying families. They accept various payment methods including ${cvmhwInfo.fees.payment}. Copays may be waived for low-income families upon demonstration of financial need.`;
   }
   
   if (lowerInput.includes('life coaching') || lowerInput.includes('non-clinical')) {
-    return `CVMHW offers Life Coaching services as a non-clinical alternative that provides flexibility and personalized guidance. These services include support for ${cvmhwInfo.services.lifeCoaching.slice(0, 3).join(', ')}, and more. Life coaching sessions can take place in various settings including parks, libraries, or coffee shops, giving you more control over your helping experience.`;
+    return `CVMHW offers Life Coaching services as a non-clinical alternative that provides flexibility and personalized guidance. These services include support for ${cvmhwInfo.lifeCoaching.services.slice(0, 5).join(', ')}, and many more. Life coaching can take place in various settings including ${cvmhwInfo.lifeCoaching.settings.slice(0, 3).join(', ')}, giving you more control over your helping experience. As their philosophy states, inspired by Viktor Frankl: "Love is the only way to grasp another human being in the innermost core of his personality."`;
   }
   
   if (lowerInput.includes('athletic') || lowerInput.includes('coaching') || lowerInput.includes('running') || lowerInput.includes('marathon')) {
-    return `Eric Riesterer at CVMHW provides Athletic Coaching services including ${cvmhwInfo.services.athleticCoaching.slice(0, 3).join(', ')}. He has extensive coaching experience at middle school, high school, and collegiate levels, with his own impressive athletic background including marathon PRs of 2:45:54 and numerous race victories.`;
+    return `Eric Riesterer at CVMHW provides Athletic Coaching services including ${cvmhwInfo.athleticCoaching.services.slice(0, 3).join(', ')}. He has extensive coaching experience at middle school, high school, and collegiate levels, with his own impressive athletic background including marathon PRs of 2:45:54 and numerous race victories. His approach utilizes theories from Lydiard, Schwartz, Daniels, and Holler for optimal athletic development. Sliding fee scales are available for qualifying households.`;
   }
   
   if (lowerInput.includes('veteran') || lowerInput.includes('military') || lowerInput.includes('army')) {
@@ -348,32 +356,27 @@ const generateCollaborativeResponse = (userInput: string): string | null => {
 
 // Function to generate appropriate conversational responses based on user input context
 export const generateConversationalResponse = (userInput: string): string => {
-  // Check if the user is asking about CVMHW specifically
+  // First check if the user is asking about CVMHW specifically
   const cvmhwResponse = generateCVMHWInfoResponse(userInput);
   if (cvmhwResponse) {
     return cvmhwResponse;
   }
   
-  // Check if the user is asking about the collaborative approach
+  // Next check if the user is asking about the collaborative approach
   const collaborativeResponse = generateCollaborativeResponse(userInput);
   if (collaborativeResponse) {
     return collaborativeResponse;
   }
   
-  // More human-like and collaborative responses based on person-centered principles
-  const responses = [
-    "I'm interested in understanding more about what that's like for you.",
-    "That sounds challenging. How are you feeling about it right now?",
-    "Thank you for sharing that with me. I appreciate your openness.",
-    "I'm here to listen without judgment. Would you like to tell me more?",
-    "I can see this matters deeply to you. What aspects feel most important?",
-    "I'm wondering how this experience has affected you.",
-    "I'm here with you in this conversation. What would be most helpful for you right now?",
-    "That's a lot to carry. How have you been managing with all of this?",
-    "I'm curious about what you're hoping for as you work through this.",
-    "I notice you mentioned [word]. Could you share more about what that means for you?"
+  // Check if a Rogerian-specific response is appropriate
+  const rogerianResponse = generateRogerianResponse(userInput);
+  if (rogerianResponse) {
+    return rogerianResponse;
+  }
+  
+  // If no specific pattern is matched, use the general human-like responses
+  // that embody Rogerian principles
+  return rogerianApplications.appropriateResponses[
+    Math.floor(Math.random() * rogerianApplications.appropriateResponses.length)
   ];
-
-  // Select a response that feels more engaging and collaborative
-  return responses[Math.floor(Math.random() * responses.length)];
 };
