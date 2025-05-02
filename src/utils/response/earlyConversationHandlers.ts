@@ -5,7 +5,7 @@ import { ConversationStage } from '../../hooks/response/conversationStageManager
 import { detectDevelopmentalStage } from '../reflection/reflectionStrategies';
 import { shouldUseConversationStarter, generateConversationStarterResponse } from '../reflection/ageAppropriateConversation';
 import { getRogerPerspectivePhrase } from './personalityHelpers';
-import { createOhioContextResponse } from './handlers/ohio/ohioContextHandler';
+import { createOhioContextResponse } from './handlers';
 
 /**
  * Handles the logic for early conversation responses

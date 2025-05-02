@@ -5,19 +5,19 @@
  */
 
 import {
+  createSadnessResponse,
   createDefensiveReactionResponse,
   createWeatherRelatedResponse,
   createTraumaResponseMessage,
-  createSadnessResponse,
   createMildGamblingResponse,
   createOhioContextResponse
 } from './handlers';
 
 export {
+  createSadnessResponse,
   createDefensiveReactionResponse,
   createWeatherRelatedResponse,
   createTraumaResponseMessage,
-  createSadnessResponse,
   createMildGamblingResponse,
   createOhioContextResponse
 };

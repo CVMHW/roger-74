@@ -1,3 +1,4 @@
+
 import { 
   getCrisisMessage,
   getMedicalConcernMessage,
@@ -16,10 +17,10 @@ import { ConcernType } from '../../utils/reflection/reflectionTypes';
 // Import our new modular helpers
 import { handleEmotionalResponses } from '../../utils/response/emotionalResponseGenerator';
 import { 
+  createSadnessResponse,
   createDefensiveReactionResponse,
   createWeatherRelatedResponse,
   createTraumaResponseMessage,
-  createSadnessResponse,
   createMildGamblingResponse,
   createOhioContextResponse
 } from '../../utils/response/handlers';

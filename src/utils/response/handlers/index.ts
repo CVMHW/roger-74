@@ -1,17 +1,11 @@
 
 /**
  * Response Handlers - Main export file
- * Re-exports all handler functions from their respective modules
+ * Re-exports all handlers for easier imports
  */
 
-// Emotional handlers
+// Re-export all handlers from their respective categories
 export { createSadnessResponse, createDefensiveReactionResponse } from './emotional';
-
-// Situational handlers
 export { createWeatherRelatedResponse, createMildGamblingResponse } from './situational';
-
-// Trauma handlers
 export { createTraumaResponseMessage } from './trauma';
-
-// Ohio context handlers
 export { createOhioContextResponse } from './ohio';
