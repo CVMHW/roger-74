@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { MessageType } from '../../components/Message';
 
 /**
  * Hook for managing message history

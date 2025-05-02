@@ -2,7 +2,7 @@
 import { useState, useCallback } from 'react';
 import { MessageType } from '../../components/Message';
 import { useToast } from '@/components/ui/use-toast';
-import { getInitialMessages } from '../../utils/messageUtils';
+import { getInitialMessages, createMessage } from '../../utils/messageUtils';
 import useRogerianResponse from '../useRogerianResponse';
 import { useLocationConcern } from './useLocationConcern';
 import { useCrisisDetection } from './useCrisisDetection';
@@ -18,14 +18,18 @@ export const useChatLogic = () => {
   // Core state
   const [messages, setMessages] = useState<MessageType[]>(getInitialMessages());
   
-  // Hook imports
-  const { isTyping, processUserMessage, simulateTypingResponse } = useRogerianResponse();
+  // Toast notification
   const { toast } = useToast();
+  
+  // Import response generation hook
+  const { isTyping, processUserMessage, simulateTypingResponse } = useRogerianResponse();
   
   // Import needed hooks for specific functionality
   const { activeLocationConcern, handleLocationData, setActiveLocationConcern } = useLocationConcern();
   const { recentCrisisMessage, handleCrisisMessage, checkDeception } = useCrisisDetection(simulateTypingResponse, setMessages);
   const { feedbackLoopDetected, checkFeedbackLoop, setFeedbackLoopDetected } = useFeedbackLoop(simulateTypingResponse, setMessages);
+  
+  // Message history hooks
   const { 
     rogerResponseHistory, 
     userMessageHistory, 
@@ -52,7 +56,6 @@ export const useChatLogic = () => {
     if (!userInput.trim()) return;
 
     // Add user message
-    const { createMessage } = require('../../utils/messageUtils');
     const newUserMessage = createMessage(userInput, 'user');
     setMessages(prevMessages => [...prevMessages, newUserMessage]);
     
