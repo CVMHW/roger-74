@@ -1,6 +1,7 @@
 /**
  * Utilities for generating conversational responses
  */
+import { detectEmotion } from './nlpProcessor'; // Add this on line 3
 import { generateRogerianResponse } from './rogerianPrinciples';
 import { generateCVMHWInfoResponse } from './conversation/cvmhwResponseGenerator';
 import { generateCollaborativeResponse } from './conversation/collaborativeResponseGenerator';
