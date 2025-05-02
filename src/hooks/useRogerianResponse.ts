@@ -210,6 +210,43 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
       );
     }
     
+    // NEW: Check for pet illness or cancer mentions
+    try {
+      const detectionUtils = await import('../utils/detectionUtils');
+      
+      // Check for pet illness concerns
+      if (detectionUtils.detectPetIllnessConcerns(userInput)) {
+        // Get specific illness details
+        const illnessDetails = detectionUtils.detectSpecificIllness(userInput);
+        
+        // Generate appropriate response for pet illness
+        const petIllnessResponse = detectionUtils.generatePetIllnessResponse({
+          petType: extractPetType(userInput),
+          illnessType: illnessDetails.illnessType,
+          severity: illnessDetails.severity
+        });
+        
+        // Update conversation stage
+        updateStage();
+        
+        // Process with our specific response
+        return baseProcessUserMessage(
+          userInput,
+          () => petIllnessResponse,
+          () => 'pet-illness' // Special concern type for pet illness
+        );
+      }
+      
+      // Check for specific illness mentions that aren't pet-related
+      const illnessDetails = detectionUtils.detectSpecificIllness(userInput);
+      if (illnessDetails.detected && illnessDetails.context !== 'pet') {
+        // This will be handled by the regular processing but with enhanced concern detection
+        // The detectConcerns function will pick this up
+      }
+    } catch (error) {
+      console.error("Error checking for illness mentions:", error);
+    }
+    
     // Check for grief themes to adjust response time and approach
     const griefThemes = detectGriefThemes(userInput);
     let responseGenerator = generateResponse;
@@ -218,7 +255,7 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     // Check for safety concerns to prioritize deescalation and customer service
     const concernType = detectConcerns(userInput);
     if (concernType && 
-        ['crisis', 'tentative-harm', 'mental-health', 'ptsd', 'trauma-response'].includes(concernType)) {
+        ['crisis', 'tentative-harm', 'mental-health', 'ptsd', 'trauma-response', 'pet-illness'].includes(concernType)) {
       // For safety concerns, use our enhanced safety response generator
       responseGenerator = generateSafetyResponse;
       // Increase response time for safety concerns to suggest careful consideration
@@ -290,6 +327,24 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
       detectConcerns,
       responseTimeMultiplier // Pass the multiplier to adjust response time
     );
+  };
+  
+  // Helper function to extract pet type from user message
+  const extractPetType = (message: string): string => {
+    const lowerMessage = message.toLowerCase();
+    
+    if (lowerMessage.includes('dog')) return 'dog';
+    if (lowerMessage.includes('puppy')) return 'puppy';
+    if (lowerMessage.includes('cat')) return 'cat';
+    if (lowerMessage.includes('kitten')) return 'kitten';
+    if (lowerMessage.includes('bird')) return 'bird';
+    if (lowerMessage.includes('fish')) return 'fish';
+    if (lowerMessage.includes('hamster')) return 'hamster';
+    if (lowerMessage.includes('guinea pig')) return 'guinea pig';
+    if (lowerMessage.includes('rabbit')) return 'rabbit';
+    if (lowerMessage.includes('horse')) return 'horse';
+    
+    return 'pet'; // Default if no specific pet type is mentioned
   };
   
   // Helper function to extract location information from user messages

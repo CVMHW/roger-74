@@ -1,4 +1,3 @@
-
 /**
  * Utilities for detecting various concerns in user messages
  */
@@ -15,16 +14,54 @@ export const detectCrisisKeywords = (message: string): boolean => {
   return crisisKeywords.some(keyword => lowerMessage.includes(keyword));
 };
 
-// Medical concern detection
+// Medical concern detection with enhanced cancer and illness detection
 export const detectMedicalConcerns = (message: string): boolean => {
   const medicalKeywords = [
     'pain', 'hurt', 'ache', 'doctor', 'hospital', 'emergency', 'ambulance', 'injury', 
     'bleeding', 'wound', 'broken', 'fracture', 'concussion', 'dizzy', 'faint', 
     'fever', 'nausea', 'vomiting', 'chest pain', 'can\'t breathe', 'difficulty breathing',
-    'heart attack', 'stroke', 'seizure', 'unconscious'
+    'heart attack', 'stroke', 'seizure', 'unconscious', 'cancer', 'tumor', 'malignant',
+    'terminal', 'diagnosis', 'prognosis', 'treatment', 'chemo', 'chemotherapy', 'radiation',
+    'oncologist', 'sick', 'illness', 'disease', 'condition'
   ];
   const lowerMessage = message.toLowerCase();
   return medicalKeywords.some(keyword => lowerMessage.includes(keyword));
+};
+
+// Pet illness detection - new function
+export const detectPetIllnessConcerns = (message: string): boolean => {
+  const petIllnessKeywords = [
+    'pet sick', 'dog sick', 'cat sick', 'animal sick', 
+    'pet ill', 'dog ill', 'cat ill', 'animal ill',
+    'pet cancer', 'dog cancer', 'cat cancer', 'animal cancer',
+    'pet dying', 'dog dying', 'cat dying', 'animal dying',
+    'pet death', 'dog death', 'cat death', 'animal death',
+    'pet euthanasia', 'dog euthanasia', 'cat euthanasia', 'animal euthanasia',
+    'put down pet', 'put down dog', 'put down cat', 'put down animal',
+    'pet not eating', 'dog not eating', 'cat not eating', 'animal not eating',
+    'pet not moving', 'dog not moving', 'cat not moving', 'animal not moving',
+    'pet suffering', 'dog suffering', 'cat suffering', 'animal suffering',
+    'pet treatment', 'dog treatment', 'cat treatment', 'animal treatment',
+    'pet vet', 'dog vet', 'cat vet', 'animal vet',
+    'pet medication', 'dog medication', 'cat medication', 'animal medication'
+  ];
+  
+  // Look for co-occurrence of pet terms and illness terms
+  const petTerms = ['pet', 'dog', 'cat', 'animal', 'puppy', 'kitten'];
+  const illnessTerms = ['sick', 'ill', 'cancer', 'tumor', 'dying', 'death', 'disease',
+                       'suffering', 'pain', 'treatment', 'vet', 'medication', 'not eating',
+                       'can\'t move', 'won\'t move', 'barely moves', 'unable to move'];
+  
+  const lowerMessage = message.toLowerCase();
+  
+  // Check for direct matches in keywords
+  const directMatch = petIllnessKeywords.some(keyword => lowerMessage.includes(keyword));
+  
+  // Check for co-occurrence of pet terms and illness terms
+  const hasPetTerm = petTerms.some(term => lowerMessage.includes(term));
+  const hasIllnessTerm = illnessTerms.some(term => lowerMessage.includes(term));
+  
+  return directMatch || (hasPetTerm && hasIllnessTerm);
 };
 
 // Mental health concern detection with improved distinction between sadness and depression
@@ -534,3 +571,138 @@ export function getMildPTSDResponse(userInput: string): string {
   return "I hear you describing some challenging reactions that can follow difficult life experiences. Our bodies and minds develop these responses to try to protect us, though sometimes they continue even when the danger has passed. Would it be helpful to explore some approaches that others have found supportive in similar situations?";
 }
 
+/**
+ * Detects specific illness and conditions like cancer
+ * @param message The user's message
+ * @returns Object with detection results and context
+ */
+export const detectSpecificIllness = (message: string): {
+  detected: boolean;
+  illnessType: string | null;
+  severity: 'mild' | 'moderate' | 'severe';
+  context: 'self' | 'family' | 'friend' | 'pet' | 'other';
+} => {
+  if (!message) return { detected: false, illnessType: null, severity: 'mild', context: 'other' };
+  
+  const lowerMessage = message.toLowerCase();
+  
+  // Cancer detection
+  const cancerKeywords = [
+    'cancer', 'tumor', 'malignant', 'oncology', 'chemo', 'chemotherapy', 
+    'radiation', 'terminal', 'metastasis', 'oncologist', 'carcinoma', 'lymphoma'
+  ];
+  
+  // Other serious illnesses
+  const seriousIllnessKeywords = [
+    'als', 'alzheimer', 'dementia', 'parkinsons', 'multiple sclerosis', 'ms',
+    'heart disease', 'stroke', 'kidney failure', 'liver failure', 'terminal illness'
+  ];
+  
+  // General illness terms
+  const generalIllnessTerms = [
+    'sick', 'ill', 'disease', 'condition', 'diagnosed', 'prognosis',
+    'treatment', 'symptoms', 'suffering'
+  ];
+  
+  // Detect illness type
+  let illnessType = null;
+  if (cancerKeywords.some(keyword => lowerMessage.includes(keyword))) {
+    illnessType = 'cancer';
+  } else if (seriousIllnessKeywords.some(keyword => lowerMessage.includes(keyword))) {
+    illnessType = 'serious_illness';
+  } else if (generalIllnessTerms.some(keyword => lowerMessage.includes(keyword))) {
+    illnessType = 'general_illness';
+  }
+  
+  // Determine context (who has the illness)
+  let context: 'self' | 'family' | 'friend' | 'pet' | 'other' = 'other';
+  
+  // Pet terms
+  const petTerms = ['pet', 'dog', 'cat', 'puppy', 'kitten', 'animal'];
+  
+  // Self terms
+  const selfTerms = ['i have', 'i\'ve got', 'i was diagnosed', 'my cancer', 'my illness', 'my condition'];
+  
+  // Family terms
+  const familyTerms = ['mom', 'mother', 'dad', 'father', 'sister', 'brother', 'aunt', 
+                      'uncle', 'grandma', 'grandmother', 'grandpa', 'grandfather', 
+                      'parent', 'child', 'son', 'daughter', 'husband', 'wife', 'spouse'];
+  
+  // Friend terms
+  const friendTerms = ['friend', 'roommate', 'colleague', 'coworker', 'neighbor', 'partner'];
+  
+  // Check context
+  if (petTerms.some(term => lowerMessage.includes(term))) {
+    context = 'pet';
+  } else if (selfTerms.some(term => lowerMessage.includes(term))) {
+    context = 'self';
+  } else if (familyTerms.some(term => lowerMessage.includes(term))) {
+    context = 'family';
+  } else if (friendTerms.some(term => lowerMessage.includes(term))) {
+    context = 'friend';
+  }
+  
+  // Determine severity based on keywords
+  let severity: 'mild' | 'moderate' | 'severe' = 'moderate'; // Default for detected illnesses
+  
+  const severeIndicators = [
+    'terminal', 'dying', 'hospice', 'no treatment', 'end stage', 'metastatic',
+    'stage 4', 'stage four', 'stage iv', 'palliative', 'not long to live',
+    'gave up', 'stopped treatment', 'no options left'
+  ];
+  
+  const mildIndicators = [
+    'early stage', 'good prognosis', 'caught early', 'treatable',
+    'responding well', 'stage 1', 'stage one', 'stage i'
+  ];
+  
+  if (severeIndicators.some(indicator => lowerMessage.includes(indicator))) {
+    severity = 'severe';
+  } else if (mildIndicators.some(indicator => lowerMessage.includes(indicator))) {
+    severity = 'mild';
+  }
+  
+  return {
+    detected: illnessType !== null,
+    illnessType,
+    severity,
+    context
+  };
+};
+
+/**
+ * Generates compassionate responses for pet illness or loss
+ * @param details Information about the pet situation
+ * @returns A compassionate response
+ */
+export const generatePetIllnessResponse = (details: { 
+  petType?: string, 
+  illnessType?: string | null, 
+  severity?: 'mild' | 'moderate' | 'severe' 
+}): string => {
+  const { petType = 'pet', illnessType, severity = 'moderate' } = details;
+  
+  // General compassionate responses for pet illness
+  const generalResponses = [
+    `I'm really sorry to hear about your ${petType}. That sounds incredibly difficult. Pets become such important members of our family, and seeing them suffer can be truly heartbreaking.`,
+    
+    `I can hear how much you care about your ${petType}. It's so hard to see our animal companions in pain or discomfort. Would you like to share more about what you're going through?`,
+    
+    `The bond we form with our pets is so special and meaningful. I'm truly sorry that your ${petType} is ill. How are you coping with this situation?`
+  ];
+  
+  // Cancer-specific responses
+  const cancerResponses = [
+    `I'm so sorry to hear that your ${petType} has cancer. That's incredibly difficult news to receive. Many people experience deep grief when their pets face serious illnesses like cancer. How have you been managing since the diagnosis?`,
+    
+    `Cancer in pets can be so challenging to deal with. I'm really sorry you and your ${petType} are going through this. It's completely natural to feel overwhelmed by this situation. Would it help to talk more about what you're experiencing?`,
+    
+    `I'm truly sorry about your ${petType}'s cancer diagnosis. Many people find this is an emotional rollercoaster, with good days and difficult days. How has this been affecting you?`
+  ];
+  
+  // Select the appropriate response set
+  const responseSet = illnessType === 'cancer' ? cancerResponses : generalResponses;
+  
+  // Return a random response from the appropriate set
+  return responseSet[Math.floor(Math.random() * responseSet.length)];
+};
