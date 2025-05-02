@@ -1,89 +1,80 @@
 
-// Import the existing file to preserve current implementations
-import { useState } from 'react';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
-import { detectPTSDConcerns } from '../../utils/detectionUtils';
-import { detectSpecificIllness, detectPetIllnessConcerns } from '../../utils/detectionUtils';
-import { detectAllProblems } from '../../utils/detectionUtils/problemDetection';
-import { isLikelyTeenMessage } from '../../utils/response/teenResponseUtils';
-import { isLikelyChildMessage } from '../../utils/responseUtils';
-import { detectYoungAdultConcerns } from '../../utils/response/youngAdultResponses';
+import { detectMildSomaticComplaints } from '../../utils/conversationalUtils';
 
 export const useConcernDetection = () => {
-  // Track previous concerns to maintain consistency
-  const [previousConcern, setPreviousConcern] = useState<ConcernType | null>(null);
-  // Track detected age group for adaptive responses
-  const [detectedAgeGroup, setDetectedAgeGroup] = useState<'child' | 'teen' | 'young-adult' | 'adult' | null>(null);
-  // Track young adult specific concerns
-  const [youngAdultConcern, setYoungAdultConcern] = useState<any>(null);
-  
-  /**
-   * Enhanced concern detection function
-   * @param message The message to analyze
-   * @returns The detected concern type or null
-   */
-  const detectConcerns = (message: string): ConcernType | null => {
-    if (!message) return null;
-    
-    try {
-      // Use the enhanced unified detection system first
-      const detectedConcern = detectAllProblems(message);
-      
-      // Try to detect age group from the common problems detection
-      try {
-        const commonProblems = require('../../utils/detectionUtils/problemDetection').detectCommonProblems(message);
-        if (commonProblems && commonProblems.ageGroup) {
-          setDetectedAgeGroup(commonProblems.ageGroup);
-        } else {
-          // Use the more precise age detection functions if available
-          if (isLikelyChildMessage(message)) {
-            setDetectedAgeGroup('child');
-          } else if (isLikelyTeenMessage(message)) {
-            setDetectedAgeGroup('teen');
-          } else {
-            // Check for young adult concerns (18-29)
-            const youngAdultConcernInfo = detectYoungAdultConcerns(message);
-            if (youngAdultConcernInfo) {
-              setDetectedAgeGroup('young-adult');
-              setYoungAdultConcern(youngAdultConcernInfo);
-            } else {
-              setDetectedAgeGroup('adult');
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error detecting age group:", error);
-      }
-      
-      if (detectedConcern) {
-        // Update previous concern for consistency
-        setPreviousConcern(detectedConcern);
-        return detectedConcern;
-      }
-      
-      // If no concern detected, fall back to previous concern for consistency
-      return previousConcern;
-    } catch (error) {
-      console.error("Error in concern detection:", error);
-      return previousConcern; // Fallback to previous concern on error
+  const detectConcerns = (userInput: string): ConcernType | null => {
+    // Check if this is a mild somatic complaint from overwork
+    const somaticInfo = detectMildSomaticComplaints(userInput);
+    if (somaticInfo.isMildSomatic && somaticInfo.likelyFromOverwork) {
+      // This is not a medical concern but a temporary state from overwork
+      return null;
     }
+    
+    // Continue with regular detection for more serious medical concerns
+    const lowerInput = userInput.toLowerCase();
+    
+    // Check for suicidal ideation or self-harm
+    if (/suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)/.test(lowerInput)) {
+      return 'tentative-harm';
+    }
+    
+    // Check for crisis situations
+    if (/crisis|emergency|urgent|need help now|immediate danger|threat|safety risk/.test(lowerInput)) {
+      return 'crisis';
+    }
+    
+    // Check for medical concerns (only for specific serious symptoms)
+    const medicalPatterns = [
+      /severe (pain|bleeding|headache|injury|symptoms)/i,
+      /(chest pain|heart attack|stroke|seizure|unconscious)/i,
+      /(broken bone|fracture|concussion)/i,
+      /(emergency room|hospital|ambulance|911)/i,
+      /(blood pressure|pulse|heart rate) (high|low|irregular|abnormal)/i,
+      /can'?t (breathe|move|feel|walk|talk|see|hear)/i
+    ];
+    
+    if (medicalPatterns.some(pattern => pattern.test(lowerInput))) {
+      return 'medical';
+    }
+    
+    // Check for mental health concerns
+    if (/depress|anxiety|bipolar|schizophrenia|ocd|ptsd|trauma|mental illness|mental health|diagnosis|therapist|psychiatrist/.test(lowerInput)) {
+      return 'mental-health';
+    }
+    
+    // Check for eating disorders
+    if (/eating disorder|anorexia|bulimia|binge|purge|starv|don'?t eat|body image|weight concern/.test(lowerInput)) {
+      return 'eating-disorder';
+    }
+    
+    // Check for substance use
+    if (/addict|alcohol|drunk|substance|drug|using|withdrawal|sober|recovery|clean|relapse|overdose/.test(lowerInput)) {
+      return 'substance-use';
+    }
+    
+    // Check for gambling concerns
+    if (/gambling|bet|casino|poker|slots|lottery|lost money|betting|won money/.test(lowerInput) && !/just a small bet|social gambling|once in a while/.test(lowerInput)) {
+      return 'mild-gambling';
+    }
+    
+    // Check for PTSD
+    if (/(ptsd|post.?traumatic|flashback|trigger|trauma response)/.test(lowerInput)) {
+      return 'ptsd';
+    }
+    
+    // Check for mild PTSD
+    if (/(nightmare|hypervigilant|startle|jumpy since|trauma|traumatic event)/.test(lowerInput)) {
+      return 'ptsd-mild';
+    }
+    
+    // Check for trauma responses that aren't full PTSD
+    if (/(freeze|flight|fight|fawn|shutdown|defensive|protect myself|unsafe|threat)/.test(lowerInput)) {
+      return 'trauma-response';
+    }
+    
+    return null;
   };
   
-  /**
-   * Get the currently detected age group
-   * @returns The detected age group or null
-   */
-  const getDetectedAgeGroup = () => detectedAgeGroup;
-  
-  /**
-   * Get young adult specific concern information
-   * @returns The detected young adult concern or null
-   */
-  const getYoungAdultConcern = () => youngAdultConcern;
-  
-  return { 
-    detectConcerns, 
-    getDetectedAgeGroup,
-    getYoungAdultConcern
-  };
+  return { detectConcerns };
 };

@@ -1,4 +1,3 @@
-
 /**
  * Utilities for generating conversational responses
  */
@@ -64,6 +63,140 @@ export const detectClientPreferences = (userInput: string, conversationHistory: 
 };
 
 /**
+ * Detect mild somatic complaints that don't require medical attention
+ * @param userInput User's message
+ * @returns Whether the complaint is likely a mild issue from fatigue/stress
+ */
+export const detectMildSomaticComplaints = (userInput: string): { 
+  isMildSomatic: boolean; 
+  somaticType: string | null;
+  likelyFromOverwork: boolean;
+} => {
+  const lowerInput = userInput.toLowerCase();
+  
+  // Check for mentions of work pressure, lack of sleep, or overworking
+  const overworkPatterns = [
+    /work(ing|ed)?\s+(late|overtime|all night)/i,
+    /stay(ing|ed)? up\s+(late|all night)/i,
+    /(haven'?t|not)\s+sleep/i,
+    /tired|exhausted|fatigue/i,
+    /busy|overwork(ed)?|stress(ed)?|burn(ed|ing|t)?\s+out/i,
+    /no\s+break/i,
+    /long\s+day/i
+  ];
+  
+  const likelyFromOverwork = overworkPatterns.some(pattern => pattern.test(userInput));
+  
+  // Common mild somatic complaints
+  const mildComplaints = {
+    stomach: /stomach (hurts|ache|pain|upset)|tummy|nauseous|queasy/i,
+    headache: /headache|head (hurts|ache|pain)|migraine/i,
+    fatigue: /tired|exhausted|no energy|drained/i,
+    bodyache: /body ache|sore|stiff/i,
+    mild: /feeling off|not feeling (good|great)|under the weather/i
+  };
+  
+  // Check for severe qualifiers that might indicate a more serious condition
+  const severeQualifiers = [
+    /severe|extreme|worst|unbearable|terrible|excruciating/i,
+    /vomit(ing)?|throw(ing)? up|blood/i,
+    /can'?t (stand|walk|move|eat|drink)/i,
+    /emergency|urgent|hospital|doctor|need help|911/i,
+    /days|weeks|months/i // Duration indicating chronic issue
+  ];
+  
+  // Check if any mild complaint is present
+  let somaticType: string | null = null;
+  let hasMildComplaint = false;
+  
+  for (const [type, pattern] of Object.entries(mildComplaints)) {
+    if (pattern.test(lowerInput)) {
+      somaticType = type;
+      hasMildComplaint = true;
+      break;
+    }
+  }
+  
+  // If no mild complaint or severe qualifier present, it's not a medical concern
+  if (!hasMildComplaint) {
+    return { 
+      isMildSomatic: false, 
+      somaticType: null,
+      likelyFromOverwork: likelyFromOverwork
+    };
+  }
+  
+  // Check if any severe qualifier is present, making it potentially more serious
+  const hasSevereQualifier = severeQualifiers.some(pattern => pattern.test(lowerInput));
+  
+  return {
+    isMildSomatic: hasMildComplaint && !hasSevereQualifier,
+    somaticType,
+    likelyFromOverwork
+  };
+};
+
+/**
+ * Generate appropriate response for mild somatic complaints
+ * @param userInput User's message
+ * @param somaticInfo Analysis of the somatic complaint
+ * @returns Empathetic, conversational response
+ */
+export const generateMildSomaticResponse = (
+  userInput: string, 
+  somaticInfo: ReturnType<typeof detectMildSomaticComplaints>
+): string => {
+  // Get the appropriate opening based on the type of somatic complaint
+  let responseOpening = "";
+  
+  switch (somaticInfo.somaticType) {
+    case 'stomach':
+      responseOpening = somaticInfo.likelyFromOverwork 
+        ? "Working late and not getting enough rest can definitely affect your stomach. " 
+        : "I hear your stomach isn't feeling great today. ";
+      break;
+    case 'headache':
+      responseOpening = somaticInfo.likelyFromOverwork 
+        ? "Those late nights can bring on headaches for sure. " 
+        : "Having a headache can make everything harder. ";
+      break;
+    case 'fatigue':
+      responseOpening = "Working through the night will definitely leave you feeling drained. ";
+      break;
+    case 'bodyache':
+      responseOpening = somaticInfo.likelyFromOverwork 
+        ? "Working long hours can really take a physical toll. " 
+        : "Being physically uncomfortable makes everything harder. ";
+      break;
+    default:
+      responseOpening = somaticInfo.likelyFromOverwork 
+        ? "Working late nights can definitely leave you feeling off. " 
+        : "Not feeling your best today? ";
+  }
+  
+  // Add a conversational follow-up
+  const followUps = [
+    "How are you managing to take care of yourself today?",
+    "What do you think might help you feel better?",
+    "Have you been able to take any breaks?",
+    "What's been going on that's kept you working so late?",
+    "What's been on your mind through all of this?"
+  ];
+  
+  // Select a follow-up based on the context
+  let followUpIndex = 0;
+  if (somaticInfo.likelyFromOverwork) {
+    // For overwork, prioritize questions about breaks or work situation
+    followUpIndex = Math.floor(Math.random() * 3) + 2; // indices 2-4
+  } else {
+    // For general complaints, prioritize self-care questions
+    followUpIndex = Math.floor(Math.random() * 2); // indices 0-1
+  }
+  
+  return responseOpening + followUps[followUpIndex];
+};
+
+/**
  * Enhanced function to generate appropriate conversational responses based on user input context
  * Incorporates Ohio context, filler word processing, and emotional/rhetorical handling
  * @param userInput User's message
@@ -83,6 +216,12 @@ export const generateConversationalResponse = (
   const words = userInput.trim().split(/\s+/);
   if (words.length <= 3 && !userInput.includes('?')) {
     return generateMinimalInputResponse(userInput);
+  }
+  
+  // NEW: Check for mild somatic complaints before handling more serious medical concerns
+  const somaticInfo = detectMildSomaticComplaints(userInput);
+  if (somaticInfo.isMildSomatic) {
+    return adaptToneForClientPreference(generateMildSomaticResponse(userInput, somaticInfo), clientPreferences);
   }
   
   // Check if the user is asking about CVMHW specifically
@@ -210,4 +349,3 @@ export const generateConversationalResponse = (
   const baseResponse = conversationalResponses[Math.floor(Math.random() * conversationalResponses.length)];
   return adaptToneForClientPreference(baseResponse, clientPreferences);
 };
-
