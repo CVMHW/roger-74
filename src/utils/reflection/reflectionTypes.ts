@@ -52,16 +52,30 @@ export interface ContextAwareReflection {
   keywords: string[];
   phrases: string[];
   priority: number;
+  // Add missing properties that are being used
+  feeling?: string;
+  wheelFeelingData?: {
+    coreEmotion: string;
+    intensity?: 'low' | 'medium' | 'high';
+    relatedFeelings?: string[];
+  };
+  specificDetails?: string[];
+  relationshipContext?: string;
+  timeContext?: string;
 }
 
 export interface ReflectionPhrases {
   opening: string[];
   middle: string[];
   closing: string[];
+  // Add missing property
+  sad?: string[];
 }
 
 export interface ReflectionPrinciple {
   name: string;
   description: string;
   examples: string[];
+  // Add missing property
+  purpose?: string;
 }

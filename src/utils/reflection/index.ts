@@ -7,7 +7,7 @@
 import { ConversationStage, DevelopmentalStage, ChildEmotionCategory, FeelingCategory } from './reflectionTypes';
 import { identifyFeelings, identifyEnhancedFeelings, detectAgeAppropriateEmotions } from './feelingDetection';
 import { createFeelingReflection, createMeaningReflection, createGeneralReflection } from './reflectionGenerators';
-import { shouldUseReflection, detectDevelopmentalStage, generateAgeAppropriateReflection } from './reflectionStrategies';
+import { detectDevelopmentalStage } from './reflectionStrategies';
 import { generateConversationStarterResponse } from './ageAppropriateConversation';
 import { getRogerPersonalityInsight } from './rogerPersonality';
 import { 
@@ -24,6 +24,53 @@ import {
   translateToChildFriendlyEmotion,
   getChildFriendlyEmotionExplanation
 } from './childEmotionsWheel';
+
+/**
+ * Generates appropriate reflection response based on user's message.
+ * Export these functions that are being imported in other places
+ */
+
+// Add these two functions to fix the build errors
+export const shouldUseReflection = (userMessage: string, conversationStage: ConversationStage): boolean => {
+  // Implementation based on the context of the application
+  if (conversationStage === 'initial' || conversationStage === 'early') {
+    return true;
+  }
+  
+  // For established conversations, be more selective with reflections
+  // Check if the message contains personal content worthy of reflection
+  return userMessage.length > 20 && 
+         !userMessage.includes('?') && 
+         Math.random() < 0.6; // 60% chance of using reflection in established conversations
+};
+
+export const generateAgeAppropriateReflection = (
+  userMessage: string, 
+  detectedEmotion: string, 
+  stage: DevelopmentalStage, 
+  isPastThirtyMinutes: boolean
+): string => {
+  // Implementation based on the context of the application
+  switch (stage) {
+    case 'infant_toddler':
+      return `I see you're feeling ${detectedEmotion || 'something'}. It's okay to feel that way.`;
+    case 'young_child':
+      return `I can tell that you're feeling ${detectedEmotion || 'something'} about this. Would you like to tell me more?`;
+    case 'middle_childhood':
+      return `It sounds like you might be feeling ${detectedEmotion || 'something specific'} about what happened. That makes sense to me.`;
+    case 'adolescent':
+      return `I'm hearing that you're experiencing ${detectedEmotion || 'some feelings'} about this situation. That's completely valid.`;
+    case 'young_adult':
+    case 'adult':
+    default:
+      // For adults, use standard reflection
+      if (detectedEmotion) {
+        return createFeelingReflection([detectedEmotion as FeelingCategory], userMessage);
+      } else {
+        return createMeaningReflection(userMessage) || createGeneralReflection(userMessage);
+      }
+  }
+};
 
 /**
  * Generates an appropriate reflection response based on user's message
