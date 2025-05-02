@@ -5,7 +5,7 @@
 
 import { ConcernType } from "./reflectionTypes";
 import { detectDevelopmentalStage } from "./reflectionStrategies";
-import { identifyEnhancedFeelings } from "./feelingDetection";
+import { identifyEnhancedFeelings } from "./detectors/basicFeelingDetector";
 import { generateReflectionResponse } from "./generators/reflectionResponseGenerator";
 
 export {
