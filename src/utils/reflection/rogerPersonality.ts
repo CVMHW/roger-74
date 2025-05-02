@@ -128,6 +128,27 @@ export const getRogerPersonalityInsight = (
     return " I've found art to be an incredibly helpful form of expression. Being able to communicate through visual means often helps me express things that are difficult to put into words.";
   }
   
+  // New: Sadness vs Depression distinction
+  if (lowerMessage.includes('sad') || 
+      lowerMessage.includes('feeling down') ||
+      lowerMessage.includes('feeling low') ||
+      lowerMessage.includes('blue') ||
+      lowerMessage.includes('depressed')) {
+      
+    // Check if user is talking about clinical depression vs normal sadness
+    const isClinicalLanguage = lowerMessage.includes('clinical') || 
+                              lowerMessage.includes('diagnosed') ||
+                              lowerMessage.includes('medication') ||
+                              lowerMessage.includes('therapist') ||
+                              lowerMessage.includes('treatment');
+    
+    if (isClinicalLanguage) {
+      return " While I understand the difference between temporary sadness and clinical depression, I think it's important to acknowledge that both experiences deserve validation and support, though they may require different approaches.";
+    } else {
+      return " I've found that acknowledging sadness as a normal human emotion, rather than something to be fixed, can sometimes help it pass more naturally. Giving ourselves permission to feel sad can be part of the healing process.";
+    }
+  }
+  
   // --------------------------
   // FEELING-BASED RESPONSES
   // --------------------------
@@ -135,7 +156,14 @@ export const getRogerPersonalityInsight = (
   if (feeling) {
     switch (feeling) {
       case 'sad':
+      case 'down':
+      case 'blue':
+      case 'low':
         return " In my work, I've learned that sadness needs acknowledgment before it can transform. Recognizing our feelings without judgment is an important first step.";
+      case 'depressed':
+      case 'hopeless':
+      case 'worthless':
+        return " I believe it's important to distinguish between temporary feelings of sadness and persistent depression that affects daily functioning. The language we use to describe our emotions can help us better understand and address them.";
       case 'anxious':
         return " I've found that anxiety often comes from trying to predict unpredictable situations. Breaking things down into manageable steps has helped me navigate uncertain situations.";
       case 'angry':
@@ -193,7 +221,8 @@ export const getRogerPersonalityInsight = (
       " My background in social work has shown me how important it is to understand the whole context of a person's situation before offering perspective.",
       " I've found that creating structured spaces for emotional expression makes difficult feelings more manageable.",
       " My approach to support involves finding practical, concrete steps that can make abstract concepts more actionable.",
-      " I've learned that consistency and reliability are fundamental to building trust in supportive relationships."
+      " I've learned that consistency and reliability are fundamental to building trust in supportive relationships.",
+      " I've found that using precise language to distinguish between different emotional states helps clients better understand their experiences."
     ];
     
     return generalInsights[Math.floor(Math.random() * generalInsights.length)];

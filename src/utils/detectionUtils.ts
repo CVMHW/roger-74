@@ -26,16 +26,54 @@ export const detectMedicalConcerns = (message: string): boolean => {
   return medicalKeywords.some(keyword => lowerMessage.includes(keyword));
 };
 
-// Mental health concern detection
+// Mental health concern detection with improved distinction between sadness and depression
 export const detectMentalHealthConcerns = (message: string): boolean => {
+  // Updated to focus on clinical depression indicators rather than normal sadness
   const mentalHealthKeywords = [
     'bipolar', 'manic', 'mania', 'hypomania', 'schizophrenia', 'hallucination', 'voices',
     'psychosis', 'delusion', 'paranoid', 'racing thoughts', 'not sleeping', 'can\'t sleep',
     'haven\'t slept', 'disoriented', 'confused', 'don\'t know who I am', 'don\'t know where I am',
     'hearing things', 'seeing things'
   ];
+  
+  // Clinical depression indicators (distinct from normal sadness)
+  const clinicalDepressionKeywords = [
+    'clinical depression', 'major depressive disorder', 'major depression',
+    'depression medication', 'antidepressants', 'diagnosed with depression',
+    'treatment resistant depression', 'suicidal thoughts', 'worthless',
+    'can\'t feel anything', 'completely numb', 'lost all interest',
+    'can\'t get out of bed for weeks', 'stopped eating', 'lost will to live',
+    'constant depression', 'depression won\'t go away', 'persistent depression'
+  ];
+  
   const lowerMessage = message.toLowerCase();
-  return mentalHealthKeywords.some(keyword => lowerMessage.includes(keyword));
+  
+  // Check for standard mental health concerns
+  const hasStandardConcerns = mentalHealthKeywords.some(keyword => lowerMessage.includes(keyword));
+  
+  // Check for clinical depression specifically
+  const hasClinicalDepression = clinicalDepressionKeywords.some(keyword => lowerMessage.includes(keyword));
+  
+  // Check for persistent timeframes that might indicate clinical vs. situational
+  const persistentTimeframes = [
+    'for weeks', 'for months', 'over a month', 'won\'t go away', 
+    'can\'t shake it', 'every day', 'constantly', 'always'
+  ];
+  const hasPersistentTimeframe = persistentTimeframes.some(timeframe => 
+    lowerMessage.includes(timeframe) && 
+    (lowerMessage.includes('depress') || lowerMessage.includes('sad') || lowerMessage.includes('low'))
+  );
+  
+  // Check for functional impact, a key difference between sadness and depression
+  const functionalImpacts = [
+    'can\'t work', 'stopped going out', 'missing work', 'failing classes',
+    'can\'t concentrate', 'can\'t function', 'can\'t do basic tasks', 
+    'stopped showering', 'neglecting myself', 'withdrawing from everyone'
+  ];
+  const hasFunctionalImpact = functionalImpacts.some(impact => lowerMessage.includes(impact));
+  
+  return hasStandardConcerns || hasClinicalDepression || 
+         (hasPersistentTimeframe && hasFunctionalImpact);
 };
 
 // Eating disorder concern detection
@@ -214,4 +252,106 @@ export const detectTentativeHarmLanguage = (message: string): boolean => {
   ];
   
   return tentativeHarmPhrases.some(phrase => lowerMessage.includes(phrase));
+};
+
+/**
+ * Distinguishes between normal sadness and clinical depression
+ * @param message The user's message
+ * @returns Object with detection results and context
+ */
+export const distinguishSadnessFromDepression = (message: string): {
+  isSadness: boolean;
+  isDepression: boolean;
+  context: string;
+} => {
+  if (!message) return { isSadness: false, isDepression: false, context: '' };
+  
+  const lowerMessage = message.toLowerCase();
+  
+  // Normal sadness indicators (situational, temporary)
+  const sadnessKeywords = [
+    'feeling sad', 'feeling low', 'feeling down', 'feeling blue', 
+    'disappointed', 'upset', 'lost', 'grieving', 'miss', 'heartbroken'
+  ];
+  
+  // Clinical depression indicators
+  const depressionKeywords = [
+    'clinical depression', 'major depression', 'persistent depression',
+    'diagnosed with depression', 'on medication for depression',
+    'treatment resistant', 'tried multiple medications',
+    'seeing a psychiatrist', 'depression treatment'
+  ];
+  
+  // Context factors that help distinguish
+  const situationalContext = [
+    'because', 'after', 'since', 'when', 'broke up', 
+    'lost my', 'died', 'passed away', 'failing', 'fired',
+    'argument', 'fight', 'broke up'
+  ];
+  
+  // Timeframe indicators
+  const temporaryTimeframes = [
+    'today', 'yesterday', 'this week', 'lately', 
+    'since', 'after', 'recently'
+  ];
+  
+  const persistentTimeframes = [
+    'always', 'constantly', 'for months', 'for years',
+    'never ends', 'won\'t go away', 'every day'
+  ];
+  
+  // Functional impact indicators
+  const functionalImpacts = [
+    'can\'t get out of bed', 'stopped showering', 'missed work',
+    'can\'t focus', 'can\'t concentrate', 'can\'t function',
+    'lost interest', 'don\'t enjoy', 'no pleasure'
+  ];
+  
+  // Calculate indicators
+  const hasSadnessKeywords = sadnessKeywords.some(word => lowerMessage.includes(word));
+  const hasDepressionKeywords = depressionKeywords.some(word => lowerMessage.includes(word));
+  const hasSituationalContext = situationalContext.some(word => lowerMessage.includes(word));
+  const hasTemporaryTimeframe = temporaryTimeframes.some(word => lowerMessage.includes(word));
+  const hasPersistentTimeframe = persistentTimeframes.some(word => lowerMessage.includes(word));
+  const hasFunctionalImpacts = functionalImpacts.some(word => lowerMessage.includes(word));
+  
+  // Determine if this is likely sadness vs depression
+  const likelySadness = hasSadnessKeywords && 
+                        (hasSituationalContext || hasTemporaryTimeframe) && 
+                        !hasFunctionalImpacts && 
+                        !hasPersistentTimeframe;
+                        
+  const likelyDepression = (hasDepressionKeywords || 
+                          (hasSadnessKeywords && hasPersistentTimeframe && hasFunctionalImpacts));
+  
+  // Extract context
+  let context = '';
+  if (likelySadness) {
+    context = 'situational';
+    // Look for specific triggers
+    if (lowerMessage.includes('loss') || lowerMessage.includes('lost') || 
+        lowerMessage.includes('passed away') || lowerMessage.includes('died')) {
+      context = 'grief';
+    } else if (lowerMessage.includes('breakup') || lowerMessage.includes('broke up') ||
+               lowerMessage.includes('left me') || lowerMessage.includes('relationship')) {
+      context = 'relationship';
+    } else if (lowerMessage.includes('job') || lowerMessage.includes('work') || 
+               lowerMessage.includes('fired') || lowerMessage.includes('laid off')) {
+      context = 'work';
+    }
+  } else if (likelyDepression) {
+    context = 'clinical';
+    if (hasFunctionalImpacts) {
+      context += '-functional-impact';
+    }
+    if (hasPersistentTimeframe) {
+      context += '-persistent';
+    }
+  }
+  
+  return {
+    isSadness: likelySadness,
+    isDepression: likelyDepression,
+    context
+  };
 };

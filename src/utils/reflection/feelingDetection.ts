@@ -1,3 +1,4 @@
+
 /**
  * Utilities for detecting feelings in user messages
  * Enhanced with the Feelings Wheel model for better emotional understanding
@@ -8,6 +9,7 @@ import { feelingCategories } from './feelingCategories';
 import { findFeelingInWheel, getAllEmotionWords, getCoreEmotion, getRelatedFeelings } from './feelingsWheel';
 import { findEmotionInChildWheel, getAllChildEmotionWords, translateToChildFriendlyEmotion } from './childEmotionsWheel';
 import { detectDevelopmentalStage } from './reflectionStrategies';
+import { distinguishSadnessFromDepression } from '../detectionUtils';
 
 /**
  * Enhanced structure for detected feelings that includes feelings wheel data
@@ -25,6 +27,10 @@ export interface EnhancedFeelingResult {
     translation: string;
     category: string;
     color: string;
+  };
+  clinicalContext?: {
+    isClinical: boolean;
+    context: string;
   };
 }
 
@@ -55,6 +61,9 @@ export const identifyEnhancedFeelings = (userMessage: string): EnhancedFeelingRe
   // Detect developmental stage to prioritize appropriate emotion detection
   const developmentalStage = detectDevelopmentalStage(userMessage);
   const isChild = developmentalStage && developmentalStage !== 'adult' && developmentalStage !== 'young_adult';
+  
+  // Get sadness vs. depression distinction
+  const emotionalDistinction = distinguishSadnessFromDepression(userMessage);
   
   // If we're dealing with a child, prioritize the child emotions wheel first
   if (isChild) {
@@ -117,6 +126,14 @@ export const identifyEnhancedFeelings = (userMessage: string): EnhancedFeelingRe
             }
           };
           
+          // For sadness, add clinical context if available
+          if (category === 'sad' && (emotionalDistinction.isSadness || emotionalDistinction.isDepression)) {
+            result.clinicalContext = {
+              isClinical: emotionalDistinction.isDepression,
+              context: emotionalDistinction.context
+            };
+          }
+          
           // For children, include a child-friendly translation
           if (isChild) {
             const childFriendlyWord = translateToChildFriendlyEmotion(word);
@@ -161,6 +178,14 @@ export const identifyEnhancedFeelings = (userMessage: string): EnhancedFeelingRe
         detectedWord: matchedWord
       };
       
+      // For sadness, add clinical context if available
+      if (category === 'sad' && (emotionalDistinction.isSadness || emotionalDistinction.isDepression)) {
+        result.clinicalContext = {
+          isClinical: emotionalDistinction.isDepression,
+          context: emotionalDistinction.context
+        };
+      }
+      
       // For children, include a child-friendly translation
       if (isChild) {
         const childFriendlyWord = translateToChildFriendlyEmotion(matchedWord);
@@ -191,10 +216,21 @@ export const identifyEnhancedFeelings = (userMessage: string): EnhancedFeelingRe
         lowerMessage.includes('bad') ||
         lowerMessage.includes('don\'t get to') ||
         lowerMessage.includes('rain')) {
-      detectedFeelings.push({
+      
+      const result: EnhancedFeelingResult = {
         category: 'sad',
         detectedWord: 'sad'
-      });
+      };
+      
+      // Add clinical context if available
+      if (emotionalDistinction.isSadness || emotionalDistinction.isDepression) {
+        result.clinicalContext = {
+          isClinical: emotionalDistinction.isDepression,
+          context: emotionalDistinction.context
+        };
+      }
+      
+      detectedFeelings.push(result);
     }
     
     // Check for anxious context
