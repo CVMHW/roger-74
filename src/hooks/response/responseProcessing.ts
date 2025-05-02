@@ -62,8 +62,16 @@ export const useResponseProcessing = ({
         // Add this response to the history to prevent future repetition
         addToResponseHistory(responseText);
         
-        // Create response message
-        const rogerResponse = createMessage(responseText, 'roger', concernType);
+        // Create response message - fixing the type issue by properly casting concernType
+        const typedConcernType = concernType === 'crisis' || 
+                               concernType === 'medical' || 
+                               concernType === 'mental-health' || 
+                               concernType === 'eating-disorder' || 
+                               concernType === 'substance-use' || 
+                               concernType === 'tentative-harm' ? 
+                               concernType as 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | null : null;
+        
+        const rogerResponse = createMessage(responseText, 'roger', typedConcernType);
         setIsTyping(false);
         resolve(rogerResponse);
       }, responseTime);

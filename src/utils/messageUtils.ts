@@ -8,7 +8,7 @@ import { MessageType } from '../components/Message';
 export const createMessage = (
   text: string, 
   sender: 'user' | 'roger', 
-  concernType: 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | null = null
+  concernType: 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | null = null
 ): MessageType => {
   return {
     id: Date.now().toString(),

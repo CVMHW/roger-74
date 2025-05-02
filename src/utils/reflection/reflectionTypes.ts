@@ -18,3 +18,5 @@ export interface ReflectionPrinciple {
   goal: string;
 }
 
+// Define the allowed concern types for consistency across the application
+export type ConcernType = 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | null;
