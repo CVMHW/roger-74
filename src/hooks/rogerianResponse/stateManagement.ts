@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { RecentCrisisMessage } from './types';
 import { extractConversationContext } from '../../utils/conversationEnhancement/repetitionDetector';
@@ -32,9 +33,17 @@ export const useRogerianState = () => {
       
       // Update client preferences if we have new information
       if (context && context.hasContext) {
+        // Create an object with relevant context information that we want to store
+        const contextInfo = {
+          topics: context.topics,
+          locations: context.locations,
+          emotions: context.emotions,
+          keyPhrases: context.keyPhrases
+        };
+        
         setClientPreferences(prev => ({
           ...prev,
-          ...context.contextualInfo
+          ...contextInfo
         }));
       }
     } catch (error) {
