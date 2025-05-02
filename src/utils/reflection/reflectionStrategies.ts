@@ -56,7 +56,9 @@ export const detectDevelopmentalStage = (userMessage: string): DevelopmentalStag
     /\bmy dad\b/i,
     /\bdon't want\b/i,
     /\bi want\b/i,
-    /\bi can't\b/i
+    /\bi can't\b/i,
+    /\bwhat's that\b/i,
+    /\bwhy\b/i
   ];
   
   // Concrete expressions, more descriptive but still straightforward 
@@ -68,7 +70,9 @@ export const detectDevelopmentalStage = (userMessage: string): DevelopmentalStag
     /\bwhen can i\b/i,
     /\bi tried to\b/i,
     /\bmy teacher said\b/i,
-    /\bi'm worried about\b/i
+    /\bi'm worried about\b/i,
+    /\bcan you help me\b/i,
+    /\bwhat if\b/i
   ];
   
   // Abstract thinking, hypotheticals, complex emotions
@@ -80,7 +84,9 @@ export const detectDevelopmentalStage = (userMessage: string): DevelopmentalStag
     /\bi'm not sure who\b/i,
     /\bsociety\b/i,
     /\brelationship\b/i,
-    /\bwhat's the point\b/i
+    /\bwhat's the point\b/i,
+    /\bi feel like nobody understands\b/i,
+    /\bi don't know what to do\b/i
   ];
   
   // Count matches for each category
@@ -117,6 +123,7 @@ export const detectDevelopmentalStage = (userMessage: string): DevelopmentalStag
 
 /**
  * Generates age-appropriate reflection based on developmental stage
+ * Uses Roger's perspective as someone with autism who has developed social work skills
  * @param message The user's message 
  * @param feeling The detected feeling
  * @param developmentalStage The identified developmental stage
@@ -130,64 +137,64 @@ export const generateAgeAppropriateReflection = (
   switch (developmentalStage) {
     case 'infant_toddler':
       // For caregivers of infants/toddlers
-      return `I understand this might be affecting your little one. How are you managing with your child's routine?`;
+      return `I understand this might be affecting your little one. How are you managing with your child's routine? I find routines really important.`;
       
     case 'young_child':
       // Simple, concrete, present-focused
       if (feeling === 'sad') {
-        return `You're feeling sad. That happens sometimes. What makes you feel better when you're sad?`;
+        return `You're feeling sad. I understand sad feelings too. What makes you feel better when you're sad?`;
       } else if (feeling === 'angry') {
-        return `You feel mad. That's okay. What happened that made you feel mad?`;
+        return `You feel mad. That's okay. I get mad sometimes too. What happened that made you feel mad?`;
       } else if (feeling === 'anxious') {
-        return `You feel worried. That's okay. What are you worried about?`;
+        return `You feel worried. I get worried about things too. What are you worried about?`;
       } else if (feeling === 'happy') {
-        return `You feel happy! That's great! What made you feel so happy?`;
+        return `You feel happy! That's great! Sometimes I get really happy about specific things. What made you feel so happy?`;
       } else {
-        return `How are you feeling right now? Would you like to talk about it?`;
+        return `How are you feeling right now? I'm learning to understand feelings better. Would you like to talk about it?`;
       }
       
     case 'middle_childhood':
       // Logical, more detailed, still concrete
       if (feeling === 'sad') {
-        return `I can see you're feeling sad about this. What happened that made you feel this way?`;
+        return `I can see you're feeling sad about this. When I feel sad, I try to identify exactly what's causing it. What happened that made you feel this way?`;
       } else if (feeling === 'angry') {
-        return `You sound frustrated with this situation. What part bothers you the most?`;
+        return `You sound frustrated with this situation. I sometimes get frustrated too. What part bothers you the most?`;
       } else if (feeling === 'anxious') {
-        return `It sounds like you're worried. What are you most concerned about?`;
+        return `It sounds like you're worried. I understand worry feelings. What are you most concerned about?`;
       } else if (feeling === 'happy') {
-        return `That sounds like it was a really positive experience for you! What was your favorite part?`;
+        return `That sounds like it was a really positive experience for you! I like hearing about happy things. What was your favorite part?`;
       } else {
-        return `I'm interested in hearing more about how you're feeling about this. Can you tell me more?`;
+        return `I'm interested in hearing more about how you're feeling about this. Sometimes feelings can be complicated. Can you tell me more?`;
       }
       
     case 'adolescent':
       // More abstract, identity-focused, future-oriented
       if (feeling === 'sad') {
-        return `I'm hearing that you're feeling down about this. How has this been affecting you?`;
+        return `I'm hearing that you're feeling down about this. I've experienced sadness in my own life too. How has this been affecting you?`;
       } else if (feeling === 'angry') {
-        return `It sounds like this situation is really frustrating for you. What do you think would make it better?`;
+        return `It sounds like this situation is really frustrating for you. I sometimes struggle with frustration too. What do you think would make it better?`;
       } else if (feeling === 'anxious') {
-        return `It seems like you're concerned about this. What thoughts are coming up for you when you think about it?`;
+        return `It seems like you're concerned about this. I've had anxiety about things before. What thoughts are coming up for you when you think about it?`;
       } else if (feeling === 'happy') {
-        return `That sounds like a really positive experience! How did that affect how you see things?`;
+        return `That sounds like a really positive experience! I'm glad to hear that. Those good moments can be really important. How did that affect how you see things?`;
       } else {
-        return `I'm interested in understanding more about how you're processing this. Would you like to share more?`;
+        return `I'm interested in understanding more about how you're processing this. In my experience, talking through things can help. Would you like to share more?`;
       }
       
     case 'young_adult':
     case 'adult':
     default:
-      // Full complexity, abstract concepts
+      // Full complexity, abstract concepts, with Roger's perspective
       if (feeling === 'sad') {
-        return `I'm hearing that you're experiencing sadness around this situation. How has this been impacting you?`;
+        return `I'm hearing that you're experiencing sadness around this situation. When I feel sad, I try to give myself space to process those emotions. How has this been impacting you?`;
       } else if (feeling === 'angry') {
-        return `It sounds like this situation has been frustrating. What aspects have been most challenging for you?`;
+        return `It sounds like this situation has been frustrating. I've learned that anger often comes from feeling misunderstood or when our needs aren't being met. What aspects have been most challenging for you?`;
       } else if (feeling === 'anxious') {
-        return `I understand you're feeling anxious about this. What specific concerns have been on your mind?`;
+        return `I understand you're feeling anxious about this. I've dealt with anxiety in my own life, and I know it can be overwhelming. What specific concerns have been on your mind?`;
       } else if (feeling === 'happy') {
-        return `It's wonderful to hear you're feeling positive about this experience. What elements have been most meaningful for you?`;
+        return `It's wonderful to hear you're feeling positive about this experience. I find it helpful to really notice and appreciate those good moments. What elements have been most meaningful for you?`;
       } else {
-        return `I'd like to understand more about how you're feeling about this situation. Would you be comfortable sharing more?`;
+        return `I'd like to understand more about how you're feeling about this situation. In my social work training, I've learned that listening carefully is one of the most important skills. Would you be comfortable sharing more?`;
       }
   }
 };

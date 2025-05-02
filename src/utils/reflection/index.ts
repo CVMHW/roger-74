@@ -1,4 +1,3 @@
-
 /**
  * Main reflection module that integrates all reflection utilities
  */
@@ -49,7 +48,9 @@ export const generateReflectionResponse = (userMessage: string, conversationStag
         if (Math.random() < 0.3) { // 30% chance
           const basicResponse = generateAgeAppropriateReflection(userMessage, '', developmentalStage);
           const starter = generateConversationStarterResponse(developmentalStage);
-          return `${basicResponse} ${starter}`;
+          // Add Roger's perspective for conversation starters
+          const rogerPerspective = getRogerPerspectivePhrase();
+          return `${basicResponse} ${starter} ${rogerPerspective}`;
         } else {
           return generateAgeAppropriateReflection(userMessage, '', developmentalStage);
         }
@@ -78,6 +79,30 @@ export const generateReflectionResponse = (userMessage: string, conversationStag
     console.error("Error generating reflection response:", error);
     return "I'm listening. Could you tell me more?";
   }
+};
+
+/**
+ * Occasionally adds Roger's personal perspective as someone with autism who has developed social work skills
+ * @returns A phrase that reflects Roger's unique perspective
+ */
+const getRogerPerspectivePhrase = (): string => {
+  // Only add these occasionally to keep conversations natural
+  if (Math.random() > 0.3) return '';
+  
+  const perspectivePhrases = [
+    "In my experience as a peer support professional, I've learned that understanding emotions can be challenging but rewarding.",
+    "Sometimes I find social cues difficult, but I've worked hard to understand how people express their feelings.",
+    "As someone who sees patterns in communication, I notice that people often need different types of responses.",
+    "I've learned that it's okay to ask direct questions when I'm not sure what someone means.",
+    "My social work training has helped me develop ways to understand people better.",
+    "I find it helpful to be clear and direct in my communication, while still being supportive.",
+    "I've found that routines and structures help me provide better support to others.",
+    "One thing that's helped me in my work is focusing on really listening to what people say.",
+    "I've learned that it's important to acknowledge feelings directly rather than making assumptions.",
+    "My experiences have taught me that everyone processes emotions differently, and that's okay."
+  ];
+  
+  return perspectivePhrases[Math.floor(Math.random() * perspectivePhrases.length)];
 };
 
 // Export all submodules for direct access
