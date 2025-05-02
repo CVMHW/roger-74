@@ -1,4 +1,3 @@
-
 import { 
   isIntroduction,
   generateIntroductionResponse,
@@ -71,10 +70,28 @@ export const useResponseGenerator = ({
     // Extract keywords related to sports teams and events if present
     const lowerInput = userInput.toLowerCase();
     
-    // Look for sports teams and betting context
-    const sportsTeams = ['cavs', 'cavaliers', 'browns', 'guardians', 'indians', 'yankees', 'lakers', 'warriors'];
-    const mentionedTeams = sportsTeams.filter(team => lowerInput.includes(team));
-    const team = mentionedTeams.length > 0 ? mentionedTeams[0] : 'sports team';
+    // Import sports teams data if available
+    let sportTeamsModule;
+    try {
+      // Dynamic import to avoid circular dependencies
+      sportTeamsModule = require('../../utils/reflection/sportsTeamsData');
+    } catch (e) {
+      console.log("Sports teams module not available");
+    }
+    
+    // Look for sports teams mentions
+    const allTeamNames = sportTeamsModule?.getAllTeamNamesAndAliases() || [];
+    const mentionedTeamNames = allTeamNames.filter(team => lowerInput.includes(team));
+    
+    // Find the first mentioned team with details
+    let teamInfo = null;
+    if (mentionedTeamNames.length > 0) {
+      teamInfo = sportTeamsModule?.findTeam(mentionedTeamNames[0]);
+    }
+    
+    // Default team name if no specific team is found
+    const team = teamInfo?.name || mentionedTeamNames[0] || 'favorite team';
+    const sport = teamInfo?.sport || 'sports';
     
     // Look for emotion words
     const sadPattern = /sad|down|upset|disappointed|bummed/i;
@@ -86,13 +103,20 @@ export const useResponseGenerator = ({
     // Check for money context
     const moneyMentioned = /[$]\d+|\d+ dollars|lost \d+|won \d+|bet \d+/i.test(lowerInput);
     
+    // Check for Cleveland-specific references
+    const clevelandMentioned = /cleveland|cle|the land/i.test(lowerInput);
+    
     // Generate appropriate reflection based on context
-    if (hasSadness && moneyMentioned && mentionedTeams.length > 0) {
-      return `I hear that you're feeling disappointed about losing your bet on the ${team}. It sounds like you usually have better luck with your bets. Would you like to tell me more about how this is affecting you?`;
-    } else if (hasFrustration && moneyMentioned) {
-      return `It sounds like you're frustrated about the money you lost betting. Even though it might not be a huge amount for you, it's still disappointing when things don't go as expected. How are you processing this experience?`;
-    } else if (moneyMentioned) {
-      return `I notice you mentioned losing some money on gambling. Even when the amount isn't financially significant, it can still impact our mood. How are you feeling about it now?`;
+    if (hasSadness && moneyMentioned && teamInfo) {
+      return `I hear that you're feeling disappointed about losing your bet on the ${team}. That's a common experience when following ${sport}. Would you like to talk more about how this is affecting you?`;
+    } else if (hasFrustration && moneyMentioned && teamInfo) {
+      return `It sounds like you're frustrated about the money you lost betting on the ${team}. Even when it's not a huge amount, it can still feel disappointing. How are you handling that feeling?`;
+    } else if (moneyMentioned && teamInfo) {
+      return `I notice you mentioned losing some money on gambling related to the ${team}. Even small losses can impact our mood. How are you feeling about it now?`;
+    } else if (clevelandMentioned && moneyMentioned) {
+      return `I hear you talking about betting on Cleveland sports. The ups and downs of being a Cleveland sports fan can make betting particularly emotional. How does the outcome affect you beyond just the money involved?`;
+    } else if (teamInfo) {
+      return `I notice you mentioned ${team} in relation to betting. Following sports can be really engaging, especially when there's something at stake. How do you balance enjoying the game versus focusing on the bet?`;
     } else {
       return `I'm hearing that gambling is something you engage in occasionally. How do you feel about your experience with betting overall?`;
     }

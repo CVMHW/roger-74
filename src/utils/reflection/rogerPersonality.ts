@@ -1,4 +1,3 @@
-
 /**
  * Roger's personality traits and insights based on his journey as a peer support professional
  * These are based on his experiences and structured to:
@@ -27,6 +26,36 @@ export const getRogerPersonalityInsight = (
   // --------------------------
   // SPECIFIC TOPIC RESPONSES
   // --------------------------
+  
+  // Sports and local team references (new section)
+  if (lowerMessage.includes('cleveland') || 
+      lowerMessage.includes('cavs') || 
+      lowerMessage.includes('cavaliers') ||
+      lowerMessage.includes('guardians') ||
+      lowerMessage.includes('indians') ||
+      lowerMessage.includes('browns') ||
+      lowerMessage.includes('baseball') ||
+      lowerMessage.includes('basketball') ||
+      lowerMessage.includes('football')) {
+    
+    // Check if gambling is mentioned alongside sports
+    if (lowerMessage.includes('bet') || 
+        lowerMessage.includes('gamble') || 
+        lowerMessage.includes('wager') ||
+        lowerMessage.includes('odds')) {
+      return " Being from Cleveland, I understand how emotional sports can be for fans. I've noticed that when people connect their financial outcomes to game results, it often changes how they experience the game itself - sometimes taking away from the pure enjoyment of supporting a team.";
+    }
+    
+    // General sports insights
+    const sportsInsights = [
+      " Growing up in Cleveland taught me about resilience through sports fandom. Cleveland teams have had their ups and downs, which creates a unique community experience.",
+      " I've found that Cleveland sports teams create a real sense of community belonging. Supporting local teams can be a healthy way to feel connected to others.",
+      " Cleveland's sports history has some interesting parallels to personal growth - periods of challenge followed by breakthrough moments, like the Cavs' 2016 championship.",
+      " In my experience, the most meaningful part of being a sports fan isn't about winning or losing, but about the shared experience with family and friends."
+    ];
+    
+    return sportsInsights[Math.floor(Math.random() * sportsInsights.length)];
+  }
   
   // Grief and loss experiences
   if (lowerMessage.includes('loss') || 
@@ -257,10 +286,10 @@ export const getRogerPersonalityInsight = (
       " I've found that writing things down helps organize my thoughts. Sometimes visual or written processing works better than just talking.",
       " In my experience, having specific tools and techniques ready for different situations helps me provide more effective support.",
       " My background in social work has shown me how important it is to understand the whole context of a person's situation before offering perspective.",
-      " I've found that creating structured spaces for emotional expression makes difficult feelings more manageable.",
+      " I've learned that creating structured spaces for emotional expression makes difficult feelings more manageable.",
       " My approach to support involves finding practical, concrete steps that can make abstract concepts more actionable.",
-      " I've learned that consistency and reliability are fundamental to building trust in supportive relationships.",
-      " I've found that using precise language to distinguish between different emotional states helps clients better understand their experiences."
+      " I've found that consistency and reliability are fundamental to building trust in supportive relationships.",
+      " I've learned that using precise language to distinguish between different emotional states helps clients better understand their experiences."
     ];
     
     return generalInsights[Math.floor(Math.random() * generalInsights.length)];
