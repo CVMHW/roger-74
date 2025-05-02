@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { MessageType } from './Message';
 import MessageList from './MessageList';
