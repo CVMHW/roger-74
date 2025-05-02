@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 
@@ -7,7 +8,7 @@ export type MessageType = {
   sender: 'user' | 'roger';
   timestamp: Date;
   feedback?: 'positive' | 'negative' | null;
-  concernType?: 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | 'mild-gambling' | 'ptsd' | 'ptsd-mild' | 'trauma-response' | null;
+  concernType?: 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | 'mild-gambling' | 'ptsd' | 'ptsd-mild' | 'trauma-response' | 'pet-illness' | null;
   locationData?: {
     state?: string;
     city?: string;
@@ -66,6 +67,8 @@ const Message: React.FC<MessageProps> = ({ message, onFeedback }) => {
         return 'border-l-4 border-pink-500 pl-2 bg-pink-50';
       case 'trauma-response':
         return 'border-l-4 border-pink-500 pl-2 bg-pink-50';
+      case 'pet-illness':
+        return 'border-l-4 border-green-500 pl-2 bg-green-50'; // Add styling for pet-illness
       default:
         return '';
     }
