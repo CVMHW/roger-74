@@ -1,13 +1,11 @@
+
 import { useState } from 'react';
 import { MessageType } from '../../components/Message';
-import { createMessage } from '../../utils/messageUtils';
-import { calculateMinimumResponseTime } from '../../utils/masterRules';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
-import { detectGriefThemes } from '../../utils/response/griefSupport';
-import { 
-  detectPoliticalEmotions,
-  detectSimpleNegativeState
-} from '../../utils/conversationalUtils';
+import { calculateMessageResponseTime } from './processing/responseTimeCalculation';
+import { analyzeSpecialConcerns } from './processing/concernAnalyzer';
+import { generateYoungAdultResponse } from './processing/youngAdultResponseHandler';
+import { finalizeResponse } from './processing/responseFinisher';
 
 interface ResponseProcessingParams {
   ensureResponseCompliance: (response: string) => string;
@@ -33,174 +31,20 @@ export const useResponseProcessing = ({
   ): Promise<MessageType> => {
     setIsTyping(true);
     
-    // Check for explicitly stated feelings as highest priority
-    const negativeStateInfo = detectSimpleNegativeState(userInput);
-    const hasExplicitFeelings = negativeStateInfo.isNegativeState && 
-                               negativeStateInfo.explicitFeelings.length > 0;
-    
-    // Prioritize response to explicit feelings
-    if (hasExplicitFeelings) {
-      // Give explicit feeling responses slightly faster response time
-      responseTimeMultiplier = 0.9;
-    }
-    
     // Detect any concerns in the user message
     const concernType = detectConcernsFn(userInput);
     
-    // Check for young adult concerns
-    let youngAdultConcern = null;
-    if (youngAdultConcernFn) {
-      youngAdultConcern = youngAdultConcernFn();
-    }
-    
-    // Calculate response time based on message complexity and emotional weight
+    // Calculate response time based on message complexity
     let responseTime = calculateResponseTime(userInput);
     
-    // Estimate message complexity and emotional weight for timing adjustments
-    const isCrisis = concernType === 'crisis' || concernType === 'tentative-harm';
-    const isMentalHealth = concernType === 'mental-health';
-    const isMedical = concernType === 'medical' || concernType === 'eating-disorder';
-    const isMildGambling = concernType === 'mild-gambling';
-    const isPTSD = concernType === 'ptsd' || concernType === 'ptsd-mild';
-    const isTraumaResponse = concernType === 'trauma-response';
+    // Analyze special concerns
+    const { youngAdultConcern, traumaResponsePatterns } = 
+      await analyzeSpecialConcerns(userInput, concernType, youngAdultConcernFn);
     
-    // Detect grief themes for response timing
-    const griefThemes = detectGriefThemes(userInput);
-    const hasSignificantGrief = griefThemes.themeIntensity >= 4;
+    // Recalculate response time based on analysis
+    responseTime = calculateMessageResponseTime(userInput, concernType);
     
-    // Detect political emotions - these need rapid responses
-    const politicalEmotions = detectPoliticalEmotions(userInput);
-    const hasPoliticalEmotions = politicalEmotions.isPolitical;
-    
-    // Check for trauma response patterns
-    let traumaResponsePatterns = null;
-    try {
-      // Use dynamic import instead of require
-      const traumaModule = await import('../../utils/response/traumaResponsePatterns').catch(() => null);
-      if (traumaModule && traumaModule.detectTraumaResponsePatterns) {
-        traumaResponsePatterns = traumaModule.detectTraumaResponsePatterns(userInput);
-      }
-    } catch (e) {
-      console.log("Trauma patterns module not available:", e);
-    }
-    
-    // Adjust complexity and emotional weight based on concerns and grief levels
-    let estimatedComplexity = isCrisis ? 8 : 
-                             isMentalHealth ? 7 :
-                             isMedical ? 7 : 
-                             isPTSD ? 8 :  // Higher complexity for PTSD
-                             isTraumaResponse ? 7 : // Higher for trauma responses
-                             isMildGambling ? 4 : 
-                             hasSignificantGrief ? 6 : 
-                             youngAdultConcern ? 6 : 5;
-    
-    let estimatedEmotionalWeight = isCrisis ? 9 : 
-                                  concernType === 'substance-use' || isMentalHealth ? 7 : 
-                                  isPTSD ? 8 : // Higher emotional weight for PTSD
-                                  isTraumaResponse ? 7 : 
-                                  isMildGambling ? 3 : 
-                                  hasSignificantGrief ? 7 : 
-                                  youngAdultConcern ? 5 : 4;
-    
-    // Political emotions should be responded to quickly
-    if (hasPoliticalEmotions) {
-      // Lower complexity for faster, more conversational response
-      estimatedComplexity = 3;
-      
-      // But still acknowledge the emotional weight
-      if (politicalEmotions.emotionExpressed === 'angry') {
-        estimatedEmotionalWeight = 5;
-      } else if (politicalEmotions.emotionExpressed === 'upset') {
-        estimatedEmotionalWeight = 4;
-      } else {
-        estimatedEmotionalWeight = 3;
-      }
-      
-      // Apply specific multiplier to ensure quick responses to political content
-      responseTimeMultiplier = 0.7; // 30% faster than normal
-    }
-    
-    // Further adjust based on specific grief severity
-    if (hasSignificantGrief) {
-      if (griefThemes.griefSeverity === 'existential') {
-        estimatedComplexity = 8;
-        estimatedEmotionalWeight = 8;
-      } else if (griefThemes.griefSeverity === 'severe') {
-        estimatedComplexity = 7;
-        estimatedEmotionalWeight = 8;
-      } else if (griefThemes.griefSeverity === 'moderate') {
-        estimatedComplexity = 6;
-        estimatedEmotionalWeight = 6;
-      }
-      
-      // If grief is specifically about spousal loss, increase weights
-      if (griefThemes.griefType === 'spousal-loss') {
-        estimatedEmotionalWeight = Math.min(estimatedEmotionalWeight + 1, 9);
-      }
-      
-      // If grief mentions non-linear or roller coaster metaphors, increase complexity
-      if (griefThemes.griefMetaphorModel === 'roller-coaster') {
-        estimatedComplexity = Math.min(estimatedComplexity + 1, 9);
-      }
-    }
-    
-    // Further adjust for young adult concerns if present
-    if (youngAdultConcern) {
-      // Young adult financial concerns often have higher emotional weight
-      if (youngAdultConcern.category === 'financial') {
-        estimatedEmotionalWeight += 1;
-      }
-      
-      // Quarter-life crisis concerns are more complex
-      if (youngAdultConcern.category === 'identity' && 
-          (youngAdultConcern.specificIssue?.includes('purpose') || 
-           youngAdultConcern.specificIssue?.includes('quarter'))) {
-        estimatedComplexity += 1;
-      }
-    }
-    
-    // Further adjust for trauma response patterns if detected
-    if (traumaResponsePatterns && traumaResponsePatterns.dominant4F) {
-      const intensityMap = {
-        'mild': 1,
-        'moderate': 2,
-        'severe': 3,
-        'extreme': 4
-      };
-      
-      const intensity = intensityMap[traumaResponsePatterns.dominant4F.intensity] || 1;
-      
-      // Increase complexity based on intensity and dominant pattern
-      if (traumaResponsePatterns.dominant4F.type === 'freeze' || 
-          traumaResponsePatterns.dominant4F.type === 'fawn') {
-        // For freeze and fawn, which need more delicate responses
-        estimatedComplexity += Math.min(intensity, 2);
-      }
-      
-      // For hybrid responses (multiple strong patterns), increase complexity
-      if (traumaResponsePatterns.secondary4F) {
-        estimatedComplexity += 1;
-      }
-      
-      // Increase emotional weight for higher intensity responses
-      if (intensity >= 3) {
-        estimatedEmotionalWeight += 1;
-      }
-      
-      // If anger level is high in trauma response, increase emotional weight
-      if (traumaResponsePatterns.angerLevel === 'angry' || 
-          traumaResponsePatterns.angerLevel === 'enraged') {
-        estimatedEmotionalWeight += 1;
-      }
-    }
-    
-    // Get minimum response time from master rules
-    const minimumTime = calculateMinimumResponseTime(estimatedComplexity, estimatedEmotionalWeight);
-    
-    // Ensure response time meets the minimum requirement
-    responseTime = Math.max(responseTime, minimumTime);
-    
-    // Apply the response time multiplier for grief or other special cases
+    // Apply the response time multiplier for any special cases
     responseTime = Math.round(responseTime * responseTimeMultiplier);
     
     // Return a promise that resolves with the appropriate response
@@ -211,46 +55,29 @@ export const useResponseProcessing = ({
         
         // If we have a young adult concern and no response yet, try to generate a young adult specific response
         if (youngAdultConcern && !responseText && youngAdultConcern.category) {
-          try {
-            // Use dynamic import instead of require
-            import('../../utils/response/youngAdultResponses')
-              .then(youngAdultModule => {
-                if (youngAdultModule.generateYoungAdultResponse) {
-                  const youngAdultResponse = youngAdultModule.generateYoungAdultResponse({
-                    concernInfo: youngAdultConcern,
-                    userMessage: userInput,
-                    concernType
-                  });
-                  
-                  if (youngAdultResponse) {
-                    responseText = youngAdultResponse;
-                  }
-                }
-                
-                finishResponse(responseText);
-              })
-              .catch(e => {
-                console.log("Young adult response module not available:", e);
-                finishResponse(responseText);
-              });
-          } catch (e) {
-            console.log("Young adult response module not available:", e);
-            finishResponse(responseText);
-          }
+          generateYoungAdultResponse(userInput, concernType, youngAdultConcern)
+            .then(youngAdultResponse => {
+              if (youngAdultResponse) {
+                responseText = youngAdultResponse;
+              }
+              completeResponse(responseText);
+            })
+            .catch(e => {
+              console.log("Error generating young adult response:", e);
+              completeResponse(responseText);
+            });
         } else {
-          finishResponse(responseText);
+          completeResponse(responseText);
         }
         
-        // Helper function to finish processing the response
-        function finishResponse(text: string) {
-          // Apply master rules to ensure no repetition
-          text = ensureResponseCompliance(text);
-          
-          // Add this response to the history to prevent future repetition
-          addToResponseHistory(text);
-          
-          // Create response message
-          const rogerResponse = createMessage(text, 'roger', concernType);
+        // Helper function to complete response processing
+        function completeResponse(text: string) {
+          const rogerResponse = finalizeResponse(
+            text,
+            ensureResponseCompliance,
+            addToResponseHistory,
+            concernType
+          );
           setIsTyping(false);
           resolve(rogerResponse);
         }
