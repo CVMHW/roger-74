@@ -7,6 +7,7 @@ export const useConcernDetection = () => {
     // First check for explicit feelings related to waiting/appointments
     const negativeStateInfo = detectSimpleNegativeState(userInput);
     const isWaitingFrustration = 
+      negativeStateInfo.explicitFeelings && 
       negativeStateInfo.explicitFeelings.length > 0 && 
       /\b(?:wait|waiting|late|appointment|therapist|doctor|eric|schedule)\b/i.test(userInput.toLowerCase());
     
@@ -20,6 +21,21 @@ export const useConcernDetection = () => {
     if (somaticInfo.isMildSomatic && somaticInfo.likelyFromOverwork) {
       // This is not a medical concern but a temporary state from overwork
       return null;
+    }
+    
+    // Check for cultural adjustment concerns (migration, relocation)
+    const lowerInput = userInput.toLowerCase();
+    const hasCulturalAdjustmentConcerns = (
+      // Check for mentions of immigration, relocation or cultural change
+      (/\b(immigrat|refugee|asylum|moved from|came from|new country|new culture|cultural|adjustment)\b/i.test(lowerInput) ||
+      // Mentions of specific challenges immigrants often face
+      /\b(language barrier|don'?t speak|accent|citizenship|visa|green card|foreign|foreigner)\b/i.test(lowerInput)) &&
+      // Combined with emotional difficulty
+      /\b(hard|difficult|struggle|miss|homesick|alone|lonely|isolated)\b/i.test(lowerInput)
+    );
+    
+    if (hasCulturalAdjustmentConcerns) {
+      return 'cultural-adjustment';
     }
     
     // Continue with regular detection for more serious medical concerns

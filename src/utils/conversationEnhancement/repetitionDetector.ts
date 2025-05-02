@@ -67,6 +67,168 @@ export const calculateResponseSimilarity = (a: string, b: string): number => {
 };
 
 /**
+ * Check if user is indicating that Roger isn't listening or is in a feedback loop
+ * @param userInput The user's message
+ * @returns Boolean indicating if user is expressing frustration about Roger not listening
+ */
+export const isUserIndicatingFeedbackLoop = (userInput: string): boolean => {
+  const lowerInput = userInput.toLowerCase();
+  
+  // Patterns that indicate the user feels Roger isn't listening
+  const feedbackLoopPatterns = [
+    /i just told you/i,
+    /i already said/i,
+    /i mentioned that/i,
+    /you('re| are) not listening/i,
+    /you('re| are) repeating/i,
+    /you('re| are) in a loop/i,
+    /feedback loop/i,
+    /already told you/i,
+    /pay attention/i,
+    /are you listening/i,
+    /did you read/i,
+    /are you reading/i,
+    /i said that/i,
+    /i literally just said/i,
+    /repeating yourself/i,
+    /robot/i,
+    /automated/i,
+    /not paying attention/i,
+    /aren't listening/i
+  ];
+  
+  return feedbackLoopPatterns.some(pattern => pattern.test(lowerInput));
+};
+
+/**
+ * Check if the conversation has context that Roger should acknowledge
+ * @param userInput Current user input
+ * @param conversationHistory Previous messages from user
+ * @returns Information about the context that should be acknowledged
+ */
+export const extractConversationContext = (userInput: string, conversationHistory: string[]): { 
+  hasContext: boolean;
+  topics: string[];
+  locations: string[];
+  people: string[];
+  emotions: string[];
+  keyPhrases: string[];
+} => {
+  // Initialize result
+  const result = {
+    hasContext: false,
+    topics: [] as string[],
+    locations: [] as string[],
+    people: [] as string[],
+    emotions: [] as string[],
+    keyPhrases: [] as string[]
+  };
+  
+  // Combine current input with recent history for context
+  const contextText = [userInput, ...(conversationHistory.slice(-3))].join(' ').toLowerCase();
+  
+  // Extract locations mentioned (countries, cities, states)
+  const locationPatterns = [
+    /pakistan/i, /cleveland/i, /ohio/i, /america/i, /united states/i, /usa/i,
+    /india/i, /china/i, /japan/i, /korea/i, /russia/i, /europe/i, /africa/i,
+    /middle east/i, /asia/i, /australia/i, /canada/i, /mexico/i, /brazil/i,
+    /new york/i, /chicago/i, /los angeles/i, /houston/i, /philadelphia/i,
+    /phoenix/i, /san antonio/i, /san diego/i, /dallas/i, /san jose/i
+  ];
+  
+  locationPatterns.forEach(pattern => {
+    const match = contextText.match(pattern);
+    if (match) {
+      const location = match[0].charAt(0).toUpperCase() + match[0].slice(1).toLowerCase();
+      if (!result.locations.includes(location)) {
+        result.locations.push(location);
+      }
+    }
+  });
+  
+  // Extract emotion words
+  const emotionPatterns = [
+    /sad/i, /happy/i, /angry/i, /frustrated/i, /anxious/i, /worried/i,
+    /scared/i, /excited/i, /depressed/i, /lonely/i, /isolated/i, /alone/i,
+    /overwhelmed/i, /stressed/i, /upset/i, /down/i, /blue/i, /miserable/i,
+    /hopeless/i, /hopeful/i, /grateful/i, /thankful/i, /content/i, /relieved/i,
+    /disappointed/i, /annoyed/i, /irritated/i, /furious/i, /enraged/i
+  ];
+  
+  emotionPatterns.forEach(pattern => {
+    const match = contextText.match(pattern);
+    if (match) {
+      const emotion = match[0].toLowerCase();
+      if (!result.emotions.includes(emotion)) {
+        result.emotions.push(emotion);
+      }
+    }
+  });
+  
+  // Extract topic keywords
+  const topics = new Set<string>();
+  
+  // Cultural topics
+  if (/food|cuisine|dish|meal|eating|restaurant/i.test(contextText)) {
+    topics.add('food');
+  }
+  if (/language|speak|speaking|arabic|urdu|hindi|spanish|french|german|chinese|japanese/i.test(contextText)) {
+    topics.add('language');
+  }
+  if (/weather|cold|hot|warm|temperature|climate|snow|rain|humidity/i.test(contextText)) {
+    topics.add('weather');
+  }
+  if (/religion|muslim|islam|christian|christianity|jewish|judaism|hindu|buddhist|faith|belief|pray/i.test(contextText)) {
+    topics.add('religion');
+  }
+  if (/family|parent|mother|father|sister|brother|son|daughter|child|children|relatives/i.test(contextText)) {
+    topics.add('family');
+  }
+  if (/friend|friendship|relationship|partner|husband|wife|boyfriend|girlfriend|dating|marriage/i.test(contextText)) {
+    topics.add('relationships');
+  }
+  if (/job|work|career|profession|employment|boss|coworker|colleague|workplace|office|company/i.test(contextText)) {
+    topics.add('work');
+  }
+  if (/money|financial|finance|expense|budget|cost|pay|payment|salary|wage|debt|bill/i.test(contextText)) {
+    topics.add('finances');
+  }
+  if (/health|illness|sick|disease|condition|symptom|pain|doctor|hospital|clinic|medication/i.test(contextText)) {
+    topics.add('health');
+  }
+  if (/home|house|apartment|rent|housing|living|accommodation|neighborhood/i.test(contextText)) {
+    topics.add('housing');
+  }
+  if (/immigrant|immigration|visa|green card|citizen|citizenship|foreigner|asylum|refugee/i.test(contextText)) {
+    topics.add('immigration');
+  }
+  if (/education|school|college|university|student|study|learn|degree|course|class/i.test(contextText)) {
+    topics.add('education');
+  }
+  
+  result.topics = Array.from(topics);
+  
+  // Extract key phrases that might need to be acknowledged
+  const keyPhrases = [];
+  if (/hard as a woman/i.test(contextText)) keyPhrases.push("challenges as a woman");
+  if (/don't know anyone/i.test(contextText)) keyPhrases.push("social isolation");
+  if (/miss\s(it|my|home)/i.test(contextText)) keyPhrases.push("homesickness");
+  if (/too cold/i.test(contextText)) keyPhrases.push("weather adjustment");
+  if (/hate the food/i.test(contextText)) keyPhrases.push("food adjustment");
+  if (/doesn'?t speak/i.test(contextText)) keyPhrases.push("language barrier");
+  
+  result.keyPhrases = keyPhrases;
+  
+  // Determine if we have meaningful context to acknowledge
+  result.hasContext = result.locations.length > 0 || 
+                     result.emotions.length > 0 || 
+                     result.topics.length > 0 || 
+                     result.keyPhrases.length > 0;
+  
+  return result;
+};
+
+/**
  * Generates an alternative response when default response is too repetitive
  * @param userContent Content information from user message
  * @returns An alternative, non-repetitive response
@@ -120,3 +282,131 @@ export const generateAlternativeResponse = (userContent: {
   
   return genericAlternatives[Math.floor(Math.random() * genericAlternatives.length)];
 };
+
+/**
+ * Generates a context-aware response when Roger needs to acknowledge specific things the user has mentioned
+ * to show he's truly listening to their situation
+ * @param context The extracted conversation context
+ * @returns A response that acknowledges specific context
+ */
+export const generateContextAwareResponse = (context: {
+  hasContext: boolean;
+  topics: string[];
+  locations: string[];
+  people: string[];
+  emotions: string[];
+  keyPhrases: string[];
+}): string => {
+  if (!context.hasContext) {
+    return "I want to make sure I'm understanding what you've shared. Could you tell me more about your situation?";
+  }
+  
+  // Build a response that acknowledges specific elements
+  let response = "";
+  
+  // Acknowledge locations if present
+  if (context.locations.length > 0) {
+    const location = context.locations[0];
+    if (location === "Pakistan") {
+      response = "I hear that you moved from Pakistan and that's been a significant change for you. ";
+    } else if (location === "Cleveland") {
+      response = "I understand you're finding Cleveland challenging to adjust to right now. ";
+    } else {
+      response = `I see that ${location} is important in your situation. `;
+    }
+  }
+  
+  // Acknowledge emotions
+  if (context.emotions.length > 0) {
+    const emotion = context.emotions[0];
+    if (emotion === "down" || emotion === "sad") {
+      response += "It's completely understandable to feel down with all these changes. ";
+    } else if (emotion === "lonely" || emotion === "alone" || emotion === "isolated") {
+      response += "The loneliness you're experiencing sounds really difficult. ";
+    } else {
+      response += `I can hear that you're feeling ${emotion} about this situation. `;
+    }
+  }
+  
+  // Acknowledge key topics
+  if (context.topics.length > 0) {
+    if (context.topics.includes("language")) {
+      response += "The language barrier must make things especially challenging. ";
+    }
+    if (context.topics.includes("food")) {
+      response += "Adjusting to different food can be a really difficult part of moving to a new country. ";
+    }
+    if (context.topics.includes("weather")) {
+      response += "The cold weather in Cleveland is certainly an adjustment from what you're used to. ";
+    }
+    if (context.topics.includes("religion")) {
+      response += "Your religious identity seems important to you and that transition must be significant. ";
+    }
+  }
+  
+  // Add a question to continue the conversation
+  const followUpQuestions = [
+    "What part of this transition has been most difficult for you?",
+    "How have you been coping with these changes so far?",
+    "What do you miss most about your home?",
+    "Have you found any aspects of your new life that bring you comfort?",
+    "What would help you feel more at home here?"
+  ];
+  
+  response += followUpQuestions[Math.floor(Math.random() * followUpQuestions.length)];
+  
+  return response;
+};
+
+/**
+ * Generates a direct acknowledgment when user indicates Roger isn't listening
+ * @param context The extracted conversation context
+ * @returns A response that directly addresses the feedback loop issue
+ */
+export const generateFeedbackLoopRecoveryResponse = (context: {
+  hasContext: boolean;
+  topics: string[];
+  locations: string[];
+  people: string[];
+  emotions: string[];
+  keyPhrases: string[];
+}): string => {
+  let response = "I apologize for not properly acknowledging what you've shared. ";
+  
+  // If we have specific context, acknowledge it directly
+  if (context.hasContext) {
+    if (context.locations.includes("Pakistan") && context.locations.includes("Cleveland")) {
+      response += "I understand you've moved from Pakistan to Cleveland, and you're experiencing several challenges: ";
+      
+      const challenges = [];
+      if (context.topics.includes("weather")) challenges.push("adjusting to the colder weather");
+      if (context.topics.includes("food")) challenges.push("finding food you enjoy");
+      if (context.topics.includes("language")) challenges.push("connecting with people who speak Arabic");
+      if (context.topics.includes("religion")) challenges.push("practicing your faith in a new environment");
+      
+      if (challenges.length > 0) {
+        response += challenges.join(", ") + ". ";
+      }
+      
+      response += "That's a lot to deal with all at once. What would be most helpful for us to focus on today?";
+    } else {
+      // Generic context acknowledgment
+      const contextItems = [
+        ...(context.emotions.length > 0 ? [`feeling ${context.emotions[0]}`] : []),
+        ...(context.topics.slice(0, 2))
+      ];
+      
+      if (contextItems.length > 0) {
+        response += `I hear that you're dealing with ${contextItems.join(" and ")}. `;
+      }
+      
+      response += "What aspect of this would be most helpful to explore together?";
+    }
+  } else {
+    // If we don't have specific context, use a generic recovery
+    response += "Let me listen more carefully. What's most important for you to feel heard about right now?";
+  }
+  
+  return response;
+};
+

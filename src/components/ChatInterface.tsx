@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MessageType } from './Message';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
@@ -27,6 +26,11 @@ import {
 // Import generateSmallTalkResponse from smallTalkUtils directly
 import { generateSmallTalkResponse } from '../utils/conversation/smallTalkUtils';
 import { detectPotentialDeception } from '../utils/detectionUtils/deceptionDetection';
+import { 
+  isUserIndicatingFeedbackLoop, 
+  extractConversationContext,
+  generateFeedbackLoopRecoveryResponse 
+} from '../utils/conversationEnhancement/repetitionDetector';
 
 const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<MessageType[]>(getInitialMessages());
@@ -49,6 +53,12 @@ const ChatInterface: React.FC = () => {
     timestamp: Date;
     concernType: string;
   } | null>(null);
+  
+  // Track user message history for context awareness
+  const [userMessageHistory, setUserMessageHistory] = useState<string[]>([]);
+  
+  // Track if we've detected a feedback loop pattern
+  const [feedbackLoopDetected, setFeedbackLoopDetected] = useState<boolean>(false);
   
   // On component mount, extract existing Roger responses for the history
   useEffect(() => {
@@ -83,12 +93,53 @@ const ChatInterface: React.FC = () => {
     });
   };
 
+  // Update user message history for context-awareness
+  const updateUserMessageHistory = useCallback((message: string) => {
+    setUserMessageHistory(prev => {
+      const newHistory = [...prev, message];
+      // Keep only the last 10 messages
+      return newHistory.length > 10 ? newHistory.slice(-10) : newHistory;
+    });
+  }, []);
+
   const handleSendMessage = (userInput: string) => {
     if (!userInput.trim()) return;
 
     // Add user message
     const newUserMessage = createMessage(userInput, 'user');
     setMessages(prevMessages => [...prevMessages, newUserMessage]);
+    
+    // Update user message history for context awareness
+    updateUserMessageHistory(userInput);
+    
+    // Check if user is indicating that Roger is in a feedback loop
+    const isUserComplaining = isUserIndicatingFeedbackLoop(userInput);
+    
+    if (isUserComplaining) {
+      // Set feedback loop detected flag
+      setFeedbackLoopDetected(true);
+      
+      // Generate a context-aware recovery response
+      const context = extractConversationContext(userInput, userMessageHistory);
+      const recoveryResponse = generateFeedbackLoopRecoveryResponse(context);
+      
+      // Create Roger's response to acknowledge the problem
+      const rogerResponse = createMessage(recoveryResponse, 'roger');
+      
+      // Add the response
+      setMessages(prevMessages => [...prevMessages, rogerResponse]);
+      
+      // Simulate typing
+      simulateTypingResponse(recoveryResponse, (text) => {
+        setMessages(prevMessages => 
+          prevMessages.map(msg => 
+            msg.id === rogerResponse.id ? { ...msg, text } : msg
+          )
+        );
+      });
+      
+      return;
+    }
     
     // Check if this message might contain location data if we're currently asking for it
     if (activeLocationConcern && activeLocationConcern.askedForLocation) {
@@ -141,6 +192,11 @@ const ChatInterface: React.FC = () => {
         });
         return;
       }
+    }
+    
+    // If we previously detected a feedback loop, reset the flag
+    if (feedbackLoopDetected) {
+      setFeedbackLoopDetected(false);
     }
     
     // Process user input normally

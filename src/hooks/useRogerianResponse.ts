@@ -23,6 +23,11 @@ import {
   detectRepetition,
   generateSarcasmResponse
 } from '../utils/conversationEnhancement/emotionalInputHandler';
+import {
+  isUserIndicatingFeedbackLoop,
+  extractConversationContext,
+  generateFeedbackLoopRecoveryResponse
+} from '../utils/conversationEnhancement/repetitionDetector';
 
 // Import generateSmallTalkResponse directly from smallTalkUtils
 import { generateSmallTalkResponse } from '../utils/conversation/smallTalkUtils';
@@ -34,6 +39,18 @@ interface UseRogerianResponseReturn {
   currentApproach: 'rogerian' | 'mi' | 'existential' | 'conversational' | 'socratic';
   handlePotentialDeception?: (originalMessage: string, followUpMessage: string) => Promise<MessageType | null>;
 }
+
+const createMessage = (text: string, sender: 'user' | 'roger', concernType?: ConcernType) => {
+  const id = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+  return {
+    id,
+    text,
+    sender,
+    timestamp: new Date(),
+    concernType,
+    feedback: null as 'positive' | 'negative' | null
+  };
+};
 
 export const useRogerianResponse = (): UseRogerianResponseReturn => {
   // Hook for conversation stage management
@@ -57,6 +74,9 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
   
   // Track repeated responses to prevent repetition loop
   const [recentResponses, setRecentResponses] = useState<string[]>([]);
+  
+  // Track if we're in recovery mode after a feedback loop
+  const [feedbackLoopRecoveryMode, setFeedbackLoopRecoveryMode] = useState(false);
   
   // Hook for adaptive response generation strategy
   const { generateAdaptiveResponse, currentApproach } = useAdaptiveResponse();
@@ -225,6 +245,92 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     }
   };
   
+  // Function to check if the user is indicating Roger isn't listening
+  const checkForFeedbackLoopComplaints = (userInput: string): boolean => {
+    return isUserIndicatingFeedbackLoop(userInput);
+  };
+
+  // Generate a response that specifically acknowledges what the user has mentioned
+  // to show that Roger is listening and understanding their situation
+  const generateContextAcknowledgmentResponse = (userInput: string): string => {
+    const context = extractConversationContext(userInput, conversationHistory);
+    
+    if (context.hasContext) {
+      // If we have specific contextual information (locations, emotions, topics)
+      // generate a response that acknowledges these specific details
+      let response = "";
+      
+      // Acknowledge locations
+      if (context.locations.length > 0) {
+        if (context.locations.includes("Pakistan") && context.locations.includes("Cleveland")) {
+          response = "I understand your move from Pakistan to Cleveland has been challenging. ";
+        } else if (context.locations.includes("Pakistan")) {
+          response = "I hear that Pakistan is important to you. ";
+        } else if (context.locations.includes("Cleveland")) {
+          response = "I understand you're in Cleveland now. ";
+        }
+      }
+      
+      // Acknowledge specific emotions
+      if (context.emotions.length > 0) {
+        if (!response) {
+          response = `I can hear that you're feeling ${context.emotions[0]} right now. `;
+        } else {
+          response += `It makes sense you'd feel ${context.emotions[0]} about this. `;
+        }
+      }
+      
+      // Acknowledge specific topics
+      if (context.topics.includes("language") && context.topics.includes("food") && context.topics.includes("weather")) {
+        response += "The combination of language barriers, food differences, and weather changes is a lot to adjust to all at once. ";
+      } else {
+        if (context.topics.includes("language")) {
+          response += "Language barriers can be especially isolating. ";
+        }
+        if (context.topics.includes("food")) {
+          response += "Food is such an important part of feeling at home somewhere. ";
+        }
+        if (context.topics.includes("weather")) {
+          response += "Adjusting to different weather can affect our daily comfort and mood. ";
+        }
+      }
+      
+      // Add a relevant follow-up question
+      const followUpQuestions = [
+        "Which of these changes has been hardest for you?",
+        "What have you found helps you feel more connected despite these challenges?",
+        "How have these adjustments been affecting your daily life?",
+        "What do you miss most about home?",
+        "Is there anything that's been easier than expected about this transition?"
+      ];
+      
+      response += followUpQuestions[Math.floor(Math.random() * followUpQuestions.length)];
+      
+      return response;
+    }
+    
+    // If no specific context was extracted, fall back to a generic but empathetic response
+    return "I hear you're going through some difficult adjustments right now. Could you tell me more about what's been most challenging for you?";
+  };
+  
+  // Detect wealth indicators to customize responses
+  const detectWealthIndicators = (userInput: string, history: string[]): 'low' | 'medium' | 'high' | 'unknown' => {
+    // Simple implementation - would be expanded in a real system
+    const combinedText = [userInput, ...history.slice(-3)].join(' ').toLowerCase();
+    
+    // Check for low wealth indicators
+    if (/\b(can'?t afford|expensive|cost too much|budget|money trouble|financial difficulty|poor|poverty|assistance|welfare|food stamps|medicaid|public housing)\b/i.test(combinedText)) {
+      return 'low';
+    }
+    
+    // Check for high wealth indicators
+    if (/\b(investment|portfolio|stocks|broker|luxury|premium|private insurance|vacation home|second home|yacht|private school)\b/i.test(combinedText)) {
+      return 'high';
+    }
+    
+    return 'unknown';
+  };
+  
   // Specialized response generator for safety concerns that incorporates
   // customer-centric deescalation
   const generateSafetyResponse = (
@@ -238,10 +344,78 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     });
   };
   
+  // Generate a response for cultural adjustment concerns
+  const generateCulturalAdjustmentResponse = (userInput: string): string => {
+    const lowerInput = userInput.toLowerCase();
+    const context = extractConversationContext(userInput, conversationHistory);
+    
+    // Check for specific cultural adjustment themes
+    const hasLanguageBarrier = /\b(language|speak|arabic|urdu|hindi|english)\b/i.test(lowerInput);
+    const hasWeatherAdjustment = /\b(cold|weather|temperature|climate|winter|snow)\b/i.test(lowerInput);
+    const hasFoodChallenges = /\b(food|eat|cuisine|meal|restaurant|cooking)\b/i.test(lowerInput);
+    const hasSocialIsolation = /\b(alone|lonely|isolated|don'?t know anyone|no friends|miss|homesick)\b/i.test(lowerInput);
+    const hasReligiousIdentity = /\b(muslim|islam|religion|faith|prayer|mosque|church|temple)\b/i.test(lowerInput);
+    
+    let response = "Moving to a new country involves so many adjustments all at once. ";
+    
+    // Add specific acknowledgments based on mentioned challenges
+    if (context.locations.length > 0) {
+      const fromLocation = context.locations.find(loc => loc.toLowerCase() !== "cleveland");
+      if (fromLocation) {
+        response += `The transition from ${fromLocation} to Cleveland brings its own unique challenges. `;
+      }
+    }
+    
+    if (hasLanguageBarrier) {
+      response += "Language barriers can be especially isolating when you're trying to build a new life. ";
+    }
+    
+    if (hasWeatherAdjustment) {
+      response += "Adapting to Cleveland's cold climate can be physically and emotionally draining, especially if you're from a warmer region. ";
+    }
+    
+    if (hasFoodChallenges) {
+      response += "Food is deeply connected to our sense of home and comfort. Finding familiar foods or adapting to new cuisines is a significant adjustment. ";
+    }
+    
+    if (hasReligiousIdentity) {
+      response += "Practicing your faith in a new cultural context can present its own set of challenges and opportunities. ";
+    }
+    
+    if (hasSocialIsolation) {
+      response += "The feeling of disconnection when you don't have your community around you is one of the hardest parts of relocation. ";
+    }
+    
+    // Add a thoughtful question to continue the conversation
+    const followUpQuestions = [
+      "What has been the most difficult adjustment for you so far?",
+      "Have you found any resources or communities that have helped with this transition?",
+      "What aspects of your home do you miss the most right now?",
+      "How have you been taking care of yourself through these changes?",
+      "Have there been any unexpected positive discoveries in your new environment?"
+    ];
+    
+    response += followUpQuestions[Math.floor(Math.random() * followUpQuestions.length)];
+    
+    return response;
+  };
+  
   // Process user message with stage update and special cases
   const processUserMessage = async (userInput: string): Promise<MessageType> => {
     // Update conversation history and client preferences
     updateConversationHistory(userInput);
+    
+    // First check if the user is indicating Roger isn't listening or is stuck in a loop
+    if (checkForFeedbackLoopComplaints(userInput)) {
+      const context = extractConversationContext(userInput, conversationHistory);
+      const recoveryResponse = generateFeedbackLoopRecoveryResponse(context);
+      
+      // Update conversation stage
+      updateStage();
+      
+      // Create a message with the recovery response
+      return Promise.resolve(createMessage(recoveryResponse, 'roger'));
+    }
     
     // HIGHEST PRIORITY: Check for sarcasm or frustration directed at Roger
     if (detectSarcasm(userInput) && userInput.toLowerCase().includes("robot") || 
@@ -259,6 +433,41 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
         () => sarcasmResponse,
         () => null
       );
+    }
+    
+    // Check for cultural adjustment concerns
+    if (/\b(moved|came) from|pakistan|immigrant|refugee|language barrier|don'?t speak|different culture|adjustment|homesick|miss (home|my country)/i.test(userInput.toLowerCase())) {
+      // Check if we have explicit location mentions
+      const context = extractConversationContext(userInput, conversationHistory);
+      
+      if (context.hasContext) {
+        const culturalResponse = generateCulturalAdjustmentResponse(userInput);
+        
+        // Update conversation stage
+        updateStage();
+        
+        // Return a culturally sensitive response
+        return Promise.resolve(createMessage(culturalResponse, 'roger', 'cultural-adjustment'));
+      }
+    }
+    
+    // After any feedback loop detection, check if we have specific context to acknowledge
+    // This helps make Roger's responses feel more connected to what the user has shared
+    if (conversationHistory.length >= 2) {
+      const context = extractConversationContext(userInput, conversationHistory);
+      
+      if (context.hasContext && 
+          (context.locations.length > 0 || context.topics.length >= 2 || context.keyPhrases.length > 0) &&
+          Math.random() < 0.7) { // 70% chance to use context-aware response when applicable
+        
+        const contextResponse = generateContextAcknowledgmentResponse(userInput);
+        
+        // Update conversation stage
+        updateStage();
+        
+        // Return a context-specific response
+        return Promise.resolve(createMessage(contextResponse, 'roger'));
+      }
     }
     
     // Check for repeated user concerns that aren't being addressed
@@ -481,9 +690,8 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
       }
     }
     
-    // Update conversation stage before processing
+    // For all other cases, use the regular processing pipeline
     updateStage();
-    
     return baseProcessUserMessage(
       userInput,
       responseGenerator,
@@ -555,7 +763,7 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
   const detectWealthIndicators = (currentInput: string, history: string[]): boolean => {
     const wealthKeywords = [
       'executive', 'ceo', 'cfo', 'board', 'investor', 'investment', 
-      'portfolio', 'luxury', 'private', 'exclusive', 'high-end', 
+      'portfolio', 'stocks', 'broker', 'luxury', 'private', 'exclusive', 'high-end', 
       'premium', 'estate', 'mansion', 'yacht', 'jet', 'assistant', 
       'secretary', 'staff', 'wealth manager', 'family office'
     ];
@@ -563,22 +771,6 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     const combinedText = [currentInput, ...history].join(' ').toLowerCase();
     
     return wealthKeywords.some(keyword => combinedText.includes(keyword));
-  };
-  
-  // Helper function to create a message (duplicated from messageUtils to avoid circular imports)
-  const createMessage = (
-    text: string, 
-    sender: 'user' | 'roger', 
-    concernType: any = null
-  ): MessageType => {
-    return {
-      id: Date.now().toString(),
-      text,
-      sender,
-      timestamp: new Date(),
-      concernType,
-      locationData: null
-    };
   };
   
   return {
