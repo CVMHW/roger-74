@@ -4,6 +4,7 @@ import { MessageType } from '../../components/Message';
 import { isLocationDataNeeded } from '../../utils/messageUtils';
 import { createMessage } from '../../utils/messageUtils';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
+import { enhanceResponseWithContext } from '../../utils/conversation/contextAware';
 
 interface MessageProcessorProps {
   processUserMessage: (userInput: string) => Promise<MessageType>;
@@ -65,7 +66,13 @@ export const useMessageProcessor = ({
     }
   };
   
+  // Track conversation history for context enhancement
+  const conversationHistory: string[] = [];
+  
   const processResponse = useCallback((userInput: string) => {
+    // Add user input to conversation history
+    conversationHistory.push(userInput);
+    
     // Check if this is a potentially critical message
     const isCritical = containsCriticalKeywords(userInput);
     const isPetLoss = isPetLossContent(userInput);
@@ -77,37 +84,63 @@ export const useMessageProcessor = ({
     // Calculate appropriate delay time based on message content
     const responseDelay = getResponseDelay(userInput);
     
+    // Double-check throttling for non-critical messages
+    if (shouldThrottleResponse() && !isCritical) {
+      console.log("Response throttled to ensure quality listening");
+      // Add an additional 700-1200ms delay for more natural conversation
+      const extraDelay = Math.floor(Math.random() * 500) + 700;
+      setTimeout(() => {
+        setProcessingContext("Roger is taking time to understand your message...");
+      }, 800);
+    }
+    
     // Process user input to generate Roger's response after appropriate delay
     setTimeout(() => {
       processUserMessage(userInput)
         .then(rogerResponse => {
           try {
+            // Enhance the response with contextual awareness before showing it
+            const enhancedResponse = enhanceResponseWithContext(
+              rogerResponse.text,
+              userInput,
+              conversationHistory.slice(-5)
+            );
+            
+            // Update the response with enhanced text that has contextual awareness
+            const updatedResponse = {
+              ...rogerResponse,
+              text: enhancedResponse
+            };
+            
             // Add the response to history to prevent future repetition
-            updateRogerResponseHistory(rogerResponse.text);
+            updateRogerResponseHistory(enhancedResponse);
             
             // Check if this is a crisis-related response and store it for deception detection
-            handleCrisisMessage(userInput, rogerResponse);
+            handleCrisisMessage(userInput, updatedResponse);
             
             // Add the empty response message first (will be updated during typing simulation)
-            setMessages(prevMessages => [...prevMessages, rogerResponse]);
+            setMessages(prevMessages => [...prevMessages, updatedResponse]);
             
             // Set up to request location after this message if needed
-            if (rogerResponse.concernType && 
-                isLocationDataNeeded(rogerResponse.concernType) && 
+            if (updatedResponse.concernType && 
+                isLocationDataNeeded(updatedResponse.concernType) && 
                 !activeLocationConcern) {
               
               setActiveLocationConcern({
-                concernType: rogerResponse.concernType,
-                messageId: rogerResponse.id,
+                concernType: updatedResponse.concernType,
+                messageId: updatedResponse.id,
                 askedForLocation: false
               });
             }
             
+            // Add response to conversation history for better context
+            conversationHistory.push(enhancedResponse);
+            
             // Simulate typing with a callback to update the message text
-            simulateTypingResponse(rogerResponse.text, (text) => {
+            simulateTypingResponse(enhancedResponse, (text) => {
               setMessages(prevMessages => 
                 prevMessages.map(msg => 
-                  msg.id === rogerResponse.id ? { ...msg, text } : msg
+                  msg.id === updatedResponse.id ? { ...msg, text } : msg
                 )
               );
               
@@ -176,6 +209,7 @@ export const useMessageProcessor = ({
     setActiveLocationConcern,
     simulateTypingResponse,
     updateRogerResponseHistory,
+    shouldThrottleResponse,
     getResponseDelay,
     setProcessingContext
   ]);

@@ -1,5 +1,7 @@
 
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
+import { detectWorkStressIndicators } from '../../utils/conversation/contextAware/workdayContext';
+import { detectSocioeconomicIndicators } from '../../utils/conversation/contextAware/socioeconomicContext';
 
 /**
  * Detects special case patterns in user input that require custom handling
@@ -10,7 +12,8 @@ export const detectSpecialCasePatterns = (userInput: string): {
   isCulturalAdjustment: boolean,
   hasContextToAcknowledge: boolean,
   isPolitical: boolean,
-  isRogerNameQuestion: boolean
+  isRogerNameQuestion: boolean,
+  isWorkStressRelated: boolean
 } => {
   // Check for inpatient questions
   const inpatientQuestionPatterns = [
@@ -48,13 +51,18 @@ export const detectSpecialCasePatterns = (userInput: string): {
     userInput.toLowerCase().includes("youre drew") ||
     userInput.toLowerCase().includes("you are drew");
   
+  // Check for work stress related concerns
+  const workStressInfo = detectWorkStressIndicators(userInput);
+  const isWorkStressRelated = workStressInfo.hasWorkStress && workStressInfo.stressLevel !== 'low';
+  
   return {
     isInpatientQuestion,
     isWeatherRelated,
     isCulturalAdjustment,
     hasContextToAcknowledge,
     isPolitical,
-    isRogerNameQuestion
+    isRogerNameQuestion,
+    isWorkStressRelated
   };
 };
 
@@ -66,6 +74,21 @@ export const determineResponseTimeMultiplier = async (
   concernType: ConcernType | null
 ): Promise<number> => {
   let responseTimeMultiplier = 1.0;
+  
+  // Check for work-related stress to adjust response time
+  const workStressInfo = detectWorkStressIndicators(userInput);
+  if (workStressInfo.hasWorkStress && workStressInfo.stressLevel !== 'low') {
+    // Give more time for work stress responses
+    responseTimeMultiplier *= 1.2;
+  }
+  
+  // Check for socioeconomic context - give more time for responses to blue collar workers
+  const socioeconomicInfo = detectSocioeconomicIndicators(userInput, []);
+  if (socioeconomicInfo.likelihood === 'high' && 
+      (socioeconomicInfo.occupationType === 'blue-collar' || socioeconomicInfo.occupationType === 'service')) {
+    // Give more time to craft responses for blue collar workers
+    responseTimeMultiplier *= 1.1;
+  }
   
   // Check for grief themes to adjust response time
   const { detectGriefThemes } = require('../../utils/response/griefSupport');
