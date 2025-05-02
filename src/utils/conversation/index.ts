@@ -1,4 +1,3 @@
-
 /**
  * Conversation Utilities
  * 
@@ -43,17 +42,19 @@ export {
   mightPreferSimpleLanguage,
   getAppropriateConversationStyle,
   shouldUseWaitingRoomEngagement,
-  // Rename these to avoid conflicts with ones from theSmallStuff
-  identifyEarlyEngagementConcern,
-  generateEarlyEngagementConcernResponse,
+  // Re-export with original names from waitingRoomEngagement
+  identifyImmediateConcern,
+  generateImmediateConcernResponse,
   generateWaitingRoomEngagement
 } from './earlyEngagement';
 
-// Export culturalConnector functions explicitly
-export { generateCulturalConnectionPrompt } from './earlyEngagement/culturalConnector';
-export { incorporateRogerPersonality } from './earlyEngagement/culturalConnector';
-export { generateConnectionStatement } from './earlyEngagement/culturalConnector';
-export { generateTransitionToEric } from './earlyEngagement/culturalConnector';
+// Export culturalConnector functions explicitly from their source file
+export { 
+  generateCulturalConnectionPrompt,
+  incorporateRogerPersonality,
+  generateConnectionStatement,
+  generateTransitionToEric 
+} from './earlyEngagement/culturalConnector';
 
 // Export everything else from smallTalkUtils directly
 export * from './smallTalkUtils';

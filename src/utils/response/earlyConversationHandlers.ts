@@ -1,4 +1,3 @@
-
 import { isIntroduction, generateIntroductionResponse, isSmallTalk, isPersonalSharing, generatePersonalSharingResponse } from '../../utils/masterRules';
 import { generateReflectionResponse } from '../reflection';
 import { generateSmallTalkResponse, isLikelyChild, isLikelyNewcomer } from '../conversation/smallTalk';
@@ -14,19 +13,18 @@ import {
   isLikelyMale,
   isLikelyBlueCollar,
   mightPreferSimpleLanguage,
-  getAppropriateConversationStyle
+  getAppropriateConversationStyle,
+  identifyImmediateConcern,
+  generateImmediateConcernResponse
 } from '../conversation/earlyEngagement';
 
-// Import from waitingRoomEngagement directly to fix the missing exports
-import { identifyImmediateConcern, generateImmediateConcernResponse } from '../conversation/earlyEngagement/waitingRoomEngagement';
-
-// Import the functions from culturalConnector directly
+// Import the functions from culturalConnector through the main export
 import { 
   generateCulturalConnectionPrompt,
   incorporateRogerPersonality,
   generateConnectionStatement,
   generateTransitionToEric
-} from '../conversation/earlyEngagement/culturalConnector';
+} from '../conversation/index';
 
 /**
  * Handles the logic for early conversation responses

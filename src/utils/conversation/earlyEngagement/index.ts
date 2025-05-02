@@ -1,4 +1,3 @@
-
 /**
  * Early Engagement Utilities
  * 
@@ -6,8 +5,10 @@
  * when patients are waiting for their appointment with Eric.
  */
 
+// We export waitingRoomEngagement functions directly
 export * from './waitingRoomEngagement';
-export * from './culturalConnector';
+
+// We export personality functions directly 
 export * from './personalityUtilization';
 
 /**
@@ -93,8 +94,17 @@ export const getAppropriateConversationStyle = (
 };
 
 /**
- * Explicit exports of the functions that were previously implicitly exported
- * from waitingRoomEngagement.ts to avoid naming conflicts
+ * Export the culturalConnector functions explicitly with renamed exports to avoid ambiguity
+ * We don't use * from to avoid naming conflicts
  */
-export { identifyImmediateConcern as identifyEarlyEngagementConcern } from './waitingRoomEngagement';
-export { generateImmediateConcernResponse as generateEarlyEngagementConcernResponse } from './waitingRoomEngagement';
+export { 
+  generateCulturalConnectionPrompt 
+} from './culturalConnector';
+
+// Re-export the identified functions with explicit naming
+export { 
+  identifyImmediateConcern, 
+  generateImmediateConcernResponse, 
+  shouldUseWaitingRoomEngagement, 
+  generateWaitingRoomEngagement 
+} from './waitingRoomEngagement';
