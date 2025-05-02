@@ -1,4 +1,3 @@
-
 // Define the type for concerns that might need special responses
 export type ConcernType = 
   'crisis' | 
@@ -10,7 +9,8 @@ export type ConcernType =
   'mild-gambling' | 
   'ptsd' | 
   'ptsd-mild' |
-  'trauma-response';
+  'trauma-response' | 
+  'pet-illness';  // Add the new type here
 
 // Define the stages of conversation
 export type ConversationStage = 'initial' | 'early' | 'established';
