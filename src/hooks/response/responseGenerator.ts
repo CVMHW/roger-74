@@ -24,6 +24,7 @@ import { getRogerPersonalityInsight } from '../../utils/reflection/rogerPersonal
 import { distinguishSadnessFromDepression } from '../../utils/detectionUtils';
 import { identifyEnhancedFeelings } from '../../utils/reflection/feelingDetection';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
+import { generateGriefResponse } from '../../utils/response/griefSupport';
 
 interface ResponseGeneratorParams {
   conversationStage: ConversationStage;
@@ -198,6 +199,14 @@ export const useResponseGenerator = ({
           return sadnessResponse + perspectivePhrase;
         }
         return sadnessResponse;
+      }
+
+      // NEW: Check for grief and existential loneliness responses
+      const griefResponse = generateGriefResponse(userInput);
+      if (griefResponse) {
+        // Grief responses are important and should be delivered without personality additions
+        // to maintain appropriate tone for these sensitive topics
+        return griefResponse;
       }
 
       // Detect developmental stage for age-appropriate responses

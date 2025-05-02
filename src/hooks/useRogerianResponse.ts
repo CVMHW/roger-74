@@ -8,6 +8,7 @@ import { useConversationStage } from './response/conversationStageManager';
 import { useResponseCompliance } from './response/responseCompliance';
 import { useResponseGenerator } from './response/responseGenerator';
 import { useResponseProcessing } from './response/responseProcessing';
+import { detectGriefThemes } from '../utils/response/griefSupport';
 
 interface UseRogerianResponseReturn {
   isTyping: boolean;
@@ -59,7 +60,7 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     simulateTypingResponse
   });
   
-  // Process user message with stage update
+  // Process user message with stage update and special cases
   const processUserMessage = async (userInput: string): Promise<MessageType> => {
     // Check for asking if Roger is Drew (unconditional rule)
     if (
@@ -84,12 +85,33 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
       );
     }
     
+    // Check for grief and existential loneliness themes to adjust response time
+    const griefThemes = detectGriefThemes(userInput);
+    let responseGenerator = generateResponse;
+    
+    // If intense grief themes are detected, potentially use existential approach
+    // and ensure adequate response time for sensitive topic
+    if (griefThemes.themeIntensity >= 7) {
+      // The generateResponse function will handle the grief response internally
+      // but we can adjust how we call processUserMessage to account for the sensitivity
+      
+      // Update conversation stage before processing
+      updateStage();
+      
+      // For intense grief messages, ensure proper response time
+      return baseProcessUserMessage(
+        userInput,
+        responseGenerator,
+        detectConcerns
+      );
+    }
+    
     // Update conversation stage before processing
     updateStage();
     
     return baseProcessUserMessage(
       userInput,
-      generateResponse,
+      responseGenerator,
       detectConcerns
     );
   };

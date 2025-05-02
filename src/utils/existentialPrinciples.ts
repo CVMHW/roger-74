@@ -1,4 +1,3 @@
-
 /**
  * Existential principles and concepts based on Viktor Frankl's Logotherapy
  * and broader existential psychology frameworks
@@ -131,6 +130,52 @@ export const existentialPrinciples = {
       ]
     },
     noogenicNeurosis: "Distress arising specifically from existential frustration or crisis of meaning that cannot be addressed by conventional psychological approaches alone."
+  },
+
+  // NEW: Expanded section on grief and existential loneliness
+  griefAndLoneliness: {
+    description: "Grief, particularly the loss of a spouse or intimate partner, creates a unique form of existential loneliness that differs from other forms of social isolation.",
+    keyAspects: [
+      {
+        name: "Existential loneliness in grief",
+        description: "A profound form of isolation that persists regardless of social connection, stemming from the loss of someone who deeply knew and witnessed one's life.",
+        aspects: [
+          "The loss of being deeply known by another person",
+          "The absence of a witness to one's life history and journey",
+          "The irreplaceability of intimacy built over decades",
+          "The loss of seeing oneself reflected through another's knowing gaze",
+          "The unique loneliness that cannot be addressed by friendship or community alone"
+        ]
+      },
+      {
+        name: "Spousal loss",
+        description: "The death of a spouse represents a unique form of loss with distinct existential implications.",
+        aspects: [
+          "Loss of a shared history that often spans decades",
+          "Disruption of identity formed within and reflected by the relationship",
+          "Loss of daily intimacy built through proximity and time",
+          "Absence of the person who witnessed one's life most completely",
+          "Loss of future plans and shared meaning structures"
+        ]
+      },
+      {
+        name: "Irreplaceability",
+        description: "The recognition that certain relationships cannot be substituted or recreated, which intensifies grief but also honors the singular nature of the bond.",
+        aspects: [
+          "The uniqueness of each relationship makes true replacement impossible",
+          "The time-depth of long relationships creates layers of meaning that cannot be quickly rebuilt",
+          "The shared context and history are irretrievable once lost",
+          "The particular way of being known cannot be replicated even in new loving relationships"
+        ]
+      }
+    ],
+    existentialResponses: [
+      "Acknowledging the unique nature of the loss without attempting to minimize it",
+      "Validating the profound loneliness that persists despite other social connections",
+      "Recognizing that this type of loss challenges one's very sense of being and identity",
+      "Exploring how meaning can still be found while honoring the irreplaceability of what was lost",
+      "Approaching the grief not as a problem to solve but as an experience to be witnessed"
+    ]
   },
 
   // Practical applications in supportive conversations
@@ -274,7 +319,13 @@ export const existentialIndicators = {
     "gap between",
     "no real connection",
     "isolated",
-    "no one gets it"
+    "no one gets it",
+    // New additions for spousal loss
+    "no one will ever know me like",
+    "knew me completely",
+    "knew everything about me",
+    "shared everything with",
+    "only person who really knew me"
   ],
   
   mortalityConcerns: [
@@ -315,7 +366,40 @@ export const existentialIndicators = {
     "drifting",
     "hollow"
   ],
-
+  
+  // Expanded indicators for spousal loss and grief
+  spousalLossConcerns: [
+    "lost my spouse",
+    "lost my husband",
+    "lost my wife",
+    "lost my partner",
+    "widow",
+    "widower",
+    "after they died",
+    "since they passed",
+    "years together",
+    "decades together",
+    "marriage ended",
+    "died before",
+    "long marriage",
+    "irreplaceable relationship"
+  ],
+  
+  existentialLoneliness: [
+    "existential loneliness",
+    "alone in a different way", 
+    "lonely in a crowd",
+    "friends don't help",
+    "different kind of lonely",
+    "nobody will ever know me",
+    "irreplaceable",
+    "can't be recreated",
+    "not the same",
+    "unique relationship",
+    "nobody knows me anymore",
+    "lost part of myself"
+  ],
+  
   // Additional indicators based on lecture materials
   provisionalLiving: [
     "waiting for life to begin",
@@ -442,7 +526,7 @@ export const generateExistentialResponse = (userInput: string): string | null =>
       
       "Many philosophers have reflected on how each person's experience is ultimately their own. Yet meaningful connection remains possible. What kinds of connections have felt most genuine to you in the past?",
       
-      "That sense of separation is something many people grapple with. Sometimes, it's in acknowledging our separate experiences that we can paradoxically feel more connected through our shared humanity. What aspects of your experience do you think others might relate to?",
+      "That sense of separation is something many grapple with. Sometimes, it's in acknowledging our separate experiences that we can paradoxically feel more connected through our shared humanity. What aspects of your experience do you think others might relate to?",
       
       "While we each journey through life in our own unique way, we can still walk alongside others. What qualities in relationships help you feel less alone in your experience?",
       
@@ -534,6 +618,29 @@ export const generateExistentialResponse = (userInput: string): string | null =>
     ];
     
     return hyperreflectionResponses[Math.floor(Math.random() * hyperreflectionResponses.length)];
+  }
+  
+  // New: Check for spousal loss and existential loneliness
+  const hasSpousalLoss = existentialIndicators.spousalLossConcerns.some(phrase => 
+    lowerInput.includes(phrase));
+    
+  const hasExistentialLoneliness = existentialIndicators.existentialLoneliness.some(phrase => 
+    lowerInput.includes(phrase));
+    
+  if (hasSpousalLoss && (hasExistentialLoneliness || lowerInput.includes("loneliness"))) {
+    const spousalLossResponses = [
+      "The loneliness you're describing after losing your spouse speaks to what philosophers call 'existential loneliness' - that profound aloneness that can exist even when surrounded by others. It comes from losing someone who truly knew you in a way no one else did. This particular kind of grief challenges us to find meaning while acknowledging that some things truly are irreplaceable. What aspects of this loneliness feel most difficult for you?",
+      
+      "Your experience highlights what existentialists describe as the unique loneliness that comes from losing a spouse - it's not simply about being alone, but about losing that witness to your life, that person who knew you in ways no one else could. While this creates a void that cannot be filled in the same way, many find that acknowledging the unique and irreplaceable nature of that relationship is itself meaningful. How has this specific type of loneliness affected how you see yourself?",
+      
+      "What you're describing touches on a profound existential reality - that the intimacy built over decades with a spouse creates something singular that cannot simply be replaced. This recognition brings both pain and a honoring of how significant that relationship was. Viktor Frankl might suggest that even in this unique loneliness, we can find meaning through how we choose to carry that relationship forward with us. What aspects of your shared life continue to provide meaning for you now?",
+      
+      "The existential loneliness after losing a spouse is distinct from other forms of loneliness because it involves the loss of being deeply known by another person. This creates what philosophers call an 'ontological shift' - a fundamental change in how we experience our existence. Many find that while nothing can replace that particular relationship, acknowledging its uniqueness actually honors its significance. How has this experience changed your understanding of connection?",
+      
+      "Your description of loneliness after losing your spouse reflects what existential thinkers call the 'irreplaceability of the other' - the recognition that each relationship is unique and cannot simply be substituted. This creates a particular kind of grief, one that persists even when surrounded by caring others. Finding meaning doesn't require diminishing this reality, but rather acknowledging the profound impact this relationship had on who you are. What from that relationship continues to guide you today?"
+    ];
+    
+    return spousalLossResponses[Math.floor(Math.random() * spousalLossResponses.length)];
   }
   
   // No clear existential concerns detected
