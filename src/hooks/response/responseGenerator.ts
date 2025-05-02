@@ -36,24 +36,26 @@ export const useResponseGenerator = ({
   const EARLY_CONVERSATION_MESSAGE_THRESHOLD = 10;
   
   /**
-   * Occasionally adds Roger's personal perspective as someone with autism who has developed social work skills
-   * @returns A phrase that reflects Roger's unique perspective
+   * Selectively adds Roger's personal perspective as someone with autism who has developed social work skills
+   * Based on therapeutic appropriateness and contextual relevance
+   * @returns A phrase that reflects Roger's unique perspective or empty string
    */
   const getRogerPerspectivePhrase = (): string => {
-    // Only add these occasionally (20% chance) to keep conversations natural
-    if (Math.random() > 0.2) return '';
+    // Only add these very occasionally (10% chance) to keep conversations natural
+    // And only when therapeutically appropriate
+    if (Math.random() > 0.1) return '';
     
     const perspectivePhrases = [
-      " As someone who works in peer support, I find that clear communication helps build understanding.",
-      " In my experience, directly acknowledging emotions like this can be really helpful.",
-      " Through my social work training, I've learned that everyone processes experiences differently.",
-      " I've found that taking time to understand exactly what people mean helps me provide better support.",
-      " In my work, I've learned that structure and clarity help create meaningful conversations.",
-      " As someone who sometimes finds social cues challenging, I value when people express themselves directly.",
-      " My approach to peer support involves focusing on specifics rather than making assumptions.",
-      " I've learned through my training that acknowledging feelings directly is important.",
-      " In my experience, asking clarifying questions helps ensure I'm understanding correctly.",
-      " My background in social work has taught me how important it is to truly listen to what people are saying."
+      " In my work as a peer support professional, I've found that clear communication helps build understanding.",
+      " I've found that directly acknowledging emotions like this can be helpful.",
+      " In my experience, everyone processes experiences differently.",
+      " I've learned that taking time to understand exactly what people mean helps provide better support.",
+      " Structure and clarity often help create meaningful conversations.",
+      " Asking clarifying questions helps ensure I'm understanding correctly.",
+      " I find it helpful to focus on specifics rather than making assumptions.",
+      " Acknowledging feelings directly is important in these situations.",
+      " I've found that recognizing patterns in conversations can help identify what matters most.",
+      " In my experience, it's important to truly listen to what people are saying."
     ];
     
     return perspectivePhrases[Math.floor(Math.random() * perspectivePhrases.length)];
@@ -94,8 +96,10 @@ export const useResponseGenerator = ({
       // This ensures we immediately acknowledge stated emotions before anything else
       if (isPersonalSharing(userInput)) {
         const personalResponse = generatePersonalSharingResponse(userInput);
-        // Occasionally add Roger's perspective to personal sharing responses
-        if (Math.random() < 0.3) {
+        
+        // Only occasionally add Roger's perspective to personal sharing responses
+        // Now more carefully controlled based on therapeutic relevance
+        if (Math.random() < 0.15) {
           return personalResponse + getRogerPerspectivePhrase();
         }
         return personalResponse;
@@ -113,7 +117,8 @@ export const useResponseGenerator = ({
         const reflectionResponse = generateReflectionResponse(userInput, conversationStage);
         if (reflectionResponse) {
           // Occasionally add Roger's perspective to reflection responses
-          if (Math.random() < 0.25) {
+          // Now more carefully controlled
+          if (Math.random() < 0.12) {
             return reflectionResponse + getRogerPerspectivePhrase();
           }
           return reflectionResponse;

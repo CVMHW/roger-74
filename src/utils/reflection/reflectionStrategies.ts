@@ -1,4 +1,3 @@
-
 /**
  * Utilities for determining when and how to use reflections
  */
@@ -122,8 +121,57 @@ export const detectDevelopmentalStage = (userMessage: string): DevelopmentalStag
 };
 
 /**
+ * Determines if sharing autism-related perspective would be therapeutically appropriate
+ * @param message The user's message
+ * @returns Boolean indicating if autism self-disclosure would be beneficial
+ */
+const isAutismDisclosureAppropriate = (message: string): boolean => {
+  if (!message) return false;
+  
+  const lowerMessage = message.toLowerCase();
+  
+  // Only disclose when the user is specifically discussing:
+  const therapeuticTopics = [
+    // Direct mentions of autism or neurodiversity
+    /\bautis[mt]\b/i,
+    /\basperger['']?s\b/i,
+    /\bneurodiverse\b/i,
+    /\bneurodiversity\b/i,
+    /\bspectrum\b/i,
+    /\basd\b/i,
+    
+    // Social challenges that mirror autism experiences
+    /\bsocial (?:cues|skills|difficulty|difficulties|challenges)\b/i,
+    /\bdifficulty (?:reading|understanding) people\b/i,
+    /\bmisunderstood\b/i,
+    /\bdon['']t understand (?:social|people)\b/i,
+    
+    // Sensory processing discussions
+    /\boverstimulat(?:ed|ion)\b/i,
+    /\bsensory (?:issues|overload|sensitivity)\b/i,
+    
+    // Communication patterns
+    /\bdirect communication\b/i,
+    /\bliteral\b/i,
+    /\bdifficulty communicating\b/i,
+    
+    // Special interests & patterns
+    /\broutines\b/i,
+    /\bpatterns\b/i,
+    /\bspecial interest\b/i
+  ];
+  
+  // Check if any therapeutic topics are present
+  const isRelevantTopic = therapeuticTopics.some(pattern => pattern.test(lowerMessage));
+  
+  // Only disclose when therapeutically relevant AND only occasionally (30% chance)
+  return isRelevantTopic && Math.random() < 0.3;
+};
+
+/**
  * Generates age-appropriate reflection based on developmental stage
  * Uses Roger's perspective as someone with autism who has developed social work skills
+ * But only reveals autism when therapeutically appropriate
  * @param message The user's message 
  * @param feeling The detected feeling
  * @param developmentalStage The identified developmental stage
@@ -134,10 +182,13 @@ export const generateAgeAppropriateReflection = (
   feeling: string,
   developmentalStage: DevelopmentalStage
 ): string => {
+  // Check if autism disclosure would be therapeutically appropriate
+  const shouldDisclose = isAutismDisclosureAppropriate(message);
+  
   switch (developmentalStage) {
     case 'infant_toddler':
       // For caregivers of infants/toddlers
-      return `I understand this might be affecting your little one. How are you managing with your child's routine? I find routines really important.`;
+      return `I understand this might be affecting your little one. How are you managing with your child's routine? ${shouldDisclose ? "As someone who understands the importance of routines, I know they can make a big difference." : "Routines can make a big difference."}`;
       
     case 'young_child':
       // Simple, concrete, present-focused
@@ -184,17 +235,17 @@ export const generateAgeAppropriateReflection = (
     case 'young_adult':
     case 'adult':
     default:
-      // Full complexity, abstract concepts, with Roger's perspective
+      // Full complexity, abstract concepts, with Roger's perspective only when appropriate
       if (feeling === 'sad') {
-        return `I'm hearing that you're experiencing sadness around this situation. When I feel sad, I try to give myself space to process those emotions. How has this been impacting you?`;
+        return `I'm hearing that you're experiencing sadness around this situation. ${shouldDisclose ? "When I feel sad, I try to give myself space to process those emotions, which is something I've had to learn to do deliberately. " : ""}How has this been impacting you?`;
       } else if (feeling === 'angry') {
-        return `It sounds like this situation has been frustrating. I've learned that anger often comes from feeling misunderstood or when our needs aren't being met. What aspects have been most challenging for you?`;
+        return `It sounds like this situation has been frustrating. ${shouldDisclose ? "As someone who's worked to understand emotional responses, I've learned that anger often comes from feeling misunderstood or when our needs aren't being met. " : ""}What aspects have been most challenging for you?`;
       } else if (feeling === 'anxious') {
-        return `I understand you're feeling anxious about this. I've dealt with anxiety in my own life, and I know it can be overwhelming. What specific concerns have been on your mind?`;
+        return `I understand you're feeling anxious about this. ${shouldDisclose ? "I've dealt with anxiety in my own life, and I know it can be overwhelming, especially when trying to process multiple inputs at once. " : ""}What specific concerns have been on your mind?`;
       } else if (feeling === 'happy') {
-        return `It's wonderful to hear you're feeling positive about this experience. I find it helpful to really notice and appreciate those good moments. What elements have been most meaningful for you?`;
+        return `It's wonderful to hear you're feeling positive about this experience. ${shouldDisclose ? "I find it helpful to really notice and appreciate those good moments, sometimes in ways others might not think about. " : ""}What elements have been most meaningful for you?`;
       } else {
-        return `I'd like to understand more about how you're feeling about this situation. In my social work training, I've learned that listening carefully is one of the most important skills. Would you be comfortable sharing more?`;
+        return `I'd like to understand more about how you're feeling about this situation. ${shouldDisclose ? "In my journey with autism and through my social work training, I've learned that listening carefully is one of the most important skills. " : ""}Would you be comfortable sharing more?`;
       }
   }
 };
