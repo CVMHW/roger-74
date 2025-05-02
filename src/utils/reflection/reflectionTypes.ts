@@ -54,7 +54,10 @@ export interface ContextAwareReflection {
   priority: number;
   // Add missing properties that are being used
   feeling?: string;
+  context?: string;
+  reflection?: string;
   wheelFeelingData?: {
+    detectedFeeling?: string;
     coreEmotion: string;
     intensity?: 'low' | 'medium' | 'high';
     relatedFeelings?: string[];
@@ -62,20 +65,32 @@ export interface ContextAwareReflection {
   specificDetails?: string[];
   relationshipContext?: string;
   timeContext?: string;
+  locationContext?: string;
 }
 
 export interface ReflectionPhrases {
   opening: string[];
   middle: string[];
   closing: string[];
-  // Add missing property
+  // Add missing emotion categories
   sad?: string[];
+  angry?: string[];
+  anxious?: string[];
+  happy?: string[];
+  confused?: string[];
+  relieved?: string[];
+  embarrassed?: string[];
+  overwhelmed?: string[];
+  lonely?: string[];
+  hopeful?: string[];
 }
 
 export interface ReflectionPrinciple {
   name: string;
   description: string;
   examples: string[];
-  // Add missing property
+  // Add missing properties
   purpose?: string;
+  approach?: string;
+  goal?: string;
 }

@@ -97,10 +97,13 @@ export const createRichContextReflection = (userMessage: string): ContextAwareRe
   
   // Create the reflection object
   const reflection: ContextAwareReflection = {
+    keywords: [],  // Initialize with empty arrays to fix TypeScript errors
+    phrases: [],
+    priority: 1,
     feeling: primaryFeeling,
     context: extractContext(userMessage),
     reflection: '', // Will be populated by the calling function
-    specificDetails: specificDetails.join(' and '),
+    specificDetails: specificDetails.length > 0 ? specificDetails.join(' and ') : undefined,
     relationshipContext: contextElements.relationshipContext || undefined,
     timeContext: contextElements.timeContext || undefined,
     locationContext: contextElements.locations.length > 0 ? contextElements.locations[0] : undefined
@@ -109,10 +112,10 @@ export const createRichContextReflection = (userMessage: string): ContextAwareRe
   // Add feelings wheel data if available
   if (wheelData) {
     reflection.wheelFeelingData = {
-      detectedFeeling: detectedWord,
+      detectedFeeling: detectedWord,  // Add this property to fix the error on line 223
       coreEmotion: wheelData.coreEmotion,
       relatedFeelings: wheelData.relatedFeelings,
-      intensity: wheelData.intensity
+      intensity: wheelData.intensity as 'low' | 'medium' | 'high'  // Cast to fix the error on line 115
     };
   }
   
@@ -220,19 +223,20 @@ export const createFeelingReflection = (feelings: FeelingCategory[], userMessage
         
         // Add feelings wheel specificity if available
         if (richContext.wheelFeelingData) {
-          const { detectedFeeling, coreEmotion, relatedFeelings } = richContext.wheelFeelingData;
+          const { detectedFeeling, coreEmotion, relatedFeelings, intensity } = richContext.wheelFeelingData;
           
-          // If we detected a nuanced feeling (intensity 3), acknowledge it specifically
-          if (richContext.wheelFeelingData.intensity >= 2) {
+          // Fix comparison by ensuring intensity is properly handled
+          // If we detected a nuanced feeling with medium or high intensity, acknowledge it specifically
+          if (intensity === 'medium' || intensity === 'high') {
             personalizedReflection = personalizedReflection.replace(
               richContext.feeling, 
-              detectedFeeling
+              detectedFeeling || richContext.feeling
             );
             
             // Sometimes add information about related feelings
-            if (relatedFeelings.length > 0 && Math.random() < 0.3) {
+            if (relatedFeelings && relatedFeelings.length > 0 && Math.random() < 0.3) {
               const randomRelatedFeeling = relatedFeelings[Math.floor(Math.random() * relatedFeelings.length)];
-              personalizedReflection += ` Sometimes feelings like ${detectedFeeling} might also come with feelings of ${randomRelatedFeeling}.`;
+              personalizedReflection += ` Sometimes feelings like ${detectedFeeling || richContext.feeling} might also come with feelings of ${randomRelatedFeeling}.`;
             }
           }
         }

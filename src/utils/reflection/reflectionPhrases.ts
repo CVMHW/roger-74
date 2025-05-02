@@ -6,6 +6,9 @@
 import { ReflectionPhrases } from './reflectionTypes';
 
 export const reflectionPhrases: ReflectionPhrases = {
+  opening: [],
+  middle: [],
+  closing: [],
   sad: [
     "I hear a sense of sadness in what you're sharing.",
     "It sounds like you're feeling down about this situation.",
