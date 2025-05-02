@@ -22,6 +22,13 @@ export const createSadnessResponse = (userInput: string): string | null => {
   const enhancedFeelings = identifyEnhancedFeelings(userInput);
   const specificFeeling = enhancedFeelings.find(f => f.category === 'sad')?.detectedWord || 'sad';
   
+  // Check for specific spouse/relationship keywords
+  const hasRelationshipTerms = /wife|husband|spouse|partner|marriage|divorce|left me|broke up|relationship|ex-/i.test(userInput);
+  
+  if (hasRelationshipTerms) {
+    return `I can hear that you're feeling ${specificFeeling} about this relationship situation. That's completely understandable. When someone significant in our lives leaves, it can be incredibly painful. Would you like to talk more about what you're going through right now?`;
+  }
+  
   switch (sadnessDistinction.context) {
     case 'grief':
       return `I can hear that you're feeling ${specificFeeling} about this loss. Grief is a natural response when we lose someone or something important to us. Would it help to talk more about what this loss means to you?`;

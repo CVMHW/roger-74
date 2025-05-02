@@ -1,7 +1,7 @@
 
 /**
- * Emotional Response Handlers - Main export file
- * Re-exports all emotionally-focused handlers for consistency
+ * Emotional response handlers index
+ * Re-exports all emotional response handlers
  */
 
 export { createSadnessResponse } from './sadnessHandler';
