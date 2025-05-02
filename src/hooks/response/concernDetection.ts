@@ -16,6 +16,7 @@ interface ConcernState {
   mentalHealth: boolean;
   eatingDisorder: boolean;
   substanceUse: boolean;
+  mildGambling: boolean;  // Added new state for mild gambling
   tentativeHarm: boolean;
 }
 
@@ -26,6 +27,7 @@ export const useConcernDetection = () => {
     mentalHealth: false,
     eatingDisorder: false,
     substanceUse: false,
+    mildGambling: false,  // Track if we've shown mild gambling message
     tentativeHarm: false
   });
 
@@ -48,8 +50,14 @@ export const useConcernDetection = () => {
       case 'eating-disorder':
         description = "For concerns about eating or body image, the Emily Program has specialists who can help.";
         break;
-      case 'substance-use':
-        description = "For substance use concerns, specialized support is available in the resources below.";
+      case 'substance-use-severe':
+        description = "For serious substance use or gambling concerns, specialized support is available in the resources below.";
+        break;
+      case 'substance-use-moderate': 
+        description = "I notice you mentioned gambling or substance use that might be concerning. Resources are available if needed.";
+        break;
+      case 'mild-gambling':
+        // No toast for mild gambling - we'll handle it conversationally
         break;
       case 'tentative-harm':
         description = "I've noticed concerning language that requires professional support. Please see scheduling link below.";
@@ -58,11 +66,13 @@ export const useConcernDetection = () => {
         description = "Please see the resources below for support with your concerns.";
     }
     
-    toast({
-      title,
-      description,
-      duration: 6000,
-    });
+    if (description) {
+      toast({
+        title,
+        description,
+        duration: 6000,
+      });
+    }
   };
 
   const detectConcerns = (userInput: string) => {
@@ -71,7 +81,9 @@ export const useConcernDetection = () => {
     const containsMedicalConcerns = detectMedicalConcerns(userInput);
     const containsMentalHealthConcerns = detectMentalHealthConcerns(userInput);
     const containsEatingDisorderConcerns = detectEatingDisorderConcerns(userInput);
-    const containsSubstanceUseConcerns = detectSubstanceUseConcerns(userInput);
+    const substanceConcernsResult = detectSubstanceUseConcerns(userInput);
+    const containsSubstanceUseConcerns = substanceConcernsResult.detected;
+    const substanceConcernSeverity = substanceConcernsResult.severity || 'mild';
     const containsTentativeHarmLanguage = detectTentativeHarmLanguage(userInput);
 
     // Determine if any concerns need to be shown
@@ -81,7 +93,9 @@ export const useConcernDetection = () => {
       medical: containsMedicalConcerns && !concernsShown.medical,
       mentalHealth: containsMentalHealthConcerns && !concernsShown.mentalHealth,
       eatingDisorder: containsEatingDisorderConcerns && !concernsShown.eatingDisorder,
-      substanceUse: containsSubstanceUseConcerns && !concernsShown.substanceUse
+      substanceUseSevere: containsSubstanceUseConcerns && substanceConcernSeverity === 'severe' && !concernsShown.substanceUse,
+      substanceUseModerate: containsSubstanceUseConcerns && substanceConcernSeverity === 'moderate' && !concernsShown.substanceUse,
+      mildGambling: containsSubstanceUseConcerns && substanceConcernSeverity === 'mild' && !concernsShown.mildGambling
     };
 
     // Show appropriate alerts based on detected concerns
@@ -110,10 +124,20 @@ export const useConcernDetection = () => {
       showConcernToast('eating-disorder');
       return 'eating-disorder';
     }
-    else if (concerns.substanceUse) {
+    else if (concerns.substanceUseSevere) {
       setConcernsShown(prev => ({ ...prev, substanceUse: true }));
-      showConcernToast('substance-use');
+      showConcernToast('substance-use-severe');
       return 'substance-use';
+    }
+    else if (concerns.substanceUseModerate) {
+      setConcernsShown(prev => ({ ...prev, substanceUse: true }));
+      showConcernToast('substance-use-moderate');
+      return 'substance-use';
+    }
+    else if (concerns.mildGambling) {
+      setConcernsShown(prev => ({ ...prev, mildGambling: true }));
+      showConcernToast('mild-gambling');
+      return 'mild-gambling'; // New type to handle mild gambling conversationally
     }
 
     return null;

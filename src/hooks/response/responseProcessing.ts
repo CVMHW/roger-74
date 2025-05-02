@@ -36,13 +36,16 @@ export const useResponseProcessing = ({
     const isCrisis = concernType === 'crisis' || concernType === 'tentative-harm';
     const isMentalHealth = concernType === 'mental-health';
     const isMedical = concernType === 'medical' || concernType === 'eating-disorder';
+    const isMildGambling = concernType === 'mild-gambling';
     
     const estimatedComplexity = isCrisis ? 8 : 
                                isMentalHealth ? 7 :
-                               isMedical ? 7 : 5;
+                               isMedical ? 7 : 
+                               isMildGambling ? 4 : 5;
     
     const estimatedEmotionalWeight = isCrisis ? 9 : 
-                                    concernType === 'substance-use' || isMentalHealth ? 7 : 4;
+                                    concernType === 'substance-use' || isMentalHealth ? 7 : 
+                                    isMildGambling ? 3 : 4;
     
     // Get minimum response time from master rules
     const minimumTime = calculateMinimumResponseTime(estimatedComplexity, estimatedEmotionalWeight);
@@ -62,14 +65,15 @@ export const useResponseProcessing = ({
         // Add this response to the history to prevent future repetition
         addToResponseHistory(responseText);
         
-        // Create response message - fixing the type issue by properly casting concernType
+        // Create response message with proper typing
         const typedConcernType = concernType === 'crisis' || 
                                concernType === 'medical' || 
                                concernType === 'mental-health' || 
                                concernType === 'eating-disorder' || 
                                concernType === 'substance-use' || 
-                               concernType === 'tentative-harm' ? 
-                               concernType as 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | null : null;
+                               concernType === 'tentative-harm' ||
+                               concernType === 'mild-gambling' ? 
+                               concernType as 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | 'mild-gambling' | null : null;
         
         const rogerResponse = createMessage(responseText, 'roger', typedConcernType);
         setIsTyping(false);

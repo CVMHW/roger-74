@@ -1,4 +1,3 @@
-
 /**
  * Utilities for detecting various concerns in user messages
  */
@@ -51,15 +50,116 @@ export const detectEatingDisorderConcerns = (message: string): boolean => {
   return eatingDisorderKeywords.some(keyword => lowerMessage.includes(keyword));
 };
 
-// Substance use concern detection
-export const detectSubstanceUseConcerns = (message: string): boolean => {
-  const substanceUseKeywords = [
-    'alcohol', 'drunk', 'drinking', 'drugs', 'high', 'addiction', 'substance', 
-    'heroin', 'cocaine', 'meth', 'opioid', 'overdose', 'withdrawal', 'relapse',
-    'sober', 'gambling', 'betting', 'casino', 'lottery', 'scratch-offs'
-  ];
+/**
+ * Enhanced substance use concern detection with severity assessment
+ * @param message The user's message
+ * @returns Object with detection result and severity level
+ */
+export const detectSubstanceUseConcerns = (message: string): { detected: boolean; severity?: 'mild' | 'moderate' | 'severe' } => {
+  if (!message) return { detected: false };
+  
   const lowerMessage = message.toLowerCase();
-  return substanceUseKeywords.some(keyword => lowerMessage.includes(keyword));
+  
+  // Severe substance use keywords that indicate immediate concern
+  const severeSubstanceKeywords = [
+    'overdose', 'withdrawal', 'relapse', 'addicted', 'addiction', 'can\'t stop',
+    'ruining my life', 'lost everything', 'desperate', 'out of control'
+  ];
+  
+  // Moderate substance use keywords that indicate ongoing issues
+  const moderateSubstanceKeywords = [
+    'using again', 'drink too much', 'getting worse', 'worried about my',
+    'problem with', 'dependency', 'dependent on', 'need help with'
+  ];
+
+  // Check for severe gambling indicators
+  const severeGamblingKeywords = [
+    'gambling debt', 'lost everything', 'maxed out', 'borrowed money to gamble', 
+    'loan shark', 'can\'t stop gambling', 'gambling problem', 'lost my house',
+    'lost my job', 'hiding gambling', 'lying about gambling', 'desperate', 
+    'suicidal over gambling', 'gambling addiction'
+  ];
+  
+  // Check for moderate gambling indicators
+  const moderateGamblingKeywords = [
+    'gamble too much', 'losing more than winning', 'spent rent money',
+    'gambling more lately', 'chasing losses', 'spending more time gambling',
+    'thinking about gambling constantly', 'gambling to escape', 'feel guilty about gambling'
+  ];
+
+  // Basic substance or gambling mentions (lower severity)
+  const basicSubstanceKeywords = [
+    'alcohol', 'drunk', 'drinking', 'drugs', 'high', 'substance', 
+    'heroin', 'cocaine', 'meth', 'opioid', 'sober'
+  ];
+  
+  const basicGamblingKeywords = [
+    'gambling', 'betting', 'casino', 'lottery', 'scratch-offs', 'slots',
+    'poker', 'blackjack', 'roulette', 'sports betting', 'bet on'
+  ];
+  
+  // Check for financial context that might indicate relative severity
+  const hasSevereFinancialLanguage = 
+    lowerMessage.includes('debt') || 
+    lowerMessage.includes('broke') || 
+    lowerMessage.includes('can\'t pay') ||
+    lowerMessage.includes('lost everything') ||
+    lowerMessage.includes('all my money');
+    
+  const hasModerateFinancialLanguage =
+    lowerMessage.includes('expensive') ||
+    lowerMessage.includes('lot of money') ||
+    lowerMessage.includes('more than I should') ||
+    lowerMessage.includes('spent too much');
+    
+  const hasMildFinancialLanguage =
+    lowerMessage.includes('a little money') ||
+    lowerMessage.includes('small bet') ||
+    lowerMessage.includes('not much') ||
+    lowerMessage.includes('won\'t break me');
+    
+  // Check for emotional distress indicators to gauge severity
+  const hasSevereDistress =
+    lowerMessage.includes('desperate') ||
+    lowerMessage.includes('hopeless') ||
+    lowerMessage.includes('devastated') ||
+    lowerMessage.includes('miserable') ||
+    lowerMessage.includes('can\'t take it');
+    
+  const hasModerateDistress =
+    lowerMessage.includes('worried') ||
+    lowerMessage.includes('stressed') ||
+    lowerMessage.includes('anxious') ||
+    lowerMessage.includes('regret');
+    
+  const hasMildDistress =
+    lowerMessage.includes('a bit sad') ||
+    lowerMessage.includes('a little sad') ||
+    lowerMessage.includes('disappointed') ||
+    lowerMessage.includes('annoyed');
+  
+  // Detect severity based on keyword matches and context
+  if (severeSubstanceKeywords.some(keyword => lowerMessage.includes(keyword)) ||
+      severeGamblingKeywords.some(keyword => lowerMessage.includes(keyword)) ||
+      (basicGamblingKeywords.some(keyword => lowerMessage.includes(keyword)) && 
+       (hasSevereFinancialLanguage || hasSevereDistress))) {
+    return { detected: true, severity: 'severe' };
+  }
+  
+  if (moderateSubstanceKeywords.some(keyword => lowerMessage.includes(keyword)) ||
+      moderateGamblingKeywords.some(keyword => lowerMessage.includes(keyword)) ||
+      (basicGamblingKeywords.some(keyword => lowerMessage.includes(keyword)) && 
+       (hasModerateFinancialLanguage || hasModerateDistress || !hasMildDistress))) {
+    return { detected: true, severity: 'moderate' };
+  }
+  
+  // Check for basic substance or gambling mentions with mild or no distress
+  if (basicSubstanceKeywords.some(keyword => lowerMessage.includes(keyword)) ||
+      basicGamblingKeywords.some(keyword => lowerMessage.includes(keyword))) {
+    return { detected: true, severity: 'mild' };
+  }
+  
+  return { detected: false };
 };
 
 // Tentative harmful language detection
