@@ -14,6 +14,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onFeedbac
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const [prevMessagesLength, setPrevMessagesLength] = useState(messages.length);
   
   // Function to check if user has manually scrolled up
   const checkIfUserScrolledUp = () => {
@@ -29,12 +30,28 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onFeedbac
     }
   };
 
-  // Scroll to bottom when messages change, but only if autoScroll is enabled
+  // Track when messages change
   useEffect(() => {
-    if (autoScroll && chatEndRef.current) {
-      scrollToBottom();
+    // Store the previous message length to detect new messages
+    setPrevMessagesLength(messages.length);
+  }, [messages]);
+
+  // Scroll to bottom only in specific conditions
+  useEffect(() => {
+    // Only scroll if:
+    // 1. User is already at the bottom (autoScroll is true)
+    // 2. A new message has been added (not just updating an existing typing message)
+    // 3. The chat end ref exists
+    if (autoScroll && chatEndRef.current && messages.length > prevMessagesLength) {
+      // Use a small timeout to ensure DOM updates before scrolling
+      const timeoutId = setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+      
+      // Clean up timeout if component unmounts or effect re-runs
+      return () => clearTimeout(timeoutId);
     }
-  }, [messages, isTyping, autoScroll]);
+  }, [messages, autoScroll, prevMessagesLength]);
 
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
