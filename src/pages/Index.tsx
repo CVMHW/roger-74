@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -31,7 +30,7 @@ const Index = () => {
                 </div>
                 <CardTitle className="text-xl font-semibold text-cvmhw-purple">Welcome from Roger at Cuyahoga Valley Mindful Health & Wellness</CardTitle>
               </div>
-              <CardDescription>Your mental health support companion</CardDescription>
+              <CardDescription>Your Peer Mental Health Support Companion</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-gray-600">
