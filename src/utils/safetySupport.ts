@@ -1,3 +1,4 @@
+
 /**
  * Utilities for safety and patient-centered support
  * Implements the unconditional rule about deescalation and customer-centric care
@@ -337,11 +338,4 @@ export const detectDefensiveReaction = (userInput: string): {
   };
 };
 
-// Export all utilities
-export {
-  getDeescalationApproaches,
-  adaptToneForClientPreference,
-  generateClientCenteredTraumaResponse,
-  deescalateDefensiveReaction,
-  detectDefensiveReaction
-};
+// REMOVED THE DUPLICATE EXPORT BLOCK THAT WAS CAUSING ERRORS
