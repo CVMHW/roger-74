@@ -158,7 +158,7 @@ const makeMoreEngaging = (response: string): string => {
   
   // Add personalization and warmth where appropriate
   if (!result.includes('I understand')) {
-    result = result.replace(/That's/g, 'I understand that's');
+    result = result.replace(/That's/g, "I understand that's");
   }
   
   // Add acknowledgment and validation
@@ -201,13 +201,13 @@ const makeMoreGentle = (response: string): string => {
   let result = response;
   
   // Avoid direct questions if they're present
-  result = result.replace(/What brought you/g, 'If you'd like to share what brought you')
-               .replace(/Why did you/g, 'If you're comfortable sharing why you')
-               .replace(/How do you/g, 'You might consider how you');
+  result = result.replace(/What brought you/g, "If you'd like to share what brought you")
+               .replace(/Why did you/g, "If you're comfortable sharing why you")
+               .replace(/How do you/g, "You might consider how you");
   
   // Add permission statements
-  if (!result.includes('if you'd like') && !result.includes('if you want')) {
-    result = result.replace(/\?/g, ', if you'd like to share?');
+  if (!result.includes("if you'd like") && !result.includes("if you want")) {
+    result = result.replace(/\?/g, ", if you'd like to share?");
   }
   
   return result;
@@ -306,3 +306,4 @@ export const generateFirstMessageResponse = (): string => {
   
   return firstMessages[Math.floor(Math.random() * firstMessages.length)];
 };
+
