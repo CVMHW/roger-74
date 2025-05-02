@@ -1,3 +1,4 @@
+
 /**
  * Utilities for generating reflections based on detected emotions
  * Enhanced with Feelings Wheel data for more nuanced reflections
@@ -69,7 +70,7 @@ export const createRichContextReflection = (userMessage: string): ContextAwareRe
   const significantPhrases = extractSignificantPhrases(userMessage);
   
   // Extract specific details about teams, locations, events
-  const specificDetails = [];
+  const specificDetails: string[] = [];
   
   // Handle sports teams specifically
   if (contextElements.sportTeams.length > 0) {
@@ -103,7 +104,7 @@ export const createRichContextReflection = (userMessage: string): ContextAwareRe
     feeling: primaryFeeling,
     context: extractContext(userMessage),
     reflection: '', // Will be populated by the calling function
-    specificDetails: specificDetails.length > 0 ? specificDetails.join(' and ') : undefined,
+    specificDetails: specificDetails,
     relationshipContext: contextElements.relationshipContext || undefined,
     timeContext: contextElements.timeContext || undefined,
     locationContext: contextElements.locations.length > 0 ? contextElements.locations[0] : undefined
@@ -111,11 +112,15 @@ export const createRichContextReflection = (userMessage: string): ContextAwareRe
   
   // Add feelings wheel data if available
   if (wheelData) {
+    const intensity = wheelData.intensity ? 
+      (wheelData.intensity as 'low' | 'medium' | 'high') : 
+      'medium';
+      
     reflection.wheelFeelingData = {
-      detectedFeeling: detectedWord,  // Add this property to fix the error on line 223
+      detectedFeeling: detectedWord,
       coreEmotion: wheelData.coreEmotion,
       relatedFeelings: wheelData.relatedFeelings,
-      intensity: wheelData.intensity as 'low' | 'medium' | 'high'  // Cast to fix the error on line 115
+      intensity: intensity
     };
   }
   
