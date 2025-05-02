@@ -7,5 +7,5 @@ export { useConversationStage } from './response/conversationStageManager';
 
 // Export feelings wheel related exports
 export * from '../utils/reflection/feelingsWheel';
+export * from '../utils/reflection/childEmotionsWheel';
 export * from '../utils/reflection/feelingDetection';
-

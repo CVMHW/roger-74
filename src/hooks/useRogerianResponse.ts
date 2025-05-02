@@ -66,7 +66,9 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
       userInput.toLowerCase().includes("are you drew") || 
       userInput.toLowerCase().includes("is your name drew") ||
       userInput.toLowerCase().includes("your name is drew") ||
-      userInput.toLowerCase().includes("you're drew")
+      userInput.toLowerCase().includes("you're drew") ||
+      userInput.toLowerCase().includes("youre drew") ||
+      userInput.toLowerCase().includes("you are drew")
     ) {
       // Direct response to redirect focus
       const redirectResponse = "I'm Roger, your peer support companion. My role is to be here for you and focus on your needs and experiences. What would be most helpful for us to explore together today?";
@@ -101,4 +103,3 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
 };
 
 export default useRogerianResponse;
-

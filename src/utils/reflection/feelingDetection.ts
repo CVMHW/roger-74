@@ -3,9 +3,11 @@
  * Enhanced with the Feelings Wheel model for better emotional understanding
  */
 
-import { FeelingCategory } from './reflectionTypes';
+import { FeelingCategory, DevelopmentalStage } from './reflectionTypes';
 import { feelingCategories } from './feelingCategories';
 import { findFeelingInWheel, getAllEmotionWords, getCoreEmotion, getRelatedFeelings } from './feelingsWheel';
+import { findEmotionInChildWheel, getAllChildEmotionWords, translateToChildFriendlyEmotion } from './childEmotionsWheel';
+import { detectDevelopmentalStage } from './reflectionStrategies';
 
 /**
  * Enhanced structure for detected feelings that includes feelings wheel data
@@ -18,6 +20,11 @@ export interface EnhancedFeelingResult {
     intensity: number;
     relatedFeelings: string[];
     color?: string;
+  };
+  childFriendly?: {
+    translation: string;
+    category: string;
+    color: string;
   };
 }
 
@@ -45,10 +52,48 @@ export const identifyEnhancedFeelings = (userMessage: string): EnhancedFeelingRe
   const lowerMessage = userMessage.toLowerCase();
   const detectedFeelings: EnhancedFeelingResult[] = [];
   
+  // Detect developmental stage to prioritize appropriate emotion detection
+  const developmentalStage = detectDevelopmentalStage(userMessage);
+  const isChild = developmentalStage && developmentalStage !== 'adult' && developmentalStage !== 'young_adult';
+  
+  // If we're dealing with a child, prioritize the child emotions wheel first
+  if (isChild) {
+    const childEmotionWords = getAllChildEmotionWords();
+    
+    for (const word of childEmotionWords) {
+      // Check for exact word matches with word boundaries
+      const regex = new RegExp(`\\b${word}\\b`, 'i');
+      if (regex.test(lowerMessage)) {
+        const childEmotion = findEmotionInChildWheel(word);
+        if (childEmotion) {
+          // Map to our standard categories for compatibility
+          const category = mapChildEmotionToCategory(childEmotion.category);
+          
+          if (category) {
+            detectedFeelings.push({
+              category,
+              detectedWord: childEmotion.detectedFeeling,
+              childFriendly: {
+                translation: childEmotion.detectedFeeling,
+                category: childEmotion.category,
+                color: childEmotion.color
+              }
+            });
+          }
+        }
+      }
+    }
+    
+    // If we found child emotions, return those
+    if (detectedFeelings.length > 0) {
+      return detectedFeelings.slice(0, 2); // Limit to top 2 feelings
+    }
+  }
+  
   // Get all emotion words from our feelings wheel
   const allEmotionWords = getAllEmotionWords();
   
-  // First check for explicit mentions using the feelings wheel vocabulary (more comprehensive)
+  // Check for explicit mentions using the feelings wheel vocabulary (more comprehensive)
   for (const word of allEmotionWords) {
     // Check for exact word matches with word boundaries
     const regex = new RegExp(`\\b${word}\\b`, 'i');
@@ -62,7 +107,7 @@ export const identifyEnhancedFeelings = (userMessage: string): EnhancedFeelingRe
         const category = mapWheelEmotionToCategory(coreEmotion);
         
         if (category) {
-          detectedFeelings.push({
+          const result: EnhancedFeelingResult = {
             category,
             detectedWord: word,
             wheelData: {
@@ -70,7 +115,23 @@ export const identifyEnhancedFeelings = (userMessage: string): EnhancedFeelingRe
               intensity: wheelFeeling.intensity,
               relatedFeelings
             }
-          });
+          };
+          
+          // For children, include a child-friendly translation
+          if (isChild) {
+            const childFriendlyWord = translateToChildFriendlyEmotion(word);
+            const childEmotion = findEmotionInChildWheel(childFriendlyWord);
+            
+            if (childEmotion) {
+              result.childFriendly = {
+                translation: childFriendlyWord,
+                category: childEmotion.category,
+                color: childEmotion.color
+              };
+            }
+          }
+          
+          detectedFeelings.push(result);
         }
       }
     }
@@ -95,10 +156,26 @@ export const identifyEnhancedFeelings = (userMessage: string): EnhancedFeelingRe
         return regex.test(lowerMessage);
       }) || category;
       
-      detectedFeelings.push({
+      const result: EnhancedFeelingResult = {
         category: category as FeelingCategory,
         detectedWord: matchedWord
-      });
+      };
+      
+      // For children, include a child-friendly translation
+      if (isChild) {
+        const childFriendlyWord = translateToChildFriendlyEmotion(matchedWord);
+        const childEmotion = findEmotionInChildWheel(childFriendlyWord);
+        
+        if (childEmotion) {
+          result.childFriendly = {
+            translation: childFriendlyWord,
+            category: childEmotion.category,
+            color: childEmotion.color
+          };
+        }
+      }
+      
+      detectedFeelings.push(result);
     }
   }
   
@@ -193,6 +270,73 @@ const mapWheelEmotionToCategory = (wheelEmotion: string): FeelingCategory | unde
   };
   
   return emotionMappings[wheelEmotion] as FeelingCategory || undefined;
+};
+
+/**
+ * Maps a child emotion category to our standard feeling categories
+ * @param childCategory The child emotion category
+ * @returns The standard feeling category
+ */
+const mapChildEmotionToCategory = (childCategory: string): FeelingCategory => {
+  const mappings: Record<string, FeelingCategory> = {
+    'happy': 'happy',
+    'excited': 'happy',
+    'silly': 'happy',
+    'calm': 'relieved',
+    'hungry': 'confused', // Not a direct emotional match but closest
+    'tired': 'overwhelmed',
+    'worried': 'anxious',
+    'confused': 'confused',
+    'sad': 'sad',
+    'scared': 'anxious',
+    'mad': 'angry',
+    'loved': 'happy'
+  };
+  
+  return mappings[childCategory] as FeelingCategory || 'confused';
+};
+
+/**
+ * Detects emotions from text with age-appropriate sensitivity
+ * For children, focuses on simpler emotional concepts
+ * @param text The text to analyze
+ * @param stage The developmental stage of the user
+ * @returns Appropriate emotions for the developmental stage
+ */
+export const detectAgeAppropriateEmotions = (text: string, stage: DevelopmentalStage): {
+  emotions: string[];
+  childFriendly: boolean;
+} => {
+  const isChild = stage !== 'adult' && stage !== 'young_adult';
+  const enhancedFeelings = identifyEnhancedFeelings(text);
+  
+  if (isChild) {
+    // For children, use simpler emotion terms from the child wheel
+    const childEmotions = enhancedFeelings
+      .filter(feeling => feeling.childFriendly)
+      .map(feeling => feeling.childFriendly?.translation || translateToChildFriendlyEmotion(feeling.detectedWord));
+    
+    // If we detected emotions with child translations, use those
+    if (childEmotions.length > 0) {
+      return {
+        emotions: childEmotions,
+        childFriendly: true
+      };
+    }
+    
+    // Otherwise, translate adult emotions to child-friendly terms
+    return {
+      emotions: enhancedFeelings.map(feeling => 
+        translateToChildFriendlyEmotion(feeling.detectedWord)),
+      childFriendly: true
+    };
+  }
+  
+  // For adults, use the full emotion vocabulary
+  return {
+    emotions: enhancedFeelings.map(feeling => feeling.detectedWord),
+    childFriendly: false
+  };
 };
 
 /**

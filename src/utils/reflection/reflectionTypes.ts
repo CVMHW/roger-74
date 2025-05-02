@@ -20,6 +20,11 @@ export type DevelopmentalStage =
   'young_adult' |         // Ages 19-25
   'adult';                // Ages 26+
 
+// New type for the children's emotion wheel categories
+export type ChildEmotionCategory =
+  'happy' | 'mad' | 'sad' | 'scared' | 'excited' | 'tired' | 'worried' | 
+  'loved' | 'confused' | 'silly' | 'hungry' | 'calm';
+
 export type ReflectionPhrases = Record<FeelingCategory, string[]>;
 
 export interface ReflectionPrinciple {
@@ -39,6 +44,15 @@ export interface WheelFeelingData {
   intensity: number;         // How specific/nuanced the feeling is (1-3)
 }
 
+// New interface for child emotion wheel data
+export interface ChildWheelEmotionData {
+  detectedFeeling: string;   // The exact feeling word detected
+  category: ChildEmotionCategory; // The category from the children's wheel
+  relatedFeelings: string[]; // Related simple feelings
+  color: string;            // Color associated with this emotion (for visual reference)
+  simpleDescription?: string; // Child-friendly description of the emotion
+}
+
 // Enhanced interface to support rich, context-aware reflections
 export interface ContextAwareReflection {
   feeling: FeelingCategory;
@@ -51,6 +65,7 @@ export interface ContextAwareReflection {
   userConcern?: string; // The primary concern expressed by the user
   developmentalStage?: DevelopmentalStage; // The developmental stage of the user
   wheelFeelingData?: WheelFeelingData; // Enhanced feelings wheel data if available
+  childWheelData?: ChildWheelEmotionData; // Child-friendly emotion wheel data if applicable
 }
 
 // Interface for tracking personalized topics for better follow-up
@@ -61,4 +76,3 @@ export interface PersonalizedTopic {
   mentionCount: number; // How many times this has been brought up
   lastMentioned: Date; // When this was last discussed
 }
-

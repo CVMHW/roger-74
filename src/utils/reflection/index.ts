@@ -1,10 +1,10 @@
 /**
  * Main reflection module that integrates all reflection utilities
- * Enhanced with Feelings Wheel lexicon for better emotional understanding
+ * Enhanced with Feelings Wheel and Children's Emotions Wheel for better emotional understanding
  */
 
-import { ConversationStage, DevelopmentalStage } from './reflectionTypes';
-import { identifyFeelings, identifyEnhancedFeelings } from './feelingDetection';
+import { ConversationStage, DevelopmentalStage, ChildEmotionCategory } from './reflectionTypes';
+import { identifyFeelings, identifyEnhancedFeelings, detectAgeAppropriateEmotions } from './feelingDetection';
 import { createFeelingReflection, createMeaningReflection, createGeneralReflection } from './reflectionGenerators';
 import { shouldUseReflection, detectDevelopmentalStage, generateAgeAppropriateReflection } from './reflectionStrategies';
 import { generateConversationStarterResponse } from './ageAppropriateConversation';
@@ -16,10 +16,17 @@ import {
   getRelatedFeelings, 
   getAllEmotionWords 
 } from './feelingsWheel';
+import {
+  childEmotionsWheel,
+  findEmotionInChildWheel,
+  getAllChildEmotionWords,
+  translateToChildFriendlyEmotion,
+  getChildFriendlyEmotionExplanation
+} from './childEmotionsWheel';
 
 /**
  * Generates an appropriate reflection response based on user's message
- * Now enhanced with Feelings Wheel lexicon for more nuanced emotional understanding
+ * Enhanced with both the Feelings Wheel and Children's Emotions Wheel
  * @param userMessage The user's message
  * @param conversationStage Current stage of conversation
  * @param messageCount Number of messages exchanged so far
@@ -50,8 +57,11 @@ export const generateReflectionResponse = (
     if (feelings.length > 0) {
       // If we detected a developmental stage, use age-appropriate reflection
       if (developmentalStage && developmentalStage !== 'adult') {
-        // Now we can potentially use more specific feeling words from the wheel
-        const detectedWord = enhancedFeelings[0].detectedWord || feelings[0];
+        // Now we can use child-friendly emotion terms from either wheel
+        const detectedWord = enhancedFeelings[0].childFriendly?.translation || 
+                           translateToChildFriendlyEmotion(enhancedFeelings[0].detectedWord) || 
+                           feelings[0];
+                           
         return generateAgeAppropriateReflection(userMessage, detectedWord, developmentalStage, isPastThirtyMinutes);
       }
       
@@ -146,6 +156,106 @@ export const getEmotionWheelInfo = (feeling: string) => {
   };
 };
 
+/**
+ * Gets information about a child-friendly emotion
+ * For use with younger users to help explain emotions in simpler terms
+ * @param childEmotion The child-friendly emotion term
+ * @returns Information about the emotion from the children's wheel
+ */
+export const getChildEmotionInfo = (childEmotion: string) => {
+  const emotion = findEmotionInChildWheel(childEmotion);
+  if (!emotion) return null;
+  
+  return {
+    emotion: emotion.detectedFeeling,
+    category: emotion.category,
+    color: emotion.color,
+    description: emotion.simpleDescription || getChildFriendlyEmotionExplanation(childEmotion),
+    relatedEmotions: emotion.relatedFeelings
+  };
+};
+
+/**
+ * Creates an age-appropriate emotional reflection
+ * Uses the children's emotions wheel for younger users
+ * @param userMessage The user's message
+ * @param stage The developmental stage of the user
+ * @returns An age-appropriate reflection
+ */
+export const createAgeAppropriateEmotionalReflection = (
+  userMessage: string, 
+  stage: DevelopmentalStage
+): string => {
+  // Use the appropriate emotion detection based on age
+  const emotionResult = detectAgeAppropriateEmotions(userMessage, stage);
+  
+  if (emotionResult.emotions.length === 0) {
+    // No emotions detected, use general age-appropriate response
+    switch (stage) {
+      case 'infant_toddler':
+        return "I see you're feeling something. It's okay to feel.";
+      case 'young_child':
+        return "I'm listening to how you're feeling. Would you like to tell me more?";
+      case 'middle_childhood':
+        return "I'm hearing what you're saying. How are you feeling about this?";
+      case 'adolescent':
+        return "I'm following what you're sharing. Can you tell me more about how this is affecting you?";
+      default:
+        return createGeneralReflection(userMessage);
+    }
+  }
+  
+  // We detected emotions, create an appropriate reflection
+  const primaryEmotion = emotionResult.emotions[0];
+  
+  if (emotionResult.childFriendly) {
+    // Get more information about this emotion from the children's wheel
+    const childEmotion = findEmotionInChildWheel(primaryEmotion);
+    
+    if (childEmotion) {
+      switch (stage) {
+        case 'infant_toddler':
+          return `I see you're feeling ${primaryEmotion}. That's okay!`;
+        case 'young_child':
+          return `I hear that you're feeling ${primaryEmotion}. ${childEmotion.simpleDescription || ''}`;
+        case 'middle_childhood':
+          return `It sounds like you might be feeling ${primaryEmotion}. ${childEmotion.simpleDescription || ''} Would you like to tell me more?`;
+        case 'adolescent':
+          return `I'm getting that you might be feeling ${primaryEmotion}. That makes sense given what you're going through.`;
+        default:
+          return createFeelingReflection([mapChildEmotionToAdultCategory(childEmotion.category)], userMessage);
+      }
+    }
+  }
+  
+  // Fall back to standard reflection if child-specific approach fails
+  return createFeelingReflection(['confused'], userMessage);
+};
+
+/**
+ * Maps a child emotion category to standard feeling category
+ * @param childCategory The child emotion category
+ * @returns A standard feeling category
+ */
+const mapChildEmotionToAdultCategory = (childCategory: ChildEmotionCategory): FeelingCategory => {
+  const mappings: Record<ChildEmotionCategory, FeelingCategory> = {
+    'happy': 'happy',
+    'mad': 'angry',
+    'sad': 'sad',
+    'scared': 'anxious',
+    'excited': 'happy',
+    'tired': 'overwhelmed',
+    'worried': 'anxious',
+    'loved': 'happy',
+    'confused': 'confused',
+    'silly': 'happy',
+    'hungry': 'confused',
+    'calm': 'relieved'
+  };
+  
+  return mappings[childCategory] || 'confused';
+};
+
 // Export all submodules for direct access
 export * from './reflectionTypes';
 export * from './feelingDetection';
@@ -157,3 +267,4 @@ export * from './reflectionPrinciples';
 export * from './ageAppropriateConversation';
 export * from './rogerPersonality';
 export * from './feelingsWheel';
+export * from './childEmotionsWheel';
