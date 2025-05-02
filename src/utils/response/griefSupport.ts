@@ -1,3 +1,4 @@
+
 /**
  * Module for responding to grief and loss topics with an emphasis on 
  * existential perspective and the unique loneliness of spousal loss
@@ -29,6 +30,13 @@ export type GriefSeverity =
   | 'moderate'      // Significant losses that disrupt emotional well-being
   | 'severe'        // Profound losses that significantly impair functioning
   | 'existential';  // Losses tied to meaning, purpose, or existence
+
+// Grief metaphor models
+export type GriefMetaphorModel = 
+  | 'stages'        // Traditional Kübler-Ross 5 stages model
+  | 'roller-coaster' // Non-linear up-and-down emotional journey
+  | 'dual-process'  // Oscillation between loss and restoration
+  | 'curve';        // U-shaped curve transitioning through emotions
 
 // Key themes related to grief and loneliness
 const griefThemes = {
@@ -109,6 +117,26 @@ const griefThemes = {
     'why go on', 'everything is empty', 'nothing matters',
     'lost my faith', 'questioning everything', 'crisis of belief',
     'feel lost', 'identity crisis', 'who am I now'
+  ],
+  
+  // New themes for roller coaster metaphor
+  rollerCoasterMetaphor: [
+    'roller coaster', 'ups and downs', 'twists and turns', 
+    'emotional ride', 'back and forth', 'one day to the next',
+    'emotional roller-coaster', 'sometimes up', 'sometimes down'
+  ],
+  
+  // New Kubler-Ross curve stages from image
+  curveStagesDownward: [
+    'loss-hurt', 'shock', 'numbness', 'denial', 'emotional outbursts',
+    'anger', 'fear', 'searchings', 'disorganization', 'panic',
+    'loneliness', 'guilt', 'isolation'
+  ],
+  
+  curveStagesUpward: [
+    'depression', 're-entry troubles', 'new relationships', 
+    'new strengths', 'new patterns', 'hope', 'affirmation',
+    'helping others', 'loss adjustment', 'post-traumatic growth'
   ]
 };
 
@@ -123,7 +151,9 @@ export const detectGriefThemes = (message: string): {
   griefSeverity: GriefSeverity | null,
   themeIntensity: number, // 0-10 scale of how intensely grief themes are present
   mentionsTimeFrame: boolean, // Whether long-term relationship is mentioned
-  mentionsIrreplaceability: boolean // Whether irreplaceability is mentioned
+  mentionsIrreplaceability: boolean, // Whether irreplaceability is mentioned
+  griefMetaphorModel: GriefMetaphorModel | null, // Which grief model is referenced
+  detectedGriefStages: string[] // Specific stages mentioned
 } => {
   const lowerMessage = message.toLowerCase();
   
@@ -134,7 +164,9 @@ export const detectGriefThemes = (message: string): {
     griefSeverity: null as GriefSeverity | null,
     themeIntensity: 0,
     mentionsTimeFrame: false,
-    mentionsIrreplaceability: false
+    mentionsIrreplaceability: false,
+    griefMetaphorModel: null as GriefMetaphorModel | null,
+    detectedGriefStages: [] as string[]
   };
   
   // Check for spouse/partner loss keywords
@@ -223,6 +255,51 @@ export const detectGriefThemes = (message: string): {
     result.themeIntensity += 1;
   }
 
+  // Check for roller coaster metaphor
+  const hasRollerCoasterMetaphor = griefThemes.rollerCoasterMetaphor.some(theme =>
+    lowerMessage.includes(theme));
+    
+  if (hasRollerCoasterMetaphor || 
+      lowerMessage.includes('not linear') || 
+      lowerMessage.includes('back and forth') ||
+      lowerMessage.includes('different every day')) {
+    result.griefMetaphorModel = 'roller-coaster';
+    result.themeIntensity += 2;
+  }
+  
+  // Check for traditional stages metaphor
+  if (lowerMessage.includes('stages of grief') || 
+      lowerMessage.includes('kübler-ross') ||
+      lowerMessage.includes('kubler-ross') ||
+      (lowerMessage.includes('denial') && lowerMessage.includes('acceptance'))) {
+    result.griefMetaphorModel = 'stages';
+    result.themeIntensity += 1;
+  }
+  
+  // Check for curve metaphor
+  if (lowerMessage.includes('grief curve') || 
+     (lowerMessage.includes('u-shaped') && lowerMessage.includes('grief'))) {
+    result.griefMetaphorModel = 'curve';
+    result.themeIntensity += 1;
+  }
+  
+  // Detect specific grief stages mentioned
+  // Check downward curve stages
+  griefThemes.curveStagesDownward.forEach(stage => {
+    if (lowerMessage.includes(stage.toLowerCase())) {
+      result.detectedGriefStages.push(stage);
+      result.themeIntensity += 0.5; // Small boost for each stage mentioned
+    }
+  });
+  
+  // Check upward curve stages
+  griefThemes.curveStagesUpward.forEach(stage => {
+    if (lowerMessage.includes(stage.toLowerCase())) {
+      result.detectedGriefStages.push(stage);
+      result.themeIntensity += 0.5; // Small boost for each stage mentioned
+    }
+  });
+
   // If no grief type or severity has been determined yet, check for different grief severity levels
   if (!result.griefSeverity) {
     // Check for very mild grief
@@ -278,6 +355,31 @@ export const detectGriefThemes = (message: string): {
  */
 export const generateGriefReflection = (message: string): string => {
   const themes = detectGriefThemes(message);
+  
+  // If roller coaster metaphor is detected, prioritize that in response
+  if (themes.griefMetaphorModel === 'roller-coaster') {
+    const rollerCoasterResponses = [
+      "The roller coaster metaphor you mentioned really captures how grief works—it's rarely a straight line and can have unpredictable ups and downs from day to day or even hour to hour.",
+      "That roller coaster description of grief is so apt. The way emotions can swing wildly and unexpectedly is something many people experience but don't always have words for.",
+      "I hear you describing grief as more of a roller coaster than a set of neat stages. That matches what many people experience—a journey with unexpected turns and varying intensities.",
+      "The way you're describing grief as a roller coaster really resonates with how unpredictable and non-linear this journey can be. Some days might feel manageable, while others bring you right back to intense feelings.",
+      "That roller coaster metaphor for grief captures something important—how we can move between different emotions, sometimes experiencing several in the same day. It's a more accurate picture than thinking grief follows orderly stages."
+    ];
+    return rollerCoasterResponses[Math.floor(Math.random() * rollerCoasterResponses.length)];
+  }
+  
+  // If specific grief stages are mentioned
+  if (themes.detectedGriefStages.length > 0) {
+    // Get first two stages to mention in response
+    const mentionedStages = themes.detectedGriefStages.slice(0, 2);
+    const stageResponses = [
+      `I notice you mentioned experiencing ${mentionedStages.join(" and ")} in your grief journey. These different emotional states are common, though they rarely follow a predictable pattern.`,
+      `The ${mentionedStages.join(" and ")} you're describing are recognized parts of grief, though most people find they move between these states rather than progressing linearly through them.`,
+      `I hear you talking about ${mentionedStages.join(" and ")} as part of your grief experience. These are common aspects of grief, though they often appear more like a roller coaster than orderly stages.`,
+      `Your mention of ${mentionedStages.join(" and ")} reflects the complex nature of grief. These experiences are valid and important parts of processing loss, even if they don't follow a neat timeline.`
+    ];
+    return stageResponses[Math.floor(Math.random() * stageResponses.length)];
+  }
   
   // High intensity spousal loss with existential loneliness
   if (themes.griefType === 'spousal-loss' && 
@@ -451,6 +553,36 @@ export const generateGriefReflection = (message: string): string => {
 };
 
 /**
+ * Generates responses that acknowledge the non-linear roller coaster nature of grief
+ * @param message The user's message
+ * @returns A response that validates the unpredictable nature of grief
+ */
+export const generateRollerCoasterGriefResponse = (message: string): string => {
+  const themes = detectGriefThemes(message);
+  
+  // If user specifically mentioned roller coaster metaphor
+  if (themes.griefMetaphorModel === 'roller-coaster') {
+    const responses = [
+      "The roller coaster metaphor for grief that you mentioned really captures how emotions can fluctuate unpredictably. One day might feel manageable, and the next can bring you back to intense feelings of loss. This back-and-forth is completely normal in grief.",
+      "I appreciate how you described grief as a roller coaster rather than neat stages. That's actually how most grief researchers now understand the process—it's rarely linear and can loop back through different emotions many times. How are you navigating these ups and downs?",
+      "That roller coaster description of grief is so accurate. The way emotions can swing wildly from moment to moment reflects the complex reality of processing loss. What parts of this ride have been most challenging for you?",
+      "You've touched on something important with the roller coaster metaphor. Grief rarely follows a predictable path, and many people find themselves moving between different emotional states—sometimes even in the same day. This unpredictability is actually a normal part of the healing process."
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+  }
+  
+  // For general non-linear grief responses
+  const responses = [
+    "Grief often feels less like orderly stages and more like a roller coaster ride with unexpected twists and turns. Some days might bring a sense of peace, while others can feel like you're starting over with the pain. This unpredictable pattern is actually quite normal.",
+    "The journey through grief rarely follows a straight line. Many people experience it more like waves that come and go with varying intensity, or like a roller coaster with unexpected drops and climbs. How has your experience been shifting over time?",
+    "What you're describing fits with how we now understand grief—not as a series of neat stages, but as a dynamic process that can move back and forth between different emotions and intensities. This seemingly chaotic nature of grief can be disorienting, but it's actually how most people experience it.",
+    "Rather than moving smoothly from one stage to another, grief often takes us on something more like a roller coaster ride. You might find yourself cycling through different emotions—sometimes feeling stronger, other times returning to intense sadness. This pattern is a normal part of healing."
+  ];
+  
+  return responses[Math.floor(Math.random() * responses.length)];
+};
+
+/**
  * Generate an appropriate response for different stages of grief
  * @param message The user's message 
  * @returns A response tailored to the grief experience expressed
@@ -464,8 +596,31 @@ export const generateGriefResponse = (message: string): string | null => {
     return null;
   }
   
-  // Start with a reflection
-  let response = generateGriefReflection(message);
+  let response;
+  
+  // First priority: Check if roller coaster metaphor was specifically mentioned
+  if (themes.griefMetaphorModel === 'roller-coaster') {
+    response = generateRollerCoasterGriefResponse(message);
+  } 
+  // Second priority: Check if specific grief stages were mentioned
+  else if (themes.detectedGriefStages.length > 0) {
+    // Start with a reflection
+    response = generateGriefReflection(message);
+    
+    // Add validation of non-linear grief if multiple stages are mentioned
+    if (themes.detectedGriefStages.length >= 2) {
+      const nonLinearAdditions = [
+        " Grief often doesn't follow a linear path through these experiences—many people find themselves moving between different states in an unpredictable way.",
+        " Although these experiences are often presented as stages, most people find they don't progress neatly from one to another—rather, they might circle back through various emotions many times.",
+        " These different aspects of grief don't usually appear in a fixed order. Most people move between them in various ways that can feel more like a roller coaster than a straight path."
+      ];
+      response += nonLinearAdditions[Math.floor(Math.random() * nonLinearAdditions.length)];
+    }
+  }
+  // Default to standard grief reflection
+  else {
+    response = generateGriefReflection(message);
+  }
   
   // For high intensity grief, add a follow-up question or validation
   if (themes.themeIntensity >= 7) {
@@ -506,3 +661,4 @@ export const generateGriefResponse = (message: string): string | null => {
   
   return response;
 };
+

@@ -4,6 +4,7 @@ import { MessageType } from '../../components/Message';
 import { createMessage } from '../../utils/messageUtils';
 import { calculateMinimumResponseTime } from '../../utils/masterRules';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
+import { detectGriefThemes } from '../../utils/response/griefSupport';
 
 interface ResponseProcessingParams {
   ensureResponseCompliance: (response: string) => string;
@@ -24,7 +25,7 @@ export const useResponseProcessing = ({
     userInput: string,
     generateResponseFn: (userInput: string, concernType: ConcernType) => string,
     detectConcernsFn: (userInput: string) => ConcernType,
-    responseTimeMultiplier: number = 1.0 // New parameter for response time adjustment
+    responseTimeMultiplier: number = 1.0 // Parameter for response time adjustment
   ): Promise<MessageType> => {
     setIsTyping(true);
     
@@ -40,14 +41,45 @@ export const useResponseProcessing = ({
     const isMedical = concernType === 'medical' || concernType === 'eating-disorder';
     const isMildGambling = concernType === 'mild-gambling';
     
-    const estimatedComplexity = isCrisis ? 8 : 
-                               isMentalHealth ? 7 :
-                               isMedical ? 7 : 
-                               isMildGambling ? 4 : 5;
+    // Detect grief themes for response timing
+    const griefThemes = detectGriefThemes(userInput);
+    const hasSignificantGrief = griefThemes.themeIntensity >= 4;
     
-    const estimatedEmotionalWeight = isCrisis ? 9 : 
-                                    concernType === 'substance-use' || isMentalHealth ? 7 : 
-                                    isMildGambling ? 3 : 4;
+    // Adjust complexity and emotional weight based on concerns and grief levels
+    let estimatedComplexity = isCrisis ? 8 : 
+                             isMentalHealth ? 7 :
+                             isMedical ? 7 : 
+                             isMildGambling ? 4 : 
+                             hasSignificantGrief ? 6 : 5;
+    
+    let estimatedEmotionalWeight = isCrisis ? 9 : 
+                                  concernType === 'substance-use' || isMentalHealth ? 7 : 
+                                  isMildGambling ? 3 : 
+                                  hasSignificantGrief ? 7 : 4;
+    
+    // Further adjust based on specific grief severity
+    if (hasSignificantGrief) {
+      if (griefThemes.griefSeverity === 'existential') {
+        estimatedComplexity = 8;
+        estimatedEmotionalWeight = 8;
+      } else if (griefThemes.griefSeverity === 'severe') {
+        estimatedComplexity = 7;
+        estimatedEmotionalWeight = 8;
+      } else if (griefThemes.griefSeverity === 'moderate') {
+        estimatedComplexity = 6;
+        estimatedEmotionalWeight = 6;
+      }
+      
+      // If grief is specifically about spousal loss, increase weights
+      if (griefThemes.griefType === 'spousal-loss') {
+        estimatedEmotionalWeight = Math.min(estimatedEmotionalWeight + 1, 9);
+      }
+      
+      // If grief mentions non-linear or roller coaster metaphors, increase complexity
+      if (griefThemes.griefMetaphorModel === 'roller-coaster') {
+        estimatedComplexity = Math.min(estimatedComplexity + 1, 9);
+      }
+    }
     
     // Get minimum response time from master rules
     const minimumTime = calculateMinimumResponseTime(estimatedComplexity, estimatedEmotionalWeight);

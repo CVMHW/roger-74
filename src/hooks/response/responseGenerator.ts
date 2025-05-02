@@ -1,4 +1,3 @@
-
 import { 
   isIntroduction,
   generateIntroductionResponse,
@@ -202,10 +201,11 @@ export const useResponseGenerator = ({
         return sadnessResponse;
       }
 
-      // Updated: Enhanced check for grief and existential loneliness responses
-      // Now with severity levels from very-mild to existential
+      // Enhanced: Check for grief and existential loneliness responses with roller coaster metaphor
+      // Now with enhanced roller coaster and non-linear grief processing
       const griefThemes = detectGriefThemes(userInput);
       if (griefThemes.themeIntensity >= 2) {
+        // Special handling for roller coaster metaphor
         const griefResponse = generateGriefResponse(userInput);
         if (griefResponse) {
           // Grief responses are important and should be delivered without personality additions

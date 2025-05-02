@@ -88,24 +88,37 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     // Check for grief themes to adjust response time and approach
     const griefThemes = detectGriefThemes(userInput);
     let responseGenerator = generateResponse;
+    let responseTimeMultiplier = 1.0;
     
-    // If grief themes are detected, adjust response time based on severity
+    // If grief themes are detected, adjust response time based on severity and metaphor
     if (griefThemes.themeIntensity >= 2) {
       // For all grief messages, ensure proper response time
-      // Update conversation stage before processing
-      updateStage();
       
       // Adjust response time based on grief severity
-      const griefResponseTimeMultiplier = 
-        griefThemes.griefSeverity === 'severe' || griefThemes.griefSeverity === 'existential' ? 1.5 :
+      responseTimeMultiplier = 
+        griefThemes.griefSeverity === 'existential' ? 1.5 :
+        griefThemes.griefSeverity === 'severe' ? 1.5 :
         griefThemes.griefSeverity === 'moderate' ? 1.3 :
         griefThemes.griefSeverity === 'mild' ? 1.2 : 1.0;
+      
+      // Further adjust for metaphor complexity - roller coaster metaphors need more time
+      if (griefThemes.griefMetaphorModel === 'roller-coaster') {
+        responseTimeMultiplier += 0.2;
+      }
+      
+      // If many grief stages are mentioned, add more time for a thoughtful response
+      if (griefThemes.detectedGriefStages.length >= 3) {
+        responseTimeMultiplier += 0.1;
+      }
+      
+      // Update conversation stage before processing
+      updateStage();
       
       return baseProcessUserMessage(
         userInput,
         responseGenerator,
         detectConcerns,
-        griefResponseTimeMultiplier // Pass the multiplier to adjust response time
+        responseTimeMultiplier // Pass the multiplier to adjust response time
       );
     }
     
