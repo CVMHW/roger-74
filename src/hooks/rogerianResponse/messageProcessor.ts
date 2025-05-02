@@ -2,7 +2,7 @@
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
 import { MessageType } from '../../components/Message';
 import { createMessage } from '../../utils/messageUtils';
-import { extractUserLocation, generateLocationRequestMessage } from '../../utils/messageUtils';
+import { extractPossibleLocation, generateLocationRequestMessage, extractUserLocation } from '../../utils/messageUtils';
 import { explainInpatientProcess } from '../../utils/safetyConcernManager';
 import { extractPetType } from '../../utils/helpers/userInfoUtils';
 import { generateWeatherRelatedResponse, generateCulturalAdjustmentResponse } from '../../utils/response/specialConcernResponses';
@@ -44,7 +44,7 @@ export const processUserMessage = async (
     return baseProcessUserMessage(
       userInput,
       () => inpatientInfoResponse,
-      detectConcerns
+      () => detectConcerns(userInput)
     );
   }
   
@@ -141,10 +141,15 @@ export const processUserMessage = async (
   
   // For all other cases, use the regular processing pipeline
   updateStage();
+  
+  const wrappedGenerateResponse = (input: string) => {
+    return generateResponse(input, concernType);
+  };
+  
   return baseProcessUserMessage(
     userInput,
-    generateResponse,
-    detectConcerns,
+    wrappedGenerateResponse,
+    () => concernType,
     responseTimeMultiplier // Pass the multiplier to adjust response time
   );
 };

@@ -116,6 +116,27 @@ export const extractPossibleLocation = (text: string): { state?: string; city?: 
 };
 
 /**
+ * Extracts user location from messages
+ */
+export const extractUserLocation = (userInput: string, conversationHistory: string[]): { state?: string; city?: string } | undefined => {
+  // First check the current message
+  const possibleLocation = extractPossibleLocation(userInput);
+  if (possibleLocation) {
+    return possibleLocation;
+  }
+  
+  // Then check conversation history
+  for (const message of conversationHistory) {
+    const locationInHistory = extractPossibleLocation(message);
+    if (locationInHistory) {
+      return locationInHistory;
+    }
+  }
+  
+  return undefined;
+};
+
+/**
  * Updates a message with location data.
  * @param messages The array of messages to update.
  * @param messageId The ID of the message to update.

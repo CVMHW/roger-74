@@ -76,7 +76,7 @@ export const handleEmotionalPatterns = (
       return baseProcessUserMessage(
         userInput,
         () => acknowledgeResponse,
-        detectConcerns
+        () => detectConcerns(userInput)
       );
     }
   }
@@ -132,7 +132,7 @@ export const handleEmotionalPatterns = (
     return baseProcessUserMessage(
       userInput,
       () => redirectResponse,
-      detectConcerns
+      () => null
     );
   }
   
