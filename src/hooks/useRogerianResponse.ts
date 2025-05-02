@@ -313,7 +313,7 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     return "I hear you're going through some difficult adjustments right now. Could you tell me more about what's been most challenging for you?";
   };
   
-  // Detect wealth indicators to customize responses
+  // Define the wealth indicators function - used by other functions
   const detectWealthIndicators = (userInput: string, history: string[]): 'low' | 'medium' | 'high' | 'unknown' => {
     // Simple implementation - would be expanded in a real system
     const combinedText = [userInput, ...history.slice(-3)].join(' ').toLowerCase();
@@ -832,20 +832,6 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     }
     
     return undefined;
-  };
-  
-  // Helper function to detect potential wealth indicators in conversation
-  const detectWealthIndicators = (currentInput: string, history: string[]): boolean => {
-    const wealthKeywords = [
-      'executive', 'ceo', 'cfo', 'board', 'investor', 'investment', 
-      'portfolio', 'stocks', 'broker', 'luxury', 'private', 'exclusive', 'high-end', 
-      'premium', 'estate', 'mansion', 'yacht', 'jet', 'assistant', 
-      'secretary', 'staff', 'wealth manager', 'family office'
-    ];
-    
-    const combinedText = [currentInput, ...history].join(' ').toLowerCase();
-    
-    return wealthKeywords.some(keyword => combinedText.includes(keyword));
   };
   
   return {
