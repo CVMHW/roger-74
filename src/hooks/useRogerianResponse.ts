@@ -34,7 +34,7 @@ interface UseRogerianResponseReturn {
   isTyping: boolean;
   processUserMessage: (userInput: string) => Promise<MessageType>;
   simulateTypingResponse: (response: string, callback: (text: string) => void) => void;
-  currentApproach: 'rogerian' | 'mi' | 'conversational';
+  currentApproach: 'rogerian' | 'mi' | 'existential' | 'conversational';
 }
 
 export const useRogerianResponse = (): UseRogerianResponseReturn => {
