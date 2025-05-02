@@ -7,7 +7,7 @@ import { FeelingCategory } from './reflectionTypes';
 import { feelingCategories } from './feelingCategories';
 
 /**
- * Identifies potential feelings in a user's message
+ * Identifies potential feelings in a user's message with enhanced context awareness
  * @param userMessage The user's message text
  * @returns Array of detected feelings
  */
@@ -62,7 +62,68 @@ export const identifyFeelings = (userMessage: string): FeelingCategory[] => {
         lowerMessage.includes('love it')) {
       detectedFeelings.push('happy');
     }
+    
+    // Enhanced sports context detection
+    if ((lowerMessage.includes('team') || 
+         lowerMessage.includes('game') || 
+         lowerMessage.includes('play') || 
+         lowerMessage.includes('season') ||
+         lowerMessage.includes('browns') ||
+         lowerMessage.includes('cavs') ||
+         lowerMessage.includes('guardians') ||
+         lowerMessage.includes('sport')) && 
+        (lowerMessage.includes('lost') || 
+         lowerMessage.includes('moving') || 
+         lowerMessage.includes('bad') ||
+         lowerMessage.includes('sad') ||
+         lowerMessage.includes('disappointing'))) {
+      detectedFeelings.push('sad');
+    }
   }
   
   return detectedFeelings;
 };
+
+/**
+ * Extracts specific contextual information from a message
+ * @param userMessage The user's message
+ * @returns Object with extracted contextual elements
+ */
+export const extractContextualElements = (userMessage: string) => {
+  const lowerMessage = userMessage.toLowerCase();
+  
+  // Extract sports teams or specific entities
+  const sportTeams = [
+    'browns', 'cavaliers', 'cavs', 'guardians', 'indians', 'monsters', 'charge',
+    'yankees', 'steelers', 'ravens', 'bengals', 'packers', 'chiefs', 'lakers',
+    'warriors', 'celtics', 'heat', 'red sox', 'cubs', 'cardinals'
+  ];
+  
+  const foundTeams = sportTeams.filter(team => lowerMessage.includes(team));
+  
+  // Extract locations
+  const locations = [
+    'cleveland', 'akron', 'baltimore', 'pittsburgh', 'cincinnati', 'columbus',
+    'ohio', 'cuyahoga', 'home', 'work', 'school', 'office', 'hospital'
+  ];
+  
+  const foundLocations = locations.filter(location => lowerMessage.includes(location));
+  
+  // Extract time references
+  const timeRegex = /\b(yesterday|today|tomorrow|last week|next week|soon|later|morning|evening|night|afternoon)\b/i;
+  const timeMatches = userMessage.match(timeRegex);
+  const timeContext = timeMatches ? timeMatches[0] : null;
+  
+  // Extract relationship references
+  const relationshipRegex = /\b(father|mother|dad|mom|husband|wife|partner|boss|coworker|friend|daughter|son|child|children|colleague|team|coach)\b/i;
+  const relationshipMatches = userMessage.match(relationshipRegex);
+  const relationshipContext = relationshipMatches ? relationshipMatches[0] : null;
+  
+  return {
+    sportTeams: foundTeams,
+    locations: foundLocations,
+    timeContext,
+    relationshipContext
+  };
+};
+

@@ -4,6 +4,7 @@
 
 import { FeelingCategory, ConversationStage, ContextAwareReflection } from './reflectionTypes';
 import { reflectionPhrases, generalReflections, meaningReflections } from './reflectionPhrases';
+import { extractContextualElements } from './feelingDetection';
 
 /**
  * Extracts key context from a user message
@@ -25,7 +26,9 @@ export const extractContext = (userMessage: string): string => {
   
   // Look for specific topics/themes
   const topics = ['family', 'work', 'school', 'relationship', 'friend', 'health', 'money', 
-                 'team', 'sport', 'game', 'music', 'art', 'politics', 'religion'];
+                 'team', 'sport', 'game', 'music', 'art', 'politics', 'religion', 'browns', 
+                 'cavaliers', 'cavs', 'guardians', 'indians', 'baltimore', 'cleveland', 
+                 'moving', 'relocation', 'coach', 'player', 'season'];
   
   const lowerMessage = userMessage.toLowerCase();
   
@@ -37,7 +40,64 @@ export const extractContext = (userMessage: string): string => {
   
   // Return unique contextual elements
   return [...new Set(contextKeywords)].join(' ');
-}
+};
+
+/**
+ * Creates a rich context-aware reflection by analyzing the user's message in depth
+ * @param userMessage The user's message
+ * @returns Contextual information for creating personalized reflections
+ */
+export const createRichContextReflection = (userMessage: string): ContextAwareReflection | null => {
+  const feelings = identifyFeelings(userMessage);
+  if (feelings.length === 0) return null;
+  
+  const primaryFeeling = feelings[0];
+  const contextElements = extractContextualElements(userMessage);
+  const significantPhrases = extractSignificantPhrases(userMessage);
+  
+  // Extract specific details about teams, locations, events
+  const specificDetails = [];
+  
+  // Handle sports teams specifically
+  if (contextElements.sportTeams.length > 0) {
+    const team = contextElements.sportTeams[0];
+    if (userMessage.toLowerCase().includes(`${team} moving`)) {
+      specificDetails.push(`the ${team} relocating`);
+    } else if (userMessage.toLowerCase().includes(`${team} lost`) || 
+              userMessage.toLowerCase().includes(`${team} losing`)) {
+      specificDetails.push(`the ${team} losing`);
+    } else {
+      specificDetails.push(`the ${team}`);
+    }
+  }
+  
+  // Add locations if mentioned
+  if (contextElements.locations.length > 0) {
+    specificDetails.push(contextElements.locations[0]);
+  }
+  
+  // Create the reflection object
+  const reflection: ContextAwareReflection = {
+    feeling: primaryFeeling,
+    context: extractContext(userMessage),
+    reflection: '', // Will be populated by the calling function
+    specificDetails: specificDetails.join(' and '),
+    relationshipContext: contextElements.relationshipContext || undefined,
+    timeContext: contextElements.timeContext || undefined,
+    locationContext: contextElements.locations.length > 0 ? contextElements.locations[0] : undefined
+  };
+  
+  return reflection;
+};
+
+/**
+ * Enhanced function that identifies feelings in the text
+ */
+const identifyFeelings = (userMessage: string): FeelingCategory[] => {
+  // Import here to avoid circular dependency
+  const { identifyFeelings: detectFeelings } = require('./feelingDetection');
+  return detectFeelings(userMessage);
+};
 
 /**
  * Generates a reflection of feeling based on detected emotions
@@ -51,6 +111,42 @@ export const createFeelingReflection = (feelings: FeelingCategory[], userMessage
     return createGeneralReflection(userMessage);
   }
 
+  // Try to create a rich, context-aware reflection
+  const richContext = createRichContextReflection(userMessage);
+  if (richContext) {
+    const phrases = reflectionPhrases[richContext.feeling] || [];
+    
+    if (phrases.length > 0) {
+      const basePhrase = phrases[Math.floor(Math.random() * phrases.length)];
+      
+      // Create a highly personalized reflection incorporating specific details
+      let personalizedReflection = basePhrase;
+      
+      // Add specific details if available
+      if (richContext.specificDetails) {
+        personalizedReflection += ` I notice you mentioned ${richContext.specificDetails}.`;
+      }
+      
+      // Add relationship context if available
+      if (richContext.relationshipContext) {
+        personalizedReflection += ` Your ${richContext.relationshipContext} seems important in this context.`;
+      }
+      
+      // Add follow-up question based on the emotion
+      if (richContext.feeling === 'sad') {
+        personalizedReflection += " Would you like to share more about how this is affecting you?";
+      } else if (richContext.feeling === 'angry') {
+        personalizedReflection += " What aspects of this situation have been most frustrating for you?";
+      } else if (richContext.feeling === 'anxious') {
+        personalizedReflection += " What specifically has been causing you the most concern?";
+      } else {
+        personalizedReflection += " Would you like to talk more about this?";
+      }
+      
+      return personalizedReflection;
+    }
+  }
+  
   // Select the most prominent feeling
   const primaryFeeling = feelings[0];
   
