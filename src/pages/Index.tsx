@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -133,7 +134,7 @@ const Index = () => {
             </CardContent>
             <CardFooter className="border-t pt-4 text-sm text-gray-500">
               <a 
-                href="https://calendly.com/cvmhw" 
+                href="https://calendly.com/ericmriesterer/" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="flex items-center gap-2 text-cvmhw-blue hover:text-cvmhw-purple transition-colors"
