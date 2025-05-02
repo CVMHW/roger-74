@@ -38,8 +38,8 @@ export const useConcernDetection = () => {
       return 'medical';
     }
     
-    // Check for mental health concerns
-    if (/depress|anxiety|bipolar|schizophrenia|ocd|ptsd|trauma|mental illness|mental health|diagnosis|therapist|psychiatrist/.test(lowerInput)) {
+    // Check for mental health concerns - make pattern more specific to avoid false positives
+    if (/\b(depress|anxiety|bipolar|schizophrenia|ocd|ptsd|trauma|mental illness|mental health|diagnosis|therapist|psychiatrist)\b/.test(lowerInput)) {
       return 'mental-health';
     }
     
@@ -49,12 +49,14 @@ export const useConcernDetection = () => {
     }
     
     // Check for substance use
-    if (/addict|alcohol|drunk|substance|drug|using|withdrawal|sober|recovery|clean|relapse|overdose/.test(lowerInput)) {
+    if (/\b(addict|alcohol|drunk|substance|drug|using|withdrawal|sober|recovery|clean|relapse|overdose)\b/.test(lowerInput)) {
       return 'substance-use';
     }
     
-    // Check for gambling concerns
-    if (/gambling|bet|casino|poker|slots|lottery|lost money|betting|won money/.test(lowerInput) && !/just a small bet|social gambling|once in a while/.test(lowerInput)) {
+    // Check for gambling concerns - stricter pattern to avoid false positives
+    if ((/\b(gambling|bet|casino|poker|slots|lottery)\b/.test(lowerInput) && 
+         /\b(lost money|betting|won money)\b/.test(lowerInput)) && 
+        !/just a small bet|social gambling|once in a while/.test(lowerInput)) {
       return 'mild-gambling';
     }
     

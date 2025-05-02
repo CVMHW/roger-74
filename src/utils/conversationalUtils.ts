@@ -197,6 +197,102 @@ export const generateMildSomaticResponse = (
 };
 
 /**
+ * Detect if a message indicates basic negative feeling states
+ * For simple expressions like "not great", "been better", etc.
+ */
+export const detectSimpleNegativeState = (userInput: string): {
+  isNegativeState: boolean;
+  intensity: 'mild' | 'moderate' | 'severe';
+} => {
+  const lowerInput = userInput.toLowerCase();
+  
+  // Check for simple negative expressions
+  const mildNegativePatterns = [
+    /been better/i,
+    /not (great|good)/i,
+    /feeling off/i,
+    /a little (down|off|low)/i,
+    /not myself/i,
+    /meh/i,
+    /so-so/i
+  ];
+  
+  const moderateNegativePatterns = [
+    /pretty (bad|rough|tough)/i,
+    /struggling/i,
+    /having a hard time/i,
+    /difficult (day|time|week)/i
+  ];
+  
+  const severeNegativePatterns = [
+    /terrible/i,
+    /awful/i,
+    /worst/i,
+    /really (bad|struggling)/i,
+    /can'?t (take|handle) (it|this)/i
+  ];
+  
+  // Check pattern matches
+  const hasMildNegative = mildNegativePatterns.some(pattern => pattern.test(lowerInput));
+  const hasModerateNegative = moderateNegativePatterns.some(pattern => pattern.test(lowerInput));
+  const hasSevereNegative = severeNegativePatterns.some(pattern => pattern.test(lowerInput));
+  
+  // Determine intensity
+  let intensity: 'mild' | 'moderate' | 'severe' = 'mild';
+  if (hasSevereNegative) {
+    intensity = 'severe';
+  } else if (hasModerateNegative) {
+    intensity = 'moderate';
+  }
+  
+  return {
+    isNegativeState: hasMildNegative || hasModerateNegative || hasSevereNegative,
+    intensity
+  };
+};
+
+/**
+ * Generate an immediate, human response to simple negative states
+ */
+export const generateSimpleNegativeStateResponse = (
+  userInput: string, 
+  negativeStateInfo: ReturnType<typeof detectSimpleNegativeState>
+): string => {
+  // Responses tailored to different intensity levels
+  const mildResponses = [
+    "I'm sorry to hear you're not feeling your best. What's been going on?",
+    "Sounds like things aren't great right now. Would you like to talk about it?",
+    "I hear that you're feeling a bit off today. What's on your mind?",
+    "Thanks for sharing that with me. Want to tell me more about what's happening?",
+    "I understand that feeling. What's contributing to you feeling this way?"
+  ];
+  
+  const moderateResponses = [
+    "I'm really sorry you're having a hard time. What's been most difficult for you?",
+    "That sounds tough. I'm here to listen if you want to talk more about it.",
+    "It can be really challenging when we're struggling. What might help you right now?",
+    "I appreciate you sharing that with me. What's weighing on you the most?",
+    "I'm here with you through this difficult time. What's been happening?"
+  ];
+  
+  const severeResponses = [
+    "I'm genuinely sorry things are so difficult right now. I'm here to listen.",
+    "That sounds really hard to deal with. I'm here with you, and I'm listening.",
+    "When things get that overwhelming, it helps to take it one step at a time. What's the most pressing thing for you right now?",
+    "I hear how hard this is. Would it help to talk through what's happening?",
+    "I'm here with you through this. What's been most overwhelming?"
+  ];
+  
+  // Select appropriate response pool based on intensity
+  const responsePool = negativeStateInfo.intensity === 'severe' ? severeResponses :
+                      negativeStateInfo.intensity === 'moderate' ? moderateResponses :
+                      mildResponses;
+  
+  // Select a random response from the appropriate pool
+  return responsePool[Math.floor(Math.random() * responsePool.length)];
+};
+
+/**
  * Enhanced function to generate appropriate conversational responses based on user input context
  * Incorporates Ohio context, filler word processing, and emotional/rhetorical handling
  * @param userInput User's message
@@ -218,7 +314,13 @@ export const generateConversationalResponse = (
     return generateMinimalInputResponse(userInput);
   }
   
-  // NEW: Check for mild somatic complaints before handling more serious medical concerns
+  // NEW: Check for simple negative state expressions
+  const negativeStateInfo = detectSimpleNegativeState(userInput);
+  if (negativeStateInfo.isNegativeState) {
+    return adaptToneForClientPreference(generateSimpleNegativeStateResponse(userInput, negativeStateInfo), clientPreferences);
+  }
+  
+  // Check for mild somatic complaints before handling more serious medical concerns
   const somaticInfo = detectMildSomaticComplaints(userInput);
   if (somaticInfo.isMildSomatic) {
     return adaptToneForClientPreference(generateMildSomaticResponse(userInput, somaticInfo), clientPreferences);

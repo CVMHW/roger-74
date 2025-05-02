@@ -27,6 +27,10 @@ import { distinguishSadnessFromDepression } from '../../utils/detectionUtils';
 import { identifyEnhancedFeelings } from '../../utils/reflection/feelingDetection';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
 import { generateGriefResponse, detectGriefThemes } from '../../utils/response/griefSupport';
+import { 
+  detectSimpleNegativeState,
+  generateSimpleNegativeStateResponse
+} from '../../utils/conversationalUtils';
 
 interface ResponseGeneratorParams {
   conversationStage: ConversationStage;
@@ -213,8 +217,13 @@ export const useResponseGenerator = ({
     concernType: ConcernType
   ): string => {
     try {
-      // New: Check for defensive reactions to mental health suggestions first
-      // This takes highest precedence to immediately de-escalate
+      // NEW: Check for simple negative state expressions first - highest priority for immediacy
+      const negativeStateInfo = detectSimpleNegativeState(userInput);
+      if (negativeStateInfo.isNegativeState) {
+        return generateSimpleNegativeStateResponse(userInput, negativeStateInfo);
+      }
+      
+      // Check for defensive reactions to mental health suggestions
       const defensiveReactionResponse = createDefensiveReactionResponse(userInput);
       if (defensiveReactionResponse) {
         return defensiveReactionResponse;
