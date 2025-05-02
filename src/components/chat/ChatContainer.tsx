@@ -11,7 +11,8 @@ const ChatContainer: React.FC = () => {
     isTyping, 
     handleSendMessage, 
     handleFeedback,
-    showCrisisResources
+    showCrisisResources,
+    processingContext // New context state to show when Roger is "thinking"
   } = useChatLogic();
 
   return (
@@ -26,7 +27,8 @@ const ChatContainer: React.FC = () => {
       <div className="flex-1 overflow-hidden">
         <MessageList 
           messages={messages} 
-          isTyping={isTyping} 
+          isTyping={isTyping}
+          processingContext={processingContext} // Pass processing context
           onFeedback={handleFeedback}
         />
       </div>

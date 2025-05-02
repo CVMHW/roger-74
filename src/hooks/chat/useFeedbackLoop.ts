@@ -11,6 +11,7 @@ import {
 /**
  * Enhanced hook for detecting and preventing feedback loops in conversation
  * UNCONDITIONAL RULE: Roger must never get stuck in a feedback loop
+ * UNCONDITIONAL RULE: Roger listens first, then responds, and is never automatic in responses
  */
 export const useFeedbackLoop = (
   simulateTypingResponse: (response: string, callback: (text: string) => void) => void,
@@ -28,6 +29,54 @@ export const useFeedbackLoop = (
   // Reference to the last user message for context
   const lastUserMessageRef = useRef<string>("");
   
+  // Add response throttling to prevent quick successive responses
+  const [lastResponseTime, setLastResponseTime] = useState<number>(0);
+  const minResponseTimeGap = useRef<number>(1500); // Minimum 1.5 seconds between responses
+  
+  /**
+   * Check if a response is being sent too quickly after the previous one
+   * Returns true if response should be delayed
+   */
+  const shouldThrottleResponse = (): boolean => {
+    const now = Date.now();
+    const timeSinceLastResponse = now - lastResponseTime;
+    
+    // If less than minimum gap, we should throttle
+    return timeSinceLastResponse < minResponseTimeGap.current;
+  };
+  
+  /**
+   * Update the last response time whenever Roger sends a message
+   */
+  const updateResponseTimestamp = () => {
+    setLastResponseTime(Date.now());
+  };
+  
+  /**
+   * Get the appropriate delay time for a response based on content sensitivity
+   */
+  const getResponseDelay = (content: string): number => {
+    // For sensitive topics, add more thinking time
+    const lowerContent = content.toLowerCase();
+    
+    if (lowerContent.includes('suicide') || 
+        lowerContent.includes('kill') || 
+        lowerContent.includes('die') ||
+        lowerContent.includes('harm')) {
+      // 3-4 second delay for crisis content
+      return 3000 + Math.random() * 1000;
+    } else if (lowerContent.includes('sad') || 
+               lowerContent.includes('death') || 
+               lowerContent.includes('died') || 
+               lowerContent.includes('passed away')) {
+      // 2-3 second delay for emotional content
+      return 2000 + Math.random() * 1000;
+    }
+    
+    // 1-2 second base delay for normal content
+    return 1000 + Math.random() * 1000;
+  };
+  
   /**
    * Add Roger's response to history and check for repetition
    */
@@ -39,6 +88,9 @@ export const useFeedbackLoop = (
       const newHistory = [...prev, responseText];
       return newHistory.length > 5 ? newHistory.slice(-5) : newHistory;
     });
+    
+    // Update response timestamp to prevent too-quick follow-ups
+    updateResponseTimestamp();
     
     // Check for and count repetitions
     setRepetitionCount(prev => {
@@ -112,17 +164,19 @@ export const useFeedbackLoop = (
       // Create Roger's response to acknowledge the problem
       const rogerResponse = createMessage(recoveryResponse, 'roger');
       
-      // Add the response
-      setMessages(prevMessages => [...prevMessages, rogerResponse]);
+      // Add the response after an appropriate delay
+      setTimeout(() => {
+        setMessages(prevMessages => [...prevMessages, rogerResponse]);
       
-      // Simulate typing
-      simulateTypingResponse(recoveryResponse, (text) => {
-        setMessages(prevMessages => 
-          prevMessages.map(msg => 
-            msg.id === rogerResponse.id ? { ...msg, text } : msg
-          )
-        );
-      });
+        // Simulate typing
+        simulateTypingResponse(recoveryResponse, (text) => {
+          setMessages(prevMessages => 
+            prevMessages.map(msg => 
+              msg.id === rogerResponse.id ? { ...msg, text } : msg
+            )
+          );
+        });
+      }, getResponseDelay(userInput));
       
       // Reset repetition counts after recovery
       setRepetitionCount({});
@@ -205,21 +259,23 @@ export const useFeedbackLoop = (
       recoveryResponse = "I notice I may have been repeating myself, which isn't helpful. I'd like to focus specifically on what you've shared. Could you tell me more about what's been most on your mind?";
     }
     
-    // Create and add the response
-    const rogerResponse = createMessage(recoveryResponse, 'roger');
-    setMessages(prevMessages => [...prevMessages, rogerResponse]);
-    
-    // Simulate typing
-    simulateTypingResponse(recoveryResponse, (text) => {
-      setMessages(prevMessages => 
-        prevMessages.map(msg => 
-          msg.id === rogerResponse.id ? { ...msg, text } : msg
-        )
-      );
-    });
-    
-    // Reset repetition counts after recovery
-    setRepetitionCount({});
+    // Create and add the response after an appropriate delay
+    setTimeout(() => {
+      const rogerResponse = createMessage(recoveryResponse, 'roger');
+      setMessages(prevMessages => [...prevMessages, rogerResponse]);
+      
+      // Simulate typing
+      simulateTypingResponse(recoveryResponse, (text) => {
+        setMessages(prevMessages => 
+          prevMessages.map(msg => 
+            msg.id === rogerResponse.id ? { ...msg, text } : msg
+          )
+        );
+      });
+      
+      // Reset repetition counts after recovery
+      setRepetitionCount({});
+    }, getResponseDelay(specificFocus));
   };
   
   // Reset the feedback loop flag if enough new, varied responses occur
@@ -241,6 +297,8 @@ export const useFeedbackLoop = (
     feedbackLoopDetected,
     setFeedbackLoopDetected,
     checkFeedbackLoop,
-    trackRogerResponse
+    trackRogerResponse,
+    shouldThrottleResponse,
+    getResponseDelay
   };
 };

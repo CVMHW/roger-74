@@ -13,6 +13,8 @@ import { useMessageProcessor } from './useMessageProcessor';
 
 /**
  * Hook that contains the main chat business logic
+ * UNCONDITIONAL RULE: Roger will answer inquiries with pinpoint accuracy
+ * UNCONDITIONAL RULE: Roger listens first, then responds, never automatic
  */
 export const useChatLogic = () => {
   // Core state
@@ -20,6 +22,9 @@ export const useChatLogic = () => {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [showCrisisResources, setShowCrisisResources] = useState<boolean>(false);
   const [consecutiveGenericResponses, setConsecutiveGenericResponses] = useState(0);
+  
+  // Add processing context to show what Roger is "thinking" about
+  const [processingContext, setProcessingContext] = useState<string | null>(null);
   
   // Toast notification
   const { toast } = useToast();
@@ -36,7 +41,9 @@ export const useChatLogic = () => {
     feedbackLoopDetected, 
     checkFeedbackLoop, 
     setFeedbackLoopDetected,
-    trackRogerResponse
+    trackRogerResponse,
+    shouldThrottleResponse,
+    getResponseDelay
   } = useFeedbackLoop(simulateTypingResponse, setMessages);
   
   // Message history hooks
@@ -63,6 +70,34 @@ export const useChatLogic = () => {
     return genericPatterns.some(pattern => pattern.test(response));
   }, []);
   
+  // Double check if a response is appropriate based on conversation context
+  const validateResponse = useCallback((response: string, userInput: string, userHistory: string[]): boolean => {
+    // Check for repetitive responses
+    if (rogerResponseHistory.length > 0) {
+      const lastRogerResponse = rogerResponseHistory[rogerResponseHistory.length - 1];
+      if (lastRogerResponse && lastRogerResponse.toLowerCase().includes(response.toLowerCase())) {
+        console.warn("RESPONSE VALIDATION: Detected potential repetition");
+        return false;
+      }
+    }
+    
+    // Check for inappropriate generic responses to specific topics
+    const isAboutPet = /pet|dog|cat|animal|died|passed|molly/i.test(userInput);
+    if (isAboutPet && isGenericResponse(response)) {
+      console.warn("RESPONSE VALIDATION: Generic response to pet topic");
+      return false;
+    }
+    
+    // Check for responses that don't acknowledge user's explicit mentions
+    const mentionedPetDeath = /my pet (died|passed)/i.test(userInput);
+    if (mentionedPetDeath && !/(sorry|pet|loss|died|passed)/i.test(response)) {
+      console.warn("RESPONSE VALIDATION: Failed to acknowledge pet death");
+      return false;
+    }
+    
+    return true;
+  }, [rogerResponseHistory, isGenericResponse]);
+  
   // Message processing hook with enhanced repetition detection
   const { processResponse } = useMessageProcessor({
     processUserMessage,
@@ -71,6 +106,9 @@ export const useChatLogic = () => {
     activeLocationConcern,
     setActiveLocationConcern,
     simulateTypingResponse,
+    shouldThrottleResponse,
+    getResponseDelay,
+    setProcessingContext,
     updateRogerResponseHistory: (responseText: string) => {
       // Track the response for feedback loop detection
       trackRogerResponse(responseText);
@@ -89,7 +127,7 @@ export const useChatLogic = () => {
           // Generate a specific acknowledgment based on the user's input
           const specificResponse = createSpecificResponse(lastUserMessage, userMessageHistory);
           
-          // Replace the generic response with a specific one
+          // Replace the generic response with a specific one after a deliberate pause
           setTimeout(() => {
             const specificMsg = createMessage(specificResponse, 'roger');
             
@@ -114,7 +152,7 @@ export const useChatLogic = () => {
             
             // Reset the counter
             setConsecutiveGenericResponses(0);
-          }, 100);
+          }, getResponseDelay(lastUserMessage));
         }
       } else {
         // Reset the counter if we get a non-generic response
@@ -185,6 +223,15 @@ export const useChatLogic = () => {
       // Update user message history for context awareness
       updateUserMessageHistory(userInput);
       
+      // Show processing context immediately to indicate Roger is "thinking"
+      let context = "Roger is listening...";
+      if (checkForCrisisContent(userInput)) {
+        context = "Roger is carefully considering your message...";
+      } else if (/pet|dog|cat|animal|died|passed away/i.test(userInput)) {
+        context = "Roger is reflecting on what you shared...";
+      }
+      setProcessingContext(context);
+      
       // UNCONDITIONAL RULE: Always check for feedback loops first
       if (checkFeedbackLoop(userInput, userMessageHistory)) {
         setIsProcessing(false);
@@ -210,7 +257,7 @@ export const useChatLogic = () => {
         setFeedbackLoopDetected(false);
       }
       
-      // Process user input normally
+      // Process user input normally, with appropriate throttling
       processResponse(userInput);
       
     } catch (error) {
@@ -232,10 +279,16 @@ export const useChatLogic = () => {
         );
       }
       
-      setMessages(prevMessages => [...prevMessages, errorResponse]);
+      // Add the error response after a brief delay to simulate thinking time
+      setTimeout(() => {
+        setMessages(prevMessages => [...prevMessages, errorResponse]);
+        
+        // Clear the processing context
+        setProcessingContext(null);
+      }, 1500);
       
     } finally {
-      setIsProcessing(false);
+      // setIsProcessing(false) will be called after response is generated
     }
   }, [
     isProcessing,
@@ -250,15 +303,21 @@ export const useChatLogic = () => {
     simulateTypingResponse,
     feedbackLoopDetected,
     setFeedbackLoopDetected,
-    processResponse
+    processResponse,
+    setProcessingContext
   ]);
 
   // Reset processing state when typing indicator changes
   useEffect(() => {
     if (!isTyping && isProcessing) {
       setIsProcessing(false);
+      
+      // Clear processing context when typing stops
+      if (processingContext) {
+        setProcessingContext(null);
+      }
     }
-  }, [isTyping, isProcessing]);
+  }, [isTyping, isProcessing, processingContext]);
   
   return {
     messages,
@@ -266,6 +325,7 @@ export const useChatLogic = () => {
     isProcessing,
     handleSendMessage,
     handleFeedback,
-    showCrisisResources
+    showCrisisResources,
+    processingContext
   };
 };
