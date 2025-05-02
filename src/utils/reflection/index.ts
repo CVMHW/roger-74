@@ -1,3 +1,4 @@
+
 /**
  * Main reflection module that integrates all reflection utilities
  */
@@ -6,6 +7,7 @@ import { ConversationStage, DevelopmentalStage } from './reflectionTypes';
 import { identifyFeelings } from './feelingDetection';
 import { createFeelingReflection, createMeaningReflection, createGeneralReflection } from './reflectionGenerators';
 import { shouldUseReflection, detectDevelopmentalStage, generateAgeAppropriateReflection } from './reflectionStrategies';
+import { generateConversationStarterResponse } from './ageAppropriateConversation';
 
 /**
  * Generates an appropriate reflection response based on user's message
@@ -43,7 +45,14 @@ export const generateReflectionResponse = (userMessage: string, conversationStag
     if (conversationStage === 'initial' || conversationStage === 'early') {
       // Check for developmental stage for age-appropriate response
       if (developmentalStage && developmentalStage !== 'adult') {
-        return generateAgeAppropriateReflection(userMessage, '', developmentalStage);
+        // Try generating an age-appropriate conversation starter sometimes
+        if (Math.random() < 0.3) { // 30% chance
+          const basicResponse = generateAgeAppropriateReflection(userMessage, '', developmentalStage);
+          const starter = generateConversationStarterResponse(developmentalStage);
+          return `${basicResponse} ${starter}`;
+        } else {
+          return generateAgeAppropriateReflection(userMessage, '', developmentalStage);
+        }
       }
       
       const meaningReflection = createMeaningReflection(userMessage);
@@ -79,3 +88,4 @@ export * from './reflectionStrategies';
 export * from './feelingCategories';
 export * from './reflectionPhrases';
 export * from './reflectionPrinciples';
+export * from './ageAppropriateConversation';
