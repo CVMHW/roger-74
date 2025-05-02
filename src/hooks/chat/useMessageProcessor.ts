@@ -38,8 +38,9 @@ export const useMessageProcessor = ({
       setMessages(prevMessages => [...prevMessages, rogerResponse]);
       
       // Set up to request location after this message if needed
+      const messageUtils = require('../../utils/messageUtils');
       if (rogerResponse.concernType && 
-          require('../../utils/messageUtils').isLocationDataNeeded(rogerResponse.concernType) && 
+          messageUtils.isLocationDataNeeded(rogerResponse.concernType) && 
           !activeLocationConcern) {
         
         setActiveLocationConcern({

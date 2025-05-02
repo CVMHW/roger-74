@@ -35,7 +35,11 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
           className="resize-none"
           rows={2}
         />
-        <Button onClick={handleSendMessage} className="bg-roger hover:bg-roger-dark">
+        <Button 
+          type="button"
+          onClick={handleSendMessage} 
+          className="bg-roger hover:bg-roger-dark"
+        >
           <Send size={18} />
         </Button>
       </div>

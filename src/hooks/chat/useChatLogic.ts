@@ -15,7 +15,10 @@ import { useMessageProcessor } from './useMessageProcessor';
  * Hook that contains the main chat business logic
  */
 export const useChatLogic = () => {
+  // Core state
   const [messages, setMessages] = useState<MessageType[]>(getInitialMessages());
+  
+  // Hook imports
   const { isTyping, processUserMessage, simulateTypingResponse } = useRogerianResponse();
   const { toast } = useToast();
   
@@ -23,8 +26,17 @@ export const useChatLogic = () => {
   const { activeLocationConcern, handleLocationData, setActiveLocationConcern } = useLocationConcern();
   const { recentCrisisMessage, handleCrisisMessage, checkDeception } = useCrisisDetection(simulateTypingResponse, setMessages);
   const { feedbackLoopDetected, checkFeedbackLoop, setFeedbackLoopDetected } = useFeedbackLoop(simulateTypingResponse, setMessages);
-  const { rogerResponseHistory, updateRogerResponseHistory, userMessageHistory, updateUserMessageHistory } = useMessageHistory();
+  const { 
+    rogerResponseHistory, 
+    userMessageHistory, 
+    updateRogerResponseHistory, 
+    updateUserMessageHistory 
+  } = useMessageHistory();
+  
+  // Hook to handle feedback
   const { handleFeedback } = useFeedbackHandler(setMessages, toast);
+  
+  // Message processing hook
   const { processResponse } = useMessageProcessor({
     processUserMessage,
     setMessages,
@@ -36,7 +48,7 @@ export const useChatLogic = () => {
   });
 
   // Main function to handle sending messages
-  const handleSendMessage = (userInput: string) => {
+  const handleSendMessage = useCallback((userInput: string) => {
     if (!userInput.trim()) return;
 
     // Add user message
@@ -71,7 +83,20 @@ export const useChatLogic = () => {
     
     // Process user input normally
     processResponse(userInput);
-  };
+  }, [
+    setMessages,
+    updateUserMessageHistory,
+    checkFeedbackLoop,
+    userMessageHistory,
+    handleLocationData,
+    activeLocationConcern,
+    checkDeception,
+    recentCrisisMessage,
+    simulateTypingResponse,
+    feedbackLoopDetected,
+    setFeedbackLoopDetected,
+    processResponse
+  ]);
   
   return {
     messages,
@@ -80,4 +105,3 @@ export const useChatLogic = () => {
     handleFeedback
   };
 };
-
