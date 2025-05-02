@@ -7,7 +7,7 @@ export type ConversationStage = 'initial' | 'early' | 'middle' | 'established';
 
 export type FeelingCategory = 'angry' | 'happy' | 'sad' | 'anxious' | 'confused' | 'relieved' | 'overwhelmed';
 
-export type DevelopmentalStage = 'infant_toddler' | 'young_child' | 'middle_childhood' | 'adolescent' | 'adult';
+export type DevelopmentalStage = 'infant_toddler' | 'young_child' | 'middle_childhood' | 'adolescent' | 'adult' | 'young_adult';
 
 export type ChildEmotionCategory = 'happy' | 'mad' | 'sad' | 'scared' | 'excited' | 'tired' | 'worried' | 'loved' | 'confused' | 'silly' | 'hungry' | 'calm';
 
@@ -37,4 +37,31 @@ export interface EnhancedFeeling {
     translation: string;
     category: ChildEmotionCategory;
   };
+}
+
+// Add missing interfaces to fix build errors
+export interface ChildWheelEmotionData {
+  detectedFeeling: string;
+  category: ChildEmotionCategory;
+  color: string;
+  relatedFeelings: string[];
+  simpleDescription?: string;
+}
+
+export interface ContextAwareReflection {
+  keywords: string[];
+  phrases: string[];
+  priority: number;
+}
+
+export interface ReflectionPhrases {
+  opening: string[];
+  middle: string[];
+  closing: string[];
+}
+
+export interface ReflectionPrinciple {
+  name: string;
+  description: string;
+  examples: string[];
 }

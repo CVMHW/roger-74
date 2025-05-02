@@ -1,3 +1,4 @@
+
 /**
  * Utilities for detecting various concerns in user messages
  */
@@ -238,6 +239,22 @@ export const detectPTSDConcerns = (message: string): { detected: boolean; severi
     'insomnia', 'scream in sleep', 'night terror', 'thrash in sleep',
     'act out dreams', 'violent dreams'
   ];
+  
+  // New: Anxiety comorbidity indicators specific to PTSD vs GAD differentiation
+  const anxietyComorbidityKeywords = [
+    'worried all the time', 'constant worry', 'excessive worry',
+    'generalized anxiety', 'gad', 'worry about everything',
+    'can\'t stop worrying', 'anxious thoughts', 'ruminating'
+  ];
+  
+  // Check if anxiety appears to be primary concern (GAD) vs trauma-related
+  const hasGeneralAnxietyFocus = anxietyComorbidityKeywords.some(keyword => lowerMessage.includes(keyword)) &&
+                               !moderatePTSDKeywords.some(keyword => lowerMessage.includes(keyword));
+  
+  // If anxiety appears to be primary without trauma indicators, don't classify as PTSD
+  if (hasGeneralAnxietyFocus) {
+    return { detected: false, severity: 'mild' };
+  }
   
   // Check for severity based on quantity and quality of symptoms described
   // If severe PTSD keywords are present or many moderate ones

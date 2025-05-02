@@ -1,4 +1,3 @@
-
 /**
  * Utilities for detecting feelings in user messages
  * Enhanced with the Feelings Wheel model for better emotional understanding
@@ -60,7 +59,9 @@ export const identifyEnhancedFeelings = (userMessage: string): EnhancedFeelingRe
   
   // Detect developmental stage to prioritize appropriate emotion detection
   const developmentalStage = detectDevelopmentalStage(userMessage);
-  const isChild = developmentalStage && developmentalStage !== 'adult' && developmentalStage !== 'young_adult';
+  const isChild = developmentalStage && 
+                  developmentalStage !== 'adult' && 
+                  developmentalStage !== 'young_adult';
   
   // Get sadness vs. depression distinction
   const emotionalDistinction = distinguishSadnessFromDepression(userMessage);
@@ -301,7 +302,7 @@ const mapWheelEmotionToCategory = (wheelEmotion: string): FeelingCategory | unde
     'sad': 'sad',
     'fearful': 'anxious',
     'angry': 'angry',
-    'disgusted': 'embarrassed',
+    'disgusted': 'confused', // Changed from 'embarrassed' to use a valid FeelingCategory
     'surprised': 'confused'
   };
   
@@ -343,7 +344,8 @@ export const detectAgeAppropriateEmotions = (text: string, stage: DevelopmentalS
   emotions: string[];
   childFriendly: boolean;
 } => {
-  const isChild = stage !== 'adult' && stage !== 'young_adult';
+  const isChild = stage !== 'adult' && 
+                 stage !== 'young_adult';
   const enhancedFeelings = identifyEnhancedFeelings(text);
   
   if (isChild) {
