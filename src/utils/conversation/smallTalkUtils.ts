@@ -16,6 +16,9 @@ export const smallTalkTopics = [
       "What do you think of this space?",
       "Did you have any trouble finding our office today?",
       "How was the drive/commute here?",
+      // New Cleveland-specific weather questions
+      "Cleveland weather can change quickly. Do you prefer our winters or summers?",
+      "It's typical Cleveland weather today. How does it compare to yesterday?"
     ]
   },
   {
@@ -25,6 +28,9 @@ export const smallTalkTopics = [
       "Have you had a chance to take a break today?",
       "Did you get a chance to enjoy the weekend?",
       "What's been the highlight of your day so far?",
+      // New wellness questions with Cleveland context
+      "There's so much going on in Cleveland right now. Have you been able to relax lately?",
+      "Cleveland can be busy. What do you do to unwind?"
     ]
   },
   {
@@ -34,6 +40,9 @@ export const smallTalkTopics = [
       "Have you read any good books recently?",
       "What kinds of things do you enjoy doing in your free time?",
       "Do you have any hobbies that help you relax?",
+      // New Cleveland-specific interest questions
+      "Have you checked out any of the local Cleveland bands or music venues?",
+      "There are some great spots for photography around Cleveland. Are you into taking pictures?"
     ]
   },
   {
@@ -43,6 +52,12 @@ export const smallTalkTopics = [
       "What's your favorite thing about this area?",
       "Have you been to any of the parks around here?",
       "Have you tried any good restaurants in this neighborhood?",
+      // Enhanced Cleveland questions
+      "The West Side Market is pretty popular. Have you been there?",
+      "Cleveland's sports teams have been interesting to follow lately. Do you have a favorite?",
+      "The Cleveland Metroparks are amazing. Do you have a favorite trail or spot?",
+      "The Rock Hall sometimes has special exhibits. Have you visited recently?",
+      "The Cleveland food scene is pretty diverse. Have you tried any local restaurants lately?"
     ]
   },
   {
@@ -52,6 +67,9 @@ export const smallTalkTopics = [
       "Would you like something to drink while you're waiting?",
       "How are you feeling about your appointment today?",
       "Is there anything specific you'd like to talk about while waiting?",
+      // New comfortable waiting questions
+      "Sometimes waiting rooms can be a lot. Is the temperature in here okay for you?",
+      "I'm here to make your wait easier. Would you prefer to chat or have some quiet time?"
     ]
   }
 ];
@@ -156,7 +174,14 @@ export const shouldUseSmallTalk = (
     /waiting for/i,
     /bored/i,
     /quiet in here/i,
-    /how long/i
+    /how long/i,
+    // New Cleveland-specific indicators
+    /Cleveland/i,
+    /Browns|Cavaliers|Cavs|Guardians/i,
+    /Lake Erie/i,
+    /West Side Market/i,
+    /Metroparks/i,
+    /Rock Hall|Rock and Roll/i
   ];
   
   // Check if the user's message is brief (likely small talk)
@@ -201,7 +226,10 @@ export const generateSmallTalkResponse = (
       "While you're waiting for Eric, I'm here to chat. How are you feeling today?",
       "It's nice to have this time to connect while you're waiting. Is there anything specific you'd like to talk about?",
       "Sometimes the waiting room can be a good place to collect your thoughts. How are you doing today?",
-      "I'm here to help make your wait more comfortable. How has your day been going so far?"
+      "I'm here to help make your wait more comfortable. How has your day been going so far?",
+      // New Cleveland-specific early responses
+      "Cleveland weather keeps us guessing. How's your day going so far?",
+      "While you're waiting to see Dr. Eric, we can chat about anything you'd like - maybe something about Cleveland or just how your day's going?"
     ];
     return earlyResponses[Math.floor(Math.random() * earlyResponses.length)];
   }
@@ -236,7 +264,10 @@ export const generateSmallTalkResponse = (
     "While we're waiting for Eric, is there anything that's been on your mind that you'd like to talk about?",
     "Sometimes a short conversation can help pass the time. Is there a topic you'd enjoy discussing?",
     "How are you feeling about your upcoming session with Eric?",
-    "Is there anything that would make you more comfortable while waiting?"
+    "Is there anything that would make you more comfortable while waiting?",
+    // New Cleveland-specific later responses
+    "Cleveland has some great places to visit. Any spots around here you enjoy?",
+    "The Cleveland weather has been interesting lately. How has it been affecting your week?"
   ];
   
   return laterSmallTalk[Math.floor(Math.random() * laterSmallTalk.length)];

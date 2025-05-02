@@ -9,7 +9,8 @@ import {
   createWeatherRelatedResponse,
   createTraumaResponseMessage,
   createSadnessResponse,
-  createMildGamblingResponse
+  createMildGamblingResponse,
+  createOhioContextResponse
 } from './handlers';
 
 export {
@@ -17,5 +18,6 @@ export {
   createWeatherRelatedResponse,
   createTraumaResponseMessage,
   createSadnessResponse,
-  createMildGamblingResponse
+  createMildGamblingResponse,
+  createOhioContextResponse
 };

@@ -6,6 +6,7 @@ import { ConversationStage } from '../../hooks/response/conversationStageManager
 import { detectDevelopmentalStage } from '../reflection/reflectionStrategies';
 import { shouldUseConversationStarter, generateConversationStarterResponse } from '../reflection/ageAppropriateConversation';
 import { getRogerPerspectivePhrase } from './personalityHelpers';
+import { createOhioContextResponse } from './handlers/ohioContextHandler';
 
 /**
  * Handles the logic for early conversation responses
@@ -20,6 +21,13 @@ export const handleEarlyConversation = (
   // Check for introductions if this is the first interaction
   if (isIntroduction(userInput) && !introductionMade) {
     return generateIntroductionResponse();
+  }
+  
+  // Check for Ohio-specific contexts to create more locally-aware responses
+  // This helps Roger connect through regional knowledge
+  const ohioContextResponse = createOhioContextResponse(userInput);
+  if (ohioContextResponse) {
+    return ohioContextResponse;
   }
   
   // Process any personal sharing with explicit feelings
@@ -49,8 +57,9 @@ export const handleEarlyConversation = (
     return reflectionResponse;
   }
   
-  // If no reflection was generated, check for small talk
+  // Enhanced check for small talk with improved detection
   if (isSmallTalk(userInput)) {
+    // Use Cleveland-aware small talk responses for more natural conversation
     return generateSmallTalkResponse(userInput, messageCount);
   }
   
