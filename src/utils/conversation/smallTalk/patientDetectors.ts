@@ -10,10 +10,10 @@
  * Detects if the user is likely a child based on their message
  */
 export const isLikelyChild = (userInput: string): boolean => {
-  // Import the child detection function from ohioContextManager
+  // Import the child detection function from ohio module
   // for consistency across the application
   try {
-    const { detectChildPatient } = require('../../conversationEnhancement/ohioContextManager');
+    const { detectChildPatient } = require('../../conversationEnhancement/ohio');
     return detectChildPatient(userInput);
   } catch (e) {
     // Fallback if import fails
@@ -32,10 +32,10 @@ export const isLikelyChild = (userInput: string): boolean => {
  * Detects if the user is likely a newcomer based on their message
  */
 export const isLikelyNewcomer = (userInput: string): boolean => {
-  // Import the newcomer detection function from ohioContextManager
+  // Import the newcomer detection function from ohio module
   // for consistency across the application
   try {
-    const { detectNewcomerPatient } = require('../../conversationEnhancement/ohioContextManager');
+    const { detectNewcomerPatient } = require('../../conversationEnhancement/ohio');
     return detectNewcomerPatient(userInput);
   } catch (e) {
     // Fallback if import fails

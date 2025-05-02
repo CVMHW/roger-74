@@ -5,7 +5,7 @@ import {
   mapReferenceToMentalHealthTopic, 
   detectChildPatient, 
   detectNewcomerPatient 
-} from '../../conversationEnhancement/ohioContextManager';
+} from '../../conversationEnhancement/ohio';
 
 /**
  * Creates a response that incorporates Ohio-specific context and references
