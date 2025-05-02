@@ -5,6 +5,7 @@ import { createMessage } from '../../utils/messageUtils';
 import { calculateMinimumResponseTime } from '../../utils/masterRules';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
 import { detectGriefThemes } from '../../utils/response/griefSupport';
+import { detectPoliticalEmotions } from '../../utils/conversationalUtils';
 
 interface ResponseProcessingParams {
   ensureResponseCompliance: (response: string) => string;
@@ -54,6 +55,10 @@ export const useResponseProcessing = ({
     const griefThemes = detectGriefThemes(userInput);
     const hasSignificantGrief = griefThemes.themeIntensity >= 4;
     
+    // Detect political emotions - these need rapid responses
+    const politicalEmotions = detectPoliticalEmotions(userInput);
+    const hasPoliticalEmotions = politicalEmotions.isPolitical;
+    
     // Check for trauma response patterns
     let traumaResponsePatterns = null;
     try {
@@ -83,6 +88,24 @@ export const useResponseProcessing = ({
                                   isMildGambling ? 3 : 
                                   hasSignificantGrief ? 7 : 
                                   youngAdultConcern ? 5 : 4;
+    
+    // Political emotions should be responded to quickly
+    if (hasPoliticalEmotions) {
+      // Lower complexity for faster, more conversational response
+      estimatedComplexity = 3;
+      
+      // But still acknowledge the emotional weight
+      if (politicalEmotions.emotionExpressed === 'angry') {
+        estimatedEmotionalWeight = 5;
+      } else if (politicalEmotions.emotionExpressed === 'upset') {
+        estimatedEmotionalWeight = 4;
+      } else {
+        estimatedEmotionalWeight = 3;
+      }
+      
+      // Apply specific multiplier to ensure quick responses to political content
+      responseTimeMultiplier = 0.7; // 30% faster than normal
+    }
     
     // Further adjust based on specific grief severity
     if (hasSignificantGrief) {

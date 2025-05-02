@@ -1,3 +1,4 @@
+
 /**
  * Utilities for generating conversational responses
  */
@@ -293,6 +294,105 @@ export const generateSimpleNegativeStateResponse = (
 };
 
 /**
+ * Detect political or news-related topics that have emotional content
+ * @param userInput The user's message
+ * @returns Whether political content was detected and its specific nature
+ */
+export const detectPoliticalEmotions = (userInput: string): {
+  isPolitical: boolean;
+  politicalFigure: string | null;
+  emotionExpressed: 'upset' | 'angry' | 'concerned' | 'supportive' | 'neutral' | null;
+} => {
+  const lowerInput = userInput.toLowerCase();
+  
+  // Check for political figures
+  const politicalFigures = {
+    'trump': /\b(trump|donald trump|president trump|45th president)\b/i,
+    'biden': /\b(biden|joe biden|president biden|46th president)\b/i,
+    'obama': /\b(obama|barack obama|44th president)\b/i,
+    'harris': /\b(harris|kamala|vice president|vp harris)\b/i,
+    'congress': /\b(congress|senate|house of representatives|capitol)\b/i,
+    'politicians': /\b(politicians|elected officials|representatives|senators)\b/i
+  };
+  
+  // Check for emotional indicators
+  const emotionIndicators = {
+    'upset': /\b(upset|sad|disappointed|let down|disheartened)\b/i,
+    'angry': /\b(angry|mad|pissed|furious|outraged|hate|can'?t stand)\b/i,
+    'concerned': /\b(worried|concerned|anxious|fearful|scared|afraid)\b/i,
+    'supportive': /\b(support|like|admire|agree|believe in)\b/i
+  };
+  
+  // Detect political figure
+  let detectedPoliticalFigure: string | null = null;
+  
+  for (const [figure, pattern] of Object.entries(politicalFigures)) {
+    if (pattern.test(userInput)) {
+      detectedPoliticalFigure = figure;
+      break;
+    }
+  }
+  
+  // If no political figure detected, it's not political
+  if (!detectedPoliticalFigure) {
+    return {
+      isPolitical: false,
+      politicalFigure: null,
+      emotionExpressed: null
+    };
+  }
+  
+  // Detect emotion
+  let detectedEmotion: 'upset' | 'angry' | 'concerned' | 'supportive' | 'neutral' | null = null;
+  
+  for (const [emotion, pattern] of Object.entries(emotionIndicators) as [string, RegExp][]) {
+    if (pattern.test(userInput)) {
+      detectedEmotion = emotion as any;
+      break;
+    }
+  }
+  
+  // Default to neutral if no emotion detected
+  if (!detectedEmotion) {
+    detectedEmotion = 'neutral';
+  }
+  
+  return {
+    isPolitical: true,
+    politicalFigure: detectedPoliticalFigure,
+    emotionExpressed: detectedEmotion
+  };
+};
+
+/**
+ * Generate an appropriate response to political emotions
+ * Focuses on the emotional experience rather than the political content
+ */
+export const generatePoliticalEmotionResponse = (
+  userInput: string,
+  politicalInfo: ReturnType<typeof detectPoliticalEmotions>
+): string => {
+  if (!politicalInfo.isPolitical) {
+    return "";
+  }
+  
+  // Focus on the emotion rather than the political topic
+  switch (politicalInfo.emotionExpressed) {
+    case 'upset':
+      return "I hear that you're feeling upset about this. Politics can definitely bring up strong emotions for many of us. Would you like to talk more about how it's affecting you?";
+    case 'angry':
+      return "I can hear the frustration in what you're sharing. It sounds like this has really stirred up some strong feelings for you. What about this situation is most upsetting?";
+    case 'concerned':
+      return "It sounds like you have some concerns about what's happening. Many people find the political climate anxiety-provoking these days. How has it been affecting you?";
+    case 'supportive':
+      return "I hear you have some positive feelings about this. It can be helpful to identify what matters to us in our civic life. What values are most important to you?";
+    case 'neutral':
+    default:
+      return "Thanks for sharing your thoughts on this political topic. I'm curious about what aspects of this matter most to you personally?";
+  }
+};
+
+/**
  * Enhanced function to generate appropriate conversational responses based on user input context
  * Incorporates Ohio context, filler word processing, and emotional/rhetorical handling
  * @param userInput User's message
@@ -312,6 +412,12 @@ export const generateConversationalResponse = (
   const words = userInput.trim().split(/\s+/);
   if (words.length <= 3 && !userInput.includes('?')) {
     return generateMinimalInputResponse(userInput);
+  }
+  
+  // Check for political emotional content
+  const politicalInfo = detectPoliticalEmotions(userInput);
+  if (politicalInfo.isPolitical) {
+    return adaptToneForClientPreference(generatePoliticalEmotionResponse(userInput, politicalInfo), clientPreferences);
   }
   
   // NEW: Check for simple negative state expressions
@@ -441,7 +547,7 @@ export const generateConversationalResponse = (
     "What's been going on with you lately?",
     "How have things been for you?",
     "I'm here to chat. What's on your mind?",
-    "What would be helpful to talk about today?",
+    "What would be most helpful to talk about today?",
     "What's been happening in your world?",
     "How are you feeling about things right now?",
     "What's been on your mind lately?",

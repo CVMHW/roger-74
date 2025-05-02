@@ -1,3 +1,4 @@
+
 /**
  * Utility for handling emotional and rhetorical inputs
  * Helps Roger respond effectively to expressions of emotion or rhetorical questions
@@ -66,6 +67,12 @@ const emotionalPatterns: EmotionalPattern[] = [
     emotion: 'fatigue',
     intensity: 'medium',
     supportApproach: 'self-care'
+  },
+  {
+    regex: /(?:i('m| am) (?:so |really |feeling )?)?(upset|pissed|angry|mad) (?:at|with) (.*?)(?:\.|$)/i,
+    emotion: 'targeted-anger',
+    intensity: 'medium',
+    supportApproach: 'validation'
   }
 ];
 
@@ -124,6 +131,7 @@ export const detectEmotionalPatterns = (input: string): {
   intensity: 'low' | 'medium' | 'high' | null;
   supportApproach: string | null;
   subtleEmotion: boolean;
+  targetedAt?: string | null;
 } => {
   // Check for subtle emotional cues first
   const subtleEmotionPatterns = {
@@ -142,6 +150,22 @@ export const detectEmotionalPatterns = (input: string): {
         subtleEmotion: true
       };
     }
+  }
+  
+  // Check for targeted emotion patterns
+  const targetedAngerPattern = /(?:i('m| am) (?:so |really |feeling )?)?(upset|pissed|angry|mad) (?:at|with) (.*?)(?:\.|\s|$)/i;
+  const targetedAngerMatch = input.match(targetedAngerPattern);
+  
+  if (targetedAngerMatch && targetedAngerMatch[3]) {
+    const target = targetedAngerMatch[3].trim();
+    return {
+      hasEmotionalContent: true,
+      detectedEmotion: 'targeted-anger',
+      intensity: 'medium',
+      supportApproach: 'validation',
+      subtleEmotion: false,
+      targetedAt: target
+    };
   }
   
   // Then check standard patterns
@@ -214,7 +238,12 @@ export const generateEmotionalResponse = (
     return "";
   }
   
-  const { detectedEmotion, intensity, supportApproach, subtleEmotion } = emotionalAnalysis;
+  const { detectedEmotion, intensity, supportApproach, subtleEmotion, targetedAt } = emotionalAnalysis;
+  
+  // Special case for targeted anger/frustration (like political discussions)
+  if (detectedEmotion === 'targeted-anger' && targetedAt) {
+    return `I hear that you're upset with ${targetedAt}. That makes sense - it can be frustrating when things don't align with what we hope for. What about this situation is most concerning for you?`;
+  }
   
   // For subtle emotions, use a more conversational, gentle approach
   if (subtleEmotion || intensity === 'low') {

@@ -1,3 +1,4 @@
+
 import { 
   isIntroduction,
   generateIntroductionResponse,
@@ -29,7 +30,9 @@ import { ConcernType } from '../../utils/reflection/reflectionTypes';
 import { generateGriefResponse, detectGriefThemes } from '../../utils/response/griefSupport';
 import { 
   detectSimpleNegativeState,
-  generateSimpleNegativeStateResponse
+  generateSimpleNegativeStateResponse,
+  detectPoliticalEmotions,
+  generatePoliticalEmotionResponse
 } from '../../utils/conversationalUtils';
 
 interface ResponseGeneratorParams {
@@ -217,7 +220,13 @@ export const useResponseGenerator = ({
     concernType: ConcernType
   ): string => {
     try {
-      // NEW: Check for simple negative state expressions first - highest priority for immediacy
+      // HIGHEST PRIORITY: Direct response to political emotions - addressing what a user explicitly mentions
+      const politicalInfo = detectPoliticalEmotions(userInput);
+      if (politicalInfo.isPolitical) {
+        return generatePoliticalEmotionResponse(userInput, politicalInfo);
+      }
+      
+      // SECOND HIGHEST: Check for simple negative state expressions
       const negativeStateInfo = detectSimpleNegativeState(userInput);
       if (negativeStateInfo.isNegativeState) {
         return generateSimpleNegativeStateResponse(userInput, negativeStateInfo);
@@ -296,12 +305,12 @@ export const useResponseGenerator = ({
       // Detect developmental stage for age-appropriate responses
       const developmentalStage = detectDevelopmentalStage(userInput);
       
-      // HIGHEST PRIORITY: Check for introductions if this is the first interaction
+      // Check for introductions if this is the first interaction
       if (isIntroduction(userInput) && !introductionMade) {
         return generateIntroductionResponse();
       }
       
-      // SECOND PRIORITY: Process any personal sharing with explicit feelings
+      // Process any personal sharing with explicit feelings
       // This ensures we immediately acknowledge stated emotions before anything else
       if (isPersonalSharing(userInput)) {
         const personalResponse = generatePersonalSharingResponse(userInput);
@@ -368,7 +377,7 @@ export const useResponseGenerator = ({
       }
     } catch (error) {
       console.error("Error in response generation:", error);
-      return "I'm listening. Would you like to tell me more about that?";
+      return "I'm listening. What's been going on with you?";
     }
   };
   
@@ -376,5 +385,3 @@ export const useResponseGenerator = ({
     generateResponse
   };
 };
-
-// Remove the duplicate export line that was causing the error
