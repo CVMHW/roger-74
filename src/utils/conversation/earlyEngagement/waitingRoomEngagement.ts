@@ -1,9 +1,12 @@
-
 /**
  * Waiting Room Engagement Utilities
  * 
  * Tools for creating comfortable, engaging experiences during the waiting room
  * phase of interaction (typically the first 1-10 messages)
+ * 
+ * UNCONDITIONAL RULE: Follow the patient's concerns and stories completely in early conversation
+ * UNCONDITIONAL RULE: Prioritize deep engagement with non-clinical concerns to build rapport
+ * UNCONDITIONAL RULE: Only crisis concerns take precedence over following the patient's narrative
  */
 
 import { 
@@ -33,35 +36,116 @@ export const shouldUseWaitingRoomEngagement = (
 };
 
 /**
- * Generates an appropriate waiting room engagement response
+ * Identifies immediate concerns in user's message that should be addressed directly
+ * before any redirection to clinical topics
+ */
+export const identifyImmediateConcern = (userInput: string): string | null => {
+  // Check for everyday frustrations first
+  const frustrationInfo = detectEverydayFrustration(userInput);
+  if (frustrationInfo.isFrustration) {
+    return frustrationInfo.category || 'general_frustration';
+  }
+  
+  // Check for specific scenarios
+  const patterns = [
+    { regex: /(slip(ped)?|fell|trip(ped)?|stumble(d)?)\s.*(puddle|mud|wet|floor|ground|ice|snow)/i, category: 'physical_mishap' },
+    { regex: /(dirty|stain(ed)?|mess(y|ed)?|wet)\s.*(cloth(es|ing)|outfit|shirt|pants|dress|shoes)/i, category: 'clothing_issue' },
+    { regex: /(traffic|jam|late|rush hour|bus|train|subway|car|drive|driving|commut)/i, category: 'commuting_problem' },
+    { regex: /(rain(ing|ed)?|snow(ing|ed)?|weather|storm|cold|hot|humid|freez(e|ing))/i, category: 'weather_issue' },
+    { regex: /(miss(ed)?|cancel(led)?|reschedule(d)?)\s.*(appointment|meeting|class|event)/i, category: 'missed_appointment' },
+    { regex: /(lost|can'?t find|misplaced|forget)\s.*(keys|phone|wallet|purse|bag|item)/i, category: 'lost_item' },
+    { regex: /(spill(ed)?|drop(ped)?|knock(ed)?|broke)\s.*(coffee|drink|food|cup|glass|plate|mug)/i, category: 'spill_accident' },
+    { regex: /(headache|migraine|tired|exhaust(ed)?|sleep|insomnia|rest)/i, category: 'physical_discomfort' },
+    { regex: /(forgot|remember|deadline|due|assign(ed|ment)|project)/i, category: 'work_stress' }
+  ];
+  
+  for (const pattern of patterns) {
+    if (pattern.regex.test(userInput)) {
+      return pattern.category;
+    }
+  }
+  
+  return null;
+};
+
+/**
+ * Generates an empathetic response to immediate concerns before proceeding with waiting room engagement
+ */
+export const generateImmediateConcernResponse = (userInput: string, concernType: string): string => {
+  switch(concernType) {
+    case 'physical_mishap':
+      return `That sounds frustrating. Slipping in public can be both physically painful and embarrassing. Are you feeling okay physically? And don't worry about appearances - we've all been there at some point.`;
+      
+    case 'clothing_issue':
+      return `Oh no, that stinks! I hope it wasn't your favorite outfit. Stains can be really hard to get out once they dry. Do you think it's something that will come out in the wash, or might it need special cleaning?`;
+      
+    case 'commuting_problem':
+      return `Traffic can really start the day off on the wrong foot. Was your commute particularly bad today? It seems like the roads around Cleveland have been extra congested lately.`;
+      
+    case 'weather_issue':
+      return `The weather in Cleveland can be so unpredictable! It sounds like it affected your day. Did you get caught without the right gear for today's conditions?`;
+      
+    case 'missed_appointment':
+      return `Missing appointments can throw off your whole schedule. Was this something important, or were you able to reschedule easily?`;
+      
+    case 'lost_item':
+      return `Losing something important is so stressful. Have you had any luck finding it? Sometimes retracing steps helps, but I know that can be frustrating too.`;
+      
+    case 'spill_accident':
+      return `Spills always seem to happen at the worst times, don't they? Did it cause much of a mess or damage anything important?`;
+      
+    case 'physical_discomfort':
+      return `I'm sorry you're not feeling well physically. That can make everything else harder to deal with. Has this been going on for a while, or is it something that just started today?`;
+      
+    case 'work_stress':
+      return `Work stress can really follow you everywhere. Is this about a specific project or deadline that's been weighing on you?`;
+      
+    case 'general_frustration':
+      return `That sounds really frustrating. Those kinds of day-to-day annoyances can really add up and affect your mood. Would it help to tell me more about what happened?`;
+      
+    default:
+      return `That sounds like it was challenging to deal with. Would you like to tell me more about what happened? I'm here to listen.`;
+  }
+};
+
+/**
+ * Generates an appropriate waiting room engagement response with enhanced focus 
+ * on immediate concerns and active follow-up questions
  */
 export const generateWaitingRoomEngagement = (
   messageCount: number,
+  userInput: string = '',
   isRunningBehind: boolean = false,
   isCrisisDelay: boolean = false
 ): string => {
-  // For the very first messages (1-3), focus on welcoming
+  // First check for immediate concerns that need addressing
+  const immediateConcern = identifyImmediateConcern(userInput);
+  if (immediateConcern && userInput) {
+    return generateImmediateConcernResponse(userInput, immediateConcern);
+  }
+
+  // For the very first messages (1-3), focus on welcoming with engagement hooks
   if (messageCount <= 3) {
     const welcomeResponses = [
-      "Welcome to the office. I'm Roger, a Peer Support Companion. Dr. Eric will be with you shortly. How are you feeling about being here today?",
-      "Hi there! I'm Roger, and I'm here to chat with you while you wait for Dr. Eric. Is this your first time visiting, or have you been here before?",
-      "Thanks for coming in today. I'm Roger, a Peer Support Companion. Dr. Eric is finishing up with another patient and will be with you soon. How's your day going so far?",
-      "Welcome! I'm Roger, and I'm here to help make your wait for Dr. Eric a bit more comfortable. Is there anything specific on your mind today?",
-      "Hello! I'm Roger, a Peer Support Companion. While we wait for Dr. Eric to be ready, I'm here to chat if you'd like. How are you doing today?"
+      "Welcome to the office. I'm Roger, a Peer Support Companion. Dr. Eric will be with you shortly. How has your day been going so far?",
+      "Hi there! I'm Roger, and I'm here to chat with you while you wait for Dr. Eric. Has your morning been going okay?",
+      "Thanks for coming in today. I'm Roger, a Peer Support Companion. Dr. Eric is finishing up with another patient and will be with you soon. Did you have any trouble getting here today?",
+      "Welcome! I'm Roger, and I'm here to help make your wait for Dr. Eric a bit more comfortable. How's everything been going for you lately?",
+      "Hello! I'm Roger, a Peer Support Companion. While we wait for Dr. Eric to be ready, I'm here to chat if you'd like. How's your day been so far?"
     ];
     return welcomeResponses[Math.floor(Math.random() * welcomeResponses.length)];
   }
   
-  // For messages 4-7, acknowledge waiting and engage
+  // For messages 4-7, acknowledge waiting and engage deeply with user's concerns
   if (messageCount <= 7) {
     // Handle case where Eric is dealing with a crisis
     if (isCrisisDelay) {
       const crisisDelayResponses = [
-        "Dr. Eric is currently helping someone who needed immediate attention. I appreciate your patience. In the meantime, I'm here to chat with you. What brought you in today?",
-        "Just to update you, Dr. Eric is assisting with an urgent situation at the moment. He'll be with you as soon as possible. While we wait, how has your week been?",
-        "I want to let you know that Dr. Eric is dealing with an emergency situation right now. He hasn't forgotten about you. How are you feeling while waiting?",
-        "Thank you for your patience. Dr. Eric is currently handling a situation that needed immediate attention. I'm here to talk with you while you wait. Is there anything specific you'd like to discuss?",
-        "Dr. Eric is helping someone who needs urgent care right now. I know waiting can be frustrating, but he'll be with you as soon as he can. What's been on your mind lately?"
+        "Dr. Eric is currently helping someone who needed immediate attention. I appreciate your patience. In the meantime, how's your day been going? Anything interesting or challenging happen recently?",
+        "Just to update you, Dr. Eric is assisting with an urgent situation at the moment. He'll be with you as soon as possible. So tell me more about your week - how have things been outside of what brought you here?",
+        "I want to let you know that Dr. Eric is dealing with an emergency situation right now. He hasn't forgotten about you. While we wait, what's been on your mind lately? Any bright spots or challenges worth sharing?",
+        "Thank you for your patience. Dr. Eric is currently handling a situation that needed immediate attention. While we wait, I'd love to hear more about what's been going on for you - good or challenging.",
+        "Dr. Eric is helping someone who needs urgent care right now. I know waiting can be frustrating, but he'll be with you as soon as he can. In the meantime, how has life been treating you lately?"
       ];
       return crisisDelayResponses[Math.floor(Math.random() * crisisDelayResponses.length)];
     }
@@ -69,33 +153,33 @@ export const generateWaitingRoomEngagement = (
     // Handle case where appointment is running behind
     if (isRunningBehind) {
       const delayResponses = [
-        "I see you're wondering about the wait time. Dr. Eric is running a bit behind schedule, but he'll be with you as soon as he can. How can I help make this wait more comfortable for you?",
-        "Thanks for your patience. Sessions sometimes run longer than expected when patients need extra time. Dr. Eric values giving everyone the time they need. While we wait, what's been going on with you lately?",
-        "I understand waiting can be frustrating. Dr. Eric is finishing up with another patient and will be with you as soon as possible. Is there anything you'd like to talk about while you wait?",
-        "I appreciate you being patient. Dr. Eric tries to keep to schedule, but sometimes conversations need more time. He'll be with you shortly. How has your day been so far?",
-        "Thanks for your understanding about the wait. Dr. Eric gives each person his full attention, which sometimes means appointments run over. While we wait, is there anything specific on your mind today?"
+        "I see you're wondering about the wait time. Dr. Eric is running a bit behind schedule, but he'll be with you as soon as he can. While we wait, tell me more about what's been going on with you - anything notable happen recently?",
+        "Thanks for your patience. Sessions sometimes run longer than expected when patients need extra time. While we wait, I'd love to hear more about your day so far - any highlights or challenges?",
+        "I understand waiting can be frustrating. Dr. Eric is finishing up with another patient and will be with you as soon as possible. In the meantime, how has your week been going? Anything you'd like to talk about?",
+        "I appreciate you being patient. Dr. Eric tries to keep to schedule, but sometimes conversations need more time. While we wait, what's been on your mind lately? Anything interesting happen in your world?",
+        "Thanks for your understanding about the wait. Dr. Eric gives each person his full attention, which sometimes means appointments run over. So tell me, how have things been going for you outside of what brought you here today?"
       ];
       return delayResponses[Math.floor(Math.random() * delayResponses.length)];
     }
     
-    // Standard engagement responses
+    // Standard engagement responses with deeper follow-up questions
     const midWaitResponses = [
-      "While we wait for Dr. Eric, I'm here to chat and make sure you're comfortable. What kind of things have been on your mind lately?",
-      "Dr. Eric should be available shortly. In the meantime, I'm here to listen. Is there anything specific that brought you in today?",
-      "You'll be meeting with Dr. Eric soon. I find that sometimes talking a bit before a session helps organize thoughts. Would you like to share what's been going on for you?",
-      "Dr. Eric is finishing up and will be with you shortly. I'm here to help make the wait time more valuable. What's most important for you to discuss in your session today?",
-      "While we're waiting for Dr. Eric, is there anything you'd like to talk about? Sometimes it helps to warm up with conversation before diving into a therapy session."
+      "I'm here to chat while you wait for Dr. Eric. What's been going on in your life lately? Any stories worth sharing - good or challenging?",
+      "Dr. Eric should be available shortly. In the meantime, I'd love to hear more about your day so far - has anything notable happened?",
+      "You'll be meeting with Dr. Eric soon. While we wait, I'm curious - what's been on your mind lately outside of what brought you here?",
+      "Dr. Eric is finishing up and will be with you shortly. I find that sometimes casual conversation helps pass the time - what's something interesting that happened in your world recently?",
+      "While we're waiting for Dr. Eric, I'd love to hear more about what's going on in your life - has anything unexpected happened lately, good or challenging?"
     ];
     return midWaitResponses[Math.floor(Math.random() * midWaitResponses.length)];
   }
   
-  // For later waiting (messages 8-10), start preparing for transition to Eric
+  // For later waiting (messages 8-10), maintain engagement while preparing for transition
   const lateWaitResponses = [
-    "Dr. Eric should be ready for you very soon. How are you feeling about your upcoming session? Sometimes people find it helpful to identify specific topics they want to address.",
-    "We're getting close to your time with Dr. Eric. Is there anything specific you're hoping to get from today's session that might be helpful for me to mention to him?",
-    "You'll be meeting with Dr. Eric in just a bit. I've enjoyed chatting with you while you wait. Is there anything else on your mind before your session starts?",
-    "Dr. Eric will be ready for you shortly. Sometimes it helps to take a moment to center yourself before a session. Would you like a moment of quiet, or would you prefer to keep chatting?",
-    "You'll be seeing Dr. Eric very soon. How are you feeling about your session today? Is there anything specific you're hoping to discuss?"
+    "Dr. Eric should be ready for you soon. Before your session starts, is there anything else going on in your life you'd like to share? Sometimes it helps to get everything out in conversation.",
+    "We're getting close to your time with Dr. Eric. While we wait, is there anything else on your mind worth chatting about? I'm here to listen.",
+    "You'll be meeting with Dr. Eric in just a bit. I've enjoyed our conversation. Is there anything else you'd like to talk about before your session?",
+    "Dr. Eric will be ready for you shortly. Before your session starts, is there anything else that's been happening in your life that might be worth mentioning?",
+    "You'll be seeing Dr. Eric very soon. Before you do, is there anything else going on that you'd like to talk about? Sometimes it helps to share even seemingly small things."
   ];
   return lateWaitResponses[Math.floor(Math.random() * lateWaitResponses.length)];
 };
