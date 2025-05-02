@@ -25,12 +25,19 @@ export const useResponseProcessing = ({
     userInput: string,
     generateResponseFn: (userInput: string, concernType: ConcernType) => string,
     detectConcernsFn: (userInput: string) => ConcernType,
-    responseTimeMultiplier: number = 1.0 // Parameter for response time adjustment
+    responseTimeMultiplier: number = 1.0, // Parameter for response time adjustment
+    youngAdultConcernFn?: () => any // Function to get young adult concerns
   ): Promise<MessageType> => {
     setIsTyping(true);
     
     // Detect any concerns in the user message
     const concernType = detectConcernsFn(userInput);
+    
+    // Check for young adult concerns
+    let youngAdultConcern = null;
+    if (youngAdultConcernFn) {
+      youngAdultConcern = youngAdultConcernFn();
+    }
     
     // Calculate response time based on message complexity and emotional weight
     let responseTime = calculateResponseTime(userInput);
@@ -66,14 +73,16 @@ export const useResponseProcessing = ({
                              isPTSD ? 8 :  // Higher complexity for PTSD
                              isTraumaResponse ? 7 : // Higher for trauma responses
                              isMildGambling ? 4 : 
-                             hasSignificantGrief ? 6 : 5;
+                             hasSignificantGrief ? 6 : 
+                             youngAdultConcern ? 6 : 5;
     
     let estimatedEmotionalWeight = isCrisis ? 9 : 
                                   concernType === 'substance-use' || isMentalHealth ? 7 : 
                                   isPTSD ? 8 : // Higher emotional weight for PTSD
                                   isTraumaResponse ? 7 : 
                                   isMildGambling ? 3 : 
-                                  hasSignificantGrief ? 7 : 4;
+                                  hasSignificantGrief ? 7 : 
+                                  youngAdultConcern ? 5 : 4;
     
     // Further adjust based on specific grief severity
     if (hasSignificantGrief) {
@@ -96,6 +105,21 @@ export const useResponseProcessing = ({
       // If grief mentions non-linear or roller coaster metaphors, increase complexity
       if (griefThemes.griefMetaphorModel === 'roller-coaster') {
         estimatedComplexity = Math.min(estimatedComplexity + 1, 9);
+      }
+    }
+    
+    // Further adjust for young adult concerns if present
+    if (youngAdultConcern) {
+      // Young adult financial concerns often have higher emotional weight
+      if (youngAdultConcern.category === 'financial') {
+        estimatedEmotionalWeight += 1;
+      }
+      
+      // Quarter-life crisis concerns are more complex
+      if (youngAdultConcern.category === 'identity' && 
+          (youngAdultConcern.specificIssue?.includes('purpose') || 
+           youngAdultConcern.specificIssue?.includes('quarter'))) {
+        estimatedComplexity += 1;
       }
     }
     
@@ -148,6 +172,26 @@ export const useResponseProcessing = ({
       setTimeout(() => {
         // Generate the response
         let responseText = generateResponseFn(userInput, concernType);
+        
+        // If we have a young adult concern and no response yet, try to generate a young adult specific response
+        if (youngAdultConcern && !responseText && youngAdultConcern.category) {
+          try {
+            const youngAdultModule = require('../../utils/response/youngAdultResponses');
+            if (youngAdultModule.generateYoungAdultResponse) {
+              const youngAdultResponse = youngAdultModule.generateYoungAdultResponse({
+                concernInfo: youngAdultConcern,
+                userMessage: userInput,
+                concernType
+              });
+              
+              if (youngAdultResponse) {
+                responseText = youngAdultResponse;
+              }
+            }
+          } catch (e) {
+            console.log("Young adult response module not available:", e);
+          }
+        }
         
         // Apply master rules to ensure no repetition
         responseText = ensureResponseCompliance(responseText);

@@ -7,12 +7,15 @@ import { detectSpecificIllness, detectPetIllnessConcerns } from '../../utils/det
 import { detectAllProblems } from '../../utils/detectionUtils/problemDetection';
 import { isLikelyTeenMessage } from '../../utils/response/teenResponseUtils';
 import { isLikelyChildMessage } from '../../utils/responseUtils';
+import { detectYoungAdultConcerns } from '../../utils/response/youngAdultResponses';
 
 export const useConcernDetection = () => {
   // Track previous concerns to maintain consistency
   const [previousConcern, setPreviousConcern] = useState<ConcernType | null>(null);
   // Track detected age group for adaptive responses
-  const [detectedAgeGroup, setDetectedAgeGroup] = useState<'teen' | 'adult' | 'child' | null>(null);
+  const [detectedAgeGroup, setDetectedAgeGroup] = useState<'child' | 'teen' | 'young-adult' | 'adult' | null>(null);
+  // Track young adult specific concerns
+  const [youngAdultConcern, setYoungAdultConcern] = useState<any>(null);
   
   /**
    * Enhanced concern detection function
@@ -33,12 +36,19 @@ export const useConcernDetection = () => {
           setDetectedAgeGroup(commonProblems.ageGroup);
         } else {
           // Use the more precise age detection functions if available
-          if (isLikelyTeenMessage(message)) {
-            setDetectedAgeGroup('teen');
-          } else if (isLikelyChildMessage(message)) {
+          if (isLikelyChildMessage(message)) {
             setDetectedAgeGroup('child');
+          } else if (isLikelyTeenMessage(message)) {
+            setDetectedAgeGroup('teen');
           } else {
-            setDetectedAgeGroup('adult');
+            // Check for young adult concerns (18-29)
+            const youngAdultConcernInfo = detectYoungAdultConcerns(message);
+            if (youngAdultConcernInfo) {
+              setDetectedAgeGroup('young-adult');
+              setYoungAdultConcern(youngAdultConcernInfo);
+            } else {
+              setDetectedAgeGroup('adult');
+            }
           }
         }
       } catch (error) {
@@ -65,8 +75,15 @@ export const useConcernDetection = () => {
    */
   const getDetectedAgeGroup = () => detectedAgeGroup;
   
+  /**
+   * Get young adult specific concern information
+   * @returns The detected young adult concern or null
+   */
+  const getYoungAdultConcern = () => youngAdultConcern;
+  
   return { 
     detectConcerns, 
-    getDetectedAgeGroup 
+    getDetectedAgeGroup,
+    getYoungAdultConcern
   };
 };

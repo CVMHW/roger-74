@@ -1,4 +1,3 @@
-
 import { 
   isIntroduction,
   generateIntroductionResponse,
@@ -192,9 +191,19 @@ export const useResponseGenerator = ({
       return null;
     }
     
+    // Ensure we're using reaction types that match the expected types in generateDeescalationResponse
+    const validReactionType = (() => {
+      const type = defensiveReaction.reactionType || 'denial';
+      // Map any non-standard types to standard ones
+      if (type === 'accusation' || type === 'profanity' || type === 'dismissal') {
+        return 'anger'; // Map these to 'anger' as closest match
+      }
+      return type;
+    })();
+    
     // If we have a defensive reaction, generate a de-escalation response
     return generateDeescalationResponse(
-      defensiveReaction.reactionType || 'denial',
+      validReactionType as 'denial' | 'anger' | 'bargaining' | 'minimization',
       defensiveReaction.suggestedConcern || ''
     );
   };
@@ -235,19 +244,19 @@ export const useResponseGenerator = ({
         
         switch (concernType) {
           case 'tentative-harm':
-            return getTentativeHarmMessage();
+            return getTentativeHarmMessage(userInput);
           case 'crisis':
-            return getCrisisMessage();
+            return getCrisisMessage(userInput);
           case 'medical':
-            return getMedicalConcernMessage();
+            return getMedicalConcernMessage(userInput);
           case 'mental-health':
-            return getMentalHealthConcernMessage();
+            return getMentalHealthConcernMessage(userInput);
           case 'eating-disorder':
-            return getEatingDisorderMessage();
+            return getEatingDisorderMessage(userInput);
           case 'substance-use':
-            return getSubstanceUseMessage();
+            return getSubstanceUseMessage(userInput);
           case 'ptsd':
-            return getPTSDMessage();
+            return getPTSDMessage(userInput);
         }
       }
 
