@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { MessageType } from '../../components/Message';
 
 /**
@@ -23,23 +23,6 @@ export const useMessageHistory = () => {
   // Update Roger's response history
   const updateRogerResponseHistory = useCallback((responseText: string) => {
     setRogerResponseHistory(prev => [...prev, responseText]);
-  }, []);
-
-  // Extract existing Roger responses for the history on mount
-  useEffect(() => {
-    // This would initialize from any existing messages
-    const initializeFromExistingMessages = (messages: MessageType[]) => {
-      const initialRogerMessages = messages
-        .filter(msg => msg.sender === 'roger')
-        .map(msg => msg.text);
-      
-      if (initialRogerMessages.length > 0) {
-        setRogerResponseHistory(initialRogerMessages);
-      }
-    };
-
-    // We would call this with the initial messages, but since we don't have access to them here,
-    // this will be handled in the parent component if needed
   }, []);
 
   return {
