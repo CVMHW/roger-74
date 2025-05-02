@@ -70,6 +70,48 @@ export const existentialPrinciples = {
       "Socratic dialogue - Questions that help people discover their own wisdom and insights",
       "Self-distancing - Helping gain perspective through humor or by stepping back from immediate concerns"
     ]
+  },
+  
+  // Logotherapeutic techniques
+  techniques: {
+    description: "Specific techniques developed in logotherapy to help individuals discover meaning:",
+    methods: [
+      {
+        name: "Paradoxical intention",
+        description: "A technique where the client is encouraged to intend or wish for the very thing feared, often with humor, to break the cycle of anticipatory anxiety."
+      },
+      {
+        name: "Dereflection",
+        description: "Redirecting attention away from excessive self-focus or symptom monitoring toward meaningful external values and purposes."
+      },
+      {
+        name: "Socratic dialogue",
+        description: "Using questions to help clients discover their own meanings, values, and wisdom rather than providing direct advice."
+      },
+      {
+        name: "Attitude modification",
+        description: "Helping clients shift attitudes toward situations that cannot be changed, finding freedom in their response to circumstances."
+      },
+      {
+        name: "Mountain Range Exercise",
+        description: "A values clarification exercise where individuals identify important people in their lives and what values they share with them."
+      },
+      {
+        name: "Movies Exercise",
+        description: "Creating a mental 'movie' of one's life (past to present, and present to future) to clarify personal meaning and direction."
+      }
+    ]
+  },
+  
+  // Relationship to positive psychology and other therapies
+  relationships: {
+    description: "Logotherapy connects with many other therapeutic approaches:",
+    connections: [
+      "Precursor to aspects of cognitive therapy, particularly in attitude modification",
+      "Complementary to humanistic approaches through focus on human potential",
+      "Aligned with positive psychology through emphasis on meaning, resilience, and growth",
+      "Compatible with spirituality-focused approaches (in the broad sense of meaning and purpose)"
+    ]
   }
 };
 
@@ -85,7 +127,10 @@ export const existentialIndicators = {
     "what's it all for",
     "why am i here",
     "purpose in life",
-    "reason for living"
+    "reason for living",
+    "empty",
+    "just going through the motions",
+    "nothing matters"
   ],
   
   valuesConcerns: [
@@ -97,7 +142,9 @@ export const existentialIndicators = {
     "what i stand for",
     "believe in",
     "lost sight of",
-    "reconnect with"
+    "reconnect with",
+    "don't know what I value anymore",
+    "not sure what's important"
   ],
   
   freedomAnxiety: [
@@ -107,7 +154,9 @@ export const existentialIndicators = {
     "afraid of making the wrong choice",
     "what if i regret",
     "responsibility",
-    "weight of decisions"
+    "weight of decisions",
+    "stuck with my choices",
+    "no way out"
   ],
   
   isolationConcerns: [
@@ -117,7 +166,9 @@ export const existentialIndicators = {
     "disconnected",
     "separated from others",
     "gap between",
-    "no real connection"
+    "no real connection",
+    "isolated",
+    "no one gets it"
   ],
   
   mortalityConcerns: [
@@ -130,7 +181,8 @@ export const existentialIndicators = {
     "remember me",
     "death",
     "finitude",
-    "impermanence"
+    "impermanence",
+    "running out of time"
   ],
   
   sufferingQuestions: [
@@ -140,7 +192,22 @@ export const existentialIndicators = {
     "enduring this",
     "meaning in pain",
     "learn from this",
-    "grow through this"
+    "grow through this",
+    "unfair",
+    "why me",
+    "can't bear this"
+  ],
+  
+  existentialVacuum: [
+    "feel empty",
+    "just existing",
+    "going through motions",
+    "bored with everything",
+    "nothing excites me",
+    "nothing to look forward to",
+    "no direction",
+    "drifting",
+    "hollow"
   ]
 };
 
@@ -166,6 +233,26 @@ export const generateExistentialResponse = (userInput: string): string | null =>
     ];
     
     return meaningResponses[Math.floor(Math.random() * meaningResponses.length)];
+  }
+  
+  // Check for existential vacuum indicators
+  const hasExistentialVacuum = existentialIndicators.existentialVacuum.some(phrase => 
+    lowerInput.includes(phrase));
+    
+  if (hasExistentialVacuum) {
+    const vacuumResponses = [
+      "That sense of emptiness you're describing is what Viktor Frankl called an 'existential vacuum' - a feeling that life lacks meaning or purpose. Sometimes this feeling actually invites us to discover what truly matters to us. What would a meaningful life look like for you?",
+      
+      "Feeling like you're just going through the motions can be really difficult. In logotherapy, this might be seen as an opportunity to reconnect with what gives your life meaning. What activities or relationships have helped you feel most alive or engaged in the past?",
+      
+      "That sense of emptiness is something many people experience at different points in life. Rather than seeing it as purely negative, it might be signaling an opportunity to explore what would bring more meaning to your life. What do you feel drawn toward, even if it seems distant right now?",
+      
+      "The feeling of 'just existing' rather than truly living is something many people face. Viktor Frankl might suggest this feeling can motivate us to discover or create meaning. What small thing might bring a sense of purpose to your day today?",
+      
+      "That hollowness you're describing is a deeply human experience. Sometimes it emerges when we're disconnected from our values or what matters to us. If you could live aligned with what's truly important to you, what might that look like?"
+    ];
+    
+    return vacuumResponses[Math.floor(Math.random() * vacuumResponses.length)];
   }
   
   // Check for values-related concerns

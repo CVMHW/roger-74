@@ -150,7 +150,8 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
         }
         
         // Create response message
-        const rogerResponse = createMessage('', 'roger', concernType);
+        const rogerResponse = createMessage(responseText, 'roger', concernType);
+        setIsTyping(false);
         resolve(rogerResponse);
       }, responseTime);
     });

@@ -17,54 +17,59 @@ export const useAdaptiveResponse = () => {
    * would be beneficial, and generates an appropriate response
    */
   const generateAdaptiveResponse = (userInput: string): string => {
-    // Look for indicators that might suggest which approach is most helpful
-    const containsChangeTalk = userInput.toLowerCase().includes('change') || 
-                               userInput.toLowerCase().includes('want to') ||
-                               userInput.toLowerCase().includes('thinking about') ||
-                               userInput.toLowerCase().includes('goal') ||
-                               userInput.toLowerCase().includes('plan') ||
-                               userInput.toLowerCase().includes('should') ||
-                               userInput.toLowerCase().includes('need to');
-                               
-    const containsAmbivalence = userInput.toLowerCase().includes('but') ||
-                                userInput.toLowerCase().includes('not sure') ||
-                                userInput.toLowerCase().includes('conflicted') ||
-                                userInput.toLowerCase().includes('part of me') ||
-                                userInput.toLowerCase().includes('on the other hand') ||
-                                userInput.toLowerCase().includes('might');
-                                
-    const containsExploration = userInput.toLowerCase().includes('feel') ||
-                                userInput.toLowerCase().includes('understand') ||
-                                userInput.toLowerCase().includes('why');
+    const lowerInput = userInput.toLowerCase();
     
-    const containsQuestionsAboutChange = userInput.toLowerCase().includes('how can i') ||
-                                         userInput.toLowerCase().includes('how do i') ||
-                                         userInput.toLowerCase().includes('what should i') ||
-                                         userInput.toLowerCase().includes('help me') ||
-                                         userInput.toLowerCase().includes('not sure how');
-    
-    const containsDoubtOrLackOfConfidence = userInput.toLowerCase().includes('can\'t') ||
-                                            userInput.toLowerCase().includes('hard') ||
-                                            userInput.toLowerCase().includes('difficult') ||
-                                            userInput.toLowerCase().includes('tried before') ||
-                                            userInput.toLowerCase().includes('failed') ||
-                                            userInput.toLowerCase().includes('worried');
-
     // Check for existential concerns (meaning, values, mortality, freedom, isolation, suffering)
-    const containsExistentialConcerns = userInput.toLowerCase().includes('meaning') ||
-                                        userInput.toLowerCase().includes('purpose') ||
-                                        userInput.toLowerCase().includes('what\'s the point') ||
-                                        userInput.toLowerCase().includes('values') ||
-                                        userInput.toLowerCase().includes('what matters') ||
-                                        userInput.toLowerCase().includes('alone') ||
-                                        userInput.toLowerCase().includes('isolation') ||
-                                        userInput.toLowerCase().includes('death') ||
-                                        userInput.toLowerCase().includes('dying') ||
-                                        userInput.toLowerCase().includes('legacy') ||
-                                        userInput.toLowerCase().includes('choices') ||
-                                        userInput.toLowerCase().includes('responsible') ||
-                                        userInput.toLowerCase().includes('suffering') ||
-                                        userInput.toLowerCase().includes('why is this happening');
+    const containsExistentialConcerns = lowerInput.includes('meaning') ||
+                                       lowerInput.includes('purpose') ||
+                                       lowerInput.includes('what\'s the point') ||
+                                       lowerInput.includes('values') ||
+                                       lowerInput.includes('what matters') ||
+                                       lowerInput.includes('alone') ||
+                                       lowerInput.includes('isolation') ||
+                                       lowerInput.includes('death') ||
+                                       lowerInput.includes('dying') ||
+                                       lowerInput.includes('legacy') ||
+                                       lowerInput.includes('choices') ||
+                                       lowerInput.includes('responsible') ||
+                                       lowerInput.includes('suffering') ||
+                                       lowerInput.includes('why is this happening') ||
+                                       lowerInput.includes('empty') ||
+                                       lowerInput.includes('hollow') ||
+                                       lowerInput.includes('going through motions');
+    
+    // Look for indicators that might suggest which approach is most helpful
+    const containsChangeTalk = lowerInput.includes('change') || 
+                               lowerInput.includes('want to') ||
+                               lowerInput.includes('thinking about') ||
+                               lowerInput.includes('goal') ||
+                               lowerInput.includes('plan') ||
+                               lowerInput.includes('should') ||
+                               lowerInput.includes('need to');
+                               
+    const containsAmbivalence = lowerInput.includes('but') ||
+                                lowerInput.includes('not sure') ||
+                                lowerInput.includes('conflicted') ||
+                                lowerInput.includes('part of me') ||
+                                lowerInput.includes('on the other hand') ||
+                                lowerInput.includes('might');
+                                
+    const containsExploration = lowerInput.includes('feel') ||
+                                lowerInput.includes('understand') ||
+                                lowerInput.includes('why');
+    
+    const containsQuestionsAboutChange = lowerInput.includes('how can i') ||
+                                         lowerInput.includes('how do i') ||
+                                         lowerInput.includes('what should i') ||
+                                         lowerInput.includes('help me') ||
+                                         lowerInput.includes('not sure how');
+    
+    const containsDoubtOrLackOfConfidence = lowerInput.includes('can\'t') ||
+                                            lowerInput.includes('hard') ||
+                                            lowerInput.includes('difficult') ||
+                                            lowerInput.includes('tried before') ||
+                                            lowerInput.includes('failed') ||
+                                            lowerInput.includes('worried');
     
     // First try an Existential response if existential concerns are detected
     if (containsExistentialConcerns) {
