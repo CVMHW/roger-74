@@ -12,6 +12,10 @@ import {
   detectPTSDConcerns
 } from '../../utils/detectionUtils';
 import { detectTraumaResponsePatterns } from '../../utils/response/traumaResponsePatterns';
+import {
+  needsLocationBasedSubstanceReferral,
+  needsLocationBasedMentalHealthReferral
+} from '../../utils/locationAndSlurDetection';
 
 interface ConcernState {
   crisis: boolean;
@@ -23,6 +27,8 @@ interface ConcernState {
   tentativeHarm: boolean;
   ptsd: boolean;
   traumaResponse: boolean; // Added tracking for trauma responses
+  locationBasedSubstance: boolean; // New for location-based substance referral
+  locationBasedMental: boolean; // New for location-based mental health referral
 }
 
 export const useConcernDetection = () => {
@@ -35,13 +41,15 @@ export const useConcernDetection = () => {
     mildGambling: false,
     tentativeHarm: false,
     ptsd: false,
-    traumaResponse: false // New state tracking
+    traumaResponse: false,
+    locationBasedSubstance: false, // New state tracking
+    locationBasedMental: false, // New state tracking
   });
 
   const { toast } = useToast();
 
   // Show appropriate toast notifications for detected concerns
-  const showConcernToast = (concernType: string) => {
+  const showConcernToast = (concernType: string, locationInfo?: { state?: string; city?: string; }) => {
     let title = "Important Notice";
     let description = "";
     
@@ -80,6 +88,24 @@ export const useConcernDetection = () => {
       case 'trauma-response':
         description = "I notice you're describing experiences that might be connected to past difficult events. Resources for trauma-informed support are available if needed.";
         break;
+      case 'location-substance-use':
+        // Location-enhanced substance referral
+        if (locationInfo && (locationInfo.state || locationInfo.city)) {
+          const location = locationInfo.city ? locationInfo.city : locationInfo.state;
+          description = `I notice terms that may indicate substance concerns. There are resources specifically in the ${location} area that could provide support if needed.`;
+        } else {
+          description = "I notice terms that may indicate substance concerns. There are resources available that could provide support if needed.";
+        }
+        break;
+      case 'location-mental-health':
+        // Location-enhanced mental health referral
+        if (locationInfo && (locationInfo.state || locationInfo.city)) {
+          const location = locationInfo.city ? locationInfo.city : locationInfo.state;
+          description = `Based on our conversation, I'd like to share mental health resources available in the ${location} area that might be helpful.`;
+        } else {
+          description = "Based on our conversation, I'd like to share mental health resources that might be helpful for you.";
+        }
+        break;
       default:
         description = "Please see the resources below for support with your concerns.";
     }
@@ -95,7 +121,19 @@ export const useConcernDetection = () => {
 
   // Detect concerns from user input
   const detectConcerns = (userInput: string): ConcernType | null => {
-    // Check for various concern keywords
+    // Get user location data (In production, this would be from IP geolocation)
+    // For now we'll simulate a null location since we can't access user IP
+    const userLocationData = null; // In production: getLocationFromIP()
+    
+    // NEW: Check for substance abuse slurs with location enhancement
+    const substanceSlurResult = needsLocationBasedSubstanceReferral(userInput, userLocationData);
+    const locationBasedSubstanceNeeded = substanceSlurResult.needsReferral;
+    
+    // NEW: Check for mental health slurs with location enhancement
+    const mentalHealthSlurResult = needsLocationBasedMentalHealthReferral(userInput, userLocationData);
+    const locationBasedMentalNeeded = mentalHealthSlurResult.needsReferral;
+    
+    // Standard checks below
     const containsCrisisKeywords = detectCrisisKeywords(userInput);
     const containsMedicalConcerns = detectMedicalConcerns(userInput);
     const containsMentalHealthConcerns = detectMentalHealthConcerns(userInput);
@@ -121,9 +159,9 @@ export const useConcernDetection = () => {
     
     // Only use 4F detection if the pattern is significant enough and user didn't already trip PTSD
     const significantTraumaResponse = traumaResponsePatterns && 
-                                   traumaResponsePatterns.dominant4F && 
-                                   traumaResponsePatterns.dominant4F.intensity !== 'mild' &&
-                                   !containsPTSDConcerns;
+                                    traumaResponsePatterns.dominant4F && 
+                                    traumaResponsePatterns.dominant4F.intensity !== 'mild' &&
+                                    !containsPTSDConcerns;
 
     // Determine if any concerns need to be shown
     const concerns = {
@@ -138,7 +176,9 @@ export const useConcernDetection = () => {
       ptsdSevere: containsPTSDConcerns && ptsdSeverity === 'severe' && !concernsShown.ptsd,
       ptsdModerate: containsPTSDConcerns && ptsdSeverity === 'moderate' && !concernsShown.ptsd,
       ptsdMild: containsPTSDConcerns && ptsdSeverity === 'mild' && !concernsShown.ptsd,
-      traumaResponse: significantTraumaResponse && !concernsShown.traumaResponse
+      traumaResponse: significantTraumaResponse && !concernsShown.traumaResponse,
+      locationBasedSubstance: locationBasedSubstanceNeeded && !concernsShown.locationBasedSubstance,
+      locationBasedMental: locationBasedMentalNeeded && !concernsShown.locationBasedMental
     };
 
     // Show appropriate alerts based on detected concerns using priority ordering
@@ -157,10 +197,27 @@ export const useConcernDetection = () => {
       showConcernToast('medical');
       return 'medical';
     }
-    else if (concerns.mentalHealth) {
-      setConcernsShown(prev => ({ ...prev, mentalHealth: true }));
-      showConcernToast('mental-health');
-      return 'mental-health';
+    else if (concerns.mentalHealth || concerns.locationBasedMental) {
+      setConcernsShown(prev => ({ 
+        ...prev, 
+        mentalHealth: true,
+        locationBasedMental: true
+      }));
+      
+      // If we have location data, show location-enhanced toast
+      if (concerns.locationBasedMental) {
+        showConcernToast('location-mental-health', mentalHealthSlurResult.locationInfo);
+        // Return the appropriate concern type based on recommended care level
+        if (mentalHealthSlurResult.recommendedCareLevel === 'outpatient') {
+          return 'mental-health'; // Standard concern type for outpatient
+        } else {
+          // For more intensive care recommendations, use the standard mental health concern
+          return 'mental-health';
+        }
+      } else {
+        showConcernToast('mental-health');
+        return 'mental-health';
+      }
     }
     else if (concerns.eatingDisorder) {
       setConcernsShown(prev => ({ ...prev, eatingDisorder: true }));
@@ -181,9 +238,19 @@ export const useConcernDetection = () => {
       showConcernToast('trauma-response');
       return 'trauma-response';
     }
-    else if (concerns.substanceUseSevere) {
-      setConcernsShown(prev => ({ ...prev, substanceUse: true }));
-      showConcernToast('substance-use-severe');
+    else if (concerns.substanceUseSevere || concerns.locationBasedSubstance) {
+      setConcernsShown(prev => ({ 
+        ...prev, 
+        substanceUse: true,
+        locationBasedSubstance: true
+      }));
+      
+      // If we have location data, show location-enhanced toast
+      if (concerns.locationBasedSubstance) {
+        showConcernToast('location-substance-use', substanceSlurResult.locationInfo);
+      } else {
+        showConcernToast('substance-use-severe');
+      }
       return 'substance-use';
     }
     else if (concerns.substanceUseModerate) {

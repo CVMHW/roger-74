@@ -1,3 +1,4 @@
+
 // Define the type for concerns that might need special responses
 export type ConcernType = 
   'crisis' | 

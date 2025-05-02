@@ -26,6 +26,10 @@ export interface ClientContext {
   culturalConsiderations?: string[];
   wealthIndicators?: boolean;
   previousMentalHealthExperience?: boolean;
+  locationData?: {
+    state?: string;
+    city?: string;
+  };
 }
 
 /**
@@ -90,6 +94,15 @@ export const generateSafetyConcernResponse = (
     baseResponse = enhanceServiceLevel(baseResponse);
   }
   
+  // Add location-specific information if available
+  if (clientContext.locationData && (clientContext.locationData.state || clientContext.locationData.city)) {
+    baseResponse = addLocationSpecificInformation(
+      baseResponse, 
+      concernType, 
+      clientContext.locationData
+    );
+  }
+  
   // Add acknowledgment of continued support alongside professional referrals
   // This implements the rule about remaining with them during the referral process
   if (isSeriousConcern(concernType)) {
@@ -131,6 +144,60 @@ const enhanceServiceLevel = (baseResponse: string): string => {
     .replace(/professional help/gi, "specialized assistance")
     .replace(/recommend/gi, "suggest as an option")
     .replace(/should/gi, "might consider");
+};
+
+/**
+ * Adds location-specific information to responses when available
+ */
+const addLocationSpecificInformation = (
+  baseResponse: string, 
+  concernType: ConcernType, 
+  locationData: { state?: string; city?: string; }
+): string => {
+  const location = locationData.city || locationData.state || "";
+  if (!location) return baseResponse;
+  
+  // Don't add location info if it's already mentioned
+  if (baseResponse.includes(location)) return baseResponse;
+  
+  let locationPhrase = "";
+  
+  switch(concernType) {
+    case 'substance-use':
+      locationPhrase = ` In ${location}, there are specialized substance use treatment centers that can provide evaluation and support tailored to your specific needs.`;
+      break;
+    case 'mental-health':
+      locationPhrase = ` The ${location} area has several mental health providers that offer both in-person and telehealth options for various levels of care.`;
+      break;
+    case 'crisis':
+      locationPhrase = ` ${location} has crisis response services available 24/7 that can provide immediate support.`;
+      break;
+    case 'ptsd':
+    case 'trauma-response':
+      locationPhrase = ` There are trauma-informed specialists in the ${location} area who have expertise in addressing these specific concerns.`;
+      break;
+    default:
+      locationPhrase = ` There are resources available in the ${location} area that might be helpful for you.`;
+  }
+  
+  // Add the location phrase before any final sentence about being available
+  if (baseResponse.includes("I'll remain available") || 
+      baseResponse.includes("I want to emphasize") ||
+      baseResponse.includes("I'll continue to support")) {
+    // Insert before the final sentence
+    const lastSentenceMatch = baseResponse.match(/\.\s+[^.]+\.$/);
+    if (lastSentenceMatch) {
+      const lastSentenceIndex = lastSentenceMatch.index;
+      if (lastSentenceIndex !== undefined) {
+        return baseResponse.substring(0, lastSentenceIndex + 1) + 
+               locationPhrase + 
+               baseResponse.substring(lastSentenceIndex + 1);
+      }
+    }
+  }
+  
+  // If no appropriate insertion point was found, just append
+  return baseResponse + locationPhrase;
 };
 
 /**
