@@ -1,3 +1,4 @@
+
 import { 
   isIntroduction,
   generateIntroductionResponse,
@@ -358,4 +359,4 @@ export const useResponseGenerator = ({
   };
 };
 
-export { useResponseGenerator };
+// Remove the duplicate export line that was causing the error
