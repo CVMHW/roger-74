@@ -11,7 +11,8 @@ import { ConcernType } from './reflection/reflectionTypes';
 import { 
   cleanFillerWords, 
   detectFillerPatterns, 
-  generateCasualSpeechResponse 
+  generateCasualSpeechResponse,
+  generateMinimalInputResponse
 } from './conversationEnhancement/fillerWordProcessor';
 import { 
   detectOhioReferences,
@@ -78,7 +79,13 @@ export const generateConversationalResponse = (
   // Detect client preferences from conversation
   const clientPreferences = detectClientPreferences(userInput, conversationHistory);
   
-  // First check if the user is asking about CVMHW specifically
+  // First check if the input is very minimal (3 words or less)
+  const words = userInput.trim().split(/\s+/);
+  if (words.length <= 3 && !userInput.includes('?')) {
+    return generateMinimalInputResponse(userInput);
+  }
+  
+  // Check if the user is asking about CVMHW specifically
   const cvmhwResponse = generateCVMHWInfoResponse(userInput);
   if (cvmhwResponse) {
     return adaptToneForClientPreference(cvmhwResponse, clientPreferences);
@@ -132,7 +139,12 @@ export const generateConversationalResponse = (
   
   // Prioritize response types based on intensity and relevance
   
-  // 1. High intensity emotional content takes highest priority
+  // 0. Minimal responses (highest priority)
+  if (fillerPatterns.isMinimalResponse) {
+    return generateMinimalInputResponse(userInput);
+  }
+  
+  // 1. High intensity emotional content takes high priority
   if (emotionalPatterns.hasEmotionalContent && emotionalPatterns.intensity === 'high') {
     const emotionalResponse = generateEmotionalResponse(emotionalPatterns);
     return adaptToneForClientPreference(emotionalResponse, clientPreferences);
@@ -144,19 +156,25 @@ export const generateConversationalResponse = (
     return adaptToneForClientPreference(sarcasmResponse, clientPreferences);
   }
   
-  // 3. Rhetorical questions
+  // 3. Subtle emotional expressions need gentle, conversational responses
+  if (emotionalPatterns.hasEmotionalContent && emotionalPatterns.subtleEmotion) {
+    const emotionalResponse = generateEmotionalResponse(emotionalPatterns);
+    return adaptToneForClientPreference(emotionalResponse, clientPreferences);
+  }
+  
+  // 4. Rhetorical questions
   if (rhetoricalPatterns.isRhetorical) {
     const rhetoricalResponse = generateRhetoricalResponse(rhetoricalPatterns);
     return adaptToneForClientPreference(rhetoricalResponse, clientPreferences);
   }
   
-  // 4. Medium intensity emotional content
+  // 5. Medium intensity emotional content
   if (emotionalPatterns.hasEmotionalContent) {
     const emotionalResponse = generateEmotionalResponse(emotionalPatterns);
     return adaptToneForClientPreference(emotionalResponse, clientPreferences);
   }
   
-  // 5. Ohio-specific context if present
+  // 6. Ohio-specific context if present
   if (ohioContextStrategy.shouldIncludeLocalReference) {
     // Create a response that bridges Ohio reference to mental health
     const ohioReference = ohioReferences.detectedLocations[0] || 
@@ -169,16 +187,27 @@ export const generateConversationalResponse = (
     }
   }
   
-  // 6. Handle casual speech and hesitation patterns
-  if (fillerPatterns.hasHighFillerDensity || fillerPatterns.potentialHesitation) {
+  // 7. Handle casual speech and hesitation patterns
+  if (casualSpeechStrategy.isSubtle || fillerPatterns.hasHighFillerDensity || fillerPatterns.potentialHesitation) {
     // Use the opener from casual speech strategy
     const baseResponse = appropriateResponses[Math.floor(Math.random() * appropriateResponses.length)];
     const response = `${casualSpeechStrategy.suggestedOpener}${baseResponse}`;
     return adaptToneForClientPreference(response, clientPreferences);
   }
   
-  // If no specific pattern is matched, use the general human-like responses
-  // with adaptation for detected preferences
-  const baseResponse = appropriateResponses[Math.floor(Math.random() * appropriateResponses.length)];
+  // If no specific pattern is matched, use more conversational general responses
+  const conversationalResponses = [
+    "What's been going on with you lately?",
+    "How have things been for you?",
+    "I'm here to chat. What's on your mind?",
+    "What would be helpful to talk about today?",
+    "What's been happening in your world?",
+    "How are you feeling about things right now?",
+    "What's been on your mind lately?",
+    "Is there something specific you'd like to talk about?"
+  ];
+  
+  const baseResponse = conversationalResponses[Math.floor(Math.random() * conversationalResponses.length)];
   return adaptToneForClientPreference(baseResponse, clientPreferences);
 };
+

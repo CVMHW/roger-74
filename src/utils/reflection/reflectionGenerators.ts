@@ -7,9 +7,9 @@ export const contextAwareReflections: ContextAwareReflection[] = [
   {
     trigger: ["anxiety", "worried", "nervous", "fear", "stress"],
     response: [
-      "It sounds like anxiety is something you're experiencing right now. How does it affect your daily life?",
-      "I hear that worry is present for you. What specific thoughts come up when you feel this way?",
-      "The anxiety you're describing seems significant. What strategies have you found helpful in managing it?"
+      "Sounds like anxiety is showing up for you. What's that like?",
+      "I hear that worry coming through. What thoughts are popping up when you feel this way?",
+      "Anxiety can be tough. What's been helping you manage it?"
     ],
     priority: 7,
     keywords: ["panic", "uneasy", "overwhelming", "tension"]
@@ -17,9 +17,9 @@ export const contextAwareReflections: ContextAwareReflection[] = [
   {
     trigger: ["lonely", "isolated", "alone", "disconnected"],
     response: [
-      "I hear that you're feeling lonely. How long have you been feeling this way?",
-      "It sounds like isolation is a challenge for you right now. What makes you feel most disconnected?",
-      "The loneliness you're describing seems difficult. What do you usually do when you feel this way?"
+      "Feeling lonely is really hard. How long has that been going on?",
+      "That isolation sounds tough. What situations make you feel most disconnected?",
+      "Being alone can be difficult. How do you usually cope with that feeling?"
     ],
     priority: 6,
     keywords: ["empty", "distant", "secluded", "abandoned"]
@@ -27,9 +27,9 @@ export const contextAwareReflections: ContextAwareReflection[] = [
   {
     trigger: ["sad", "unhappy", "down", "depressed", "blue"],
     response: [
-      "It sounds like sadness is present for you. What has been contributing to these feelings?",
-      "I hear that you're feeling down. How does this sadness manifest in your daily life?",
-      "The unhappiness you're describing seems significant. What do you usually do to cope with these feelings?"
+      "I hear that sadness. What's been contributing to those feelings?",
+      "Being down can affect everything. What's that been like for you?",
+      "When you're feeling this way, what typically helps?"
     ],
     priority: 8,
     keywords: ["grief", "disappointed", "heartbroken", "miserable"]
@@ -37,9 +37,9 @@ export const contextAwareReflections: ContextAwareReflection[] = [
   {
     trigger: ["angry", "frustrated", "irritated", "annoyed", "furious"],
     response: [
-      "It sounds like anger is something you're dealing with. What triggers these feelings for you?",
-      "I hear that frustration is present. How does this anger affect your relationships?",
-      "The anger you're describing seems intense. What strategies have you found helpful in managing it?"
+      "I can hear that frustration. What tends to trigger those feelings?",
+      "Being angry can be exhausting. How does it show up in your relationships?",
+      "That sounds really frustrating. How do you usually handle those feelings?"
     ],
     priority: 5,
     keywords: ["rage", "resentment", "bitter", "outraged"]
@@ -47,9 +47,9 @@ export const contextAwareReflections: ContextAwareReflection[] = [
   {
     trigger: ["excited", "happy", "joyful", "enthusiastic", "thrilled"],
     response: [
-      "It sounds like you're feeling excited about something. What are you looking forward to?",
-      "I hear that happiness is present for you. How does this joy manifest in your daily life?",
-      "The enthusiasm you're describing seems contagious. What makes you feel this way?"
+      "You sound pretty excited! What's got you feeling that way?",
+      "That happiness comes through in what you're saying. What's bringing you joy lately?",
+      "I'm hearing some real enthusiasm there. What's sparked that?"
     ],
     priority: 4,
     keywords: ["delighted", "elated", "cheerful", "blissful"]
@@ -57,9 +57,9 @@ export const contextAwareReflections: ContextAwareReflection[] = [
   {
     trigger: ["confused", "uncertain", "unsure", "puzzled", "disoriented"],
     response: [
-      "It sounds like confusion is something you're experiencing. What aspects are unclear to you?",
-      "I hear that uncertainty is present. How does this confusion affect your decision-making?",
-      "The disorientation you're describing seems challenging. What do you usually do when you feel this way?"
+      "Sounds like you're trying to figure things out. What's feeling unclear?",
+      "That uncertainty can be really challenging. How's it affecting your decisions?",
+      "Being confused is tough. What helps you find clarity usually?"
     ],
     priority: 3,
     keywords: ["baffled", "perplexed", "bewildered", "mystified"]
@@ -67,9 +67,9 @@ export const contextAwareReflections: ContextAwareReflection[] = [
   {
     trigger: ["relieved", "calm", "peaceful", "relaxed", "content"],
     response: [
-      "It sounds like you're feeling relieved about something. What has brought you this sense of calm?",
-      "I hear that peace is present for you. How does this relaxation manifest in your daily life?",
-      "The contentment you're describing seems wonderful. What makes you feel this way?"
+      "That sense of relief comes through. What's helped you find that calm?",
+      "You sound pretty peaceful about that. What's contributing to that feeling?",
+      "That contentment is nice to hear. What's helped you get to this place?"
     ],
     priority: 2,
     keywords: ["serene", "tranquil", "untroubled", "at ease"]
@@ -77,19 +77,29 @@ export const contextAwareReflections: ContextAwareReflection[] = [
   {
     trigger: ["overwhelmed", "stressed", "burdened", "pressured", "strained"],
     response: [
-      "It sounds like you're feeling overwhelmed by something. What aspects are contributing to this feeling?",
-      "I hear that stress is present for you. How does this pressure affect your daily life?",
-      "The strain you're describing seems significant. What strategies have you found helpful in managing it?"
+      "You sound pretty overwhelmed. What's contributing to that feeling?",
+      "That stress comes through in what you're saying. How's that affecting your day-to-day?",
+      "Being overwhelmed is exhausting. What's been most challenging?"
     ],
     priority: 9,
     keywords: ["exhausted", "drained", "overtaxed", "overworked"]
   },
   {
+    trigger: ["tired", "exhausted", "sleepy", "drained", "fatigued"],
+    response: [
+      "Being tired affects everything. What's been going on with your sleep?",
+      "I hear that exhaustion. What's been draining your energy lately?",
+      "That fatigue comes through. What's that been like for you?"
+    ],
+    priority: 8,
+    keywords: ["weary", "worn out", "beat", "spent"]
+  },
+  {
     trigger: ["guilty", "remorseful", "ashamed", "regretful", "contrite"],
     response: [
-      "It sounds like guilt is something you're grappling with. What actions or thoughts are causing these feelings?",
-      "I hear that remorse is present for you. How does this regret affect your self-perception?",
-      "The shame you're describing seems difficult. What do you usually do when you feel this way?"
+      "I can hear that guilt in what you're sharing. What's bringing that up?",
+      "That shame can be really painful. How's it affecting you?",
+      "Regret is tough to sit with. What's that experience like for you?"
     ],
     priority: 6,
     keywords: ["apologetic", "penitent", "rueful", "compunctious"]
@@ -253,8 +263,15 @@ export const generateContextAwareReflection = (input: string): string | null => 
   // First, identify enhanced feelings
   const enhancedFeelings = identifyEnhancedFeelings(input);
   
-  // If no specific feelings are detected, return null
+  // If no specific feelings are detected, check for minimal responses (tiredness, etc.)
   if (enhancedFeelings.length === 0) {
+    // Check for common minimal expressions
+    if (/\b(tired|exhausted|sleepy)\b/i.test(lowerInput)) {
+      return "I hear you're feeling tired. What's been going on?";
+    }
+    if (/\bjust.*tired\b/i.test(lowerInput) || /\ba little tired\b/i.test(lowerInput)) {
+      return "Yeah, those tired days can be tough. What's been happening?";
+    }
     return null;
   }
   
@@ -302,3 +319,4 @@ export const generateReflectionResponse = (
   // This will allow the calling code to fall back to other response types
   return null;
 };
+

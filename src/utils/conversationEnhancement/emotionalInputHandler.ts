@@ -1,4 +1,3 @@
-
 /**
  * Utility for handling emotional and rhetorical inputs
  * Helps Roger respond effectively to expressions of emotion or rhetorical questions
@@ -37,6 +36,12 @@ const emotionalPatterns: EmotionalPattern[] = [
     emotion: 'sadness',
     intensity: 'medium',
     supportApproach: 'reflection'
+  },
+  {
+    regex: /(?:i('m| am) (?:just |a little |kind of |somewhat |feeling )?)?(tired|exhausted|fatigued|sleepy|drained|wiped out)/i,
+    emotion: 'fatigue',
+    intensity: 'medium',
+    supportApproach: 'gentle-presence'
   },
   {
     regex: /(i hate|i('m| am) (?:so |really |completely |totally )?(?:angry|furious|pissed|mad)|this is bullshit)/i,
@@ -118,14 +123,36 @@ export const detectEmotionalPatterns = (input: string): {
   detectedEmotion: string | null;
   intensity: 'low' | 'medium' | 'high' | null;
   supportApproach: string | null;
+  subtleEmotion: boolean;
 } => {
+  // Check for subtle emotional cues first
+  const subtleEmotionPatterns = {
+    fatigue: /(?:just|a little|kind of|somewhat) (tired|sleepy|exhausted)/i,
+    sadness: /(?:just|a little|kind of|somewhat) (sad|down|blue)/i,
+    anxiety: /(?:just|a little|kind of|somewhat) (worried|nervous|anxious)/i,
+  };
+  
+  for (const [emotion, pattern] of Object.entries(subtleEmotionPatterns)) {
+    if (pattern.test(input)) {
+      return {
+        hasEmotionalContent: true,
+        detectedEmotion: emotion,
+        intensity: 'low',
+        supportApproach: 'gentle-presence',
+        subtleEmotion: true
+      };
+    }
+  }
+  
+  // Then check standard patterns
   for (const pattern of emotionalPatterns) {
     if (pattern.regex.test(input)) {
       return {
         hasEmotionalContent: true,
         detectedEmotion: pattern.emotion,
         intensity: pattern.intensity,
-        supportApproach: pattern.supportApproach
+        supportApproach: pattern.supportApproach,
+        subtleEmotion: false
       };
     }
   }
@@ -134,7 +161,8 @@ export const detectEmotionalPatterns = (input: string): {
     hasEmotionalContent: false,
     detectedEmotion: null,
     intensity: null,
-    supportApproach: null
+    supportApproach: null,
+    subtleEmotion: false
   };
 };
 
@@ -186,42 +214,60 @@ export const generateEmotionalResponse = (
     return "";
   }
   
-  const { detectedEmotion, intensity, supportApproach } = emotionalAnalysis;
+  const { detectedEmotion, intensity, supportApproach, subtleEmotion } = emotionalAnalysis;
+  
+  // For subtle emotions, use a more conversational, gentle approach
+  if (subtleEmotion || intensity === 'low') {
+    switch (detectedEmotion) {
+      case 'fatigue':
+        return "Yeah, I get that. Being tired can really affect everything else. What's been going on?";
+      case 'sadness':
+        return "I hear you. Those down days happen to all of us. Want to talk about it a bit?";
+      case 'anxiety':
+        return "That bit of worry can be tough. What's on your mind right now?";
+      case 'anger':
+        return "I can tell something's bothering you. What happened?";
+      default:
+        return "I'm picking up on how you're feeling. Want to share more about that?";
+    }
+  }
   
   // High intensity emotional responses (prioritize safety and support)
   if (intensity === 'high') {
     switch (detectedEmotion) {
       case 'anxiety':
-        return "I hear that you're feeling really overwhelmed right now. Let's take a moment together. Can you try taking a slow, deep breath with me? Breathing in for 4 counts, and out for 6. How does that feel?";
+        return "I hear you're feeling really overwhelmed. That's really hard. Do you want to talk about what's going on, or would it help to take a moment together first?";
       case 'depression':
-        return "I'm genuinely concerned about how you're feeling. These tough moments don't define you, and you don't have to face them alone. What's one small thing that has helped you get through difficult feelings in the past?";
+        return "Thanks for sharing how you're feeling. That sounds really difficult. I'm here with you. What's been the hardest part?";
       case 'anger':
-        return "I can tell you're feeling really frustrated right now, and that's completely valid. Sometimes anger is telling us something important about our boundaries or needs. Would it help to talk more about what's behind these feelings?";
+        return "I can tell there's some frustration there. That makes sense. What's been going on?";
       case 'overwhelm':
-        return "It sounds like you've reached a really challenging point. Sometimes when we feel completely overwhelmed, it helps to focus on just the next small step. What's one tiny thing that might feel manageable right now?";
+        return "It sounds like things have been a lot lately. I'm here to listen. What's been happening?";
       default:
-        return "I can hear how intensely you're feeling right now. You don't have to manage these feelings alone. What kind of support would be most helpful in this moment?";
+        return "I can tell this is hitting you hard. I'm here with you. What would feel most helpful right now?";
     }
   }
   
   // Medium intensity emotional responses (validate and explore)
   switch (supportApproach) {
     case 'validation':
-      return `I hear that you're feeling ${detectedEmotion === 'anxiety' ? 'anxious' : detectedEmotion}. That's a completely understandable response to what you're experiencing. Would you like to share more about what's contributing to these feelings?`;
+      return `I hear you. It's completely normal to feel ${detectedEmotion === 'anxiety' ? 'anxious' : detectedEmotion} with everything going on. What's been on your mind lately?`;
     case 'reflection':
-      return `It sounds like you're feeling ${detectedEmotion}. When did you first notice these feelings coming up? Sometimes understanding the pattern can help us manage them better.`;
+      return `Yeah, feeling ${detectedEmotion} can be tough. What do you think brought this on?`;
     case 'acknowledgment':
-      return `I notice you're expressing ${detectedEmotion}, and that's completely valid. Sometimes these feelings are trying to tell us something important. What do you think your ${detectedEmotion} might be telling you right now?`;
+      return `I hear that ${detectedEmotion}. Makes sense given what you're dealing with. Want to talk about what happened?`;
+    case 'gentle-presence':
+      return `Being ${detectedEmotion === 'fatigue' ? 'tired' : detectedEmotion} can really affect everything. What's been going on with your sleep lately?`;
     case 'self-care':
-      return `I hear that you're feeling ${detectedEmotion === 'fatigue' ? 'exhausted' : detectedEmotion}. Taking care of ourselves is so important, especially in difficult times. What's one small way you might be able to show yourself some compassion today?`;
+      return `It sounds like you're pretty ${detectedEmotion === 'fatigue' ? 'worn out' : detectedEmotion}. What usually helps you when you feel this way?`;
     case 'support':
-      return `It sounds like you're going through a really tough time. You don't have to face this alone. What kind of support has been helpful for you in the past?`;
+      return `That sounds really tough. What kinds of things have been helping you manage lately?`;
     case 'hope':
-      return `I hear how ${detectedEmotion} you're feeling. Even though it might not feel like it right now, these feelings won't last forever. What's one tiny thing that has brought you even a moment of relief in the past?`;
+      return `I hear how ${detectedEmotion} you're feeling. What's one small thing that's been keeping you going?`;
     case 'grounding':
-      return `I notice you're feeling quite ${detectedEmotion}. Sometimes when we feel this way, it helps to ground ourselves in the present moment. Can you tell me three things you can see around you right now?`;
+      return `It sounds like things are pretty intense right now. Would it help to talk about what's happening, or would you prefer to focus on something else for a bit?`;
     default:
-      return `I hear that you're feeling ${detectedEmotion}. That's completely valid. Would it help to explore these feelings a bit more while you're waiting for Dr. Eric?`;
+      return `I notice you're feeling ${detectedEmotion}. What's been going on?`;
   }
 };
 
@@ -241,17 +287,17 @@ export const generateRhetoricalResponse = (
   
   switch (responseType) {
     case 'validation':
-      return "That question really resonates - life can feel incredibly challenging sometimes. These feelings are valid, even if they're difficult to sit with. What aspect has been feeling particularly hard lately?";
+      return "Yeah, it can definitely feel that way sometimes. What's been making things particularly challenging lately?";
     case 'meaning':
-      return "I hear that questioning in your voice. When we're struggling, it can be really difficult to connect with meaning or purpose. What has helped you find meaning during difficult times in the past?";
+      return "I get that. Sometimes it's hard to see the point. What's been making you feel that way?";
     case 'connection':
-      return "That's a powerful question, and one that many people ask when they're feeling isolated. I want you to know that I care about what you're experiencing. What's been making you feel disconnected?";
+      return "I hear you. It can feel pretty isolating sometimes. What's been going on?";
     case 'motivation':
-      return "I hear that hesitation. It's natural to question our efforts when things feel difficult. What small thing has felt worth doing recently, even if it was hard?";
+      return "That's a fair question. What's been making it hard to find motivation lately?";
     case 'endurance':
-      return "I can hear the weariness in that question. Difficult periods can feel endless when we're in them. What's one thing that's helping you hold on right now?";
+      return "I can hear how tiring this has been. What's been the hardest part to deal with?";
     default:
-      return "That's the kind of question we all ask ourselves sometimes. Even though it might feel rhetorical, I'm genuinely interested in exploring it with you if that would be helpful.";
+      return "That's a good question. What's been on your mind about that?";
   }
 };
 
@@ -262,10 +308,10 @@ export const generateRhetoricalResponse = (
 export const generateSarcasmResponse = (): string => {
   const responses = [
     "I hear some frustration there. What's been most challenging for you today?",
-    "I sense that you might be feeling skeptical, which is completely understandable. What would feel more helpful right now?",
-    "Sometimes humor helps us express difficult feelings. Is there something specific you're hoping to address today?",
-    "I appreciate your candor. Sometimes the standard approaches don't resonate. What would be more helpful for you during this waiting time?",
-    "Point taken. Let's try a different approach. What would feel most supportive while you're waiting for Dr. Eric?"
+    "Sounds like things have been frustrating. What's going on?",
+    "I get the sense that something's not working for you. What would be more helpful?",
+    "I hear you. Let's try a different approach. What would feel more supportive right now?",
+    "Fair enough. What would be more helpful to talk about?"
   ];
   
   return responses[Math.floor(Math.random() * responses.length)];
