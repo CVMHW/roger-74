@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { MessageType } from '../components/Message';
 import { 
@@ -34,6 +33,7 @@ import {
   isPersonalSharing,
   generatePersonalSharingResponse
 } from '../utils/masterRules';
+import { generateReflectionResponse } from '../utils/reflectionUtils';
 
 interface ConcernState {
   crisis: boolean;
@@ -66,8 +66,12 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
   // Track conversation stage
   const [conversationStage, setConversationStage] = useState<'initial' | 'early' | 'established'>('initial');
   
-  // New flag to track if an introduction has already been made
+  // Flag to track if an introduction has already been made
   const [introductionMade, setIntroductionMade] = useState(false);
+  
+  // Track conversation duration for the 10-minute rule (using message count as proxy)
+  const [messageCount, setMessageCount] = useState(0);
+  const EARLY_CONVERSATION_MESSAGE_THRESHOLD = 10; // Roughly equivalent to 10 minutes
   
   const { toast } = useToast();
   const { calculateResponseTime, simulateTypingResponse } = useTypingEffect();
@@ -138,6 +142,9 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
   const processUserMessage = async (userInput: string): Promise<MessageType> => {
     setIsTyping(true);
     
+    // Increment message count to track conversation progression
+    setMessageCount(prev => prev + 1);
+    
     // Check for various concern keywords
     const containsCrisisKeywords = detectCrisisKeywords(userInput);
     const containsMedicalConcerns = detectMedicalConcerns(userInput);
@@ -146,12 +153,12 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     const containsSubstanceUseConcerns = detectSubstanceUseConcerns(userInput);
     const containsTentativeHarmLanguage = detectTentativeHarmLanguage(userInput);
     
-    // Update conversation stage based on previous messages
+    // Update conversation stage based on message count
     if (conversationStage === 'initial') {
       setConversationStage('early');
       // Mark that an introduction has been made after the first message
       setIntroductionMade(true);
-    } else if (conversationStage === 'early' && previousResponses.length >= 3) {
+    } else if (conversationStage === 'early' && (previousResponses.length >= 3 || messageCount >= EARLY_CONVERSATION_MESSAGE_THRESHOLD)) {
       setConversationStage('established');
     }
     
@@ -235,6 +242,24 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
           responseText = generateIntroductionResponse();
           setIntroductionMade(true);
         }
+        // Implementation of the 10-minute rule for reflections - prioritize in early conversation
+        else if (messageCount <= EARLY_CONVERSATION_MESSAGE_THRESHOLD) {
+          // First try a reflection response for early conversation (first 10 minutes/messages)
+          const reflectionResponse = generateReflectionResponse(userInput, conversationStage);
+          if (reflectionResponse) {
+            responseText = reflectionResponse;
+          }
+          // If no reflection was generated, fall back to other response types
+          else if (isPersonalSharing(userInput)) {
+            responseText = generatePersonalSharingResponse(userInput);
+          }
+          else if (isSmallTalk(userInput)) {
+            responseText = generateSmallTalkResponse(userInput);
+          }
+          else {
+            responseText = generateAdaptiveResponse(userInput);
+          }
+        }
         // Check for personal sharing - provide validating responses
         else if (isPersonalSharing(userInput)) {
           responseText = generatePersonalSharingResponse(userInput);
@@ -244,8 +269,14 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
           responseText = generateSmallTalkResponse(userInput);
         }
         else {
-          // If no special interaction pattern is detected, generate an adaptive response
-          responseText = generateAdaptiveResponse(userInput);
+          // Try a reflection response first (but less frequently in established conversation)
+          const reflectionResponse = generateReflectionResponse(userInput, conversationStage);
+          if (reflectionResponse) {
+            responseText = reflectionResponse;
+          } else {
+            // If no reflection was appropriate, generate an adaptive response
+            responseText = generateAdaptiveResponse(userInput);
+          }
         }
         
         // Apply master rules to ensure no repetition

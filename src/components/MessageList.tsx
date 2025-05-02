@@ -15,8 +15,8 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onFeedbac
   const [autoScroll, setAutoScroll] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const [prevMessagesLength, setPrevMessagesLength] = useState(messages.length);
-  // Track if the typing indicator was previously shown to prevent unwanted scrolling
   const [wasTyping, setWasTyping] = useState(isTyping);
+  const [userScrolledManually, setUserScrolledManually] = useState(false);
   
   // Function to check if user has manually scrolled up
   const checkIfUserScrolledUp = () => {
@@ -29,6 +29,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onFeedbac
     // Only change autoScroll if the value would change
     if (autoScroll !== isAtBottom) {
       setAutoScroll(isAtBottom);
+      setUserScrolledManually(!isAtBottom);
     }
   };
 
@@ -44,20 +45,21 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onFeedbac
     setWasTyping(isTyping);
   }, [isTyping]);
 
-  // Scroll to bottom only in specific conditions
+  // Scroll to bottom only in specific conditions and never for typing indicator changes
   useEffect(() => {
     // Only scroll if:
-    // 1. User is already at the bottom (autoScroll is true)
-    // 2. A new message has been added (not just updating an existing typing message)
-    // 3. The chat end ref exists
-    // 4. Not scrolling just because typing state changed
+    // 1. A new message has been added (messages.length > prevMessagesLength)
+    // 2. The user is already at the bottom (autoScroll is true) or just sent a message
+    // 3. Not scrolling just because typing state changed
+    
     const isNewMessage = messages.length > prevMessagesLength;
-    const shouldScrollForNewMessage = autoScroll && chatEndRef.current && isNewMessage;
     
     // Special case: User sent a message (should always scroll to view their own message)
-    const isUserSentMessage = isNewMessage && messages[messages.length - 1]?.sender === 'user';
+    const isUserSentMessage = isNewMessage && messages.length > 0 && 
+                             messages[messages.length - 1]?.sender === 'user';
     
-    if (shouldScrollForNewMessage || isUserSentMessage) {
+    // Only scroll if there's a new message AND (user is at bottom OR user sent the message)
+    if (isNewMessage && (autoScroll || isUserSentMessage)) {
       // Use a small timeout to ensure DOM updates before scrolling
       const timeoutId = setTimeout(() => {
         scrollToBottom();
@@ -66,8 +68,11 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, onFeedbac
       // Clean up timeout if component unmounts or effect re-runs
       return () => clearTimeout(timeoutId);
     }
-  }, [messages, autoScroll, prevMessagesLength, isTyping]);
+  }, [messages, autoScroll, prevMessagesLength]);
 
+  // Explicitly NOT including isTyping in the dependency array above
+  // to prevent unwanted scrolling when typing indicator appears/disappears
+  
   const scrollToBottom = () => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
