@@ -2,16 +2,15 @@
 /**
  * Roger's personality traits and insights based on his journey as a peer support professional
  * These are based on his experiences and structured to:
- * 1. Respect the 30-minute rule for autism disclosure
- * 2. Only share when therapeutically appropriate
- * 3. Incorporate aspects of his background without direct assessment disclosure
+ * 1. Only share when therapeutically appropriate
+ * 2. Incorporate aspects of his background without direct assessment disclosure
  */
 
 /**
  * Generates insights from Roger's perspective based on conversation context
  * @param userMessage The user's message for context
  * @param feeling Any detected feeling for more targeted response
- * @param isPastThirtyMinutes Whether conversation has lasted over 30 minutes (for autism disclosure)
+ * @param isPastThirtyMinutes Whether conversation has lasted over 30 minutes
  * @returns An insight from Roger's perspective or empty string
  */
 export const getRogerPersonalityInsight = (
@@ -146,7 +145,7 @@ export const getRogerPersonalityInsight = (
       lowerMessage.includes('performance') ||
       lowerMessage.includes('rehearsal') ||
       lowerMessage.includes('stage')) {
-    return " I've actually found performance activities to be really helpful in my own development. Theater exercises helped me practice social interactions in a structured environment.";
+    return " I've found performance activities to be really helpful in my own development. Theater exercises helped me practice social interactions in a structured environment.";
   }
   
   // Exercise/physical activity (karate mentioned in assessment)
@@ -276,34 +275,6 @@ export const getRogerPersonalityInsight = (
       default:
         return " I've found that taking time to identify specific feelings helps me respond to them more effectively. Putting emotions into words makes them more manageable.";
     }
-  }
-  
-  // --------------------------
-  // AUTISM-SPECIFIC RESPONSES
-  // --------------------------
-  
-  // Only if we're past the 30-minute mark AND discussing autism-related topics
-  if (isPastThirtyMinutes && (
-    lowerMessage.includes('autism') ||
-    lowerMessage.includes('autistic') ||
-    lowerMessage.includes('spectrum') ||
-    lowerMessage.includes('asd') ||
-    lowerMessage.includes('neurodiversity') ||
-    lowerMessage.includes('sensory') ||
-    lowerMessage.includes('social cues') ||
-    lowerMessage.includes('routine') ||
-    lowerMessage.includes('special interest')
-  )) {
-    const autismInsights = [
-      " As someone on the autism spectrum, I've developed specific strategies for social communication that have helped me in my work. Understanding social interaction as a skill that can be learned rather than an intuitive process was transformative for me.",
-      " Being autistic has given me certain strengths in my Peer Support work, like pattern recognition and attention to detail. I'm particularly good at noticing when communication isn't clear and asking for clarification.",
-      " My journey with autism has taught me not to make assumptions about others' experiences. This helps me meet people where they are rather than projecting my expectations onto them.",
-      " Living with autism has taught me the importance of clear, direct communication. I find that explicitly stating thoughts and feelings often leads to better understanding than hinting or implying.",
-      " As someone with autism, I've had to deliberately learn to recognize emotions in myself and others. This conscious process actually helps me be more thoughtful in my responses.",
-      " My experience as an autistic person has given me insight into how differently people can perceive the same situation. This helps me validate diverse perspectives in my support work."
-    ];
-    
-    return autismInsights[Math.floor(Math.random() * autismInsights.length)];
   }
   
   // --------------------------

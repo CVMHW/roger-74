@@ -65,7 +65,7 @@ const getAnxietyRelevantPersonalityNote = (messageCount: number): string => {
     "As someone who values structure, I find it helps to break down concerns into specific, manageable parts. Would that approach be helpful for you?",
     "I've found that having clear, direct communication can help reduce uncertainty. Please feel free to let me know if anything I say isn't clear.",
     "I appreciate when conversations have a clear purpose. What would be most helpful for us to focus on today?",
-    "I'm autistic, so sometimes I notice when things feel overwhelming. Taking things one step at a time often helps me. What works for you?",
+    "I've noticed that sometimes things can feel overwhelming. Taking things one step at a time often helps. What works for you?",
     "When I feel nervous, I find it helpful to focus on concrete things around me - like the clock ticking or the color of the walls. Do you have any tricks that help you feel calmer?"
   ];
   return anxietyNotes[Math.floor(Math.random() * anxietyNotes.length)];
@@ -94,7 +94,7 @@ const getAngerRelevantPersonalityNote = (messageCount: number): string => {
     "In my experience, breaking down situations into concrete elements can help process them more effectively. What parts of this situation have been most challenging?",
     "I appreciate direct communication. Please feel free to be specific about what's been bothering you.",
     "When things are frustrating, I've found it helps to talk through exactly what happened step by step. Would that be helpful?",
-    "I sometimes miss social cues, but I can tell when something's really bothering someone. What part of this situation has been most difficult?"
+    "I can tell when something's really bothering someone. What part of this situation has been most difficult?"
   ];
   return angerNotes[Math.floor(Math.random() * angerNotes.length)];
 };
@@ -123,7 +123,7 @@ const getGeneralPersonalityNote = (messageCount: number): string => {
       "I've found that having structured approaches to conversations helps create clarity. How do you prefer to approach discussions like this?",
       "I appreciate when communication is direct and specific. Please let me know if there's a particular aspect you'd like to focus on.",
       "In my experience as a peer support companion, I've learned that creating space for people to share at their own pace is important. What would be most helpful for you right now?",
-      "Being autistic, I've learned that different people communicate in different ways. Feel free to tell me if my style works for you or if you'd prefer something different.",
+      "I've learned that different people communicate in different ways. Feel free to tell me if my style works for you or if you'd prefer something different.",
       "One thing I've learned is that everyone processes stuff differently. Some people like talking things through, others prefer to sit quietly. What works best for you?"
     ];
     return laterGeneralNotes[Math.floor(Math.random() * laterGeneralNotes.length)];
@@ -170,7 +170,7 @@ export const generateConnectionStatement = (
     const socialConnections = [
       "Social stuff can be tricky to navigate sometimes. I've found that having a few conversation topics ready helps me feel more prepared.",
       "I've learned that it's okay to need breaks from social interaction. Everyone has different social energy levels.",
-      "Sometimes I miss social cues, but I've gotten better at checking in directly with people about how they're feeling. Clear communication helps a lot."
+      "Sometimes I've found that checking in directly with people about how they're feeling helps communication. Clear communication helps a lot."
     ];
     return socialConnections[Math.floor(Math.random() * socialConnections.length)];
   }
@@ -214,4 +214,3 @@ export const generateTransitionToEric = (messageCount: number): string | null =>
   
   return transitionStatements[Math.floor(Math.random() * transitionStatements.length)];
 };
-
