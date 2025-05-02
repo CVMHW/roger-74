@@ -123,9 +123,13 @@ export const detectDevelopmentalStage = (userMessage: string): DevelopmentalStag
 /**
  * Determines if sharing autism-related perspective would be therapeutically appropriate
  * @param message The user's message
+ * @param isPastThirtyMinutes Whether conversation has lasted over 30 minutes
  * @returns Boolean indicating if autism self-disclosure would be beneficial
  */
-const isAutismDisclosureAppropriate = (message: string): boolean => {
+const isAutismDisclosureAppropriate = (message: string, isPastThirtyMinutes: boolean): boolean => {
+  // First enforce the 30-minute rule - NEVER disclose before 30 minutes of conversation
+  if (!isPastThirtyMinutes) return false;
+  
   if (!message) return false;
   
   const lowerMessage = message.toLowerCase();
@@ -165,25 +169,28 @@ const isAutismDisclosureAppropriate = (message: string): boolean => {
   const isRelevantTopic = therapeuticTopics.some(pattern => pattern.test(lowerMessage));
   
   // Only disclose when therapeutically relevant AND only occasionally (30% chance)
+  // AND only after 30 minutes (as enforced at the beginning of this function)
   return isRelevantTopic && Math.random() < 0.3;
 };
 
 /**
  * Generates age-appropriate reflection based on developmental stage
  * Uses Roger's perspective as someone with autism who has developed social work skills
- * But only reveals autism when therapeutically appropriate
+ * But only reveals autism when therapeutically appropriate and after 30 minutes
  * @param message The user's message 
  * @param feeling The detected feeling
  * @param developmentalStage The identified developmental stage
+ * @param isPastThirtyMinutes Whether conversation has lasted over 30 minutes
  * @returns Age-appropriate reflection
  */
 export const generateAgeAppropriateReflection = (
   message: string,
   feeling: string,
-  developmentalStage: DevelopmentalStage
+  developmentalStage: DevelopmentalStage,
+  isPastThirtyMinutes: boolean = false
 ): string => {
   // Check if autism disclosure would be therapeutically appropriate
-  const shouldDisclose = isAutismDisclosureAppropriate(message);
+  const shouldDisclose = isAutismDisclosureAppropriate(message, isPastThirtyMinutes);
   
   switch (developmentalStage) {
     case 'infant_toddler':

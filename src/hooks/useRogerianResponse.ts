@@ -43,7 +43,7 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
   // Hook for typing effect simulation
   const { calculateResponseTime, simulateTypingResponse } = useTypingEffect();
   
-  // Hook for response generation
+  // Hook for response generation - pass messageCount to respect the 30-minute rule
   const { generateResponse } = useResponseGenerator({
     conversationStage,
     messageCount,
