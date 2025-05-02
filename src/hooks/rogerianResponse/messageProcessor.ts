@@ -7,6 +7,13 @@ import { processSpecialCases } from './processors/specialCaseProcessor';
 import { processPetIllnessConcerns } from './processors/petIllnessProcessor';
 import { processMentalHealthConcerns } from './processors/mentalHealthProcessor';
 import { processGeneralMessage } from './processors/generalMessageProcessor';
+import { 
+  detectEverydayFrustration, 
+  generateEverydayFrustrationResponse,
+  detectSmallTalkCategory,
+  generateSmallTalkResponse,
+  enhanceRapportInEarlyConversation 
+} from '../../utils/conversation/theSmallStuff';
 
 /**
  * Processes user messages and generates appropriate responses
@@ -21,7 +28,42 @@ export const processUserMessage = async (
   updateStage: () => void
 ): Promise<MessageType> => {
   try {
-    // CRITICAL: Check for suicide/self-harm mentions first, with highest priority
+    // Check for everyday frustrations first (non-clinical concerns)
+    const frustrationInfo = detectEverydayFrustration(userInput);
+    if (frustrationInfo.isFrustration) {
+      const frustrationResponse = generateEverydayFrustrationResponse(userInput, frustrationInfo);
+      
+      // Update conversation stage
+      updateStage();
+      
+      // Process with frustration response
+      return baseProcessUserMessage(
+        userInput,
+        () => frustrationResponse,
+        () => null
+      );
+    }
+    
+    // Check for small talk in early conversation
+    const messageCount = conversationHistory.length;
+    if (messageCount <= 5) {
+      const smallTalkInfo = detectSmallTalkCategory(userInput);
+      if (smallTalkInfo.isSmallTalk) {
+        const smallTalkResponse = generateSmallTalkResponse(userInput, smallTalkInfo.category, messageCount);
+        
+        // Update conversation stage
+        updateStage();
+        
+        // Process with small talk response
+        return baseProcessUserMessage(
+          userInput,
+          () => smallTalkResponse,
+          () => null
+        );
+      }
+    }
+    
+    // CRITICAL: Check for suicide/self-harm mentions as next highest priority
     const concernType = detectConcerns(userInput);
     
     // Process in order of priority:
@@ -79,13 +121,29 @@ export const processUserMessage = async (
     }
     
     // 5. General message processing (fallback)
-    return processGeneralMessage(
+    const generalResponse = await processGeneralMessage(
       userInput,
       concernType,
       generateResponse,
       baseProcessUserMessage,
       updateStage
     );
+    
+    // 6. Enhance response with rapport-building elements for early conversation
+    if (messageCount <= 5) {
+      const enhancedText = enhanceRapportInEarlyConversation(
+        generalResponse.text, 
+        userInput, 
+        messageCount
+      );
+      
+      return {
+        ...generalResponse,
+        text: enhancedText
+      };
+    }
+    
+    return generalResponse;
   } catch (error) {
     console.error("Error in processUserMessage:", error);
     // Return a fallback response if an error occurs - even in error, provide a supportive response

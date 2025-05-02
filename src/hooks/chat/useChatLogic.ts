@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { MessageType } from '../../components/Message';
 import { useToast } from '@/components/ui/use-toast';
@@ -10,6 +9,15 @@ import { useFeedbackLoop } from './useFeedbackLoop';
 import { useMessageHistory } from './useMessageHistory';
 import { useFeedbackHandler } from './useFeedbackHandler';
 import { useMessageProcessor } from './useMessageProcessor';
+import { 
+  detectEverydayFrustration, 
+  generateEverydayFrustrationResponse,
+  detectSmallTalkCategory,
+  generateSmallTalkResponse,
+  generateSmallTalkTransition,
+  enhanceRapportInEarlyConversation,
+  generateFirstMessageResponse
+} from '../utils/conversation/theSmallStuff';
 
 /**
  * Hook that contains the main chat business logic
