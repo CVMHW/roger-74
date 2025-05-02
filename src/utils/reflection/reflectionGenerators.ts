@@ -1,5 +1,6 @@
+
 import { identifyEnhancedFeelings } from './feelingDetection';
-import { ContextAwareReflection } from './reflectionTypes';
+import { ContextAwareReflection, ConversationStage } from './reflectionTypes';
 
 // Example reflections based on context
 export const contextAwareReflections: ContextAwareReflection[] = [
@@ -281,5 +282,23 @@ export const generateContextAwareReflection = (input: string): string | null => 
   }
   
   // If no matching reflections are found for any feelings, return null
+  return null;
+};
+
+// Add the missing generateReflectionResponse function
+export const generateReflectionResponse = (
+  userInput: string,
+  conversationStage: ConversationStage,
+  messageCount: number
+): string | null => {
+  // Try to generate a context-aware reflection first
+  const contextReflection = generateContextAwareReflection(userInput);
+  
+  if (contextReflection) {
+    return contextReflection;
+  }
+  
+  // If no context-specific reflection was generated, return null
+  // This will allow the calling code to fall back to other response types
   return null;
 };

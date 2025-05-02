@@ -16,7 +16,7 @@ export const createMessage = (
     text,
     sender,
     timestamp: new Date(),
-    concernType
+    concernType: concernType as MessageType['concernType']
   };
 };
 

@@ -14,4 +14,5 @@ export {
   generateReflectionResponse
 };
 
-export { ConcernType };
+// Use 'export type' for re-exporting types when isolatedModules is enabled
+export type { ConcernType };
