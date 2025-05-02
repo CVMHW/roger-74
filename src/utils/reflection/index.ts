@@ -1,9 +1,10 @@
+
 /**
  * Main reflection module that integrates all reflection utilities
  * Enhanced with Feelings Wheel and Children's Emotions Wheel for better emotional understanding
  */
 
-import { ConversationStage, DevelopmentalStage, ChildEmotionCategory } from './reflectionTypes';
+import { ConversationStage, DevelopmentalStage, ChildEmotionCategory, FeelingCategory } from './reflectionTypes';
 import { identifyFeelings, identifyEnhancedFeelings, detectAgeAppropriateEmotions } from './feelingDetection';
 import { createFeelingReflection, createMeaningReflection, createGeneralReflection } from './reflectionGenerators';
 import { shouldUseReflection, detectDevelopmentalStage, generateAgeAppropriateReflection } from './reflectionStrategies';
