@@ -294,26 +294,6 @@ export const isSmallTalk = (message: string): boolean => {
 };
 
 /**
- * Enhanced small talk response generation that incorporates:
- * 1. Conversation starter cards topics
- * 2. Turn-taking principles 
- * 3. Specific waiting room scenarios
- */
-export const generateSmallTalkResponse = (userInput: string): string => {
-  // First check if this is specifically about waiting for Eric
-  if (isWaitingRoomRelated(userInput)) {
-    return generateWaitingRoomResponse(userInput);
-  }
-  
-  // Get message count from the global state (if available)
-  // This is a simplified approach - in a real implementation,
-  // you would pass the messageCount as a parameter
-  const messageCount = 5; // Default to early conversation state
-  
-  return generateSmallTalkResponse(userInput, messageCount);
-};
-
-/**
  * Detect if a message includes sharing personal information
  * @param message The user's message
  * @returns Boolean indicating if the message appears to contain personal sharing
@@ -424,3 +404,10 @@ import {
   shouldUseSmallTalk,
   generateSmallTalkResponse
 } from './conversation/smallTalkUtils';
+
+// Re-export the imported small talk functions
+export { 
+  isWaitingRoomRelated, 
+  generateWaitingRoomResponse,
+  shouldUseSmallTalk 
+};

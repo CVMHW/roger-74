@@ -1,8 +1,8 @@
+
 import { 
   isIntroduction,
   generateIntroductionResponse,
   isSmallTalk,
-  generateSmallTalkResponse,
   isPersonalSharing,
   generatePersonalSharingResponse
 } from '../../utils/masterRules';
@@ -18,6 +18,10 @@ import {
   getMildPTSDResponse,
   generateDeescalationResponse
 } from '../../utils/responseUtils';
+
+// Import generateSmallTalkResponse directly from smallTalkUtils instead of masterRules
+import { generateSmallTalkResponse } from '../../utils/conversation/smallTalkUtils';
+
 import { detectDefensiveReaction } from '../../utils/safetySupport';
 import { ConversationStage } from './conversationStageManager';
 import { detectDevelopmentalStage } from '../../utils/reflection/reflectionStrategies';

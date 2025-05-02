@@ -18,6 +18,9 @@ import { generateSafetyConcernResponse, explainInpatientProcess } from '../utils
 import { ConcernType } from '../utils/reflection/reflectionTypes';
 import { DeceptionAnalysis } from '../utils/detectionUtils/deceptionDetection';
 
+// Import generateSmallTalkResponse directly from smallTalkUtils
+import { generateSmallTalkResponse } from '../utils/conversation/smallTalkUtils';
+
 interface UseRogerianResponseReturn {
   isTyping: boolean;
   processUserMessage: (userInput: string) => Promise<MessageType>;
