@@ -1,6 +1,7 @@
 
 /**
  * Type definitions for the reflection system
+ * Enhanced with Feelings Wheel data structures
  */
 
 // Categories of feeling words to help identify emotions in text
@@ -30,6 +31,14 @@ export interface ReflectionPrinciple {
 // Define the allowed concern types for consistency across the application
 export type ConcernType = 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | null;
 
+// New interface for feelings wheel data
+export interface WheelFeelingData {
+  detectedFeeling: string;   // The exact feeling word detected
+  coreEmotion: string;       // The core emotion category from the wheel
+  relatedFeelings: string[]; // Related feelings from the same section of the wheel
+  intensity: number;         // How specific/nuanced the feeling is (1-3)
+}
+
 // Enhanced interface to support rich, context-aware reflections
 export interface ContextAwareReflection {
   feeling: FeelingCategory;
@@ -41,6 +50,7 @@ export interface ContextAwareReflection {
   locationContext?: string; // Location context if mentioned (e.g., "at work", "in Cleveland")
   userConcern?: string; // The primary concern expressed by the user
   developmentalStage?: DevelopmentalStage; // The developmental stage of the user
+  wheelFeelingData?: WheelFeelingData; // Enhanced feelings wheel data if available
 }
 
 // Interface for tracking personalized topics for better follow-up
@@ -51,3 +61,4 @@ export interface PersonalizedTopic {
   mentionCount: number; // How many times this has been brought up
   lastMentioned: Date; // When this was last discussed
 }
+

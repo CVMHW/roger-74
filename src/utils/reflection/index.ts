@@ -1,16 +1,25 @@
 /**
  * Main reflection module that integrates all reflection utilities
+ * Enhanced with Feelings Wheel lexicon for better emotional understanding
  */
 
 import { ConversationStage, DevelopmentalStage } from './reflectionTypes';
-import { identifyFeelings } from './feelingDetection';
+import { identifyFeelings, identifyEnhancedFeelings } from './feelingDetection';
 import { createFeelingReflection, createMeaningReflection, createGeneralReflection } from './reflectionGenerators';
 import { shouldUseReflection, detectDevelopmentalStage, generateAgeAppropriateReflection } from './reflectionStrategies';
 import { generateConversationStarterResponse } from './ageAppropriateConversation';
 import { getRogerPersonalityInsight } from './rogerPersonality';
+import { 
+  feelingsWheel, 
+  findFeelingInWheel, 
+  getCoreEmotion, 
+  getRelatedFeelings, 
+  getAllEmotionWords 
+} from './feelingsWheel';
 
 /**
  * Generates an appropriate reflection response based on user's message
+ * Now enhanced with Feelings Wheel lexicon for more nuanced emotional understanding
  * @param userMessage The user's message
  * @param conversationStage Current stage of conversation
  * @param messageCount Number of messages exchanged so far
@@ -30,8 +39,9 @@ export const generateReflectionResponse = (
     // Detect developmental stage for age-appropriate responses
     const developmentalStage = detectDevelopmentalStage(userMessage);
     
-    // First identify any feelings that are explicitly stated
-    const feelings = identifyFeelings(userMessage);
+    // Enhanced: Use our new feelings wheel detection for more nuanced understanding
+    const enhancedFeelings = identifyEnhancedFeelings(userMessage);
+    const feelings = enhancedFeelings.map(ef => ef.category);
     
     // Check for conversation duration to respect the 30-minute rule about autism disclosure
     const isPastThirtyMinutes = messageCount >= 30; // assuming each message takes ~1 minute
@@ -40,14 +50,16 @@ export const generateReflectionResponse = (
     if (feelings.length > 0) {
       // If we detected a developmental stage, use age-appropriate reflection
       if (developmentalStage && developmentalStage !== 'adult') {
-        return generateAgeAppropriateReflection(userMessage, feelings[0], developmentalStage, isPastThirtyMinutes);
+        // Now we can potentially use more specific feeling words from the wheel
+        const detectedWord = enhancedFeelings[0].detectedWord || feelings[0];
+        return generateAgeAppropriateReflection(userMessage, detectedWord, developmentalStage, isPastThirtyMinutes);
       }
       
-      // Otherwise use standard feeling reflection
+      // Otherwise use standard feeling reflection with enhanced wheel data
       const feelingReflection = createFeelingReflection(feelings, userMessage);
       
       // Get personality insight to potentially add to the reflection
-      const personalityInsight = getRogerPersonalityInsight(userMessage, feelings[0], isPastThirtyMinutes);
+      const personalityInsight = getRogerPersonalityInsight(userMessage, enhancedFeelings[0].detectedWord || feelings[0], isPastThirtyMinutes);
       
       if (personalityInsight && Math.random() < 0.2) { // 20% chance to add personality insight
         return (feelingReflection || createGeneralReflection(userMessage)) + personalityInsight;
@@ -112,6 +124,28 @@ export const generateReflectionResponse = (
   }
 };
 
+/**
+ * Gets information about a feeling from the Feelings Wheel
+ * Useful for educational explanations about emotions when appropriate
+ * @param feeling The feeling to get information about
+ * @returns Information about the feeling's place in the wheel hierarchy
+ */
+export const getEmotionWheelInfo = (feeling: string) => {
+  const wheelFeeling = findFeelingInWheel(feeling);
+  if (!wheelFeeling) return null;
+  
+  const coreEmotion = getCoreEmotion(feeling);
+  const relatedFeelings = getRelatedFeelings(feeling);
+  
+  return {
+    feeling: wheelFeeling.name,
+    synonyms: wheelFeeling.synonyms,
+    coreEmotion,
+    relatedFeelings: relatedFeelings.map(f => f.name),
+    intensity: wheelFeeling.intensity
+  };
+};
+
 // Export all submodules for direct access
 export * from './reflectionTypes';
 export * from './feelingDetection';
@@ -122,3 +156,4 @@ export * from './reflectionPhrases';
 export * from './reflectionPrinciples';
 export * from './ageAppropriateConversation';
 export * from './rogerPersonality';
+export * from './feelingsWheel';

@@ -61,6 +61,27 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
   
   // Process user message with stage update
   const processUserMessage = async (userInput: string): Promise<MessageType> => {
+    // Check for asking if Roger is Drew (unconditional rule)
+    if (
+      userInput.toLowerCase().includes("are you drew") || 
+      userInput.toLowerCase().includes("is your name drew") ||
+      userInput.toLowerCase().includes("your name is drew") ||
+      userInput.toLowerCase().includes("you're drew")
+    ) {
+      // Direct response to redirect focus
+      const redirectResponse = "I'm Roger, your peer support companion. My role is to be here for you and focus on your needs and experiences. What would be most helpful for us to explore together today?";
+      
+      // Update conversation stage before processing
+      updateStage();
+      
+      // Process the usual way but with our specific response
+      return baseProcessUserMessage(
+        userInput,
+        () => redirectResponse,
+        detectConcerns
+      );
+    }
+    
     // Update conversation stage before processing
     updateStage();
     
@@ -80,3 +101,4 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
 };
 
 export default useRogerianResponse;
+

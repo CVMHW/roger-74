@@ -1,10 +1,12 @@
 /**
  * Utilities for generating reflections based on detected emotions
+ * Enhanced with Feelings Wheel data for more nuanced reflections
  */
 
 import { FeelingCategory, ContextAwareReflection } from './reflectionTypes';
 import { reflectionPhrases, generalReflections, meaningReflections } from './reflectionPhrases';
-import { extractContextualElements, identifyFeelings } from './feelingDetection';
+import { extractContextualElements, identifyEnhancedFeelings, EnhancedFeelingResult } from './feelingDetection';
+import { findFeelingInWheel, getRelatedFeelings, feelingsWheel } from './feelingsWheel';
 
 /**
  * Extracts key context from a user message
@@ -56,10 +58,13 @@ export const createRichContextReflection = (userMessage: string): ContextAwareRe
     return null;
   }
   
-  const feelings = identifyFeelings(userMessage);
-  if (feelings.length === 0) return null;
+  const enhancedFeelings = identifyEnhancedFeelings(userMessage);
+  if (enhancedFeelings.length === 0) return null;
   
-  const primaryFeeling = feelings[0];
+  const primaryFeeling = enhancedFeelings[0].category;
+  const detectedWord = enhancedFeelings[0].detectedWord;
+  const wheelData = enhancedFeelings[0].wheelData;
+  
   const contextElements = extractContextualElements(userMessage);
   const significantPhrases = extractSignificantPhrases(userMessage);
   
@@ -100,6 +105,16 @@ export const createRichContextReflection = (userMessage: string): ContextAwareRe
     timeContext: contextElements.timeContext || undefined,
     locationContext: contextElements.locations.length > 0 ? contextElements.locations[0] : undefined
   };
+  
+  // Add feelings wheel data if available
+  if (wheelData) {
+    reflection.wheelFeelingData = {
+      detectedFeeling: detectedWord,
+      coreEmotion: wheelData.coreEmotion,
+      relatedFeelings: wheelData.relatedFeelings,
+      intensity: wheelData.intensity
+    };
+  }
   
   return reflection;
 };
@@ -176,6 +191,7 @@ export const extractSignificantPhrases = (userMessage: string): string => {
 
 /**
  * Generates a reflection of feeling based on detected emotions
+ * Now enhanced with Feelings Wheel data for richer emotional understanding
  * @param feelings Array of identified feelings
  * @param userMessage The original user message
  * @returns A reflection of feeling response
@@ -201,6 +217,25 @@ export const createFeelingReflection = (feelings: FeelingCategory[], userMessage
         
         // Create a highly personalized reflection incorporating specific details
         let personalizedReflection = basePhrase;
+        
+        // Add feelings wheel specificity if available
+        if (richContext.wheelFeelingData) {
+          const { detectedFeeling, coreEmotion, relatedFeelings } = richContext.wheelFeelingData;
+          
+          // If we detected a nuanced feeling (intensity 3), acknowledge it specifically
+          if (richContext.wheelFeelingData.intensity >= 2) {
+            personalizedReflection = personalizedReflection.replace(
+              richContext.feeling, 
+              detectedFeeling
+            );
+            
+            // Sometimes add information about related feelings
+            if (relatedFeelings.length > 0 && Math.random() < 0.3) {
+              const randomRelatedFeeling = relatedFeelings[Math.floor(Math.random() * relatedFeelings.length)];
+              personalizedReflection += ` Sometimes feelings like ${detectedFeeling} might also come with feelings of ${randomRelatedFeeling}.`;
+            }
+          }
+        }
         
         // Add specific details if available
         if (richContext.specificDetails) {
@@ -255,13 +290,25 @@ export const createFeelingReflection = (feelings: FeelingCategory[], userMessage
       if (phrases.length > 0) {
         const basePhrase = phrases[Math.floor(Math.random() * phrases.length)];
         
+        // Check for more nuanced emotions from the feelings wheel
+        const enhancedFeelings = identifyEnhancedFeelings(userMessage);
+        let enhancedPhrase = basePhrase;
+        
+        if (enhancedFeelings.length > 0 && enhancedFeelings[0].wheelData) {
+          // Replace the basic emotion with the more specific one detected
+          enhancedPhrase = enhancedPhrase.replace(
+            primaryFeeling, 
+            enhancedFeelings[0].detectedWord
+          );
+        }
+        
         // Incorporate context and/or significant phrases into the reflection
         if (context && significantPhrases) {
-          return `${basePhrase} I notice you mentioned ${context} and ${significantPhrases}. What about this has been most significant for you?`;
+          return `${enhancedPhrase} I notice you mentioned ${context} and ${significantPhrases}. What about this has been most significant for you?`;
         } else if (context) {
-          return `${basePhrase} I notice you mentioned ${context}. Can you tell me more about how that's affecting you?`;
+          return `${enhancedPhrase} I notice you mentioned ${context}. Can you tell me more about how that's affecting you?`;
         } else if (significantPhrases) {
-          return `${basePhrase} When you say "${significantPhrases}", what aspects of that are most difficult?`;
+          return `${enhancedPhrase} When you say "${significantPhrases}", what aspects of that are most difficult?`;
         }
       }
     }
