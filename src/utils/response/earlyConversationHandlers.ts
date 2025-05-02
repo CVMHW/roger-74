@@ -6,6 +6,12 @@ import { detectDevelopmentalStage } from '../reflection/reflectionStrategies';
 import { shouldUseConversationStarter, generateConversationStarterResponse } from '../reflection/ageAppropriateConversation';
 import { getRogerPerspectivePhrase } from './personalityHelpers';
 import { createOhioContextResponse } from './handlers';
+import { 
+  shouldUseWaitingRoomEngagement, 
+  generateWaitingRoomEngagement, 
+  generateCulturalConnectionPrompt, 
+  incorporateRogerPersonality 
+} from '../conversation/earlyEngagement';
 
 /**
  * Handles the logic for early conversation responses
@@ -32,10 +38,40 @@ export const handleEarlyConversation = (
   if (ohioContextResponse) {
     return ohioContextResponse;
   }
+
+  // Check if we should use waiting room engagement (first 1-10 messages)
+  // This is our new priority for early conversation to keep patients engaged
+  if (shouldUseWaitingRoomEngagement(userInput, messageCount)) {
+    // Determine if Eric is likely running behind based on keywords
+    const isRunningBehind = /wait(ing)?|how long|when|delayed|late/i.test(userInput);
+    const isCrisisDelay = /emergency|urgent|crisis/i.test(userInput);
+    
+    const waitingRoomResponse = generateWaitingRoomEngagement(messageCount, isRunningBehind, isCrisisDelay);
+    
+    // Add a cultural connection prompt if appropriate
+    const culturalPrompt = generateCulturalConnectionPrompt(userInput, messageCount);
+    if (culturalPrompt) {
+      return `${waitingRoomResponse} ${culturalPrompt}`;
+    }
+    
+    // Add a personality note if no cultural prompt was added
+    const personalityNote = incorporateRogerPersonality(userInput, messageCount);
+    if (personalityNote) {
+      return `${waitingRoomResponse} ${personalityNote}`;
+    }
+    
+    return waitingRoomResponse;
+  }
   
   // Process any personal sharing with explicit feelings
   if (isPersonalSharing(userInput)) {
     const personalResponse = generatePersonalSharingResponse(userInput);
+    
+    // Add cultural connection for personal sharing if appropriate
+    const culturalPrompt = generateCulturalConnectionPrompt(userInput, messageCount);
+    if (culturalPrompt && messageCount <= 7) {
+      return `${personalResponse} ${culturalPrompt}`;
+    }
     
     // Occasionally add Roger's perspective to personal sharing responses
     const perspectivePhrase = getRogerPerspectivePhrase(userInput, messageCount);
@@ -57,6 +93,13 @@ export const handleEarlyConversation = (
   // First try a reflection response for early conversation
   const reflectionResponse = generateReflectionResponse(userInput, conversationStage, messageCount);
   if (reflectionResponse) {
+    // Add personality note to reflection responses in early conversation
+    if (messageCount <= 10) {
+      const personalityNote = incorporateRogerPersonality(userInput, messageCount);
+      if (personalityNote) {
+        return `${reflectionResponse} ${personalityNote}`;
+      }
+    }
     return reflectionResponse;
   }
   
