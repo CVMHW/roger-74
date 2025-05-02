@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { MessageType } from '../components/Message';
 import { 
@@ -22,7 +23,15 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import useTypingEffect from './useTypingEffect';
 import useAdaptiveResponse from './useAdaptiveResponse';
-import { MASTER_RULES, isUniqueResponse, calculateMinimumResponseTime } from '../utils/masterRules';
+import { 
+  MASTER_RULES, 
+  isUniqueResponse, 
+  calculateMinimumResponseTime,
+  isIntroduction,
+  generateIntroductionResponse,
+  isSmallTalk,
+  generateSmallTalkResponse
+} from '../utils/masterRules';
 
 interface ConcernState {
   crisis: boolean;
@@ -52,6 +61,8 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
   });
   // Track previous responses to prevent repetition (master rule)
   const [previousResponses, setPreviousResponses] = useState<string[]>([]);
+  // Track conversation stage
+  const [conversationStage, setConversationStage] = useState<'initial' | 'early' | 'established'>('initial');
   
   const { toast } = useToast();
   const { calculateResponseTime, simulateTypingResponse } = useTypingEffect();
@@ -126,6 +137,13 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     const containsSubstanceUseConcerns = detectSubstanceUseConcerns(userInput);
     const containsTentativeHarmLanguage = detectTentativeHarmLanguage(userInput);
     
+    // Update conversation stage based on previous messages
+    if (conversationStage === 'initial') {
+      setConversationStage('early');
+    } else if (conversationStage === 'early' && previousResponses.length >= 3) {
+      setConversationStage('established');
+    }
+    
     // Show appropriate alerts based on detected concerns
     if (containsTentativeHarmLanguage && !concernsShown.tentativeHarm) {
       setConcernsShown(prev => ({ ...prev, tentativeHarm: true }));
@@ -175,7 +193,7 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
         let responseText;
         let concernType = null;
         
-        // Determine which response to use based on detected concerns
+        // Safety concerns always take precedence as per master rules
         if (containsTentativeHarmLanguage) {
           responseText = getTentativeHarmMessage();
           concernType = 'tentative-harm';
@@ -200,6 +218,14 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
           responseText = getSubstanceUseMessage();
           concernType = 'substance-use';
         } 
+        // Check for introductions and greetings - prioritize human-like interaction
+        else if (isIntroduction(userInput)) {
+          responseText = generateIntroductionResponse();
+        }
+        // Check for small talk - natural conversation flow
+        else if (isSmallTalk(userInput)) {
+          responseText = generateSmallTalkResponse(userInput);
+        }
         else {
           // Generate an adaptive response based on the client's input
           responseText = generateAdaptiveResponse(userInput);
