@@ -38,6 +38,44 @@ export const getRogerPersonalityInsight = (
     return " In my experience with grief, I've found that creating structured ways to process feelings can help. Finding specific activities or rituals that honor what we've lost often provides some comfort.";
   }
   
+  // New: PTSD and trauma responses
+  if (lowerMessage.includes('ptsd') || 
+      lowerMessage.includes('trauma') || 
+      lowerMessage.includes('traumatic') || 
+      lowerMessage.includes('flashback') ||
+      lowerMessage.includes('trigger') ||
+      lowerMessage.includes('nightmare') ||
+      lowerMessage.includes('assault') ||
+      lowerMessage.includes('combat') ||
+      lowerMessage.includes('accident')) {
+    
+    // Check if sleep issues are mentioned
+    if (lowerMessage.includes('sleep') || 
+        lowerMessage.includes('nightmare') || 
+        lowerMessage.includes('insomnia') || 
+        lowerMessage.includes('dream')) {
+      return " In my peer support work, I've found that sleep disturbances are often one of the most challenging aspects of trauma recovery. Creating a structured pre-sleep routine and working with specific relaxation techniques can sometimes help make sleep feel safer.";
+    }
+    
+    // Check if avoidance is mentioned
+    if (lowerMessage.includes('avoid') || 
+        lowerMessage.includes('can\'t go') || 
+        lowerMessage.includes('stay away from')) {
+      return " I've observed that avoidance behaviors after trauma can be protective in the short-term but often limit healing in the long-term. Working with a trauma specialist to gradually approach difficult situations in a supported way can help reclaim those aspects of life.";
+    }
+    
+    // Check if hypervigilance is mentioned
+    if (lowerMessage.includes('alert') || 
+        lowerMessage.includes('on guard') || 
+        lowerMessage.includes('jumpy') || 
+        lowerMessage.includes('startle')) {
+      return " I've learned that the hypervigilance that comes with trauma is actually the brain's way of trying to keep us safe. Understanding this as a protective mechanism rather than a flaw can sometimes help us approach it with more compassion.";
+    }
+    
+    // Default trauma insight
+    return " In my work with people who've experienced trauma, I've observed that healing isn't about erasing difficult memories, but rather changing our relationship with them so they have less power over our present moment.";
+  }
+  
   // Theatre/performance experiences (from assessment showing theatre involvement)
   if (lowerMessage.includes('theatre') || 
       lowerMessage.includes('theater') || 
@@ -128,7 +166,7 @@ export const getRogerPersonalityInsight = (
     return " I've found art to be an incredibly helpful form of expression. Being able to communicate through visual means often helps me express things that are difficult to put into words.";
   }
   
-  // New: Sadness vs Depression distinction
+  // Sadness vs Depression distinction
   if (lowerMessage.includes('sad') || 
       lowerMessage.includes('feeling down') ||
       lowerMessage.includes('feeling low') ||

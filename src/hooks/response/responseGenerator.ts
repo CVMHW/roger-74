@@ -14,7 +14,9 @@ import {
   getMentalHealthConcernMessage,
   getEatingDisorderMessage,
   getSubstanceUseMessage,
-  getTentativeHarmMessage
+  getTentativeHarmMessage,
+  getPTSDMessage,
+  getMildPTSDResponse
 } from '../../utils/responseUtils';
 import { ConversationStage } from './conversationStageManager';
 import { detectDevelopmentalStage } from '../../utils/reflection/reflectionStrategies';
@@ -133,11 +135,16 @@ export const useResponseGenerator = ({
     concernType: ConcernType
   ): string => {
     try {
-      // Safety concerns always take precedence, but now handle mild gambling differently
+      // Safety concerns always take precedence
       if (concernType) {
-        // New special handling for mild gambling
+        // Special handling for mild gambling
         if (concernType === 'mild-gambling') {
           return createMildGamblingResponse(userInput);
+        }
+        
+        // New special handling for mild PTSD
+        if (concernType === 'ptsd-mild') {
+          return getMildPTSDResponse(userInput);
         }
         
         switch (concernType) {
@@ -153,10 +160,12 @@ export const useResponseGenerator = ({
             return getEatingDisorderMessage();
           case 'substance-use':
             return getSubstanceUseMessage();
+          case 'ptsd':
+            return getPTSDMessage();
         }
       }
 
-      // New path: Check for normal sadness vs clinical depression
+      // Check for normal sadness vs clinical depression
       const sadnessResponse = createSadnessResponse(userInput);
       if (sadnessResponse) {
         // Add Roger's perspective occasionally for sadness responses

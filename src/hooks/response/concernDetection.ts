@@ -7,7 +7,8 @@ import {
   detectMentalHealthConcerns,
   detectEatingDisorderConcerns,
   detectSubstanceUseConcerns,
-  detectTentativeHarmLanguage
+  detectTentativeHarmLanguage,
+  detectPTSDConcerns
 } from '../../utils/detectionUtils';
 
 interface ConcernState {
@@ -16,8 +17,9 @@ interface ConcernState {
   mentalHealth: boolean;
   eatingDisorder: boolean;
   substanceUse: boolean;
-  mildGambling: boolean;  // Added new state for mild gambling
+  mildGambling: boolean;
   tentativeHarm: boolean;
+  ptsd: boolean;  // Added new state for PTSD
 }
 
 export const useConcernDetection = () => {
@@ -27,8 +29,9 @@ export const useConcernDetection = () => {
     mentalHealth: false,
     eatingDisorder: false,
     substanceUse: false,
-    mildGambling: false,  // Track if we've shown mild gambling message
-    tentativeHarm: false
+    mildGambling: false,
+    tentativeHarm: false,
+    ptsd: false  // Initialize PTSD concern tracking
   });
 
   const { toast } = useToast();
@@ -62,6 +65,12 @@ export const useConcernDetection = () => {
       case 'tentative-harm':
         description = "I've noticed concerning language that requires professional support. Please see scheduling link below.";
         break;
+      case 'ptsd-severe':
+        description = "I notice you're describing symptoms that may be related to PTSD. Professional support from a trauma specialist is recommended.";
+        break;
+      case 'ptsd-moderate':
+        description = "Your experiences sound challenging and may be related to trauma. Resources for trauma support are available below.";
+        break;
       default:
         description = "Please see the resources below for support with your concerns.";
     }
@@ -85,6 +94,11 @@ export const useConcernDetection = () => {
     const containsSubstanceUseConcerns = substanceConcernsResult.detected;
     const substanceConcernSeverity = substanceConcernsResult.severity || 'mild';
     const containsTentativeHarmLanguage = detectTentativeHarmLanguage(userInput);
+    
+    // New PTSD detection
+    const ptsdResult = detectPTSDConcerns(userInput);
+    const containsPTSDConcerns = ptsdResult.detected;
+    const ptsdSeverity = ptsdResult.severity;
 
     // Determine if any concerns need to be shown
     const concerns = {
@@ -95,7 +109,10 @@ export const useConcernDetection = () => {
       eatingDisorder: containsEatingDisorderConcerns && !concernsShown.eatingDisorder,
       substanceUseSevere: containsSubstanceUseConcerns && substanceConcernSeverity === 'severe' && !concernsShown.substanceUse,
       substanceUseModerate: containsSubstanceUseConcerns && substanceConcernSeverity === 'moderate' && !concernsShown.substanceUse,
-      mildGambling: containsSubstanceUseConcerns && substanceConcernSeverity === 'mild' && !concernsShown.mildGambling
+      mildGambling: containsSubstanceUseConcerns && substanceConcernSeverity === 'mild' && !concernsShown.mildGambling,
+      ptsdSevere: containsPTSDConcerns && ptsdSeverity === 'severe' && !concernsShown.ptsd,
+      ptsdModerate: containsPTSDConcerns && ptsdSeverity === 'moderate' && !concernsShown.ptsd,
+      ptsdMild: containsPTSDConcerns && ptsdSeverity === 'mild' && !concernsShown.ptsd
     };
 
     // Show appropriate alerts based on detected concerns
@@ -124,6 +141,11 @@ export const useConcernDetection = () => {
       showConcernToast('eating-disorder');
       return 'eating-disorder';
     }
+    else if (concerns.ptsdSevere || concerns.ptsdModerate) {
+      setConcernsShown(prev => ({ ...prev, ptsd: true }));
+      showConcernToast(concerns.ptsdSevere ? 'ptsd-severe' : 'ptsd-moderate');
+      return 'ptsd';
+    }
     else if (concerns.substanceUseSevere) {
       setConcernsShown(prev => ({ ...prev, substanceUse: true }));
       showConcernToast('substance-use-severe');
@@ -137,7 +159,12 @@ export const useConcernDetection = () => {
     else if (concerns.mildGambling) {
       setConcernsShown(prev => ({ ...prev, mildGambling: true }));
       showConcernToast('mild-gambling');
-      return 'mild-gambling'; // New type to handle mild gambling conversationally
+      return 'mild-gambling';
+    }
+    else if (concerns.ptsdMild) {
+      // For mild PTSD, don't show a toast but return the concern type
+      // so the response generator can handle it conversationally
+      return 'ptsd-mild';
     }
 
     return null;

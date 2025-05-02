@@ -200,6 +200,68 @@ export const detectSubstanceUseConcerns = (message: string): { detected: boolean
   return { detected: false };
 };
 
+// PTSD concern detection
+export const detectPTSDConcerns = (message: string): { detected: boolean; severity: 'mild' | 'moderate' | 'severe' } => {
+  if (!message) return { detected: false, severity: 'mild' };
+  
+  const lowerMessage = message.toLowerCase();
+  
+  // Severe PTSD indicators based on PCL-5 and clinical literature
+  const severePTSDKeywords = [
+    'flashback', 'reliving trauma', 'can\'t sleep at all', 'severe nightmares', 
+    'always on guard', 'completely numb', 'extreme anger', 'suicidal thoughts',
+    'can\'t function', 'lost control', 'completely avoid', 'completely cut off',
+    'constant nightmares', 'constant fear', 'extreme reactions', 'unable to work',
+    'cant live like this', 'traumatized', 'can\'t escape the memories'
+  ];
+  
+  // Moderate PTSD indicators
+  const moderatePTSDKeywords = [
+    'ptsd', 'post traumatic', 'traumatic stress', 'nightmares', 'flashbacks',
+    'triggered', 'avoid places', 'avoid people', 'hypervigilant', 'jumpy',
+    'trouble sleeping', 'bad dreams', 'memory problems', 'feeling unsafe',
+    'combat', 'assault', 'military trauma', 'trauma', 'sexual assault',
+    'physically attacked', 'started after'
+  ];
+  
+  // Mild or general trauma indicators
+  const mildTraumaKeywords = [
+    'bad experience', 'difficult event', 'upsetting memory', 'stressful situation',
+    'uncomfortable around', 'bothered by', 'reminded me of', 'thinking about it',
+    'hard to forget', 'disturbing'
+  ];
+  
+  // Sleep disturbance indicators (particularly relevant for PTSD)
+  const sleepDisturbanceKeywords = [
+    'night sweats', 'wake up scared', 'trouble falling asleep', 'wake up frequently',
+    'nightmares', 'dream about it', 'can\'t sleep', 'disrupted sleep',
+    'insomnia', 'scream in sleep', 'night terror', 'thrash in sleep',
+    'act out dreams', 'violent dreams'
+  ];
+  
+  // Check for severity based on quantity and quality of symptoms described
+  // If severe PTSD keywords are present or many moderate ones
+  if (severePTSDKeywords.some(keyword => lowerMessage.includes(keyword)) ||
+      (moderatePTSDKeywords.filter(keyword => lowerMessage.includes(keyword)).length >= 3)) {
+    return { detected: true, severity: 'severe' };
+  }
+  
+  // If moderate PTSD keywords are present or combination with sleep disturbances
+  if (moderatePTSDKeywords.some(keyword => lowerMessage.includes(keyword)) ||
+      (mildTraumaKeywords.some(keyword => lowerMessage.includes(keyword)) && 
+       sleepDisturbanceKeywords.some(keyword => lowerMessage.includes(keyword)))) {
+    return { detected: true, severity: 'moderate' };
+  }
+  
+  // If only mild trauma indicators are present
+  if (mildTraumaKeywords.some(keyword => lowerMessage.includes(keyword)) ||
+      sleepDisturbanceKeywords.some(keyword => lowerMessage.includes(keyword))) {
+    return { detected: true, severity: 'mild' };
+  }
+  
+  return { detected: false, severity: 'mild' };
+};
+
 // Tentative harmful language detection
 export const detectTentativeHarmLanguage = (message: string): boolean => {
   const lowerMessage = message.toLowerCase();
