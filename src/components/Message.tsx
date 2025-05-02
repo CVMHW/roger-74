@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ConcernType } from '../utils/reflection/reflectionTypes';
 
 export type MessageType = {
   id: string;
@@ -8,7 +9,7 @@ export type MessageType = {
   sender: 'user' | 'roger';
   timestamp: Date;
   feedback?: 'positive' | 'negative' | null;
-  concernType?: 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | 'mild-gambling' | 'ptsd' | 'ptsd-mild' | 'trauma-response' | 'pet-illness' | null;
+  concernType?: ConcernType | null;
   locationData?: {
     state?: string;
     city?: string;
