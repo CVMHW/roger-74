@@ -1,11 +1,13 @@
-
 import { useState } from 'react';
 import { MessageType } from '../../components/Message';
 import { createMessage } from '../../utils/messageUtils';
 import { calculateMinimumResponseTime } from '../../utils/masterRules';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
 import { detectGriefThemes } from '../../utils/response/griefSupport';
-import { detectPoliticalEmotions } from '../../utils/conversationalUtils';
+import { 
+  detectPoliticalEmotions,
+  detectSimpleNegativeState
+} from '../../utils/conversationalUtils';
 
 interface ResponseProcessingParams {
   ensureResponseCompliance: (response: string) => string;
