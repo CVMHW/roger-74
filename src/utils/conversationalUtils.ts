@@ -1,4 +1,3 @@
-
 /**
  * Utilities for generating conversational responses
  */
@@ -206,159 +205,150 @@ export const generateMildSomaticResponse = (
 };
 
 /**
- * Detect if a message indicates basic negative feeling states
- * For simple expressions like "not great", "been better", etc.
+ * Detects if the user's message contains explicit statements of negative emotional states
  */
-export const detectSimpleNegativeState = (userInput: string): {
+export function detectSimpleNegativeState(userInput: string): {
   isNegativeState: boolean;
-  stateType: 'angry' | 'sad' | 'anxious' | 'frustrated' | 'overwhelmed' | null;
-  intensity: 'low' | 'medium' | 'high' | null;
+  stateType: 'anxious' | 'angry' | 'sad' | 'frustrated' | 'overwhelmed';
+  intensity: 'low' | 'medium' | 'high';
   explicitStatement: boolean;
-  explicitFeelings: string[]; // Add this property
-} => {
-  // Convert to lowercase for case-insensitive matching
+  explicitFeelings?: string[];
+} {
+  if (!userInput) {
+    return {
+      isNegativeState: false,
+      stateType: 'sad',
+      intensity: 'low',
+      explicitStatement: false
+    };
+  }
+  
   const lowerInput = userInput.toLowerCase();
   
-  // Extract explicit feelings for use elsewhere
-  const explicitFeelings: string[] = [];
-  
-  // Check for explicit "I am" statements about emotions
-  // These take highest priority as they are direct statements
-  
-  // Anger expressions
-  if (
-    /i('| a)m (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:angry|mad|furious|pissed|irate|enraged|livid)/i.test(lowerInput) ||
-    /i feel (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:angry|mad|furious|pissed|irate|enraged|livid)/i.test(lowerInput)
-  ) {
-    // Detect intensity
-    const highIntensity = /(?:really |very |so |absolutely |completely |totally |)(?:furious|enraged|livid|irate)/i.test(lowerInput);
-    const lowIntensity = /(?:kind of |a bit |just |slightly |a little |somewhat )(?:angry|mad|pissed)/i.test(lowerInput);
-    
-    // Extract the specific feeling word
-    const match = lowerInput.match(/(?:i('| a)m|i feel) (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:angry|mad|furious|pissed|irate|enraged|livid)/i);
-    if (match) {
-      const lastWord = match[0].trim().split(/\s+/).pop();
-      if (lastWord) explicitFeelings.push(lastWord);
-    }
-    
-    return {
-      isNegativeState: true,
-      stateType: 'angry',
-      intensity: highIntensity ? 'high' : (lowIntensity ? 'low' : 'medium'),
-      explicitStatement: true,
-      explicitFeelings
-    };
-  }
-  
-  // Sadness expressions
-  if (
-    /i('| a)m (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:sad|depressed|down|unhappy|miserable|heartbroken|devastated|upset|blue)/i.test(lowerInput) ||
-    /i feel (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:sad|depressed|down|unhappy|miserable|heartbroken|devastated|upset|blue)/i.test(lowerInput)
-  ) {
-    // Detect intensity
-    const highIntensity = /(?:really |very |so |absolutely |completely |totally |)(?:devastated|miserable|heartbroken)/i.test(lowerInput);
-    const lowIntensity = /(?:kind of |a bit |just |slightly |a little |somewhat )(?:sad|down|blue|unhappy)/i.test(lowerInput);
-    
-    // Extract the specific feeling word
-    const match = lowerInput.match(/(?:i('| a)m|i feel) (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:sad|depressed|down|unhappy|miserable|heartbroken|devastated|upset|blue)/i);
-    if (match) {
-      const lastWord = match[0].trim().split(/\s+/).pop();
-      if (lastWord) explicitFeelings.push(lastWord);
-    }
-    
-    return {
-      isNegativeState: true,
-      stateType: 'sad',
-      intensity: highIntensity ? 'high' : (lowIntensity ? 'low' : 'medium'),
-      explicitStatement: true,
-      explicitFeelings
-    };
-  }
-  
-  // Anxiety expressions
-  if (
-    /i('| a)m (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:anxious|nervous|worried|scared|afraid|terrified|panicking|fearful|stressed)/i.test(lowerInput) ||
-    /i feel (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:anxious|nervous|worried|scared|afraid|terrified|panicking|fearful|stressed)/i.test(lowerInput)
-  ) {
-    // Detect intensity
-    const highIntensity = /(?:really |very |so |absolutely |completely |totally |)(?:terrified|panicking)/i.test(lowerInput);
-    const lowIntensity = /(?:kind of |a bit |just |slightly |a little |somewhat )(?:anxious|nervous|worried)/i.test(lowerInput);
-    
-    // Extract the specific feeling word
-    const match = lowerInput.match(/(?:i('| a)m|i feel) (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:anxious|nervous|worried|scared|afraid|terrified|panicking|fearful|stressed)/i);
-    if (match) {
-      const lastWord = match[0].trim().split(/\s+/).pop();
-      if (lastWord) explicitFeelings.push(lastWord);
-    }
-    
-    return {
-      isNegativeState: true,
-      stateType: 'anxious',
-      intensity: highIntensity ? 'high' : (lowIntensity ? 'low' : 'medium'),
-      explicitStatement: true,
-      explicitFeelings
-    };
-  }
-  
-  // Frustration expressions
-  if (
-    /i('| a)m (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:frustrated|annoyed|irritated|bothered|fed up)/i.test(lowerInput) ||
-    /i feel (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:frustrated|annoyed|irritated|bothered|fed up)/i.test(lowerInput)
-  ) {
-    // Detect intensity
-    const highIntensity = /(?:really |very |so |absolutely |completely |totally |)(?:fed up|extremely frustrated)/i.test(lowerInput);
-    const lowIntensity = /(?:kind of |a bit |just |slightly |a little |somewhat )(?:annoyed|bothered)/i.test(lowerInput);
-    
-    // Extract the specific feeling word
-    const match = lowerInput.match(/(?:i('| a)m|i feel) (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:frustrated|annoyed|irritated|bothered|fed up)/i);
-    if (match) {
-      const lastWord = match[0].trim().split(/\s+/).pop();
-      if (lastWord) explicitFeelings.push(lastWord);
-    }
-    
-    return {
-      isNegativeState: true,
-      stateType: 'frustrated',
-      intensity: highIntensity ? 'high' : (lowIntensity ? 'low' : 'medium'),
-      explicitStatement: true,
-      explicitFeelings
-    };
-  }
-  
-  // Overwhelm expressions
-  if (
-    /i('| a)m (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:overwhelmed|burnt out|exhausted|at my limit|drained)/i.test(lowerInput) ||
-    /i feel (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:overwhelmed|burnt out|exhausted|at my limit|drained)/i.test(lowerInput)
-  ) {
-    // Detect intensity
-    const highIntensity = /(?:really |very |so |absolutely |completely |totally |)(?:at my limit|completely overwhelmed)/i.test(lowerInput);
-    const lowIntensity = /(?:kind of |a bit |just |slightly |a little |somewhat )(?:overwhelmed|tired|drained)/i.test(lowerInput);
-    
-    // Extract the specific feeling word
-    const match = lowerInput.match(/(?:i('| a)m|i feel) (?:really |very |so |absolutely |completely |totally |kind of |a bit |just |)(?:overwhelmed|burnt out|exhausted|at my limit|drained)/i);
-    if (match) {
-      const lastWord = match[0].trim().split(/\s+/).pop();
-      if (lastWord) explicitFeelings.push(lastWord);
-    }
-    
-    return {
-      isNegativeState: true,
-      stateType: 'overwhelmed',
-      intensity: highIntensity ? 'high' : (lowIntensity ? 'low' : 'medium'),
-      explicitStatement: true,
-      explicitFeelings
-    };
-  }
-  
-  // No explicit emotional state detected
-  return {
-    isNegativeState: false,
-    stateType: null,
-    intensity: null,
-    explicitStatement: false,
-    explicitFeelings: []
+  // Check for explicit statements about emotional states
+  const explicitPatterns = {
+    anxious: [
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?anxious/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?nervous/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?worried/i,
+      /i have (some |a lot of |serious |terrible |bad |really bad )?anxiety/i,
+    ],
+    angry: [
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?angry/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?mad/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?furious/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?pissed off/i,
+    ],
+    sad: [
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?sad/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?depressed/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?down/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?low/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?blue/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?unhappy/i,
+    ],
+    frustrated: [
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?frustrated/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?annoyed/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?irritated/i,
+    ],
+    overwhelmed: [
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?overwhelmed/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?exhausted/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?drained/i,
+      /i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?burned out/i,
+    ]
   };
-};
+  
+  // Check for explicit statements
+  let foundStateType: 'anxious' | 'angry' | 'sad' | 'frustrated' | 'overwhelmed' = 'sad';
+  let explicitStatement = false;
+  let explicitFeelings: string[] = [];
+  
+  for (const [stateType, patterns] of Object.entries(explicitPatterns)) {
+    for (const pattern of patterns) {
+      const match = lowerInput.match(pattern);
+      if (match) {
+        foundStateType = stateType as any;
+        explicitStatement = true;
+        
+        // Extract the actual feeling word
+        const fullMatch = match[0].toLowerCase();
+        const feelingWords = [
+          'anxious', 'nervous', 'worried', 'anxiety',
+          'angry', 'mad', 'furious', 'pissed',
+          'sad', 'depress', 'down', 'low', 'blue', 'unhappy',
+          'frustrated', 'annoyed', 'irritated',
+          'overwhelmed', 'exhausted', 'drained', 'burned out'
+        ];
+        
+        for (const word of feelingWords) {
+          if (fullMatch.includes(word)) {
+            explicitFeelings.push(word);
+            break;
+          }
+        }
+      }
+    }
+  }
+  
+  // Check for intensity modifiers
+  let intensity: 'low' | 'medium' | 'high' = 'medium';
+  if (/really|very|extremely|so|terrible|serious/i.test(lowerInput)) {
+    intensity = 'high';
+  } else if (/kind of|a bit|some|a little|slightly/i.test(lowerInput)) {
+    intensity = 'low';
+  }
+  
+  // If not an explicit statement, check for general negative tone
+  // and determine the most likely state type
+  if (!explicitStatement) {
+    const wordIndicators = {
+      anxious: ['worry', 'afraid', 'scared', 'fear', 'panic', 'stress', 'anxious'],
+      angry: ['hate', 'anger', 'mad', 'furious', 'rage', 'pissed'],
+      sad: ['sad', 'depress', 'unhappy', 'miserable', 'down', 'blue', 'grief'],
+      frustrated: ['frustrat', 'annoy', 'irritat', 'bother', 'upset'],
+      overwhelmed: ['overwhelm', 'exhaust', 'tired', 'drain', 'burn out', 'too much']
+    };
+    
+    let maxCount = 0;
+    for (const [stateType, words] of Object.entries(wordIndicators)) {
+      let count = 0;
+      for (const word of words) {
+        if (lowerInput.includes(word)) {
+          count++;
+          // Also add to explicit feelings for reference
+          if (!explicitFeelings.includes(word)) {
+            explicitFeelings.push(word);
+          }
+        }
+      }
+      
+      if (count > maxCount) {
+        maxCount = count;
+        foundStateType = stateType as any;
+      }
+    }
+    
+    if (maxCount > 0) {
+      return {
+        isNegativeState: true,
+        stateType: foundStateType,
+        intensity,
+        explicitStatement: false,
+        explicitFeelings
+      };
+    }
+  }
+  
+  return {
+    isNegativeState: explicitStatement || explicitFeelings.length > 0,
+    stateType: foundStateType,
+    intensity,
+    explicitStatement,
+    explicitFeelings
+  };
+}
 
 /**
  * Generates content-aware responses to explicit emotional states
@@ -476,68 +466,87 @@ export const detectPoliticalEmotions = (userInput: string): {
   isPolitical: boolean;
   politicalTopic?: string;
   emotionType?: string;
-  emotionExpressed?: 'upset' | 'angry' | 'concerned' | 'supportive' | 'neutral'; // Add this property
+  emotionExpressed?: string;
 } => {
+  if (!userInput) {
+    return { isPolitical: false };
+  }
+  
   const lowerInput = userInput.toLowerCase();
   
-  // Check for political figures
-  const politicalFigures = {
-    'trump': /\b(trump|donald trump|president trump|45th president)\b/i,
-    'biden': /\b(biden|joe biden|president biden|46th president)\b/i,
-    'obama': /\b(obama|barack obama|44th president)\b/i,
-    'harris': /\b(harris|kamala|vice president|vp harris)\b/i,
-    'congress': /\b(congress|senate|house of representatives|capitol)\b/i,
-    'politicians': /\b(politicians|elected officials|representatives|senators)\b/i
-  };
+  // Define political keywords and topics
+  const politicalTopics = [
+    { keyword: 'election', topic: 'elections' },
+    { keyword: 'vote', topic: 'elections' },
+    { keyword: 'democrat', topic: 'political parties' },
+    { keyword: 'republican', topic: 'political parties' },
+    { keyword: 'liberal', topic: 'political ideology' },
+    { keyword: 'conservative', topic: 'political ideology' },
+    { keyword: 'biden', topic: 'political figures' },
+    { keyword: 'trump', topic: 'political figures' },
+    { keyword: 'congress', topic: 'government' },
+    { keyword: 'senate', topic: 'government' },
+    { keyword: 'house of representatives', topic: 'government' },
+    { keyword: 'supreme court', topic: 'judiciary' },
+    { keyword: 'justice', topic: 'judiciary' },
+    { keyword: 'law', topic: 'policy' },
+    { keyword: 'policy', topic: 'policy' },
+    { keyword: 'tax', topic: 'economic policy' },
+    { keyword: 'healthcare', topic: 'healthcare policy' },
+    { keyword: 'abortion', topic: 'reproductive rights' },
+    { keyword: 'gun', topic: 'gun policy' },
+    { keyword: 'climate', topic: 'climate policy' },
+    { keyword: 'immigration', topic: 'immigration policy' },
+    { keyword: 'protest', topic: 'civic action' },
+    { keyword: 'riot', topic: 'civil unrest' },
+    { keyword: 'media', topic: 'media coverage' }
+  ];
   
-  // Check for emotional indicators
-  const emotionIndicators = {
-    'upset': /\b(upset|sad|disappointed|let down|disheartened)\b/i,
-    'angry': /\b(angry|mad|pissed|furious|outraged|hate|can'?t stand)\b/i,
-    'concerned': /\b(worried|concerned|anxious|fearful|scared|afraid)\b/i,
-    'supportive': /\b(support|like|admire|agree|believe in)\b/i
-  };
+  // Define emotion categories
+  const emotions = [
+    { keywords: ['angry', 'mad', 'furious', 'outraged', 'pissed'], category: 'anger' },
+    { keywords: ['worried', 'anxious', 'concerned', 'fearful', 'scared', 'afraid'], category: 'anxiety' },
+    { keywords: ['sad', 'disappointed', 'disheartened', 'hopeless', 'depressed'], category: 'sadness' },
+    { keywords: ['happy', 'hopeful', 'excited', 'optimistic', 'pleased'], category: 'happiness' },
+    { keywords: ['confused', 'uncertain', 'unsure', 'bewildered', 'perplexed'], category: 'confusion' },
+    { keywords: ['frustrated', 'annoyed', 'irritated', 'exasperated', 'aggravated'], category: 'frustration' }
+  ];
   
-  // Detect political figure
-  let detectedPoliticalFigure: string | null = null;
+  // Check if the input contains political topics
+  const foundTopic = politicalTopics.find(item => lowerInput.includes(item.keyword));
+  if (!foundTopic) {
+    return { isPolitical: false };
+  }
   
-  for (const [figure, pattern] of Object.entries(politicalFigures)) {
-    if (pattern.test(userInput)) {
-      detectedPoliticalFigure = figure;
-      break;
+  // Check for emotional content
+  let emotionFound = null;
+  let emotionExpressed = null;
+  
+  for (const emotion of emotions) {
+    for (const keyword of emotion.keywords) {
+      if (lowerInput.includes(keyword)) {
+        emotionFound = emotion.category;
+        emotionExpressed = keyword;
+        break;
+      }
+      
+      // Also check explicit statements
+      const explicitPattern = new RegExp(`i('m| am) (feeling |really |so |just |kind of |a bit |extremely |very )?${keyword}`, 'i');
+      if (explicitPattern.test(lowerInput)) {
+        emotionFound = emotion.category;
+        emotionExpressed = keyword;
+        break;
+      }
     }
-  }
-  
-  // If no political figure detected, it's not political
-  if (!detectedPoliticalFigure) {
-    return {
-      isPolitical: false,
-      politicalTopic: null,
-      emotionType: null,
-      emotionExpressed: null
-    };
-  }
-  
-  // Detect emotion
-  let detectedEmotion: 'upset' | 'angry' | 'concerned' | 'supportive' | 'neutral' | null = null;
-  
-  for (const [emotion, pattern] of Object.entries(emotionIndicators) as [string, RegExp][]) {
-    if (pattern.test(userInput)) {
-      detectedEmotion = emotion as any;
-      break;
-    }
-  }
-  
-  // Default to neutral if no emotion detected
-  if (!detectedEmotion) {
-    detectedEmotion = 'neutral';
+    
+    if (emotionFound) break;
   }
   
   return {
     isPolitical: true,
-    politicalTopic: detectedPoliticalFigure,
-    emotionType: detectedEmotion,
-    emotionExpressed: detectedEmotion
+    politicalTopic: foundTopic.topic,
+    emotionType: emotionFound,
+    emotionExpressed: emotionExpressed
   };
 };
 

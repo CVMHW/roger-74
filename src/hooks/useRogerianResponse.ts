@@ -400,6 +400,62 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     return response;
   };
   
+  // Generate a response for weather-related situations
+  const generateWeatherRelatedResponse = (userInput: string): string => {
+    const lowerInput = userInput.toLowerCase();
+    const context = extractConversationContext(userInput, conversationHistory);
+    
+    // Check for specific weather-related themes
+    const hasSnow = /\b(snow|blizzard|storm|hurricane|tornado|flood|ice|weather|power outage|electricity)\b/i.test(lowerInput);
+    const hasPowerIssues = /\b(power outage|electricity|power|no heat|cold|freezing|internet down)\b/i.test(lowerInput);
+    const hasIsolation = /\b(stuck|trapped|can'?t leave|unable to leave|days|inside|home|house|isolated|cabin fever|bored)\b/i.test(lowerInput);
+    const hasFrustration = /\b(frustrat|annoy|bore|tired of|sick of|fed up|can'?t stand|stir-crazy)\b/i.test(lowerInput);
+    const hasWork = /\b(work|job|remote|working from home|can'?t work)\b/i.test(lowerInput);
+    const hasPet = /\b(dog|cat|pet|walk|doggie|kitty|puppy|kitten|animal)\b/i.test(lowerInput);
+    
+    let response = "I hear you're dealing with challenging weather that's really affecting your daily life. ";
+    
+    // Add specific acknowledgments based on mentioned challenges
+    if (context.locations.length > 0) {
+      response += `Being stuck at home in ${context.locations[0]} during severe weather can definitely be difficult. `;
+    }
+    
+    if (hasSnow) {
+      response += "Four feet of snow is extreme - most cities aren't equipped to handle that much accumulation quickly. ";
+    }
+    
+    if (hasPowerIssues) {
+      response += "The rolling power and internet outages must be making this situation even more challenging, especially when you're trying to maintain some normalcy. ";
+    }
+    
+    if (hasIsolation && hasWork) {
+      response += "Being unable to leave home while also struggling to work remotely due to infrastructure issues creates a frustrating double bind. ";
+    } else if (hasIsolation) {
+      response += "Being confined indoors for days can really take a toll on your mood and energy. ";
+    }
+    
+    if (hasPet) {
+      response += "It must be tough for both you and your pet to be cooped up, especially when your dog needs exercise and outdoor time. ";
+    }
+    
+    if (hasFrustration) {
+      response += "Your frustration is completely understandable given these circumstances. ";
+    }
+    
+    // Add a thoughtful question to continue the conversation
+    const followUpQuestions = [
+      "How have you been coping with the isolation so far?",
+      "Have you found any activities that help pass the time when the power is working?",
+      "What's been the most challenging part of this weather situation for you?",
+      "How have you been taking care of your wellbeing during this difficult time?",
+      "Is there anything that's been helping you get through these difficult days?"
+    ];
+    
+    response += followUpQuestions[Math.floor(Math.random() * followUpQuestions.length)];
+    
+    return response;
+  };
+  
   // Process user message with stage update and special cases
   const processUserMessage = async (userInput: string): Promise<MessageType> => {
     // Update conversation history and client preferences
@@ -433,6 +489,19 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
         () => sarcasmResponse,
         () => null
       );
+    }
+    
+    // Check for weather-related concerns - add this before other checks
+    if (/\b(snow|blizzard|storm|hurricane|tornado|flood|ice|weather|power outage|electricity)\b/i.test(userInput.toLowerCase()) &&
+        /\b(stuck|trapped|can'?t leave|unable to leave|days|inside|home|house|isolated|cabin fever|bored|frustrat)\b/i.test(userInput.toLowerCase())) {
+      
+      const weatherResponse = generateWeatherRelatedResponse(userInput);
+      
+      // Update conversation stage
+      updateStage();
+      
+      // Return a weather-specific response
+      return Promise.resolve(createMessage(weatherResponse, 'roger', 'weather-related'));
     }
     
     // Check for cultural adjustment concerns
@@ -604,7 +673,7 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
         return baseProcessUserMessage(
           userInput,
           () => petIllnessResponse,
-          () => 'pet-illness' // Special concern type for pet illness
+          () => 'pet-illness' as ConcernType // Special concern type for pet illness
         );
       }
       
@@ -625,7 +694,13 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     
     // Check for safety concerns to prioritize deescalation and customer service
     const concernType = detectConcerns(userInput);
-    if (concernType && 
+    
+    // For weather-related concerns, use our specialized response generator
+    if (concernType === 'weather-related') {
+      responseGenerator = generateWeatherRelatedResponse;
+    }
+    // For other specific concerns, use appropriate response generators
+    else if (concernType && 
         ['crisis', 'tentative-harm', 'mental-health', 'ptsd', 'trauma-response', 'pet-illness'].includes(concernType)) {
       // For safety concerns, use our enhanced safety response generator
       responseGenerator = generateSafetyResponse;

@@ -1,16 +1,18 @@
 // Define the type for concerns that might need special responses
 export type ConcernType = 
-  'crisis' | 
-  'medical' | 
-  'mental-health' | 
-  'eating-disorder' | 
-  'substance-use' | 
-  'tentative-harm' | 
-  'mild-gambling' | 
-  'ptsd' | 
-  'ptsd-mild' |
-  'trauma-response' | 
-  'pet-illness';  // Add the new type here
+  | 'tentative-harm' 
+  | 'crisis' 
+  | 'medical' 
+  | 'mental-health' 
+  | 'eating-disorder'
+  | 'substance-use'
+  | 'mild-gambling'
+  | 'ptsd'
+  | 'ptsd-mild'
+  | 'trauma-response'
+  | 'cultural-adjustment'
+  | 'weather-related'
+  | 'pet-illness';  // Add the new type here
 
 // Define the stages of conversation
 export type ConversationStage = 'initial' | 'early' | 'established';

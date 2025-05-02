@@ -23,8 +23,20 @@ export const useConcernDetection = () => {
       return null;
     }
     
-    // Check for cultural adjustment concerns (migration, relocation)
+    // Check for weather-related concerns
     const lowerInput = userInput.toLowerCase();
+    const hasWeatherRelatedConcerns = (
+      // Check for mentions of severe weather events
+      (/\b(snow|blizzard|storm|hurricane|tornado|flood|ice|weather|power outage|electricity|internet down)\b/i.test(lowerInput)) &&
+      // Combined with isolation or difficulties
+      (/\b(stuck|trapped|can'?t leave|unable to leave|days|inside|home|house|isolated|cabin fever|bored|frustrated)\b/i.test(lowerInput))
+    );
+    
+    if (hasWeatherRelatedConcerns) {
+      return 'weather-related';
+    }
+    
+    // Check for cultural adjustment concerns (migration, relocation)
     const hasCulturalAdjustmentConcerns = (
       // Check for mentions of immigration, relocation or cultural change
       (/\b(immigrat|refugee|asylum|moved from|came from|new country|new culture|cultural|adjustment)\b/i.test(lowerInput) ||
@@ -39,8 +51,6 @@ export const useConcernDetection = () => {
     }
     
     // Continue with regular detection for more serious medical concerns
-    const lowerInput = userInput.toLowerCase();
-    
     // Check for suicidal ideation or self-harm
     if (/suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)/.test(lowerInput)) {
       return 'tentative-harm';
