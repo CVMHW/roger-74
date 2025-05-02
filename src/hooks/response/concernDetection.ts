@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
+import { ConcernType } from '../../utils/reflection/reflectionTypes';
 import { 
   detectCrisisKeywords, 
   detectMedicalConcerns,
@@ -20,7 +21,8 @@ interface ConcernState {
   substanceUse: boolean;
   mildGambling: boolean;
   tentativeHarm: boolean;
-  ptsd: boolean;  // PTSD concern tracking
+  ptsd: boolean;
+  traumaResponse: boolean; // Added tracking for trauma responses
 }
 
 export const useConcernDetection = () => {
@@ -32,15 +34,18 @@ export const useConcernDetection = () => {
     substanceUse: false,
     mildGambling: false,
     tentativeHarm: false,
-    ptsd: false
+    ptsd: false,
+    traumaResponse: false // New state tracking
   });
 
   const { toast } = useToast();
 
+  // Show appropriate toast notifications for detected concerns
   const showConcernToast = (concernType: string) => {
     let title = "Important Notice";
     let description = "";
     
+    // Determine the appropriate toast message based on concern type
     switch(concernType) {
       case 'crisis':
         description = "This appears to be a sensitive topic. Crisis resources are available below.";
@@ -88,7 +93,8 @@ export const useConcernDetection = () => {
     }
   };
 
-  const detectConcerns = (userInput: string) => {
+  // Detect concerns from user input
+  const detectConcerns = (userInput: string): ConcernType | null => {
     // Check for various concern keywords
     const containsCrisisKeywords = detectCrisisKeywords(userInput);
     const containsMedicalConcerns = detectMedicalConcerns(userInput);
@@ -132,10 +138,10 @@ export const useConcernDetection = () => {
       ptsdSevere: containsPTSDConcerns && ptsdSeverity === 'severe' && !concernsShown.ptsd,
       ptsdModerate: containsPTSDConcerns && ptsdSeverity === 'moderate' && !concernsShown.ptsd,
       ptsdMild: containsPTSDConcerns && ptsdSeverity === 'mild' && !concernsShown.ptsd,
-      traumaResponse: significantTraumaResponse && !concernsShown.ptsd
+      traumaResponse: significantTraumaResponse && !concernsShown.traumaResponse
     };
 
-    // Show appropriate alerts based on detected concerns
+    // Show appropriate alerts based on detected concerns using priority ordering
     if (concerns.tentativeHarm) {
       setConcernsShown(prev => ({ ...prev, tentativeHarm: true }));
       showConcernToast('tentative-harm');
@@ -167,12 +173,11 @@ export const useConcernDetection = () => {
       return 'ptsd';
     }
     else if (concerns.ptsdMild) {
-      // For mild PTSD, don't show a toast but return the concern type
-      // so the response generator can handle it conversationally
+      setConcernsShown(prev => ({ ...prev, ptsd: true }));
       return 'ptsd-mild';
     }
     else if (concerns.traumaResponse) {
-      // For 4F trauma responses that aren't PTSD but significant enough to note
+      setConcernsShown(prev => ({ ...prev, traumaResponse: true }));
       showConcernToast('trauma-response');
       return 'trauma-response';
     }

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { MessageType } from '../components/Message';
 import useTypingEffect from './useTypingEffect';
@@ -9,6 +8,9 @@ import { useResponseCompliance } from './response/responseCompliance';
 import { useResponseGenerator } from './response/responseGenerator';
 import { useResponseProcessing } from './response/responseProcessing';
 import { detectGriefThemes } from '../utils/response/griefSupport';
+import { detectClientPreferences } from '../utils/conversationalUtils';
+import { generateSafetyConcernResponse } from '../utils/safetyConcernManager';
+import { ConcernType } from '../utils/reflection/reflectionTypes';
 
 interface UseRogerianResponseReturn {
   isTyping: boolean;
@@ -26,6 +28,16 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     updateStage, 
     setIntroductionMade 
   } = useConversationStage();
+  
+  // Store conversation history for context awareness
+  const [conversationHistory, setConversationHistory] = useState<string[]>([]);
+  
+  // Track detected client preferences
+  const [clientPreferences, setClientPreferences] = useState({
+    prefersFormalLanguage: false,
+    prefersDirectApproach: false,
+    isFirstTimeWithMentalHealth: false
+  });
   
   // Hook for adaptive response generation strategy
   const { generateAdaptiveResponse, currentApproach } = useAdaptiveResponse();
@@ -60,8 +72,41 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     simulateTypingResponse
   });
   
+  // Update conversation history when user messages are received
+  const updateConversationHistory = (userInput: string) => {
+    setConversationHistory(prev => {
+      const newHistory = [...prev, userInput];
+      // Keep last 10 messages for context
+      return newHistory.length > 10 ? newHistory.slice(-10) : newHistory;
+    });
+    
+    // Update detected client preferences
+    const newPreferences = detectClientPreferences(userInput, conversationHistory);
+    setClientPreferences(prev => ({
+      prefersFormalLanguage: prev.prefersFormalLanguage || newPreferences.prefersFormalLanguage,
+      prefersDirectApproach: prev.prefersDirectApproach || newPreferences.prefersDirectApproach,
+      isFirstTimeWithMentalHealth: prev.isFirstTimeWithMentalHealth || newPreferences.isFirstTimeWithMentalHealth
+    }));
+  };
+  
+  // Specialized response generator for safety concerns that incorporates
+  // customer-centric deescalation
+  const generateSafetyResponse = (
+    userInput: string, 
+    concernType: ConcernType
+  ): string => {
+    return generateSafetyConcernResponse(userInput, concernType, {
+      ...clientPreferences,
+      wealthIndicators: detectWealthIndicators(userInput, conversationHistory),
+      previousMentalHealthExperience: !clientPreferences.isFirstTimeWithMentalHealth
+    });
+  };
+  
   // Process user message with stage update and special cases
   const processUserMessage = async (userInput: string): Promise<MessageType> => {
+    // Update conversation history and client preferences
+    updateConversationHistory(userInput);
+    
     // Check for asking if Roger is Drew (unconditional rule)
     if (
       userInput.toLowerCase().includes("are you drew") || 
@@ -90,8 +135,18 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     let responseGenerator = generateResponse;
     let responseTimeMultiplier = 1.0;
     
+    // Check for safety concerns to prioritize deescalation and customer service
+    const concernType = detectConcerns(userInput);
+    if (concernType && 
+        ['crisis', 'tentative-harm', 'mental-health', 'ptsd', 'trauma-response'].includes(concernType)) {
+      // For safety concerns, use our enhanced safety response generator
+      responseGenerator = generateSafetyResponse;
+      // Increase response time for safety concerns to suggest careful consideration
+      responseTimeMultiplier = 1.3;
+    }
+    
     // If grief themes are detected, adjust response time based on severity and metaphor
-    if (griefThemes.themeIntensity >= 2) {
+    else if (griefThemes.themeIntensity >= 2) {
       // For all grief messages, ensure proper response time
       
       // Adjust response time based on grief severity
@@ -155,6 +210,20 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
       detectConcerns,
       responseTimeMultiplier // Pass the multiplier to adjust response time
     );
+  };
+  
+  // Helper function to detect potential wealth indicators in conversation
+  const detectWealthIndicators = (currentInput: string, history: string[]): boolean => {
+    const wealthKeywords = [
+      'executive', 'ceo', 'cfo', 'board', 'investor', 'investment', 
+      'portfolio', 'luxury', 'private', 'exclusive', 'high-end', 
+      'premium', 'estate', 'mansion', 'yacht', 'jet', 'assistant', 
+      'secretary', 'staff', 'wealth manager', 'family office'
+    ];
+    
+    const combinedText = [currentInput, ...history].join(' ').toLowerCase();
+    
+    return wealthKeywords.some(keyword => combinedText.includes(keyword));
   };
   
   return {
