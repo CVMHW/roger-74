@@ -62,9 +62,9 @@ export const useResponseProcessing = ({
     // Check for trauma response patterns
     let traumaResponsePatterns = null;
     try {
-      // Dynamic import to avoid circular dependencies
-      const traumaModule = require('../../utils/response/traumaResponsePatterns');
-      if (traumaModule.detectTraumaResponsePatterns) {
+      // Use dynamic import instead of require
+      const traumaModule = await import('../../utils/response/traumaResponsePatterns').catch(() => null);
+      if (traumaModule && traumaModule.detectTraumaResponsePatterns) {
         traumaResponsePatterns = traumaModule.detectTraumaResponsePatterns(userInput);
       }
     } catch (e) {
@@ -199,33 +199,48 @@ export const useResponseProcessing = ({
         // If we have a young adult concern and no response yet, try to generate a young adult specific response
         if (youngAdultConcern && !responseText && youngAdultConcern.category) {
           try {
-            const youngAdultModule = require('../../utils/response/youngAdultResponses');
-            if (youngAdultModule.generateYoungAdultResponse) {
-              const youngAdultResponse = youngAdultModule.generateYoungAdultResponse({
-                concernInfo: youngAdultConcern,
-                userMessage: userInput,
-                concernType
+            // Use dynamic import instead of require
+            import('../../utils/response/youngAdultResponses')
+              .then(youngAdultModule => {
+                if (youngAdultModule.generateYoungAdultResponse) {
+                  const youngAdultResponse = youngAdultModule.generateYoungAdultResponse({
+                    concernInfo: youngAdultConcern,
+                    userMessage: userInput,
+                    concernType
+                  });
+                  
+                  if (youngAdultResponse) {
+                    responseText = youngAdultResponse;
+                  }
+                }
+                
+                finishResponse(responseText);
+              })
+              .catch(e => {
+                console.log("Young adult response module not available:", e);
+                finishResponse(responseText);
               });
-              
-              if (youngAdultResponse) {
-                responseText = youngAdultResponse;
-              }
-            }
           } catch (e) {
             console.log("Young adult response module not available:", e);
+            finishResponse(responseText);
           }
+        } else {
+          finishResponse(responseText);
         }
         
-        // Apply master rules to ensure no repetition
-        responseText = ensureResponseCompliance(responseText);
-        
-        // Add this response to the history to prevent future repetition
-        addToResponseHistory(responseText);
-        
-        // Create response message
-        const rogerResponse = createMessage(responseText, 'roger', concernType);
-        setIsTyping(false);
-        resolve(rogerResponse);
+        // Helper function to finish processing the response
+        function finishResponse(text: string) {
+          // Apply master rules to ensure no repetition
+          text = ensureResponseCompliance(text);
+          
+          // Add this response to the history to prevent future repetition
+          addToResponseHistory(text);
+          
+          // Create response message
+          const rogerResponse = createMessage(text, 'roger', concernType);
+          setIsTyping(false);
+          resolve(rogerResponse);
+        }
       }, responseTime);
     });
   };

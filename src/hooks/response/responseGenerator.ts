@@ -1,4 +1,3 @@
-
 import { 
   isIntroduction,
   generateIntroductionResponse,
@@ -170,16 +169,24 @@ export const useResponseGenerator = ({
    */
   const createTraumaResponseMessage = (userInput: string): string | null => {
     try {
-      // Import the trauma response patterns module
-      const traumaResponseModule = require('../../utils/response/traumaResponsePatterns');
-      const analysis = traumaResponseModule.detectTraumaResponsePatterns(userInput);
+      // Dynamic import to avoid require
+      const traumaResponseModule = import('../../utils/response/traumaResponsePatterns');
       
-      // If we have a valid analysis, generate a trauma-informed response
-      if (analysis && analysis.dominant4F) {
-        return traumaResponseModule.generateTraumaInformedResponse(analysis);
-      }
+      return traumaResponseModule.then(module => {
+        const analysis = module.detectTraumaResponsePatterns(userInput);
+        
+        // If we have a valid analysis, generate a trauma-informed response
+        if (analysis && analysis.dominant4F) {
+          return module.generateTraumaInformedResponse(analysis);
+        }
+        return null;
+      }).catch(e => {
+        console.log("Error in trauma response generation:", e);
+        return null;
+      });
     } catch (e) {
       console.log("Error in trauma response generation:", e);
+      return null;
     }
     
     // If module not available or analysis failed, return null to use other response types
@@ -220,14 +227,20 @@ export const useResponseGenerator = ({
     concernType: ConcernType
   ): string => {
     try {
-      // HIGHEST PRIORITY: Direct response to political emotions - addressing what a user explicitly mentions
+      // HIGHEST PRIORITY: Check for explicitly stated feelings first
+      const negativeStateInfo = detectSimpleNegativeState(userInput);
+      if (negativeStateInfo.isNegativeState && negativeStateInfo.explicitFeelings.length > 0) {
+        // Always acknowledge explicitly stated feelings first
+        return generateSimpleNegativeStateResponse(userInput, negativeStateInfo);
+      }
+      
+      // SECOND HIGHEST: Direct response to political emotions - addressing what a user explicitly mentions
       const politicalInfo = detectPoliticalEmotions(userInput);
       if (politicalInfo.isPolitical) {
         return generatePoliticalEmotionResponse(userInput, politicalInfo);
       }
       
-      // SECOND HIGHEST: Check for simple negative state expressions
-      const negativeStateInfo = detectSimpleNegativeState(userInput);
+      // THIRD HIGHEST: Check for simple negative state expressions without explicit feelings
       if (negativeStateInfo.isNegativeState) {
         return generateSimpleNegativeStateResponse(userInput, negativeStateInfo);
       }

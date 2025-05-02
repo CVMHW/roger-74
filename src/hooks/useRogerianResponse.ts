@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { MessageType } from '../components/Message';
 import useTypingEffect from './useTypingEffect';
@@ -8,7 +9,11 @@ import { useResponseCompliance } from './response/responseCompliance';
 import { useResponseGenerator } from './response/responseGenerator';
 import { useResponseProcessing } from './response/responseProcessing';
 import { detectGriefThemes } from '../utils/response/griefSupport';
-import { detectClientPreferences } from '../utils/conversationalUtils';
+import { 
+  detectClientPreferences,
+  detectSimpleNegativeState,
+  detectPoliticalEmotions
+} from '../utils/conversationalUtils';
 import { generateSafetyConcernResponse, explainInpatientProcess } from '../utils/safetyConcernManager';
 import { ConcernType } from '../utils/reflection/reflectionTypes';
 import { DeceptionAnalysis } from '../utils/detectionUtils/deceptionDetection';
@@ -158,6 +163,40 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     // Update conversation history and client preferences
     updateConversationHistory(userInput);
     
+    // HIGHEST PRIORITY: Check for explicitly stated feelings first
+    const negativeStateInfo = detectSimpleNegativeState(userInput);
+    if (negativeStateInfo.isNegativeState && 
+        (negativeStateInfo.explicitFeelings.length > 0 || negativeStateInfo.intensity !== 'mild')) {
+      // User has explicitly stated how they feel - always acknowledge this first
+      updateStage();
+      
+      // Generate response that acknowledges their stated feelings
+      return baseProcessUserMessage(
+        userInput,
+        (input) => {
+          // Always prioritize the explicitly stated feeling
+          return detectSimpleNegativeState(input).explicitFeelings.length > 0
+            ? generateSimpleNegativeStateResponse(input, detectSimpleNegativeState(input))
+            : generateResponse(input, null);
+        },
+        () => null // No concern needed here as we're handling the emotional state directly
+      );
+    }
+    
+    // Check for political emotions as second highest priority
+    const politicalInfo = detectPoliticalEmotions(userInput);
+    if (politicalInfo.isPolitical) {
+      updateStage();
+      
+      // Process with political emotion response
+      const { generatePoliticalEmotionResponse } = await import('../utils/conversationalUtils');
+      return baseProcessUserMessage(
+        userInput,
+        (input) => generatePoliticalEmotionResponse(input, politicalInfo),
+        () => null
+      );
+    }
+    
     // Check for asking if Roger is Drew (unconditional rule)
     if (
       userInput.toLowerCase().includes("are you drew") || 
@@ -287,7 +326,8 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     // Check for trauma response patterns to adjust response time
     let traumaResponsePatterns = null;
     try {
-      const traumaModule = require('../utils/response/traumaResponsePatterns');
+      // Use dynamic import instead of require
+      const traumaModule = await import('../utils/response/traumaResponsePatterns').catch(() => null);
       if (traumaModule && traumaModule.detectTraumaResponsePatterns) {
         traumaResponsePatterns = traumaModule.detectTraumaResponsePatterns(userInput);
       }

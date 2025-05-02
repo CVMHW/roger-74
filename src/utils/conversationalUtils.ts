@@ -204,6 +204,7 @@ export const generateMildSomaticResponse = (
 export const detectSimpleNegativeState = (userInput: string): {
   isNegativeState: boolean;
   intensity: 'mild' | 'moderate' | 'severe';
+  explicitFeelings: string[];
 } => {
   const lowerInput = userInput.toLowerCase();
   
@@ -212,7 +213,7 @@ export const detectSimpleNegativeState = (userInput: string): {
     /been better/i,
     /not (great|good)/i,
     /feeling off/i,
-    /a little (down|off|low)/i,
+    /a little (down|off|low|bummed)/i,
     /not myself/i,
     /meh/i,
     /so-so/i
@@ -238,6 +239,22 @@ export const detectSimpleNegativeState = (userInput: string): {
   const hasModerateNegative = moderateNegativePatterns.some(pattern => pattern.test(lowerInput));
   const hasSevereNegative = severeNegativePatterns.some(pattern => pattern.test(lowerInput));
   
+  // Extract explicitly stated feelings
+  const explicitFeelings: string[] = [];
+  const feelingWords = [
+    'sad', 'upset', 'angry', 'mad', 'frustrated', 'annoyed', 'anxious', 'worried', 
+    'scared', 'fearful', 'happy', 'glad', 'joyful', 'excited', 'tired', 'exhausted', 
+    'confused', 'lost', 'lonely', 'alone', 'depressed', 'down', 'bummed', 'disappointed'
+  ];
+  
+  // Look for feeling words preceded by "feeling" or "feel"
+  const feelingRegex = new RegExp(`(?:feel(?:ing)?|am) (?:a bit |a little |kind of |really |very |super |extremely )?(${feelingWords.join('|')})`, 'i');
+  const match = lowerInput.match(feelingRegex);
+  
+  if (match && match[1]) {
+    explicitFeelings.push(match[1]);
+  }
+  
   // Determine intensity
   let intensity: 'mild' | 'moderate' | 'severe' = 'mild';
   if (hasSevereNegative) {
@@ -247,8 +264,9 @@ export const detectSimpleNegativeState = (userInput: string): {
   }
   
   return {
-    isNegativeState: hasMildNegative || hasModerateNegative || hasSevereNegative,
-    intensity
+    isNegativeState: hasMildNegative || hasModerateNegative || hasSevereNegative || explicitFeelings.length > 0,
+    intensity,
+    explicitFeelings
   };
 };
 
@@ -259,7 +277,35 @@ export const generateSimpleNegativeStateResponse = (
   userInput: string, 
   negativeStateInfo: ReturnType<typeof detectSimpleNegativeState>
 ): string => {
-  // Responses tailored to different intensity levels
+  // If user has explicitly stated their feelings, acknowledge that directly first
+  if (negativeStateInfo.explicitFeelings.length > 0) {
+    const feeling = negativeStateInfo.explicitFeelings[0];
+    
+    const acknowledgeResponses = [
+      `I hear that you're feeling ${feeling}. That makes sense, especially with moving to a new country.`,
+      `Thanks for sharing that you're feeling ${feeling}. Moving to a new place can bring up a lot of emotions.`,
+      `I understand you're feeling ${feeling} right now. Moving to America must be quite an adjustment.`,
+      `It sounds like you're feeling ${feeling}. Moving to a new country can be really challenging.`
+    ];
+    
+    // Select a random acknowledgment response
+    const acknowledgment = acknowledgeResponses[Math.floor(Math.random() * acknowledgeResponses.length)];
+    
+    const followUpQuestions = [
+      "What's been the hardest part of the transition so far?",
+      "How long have you been here?",
+      "What aspects of this change have been most difficult for you?",
+      "Would it help to talk more about what's been going on?"
+    ];
+    
+    // Select a random follow-up question
+    const followUp = followUpQuestions[Math.floor(Math.random() * followUpQuestions.length)];
+    
+    // Combine acknowledgment and follow-up
+    return `${acknowledgment} ${followUp}`;
+  }
+  
+  // Responses tailored to different intensity levels if no explicit feelings were stated
   const mildResponses = [
     "I'm sorry to hear you're not feeling your best. What's been going on?",
     "Sounds like things aren't great right now. Would you like to talk about it?",
@@ -414,16 +460,16 @@ export const generateConversationalResponse = (
     return generateMinimalInputResponse(userInput);
   }
   
+  // HIGHEST PRIORITY: Check for explicitly stated feelings in the current message
+  const negativeStateInfo = detectSimpleNegativeState(userInput);
+  if (negativeStateInfo.isNegativeState) {
+    return adaptToneForClientPreference(generateSimpleNegativeStateResponse(userInput, negativeStateInfo), clientPreferences);
+  }
+  
   // Check for political emotional content
   const politicalInfo = detectPoliticalEmotions(userInput);
   if (politicalInfo.isPolitical) {
     return adaptToneForClientPreference(generatePoliticalEmotionResponse(userInput, politicalInfo), clientPreferences);
-  }
-  
-  // NEW: Check for simple negative state expressions
-  const negativeStateInfo = detectSimpleNegativeState(userInput);
-  if (negativeStateInfo.isNegativeState) {
-    return adaptToneForClientPreference(generateSimpleNegativeStateResponse(userInput, negativeStateInfo), clientPreferences);
   }
   
   // Check for mild somatic complaints before handling more serious medical concerns
