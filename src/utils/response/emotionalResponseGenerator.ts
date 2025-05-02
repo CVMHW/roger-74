@@ -4,6 +4,7 @@ import { detectSarcasm, generateSarcasmResponse } from '../../utils/conversation
 import { detectRepetition, generateRepetitionAcknowledgment } from '../../utils/conversationEnhancement/emotionalInputHandler';
 import { detectSimpleNegativeState, generateSimpleNegativeStateResponse } from '../../utils/conversationalUtils';
 import { detectPoliticalEmotions, generatePoliticalEmotionResponse } from '../../utils/conversationalUtils';
+import { createSadnessResponse } from './handlers/emotional';
 
 /**
  * Handles initial emotional content detection and response generation
@@ -11,6 +12,12 @@ import { detectPoliticalEmotions, generatePoliticalEmotionResponse } from '../..
  * @param conversationHistory Recent conversation history
  */
 export const handleEmotionalResponses = (userInput: string, conversationHistory: string[]): string | null => {
+  // Check for sadness response first
+  const sadnessResponse = createSadnessResponse(userInput);
+  if (sadnessResponse) {
+    return sadnessResponse;
+  }
+  
   // Check for repetition patterns that might indicate frustration
   if (conversationHistory.length >= 2) {
     const repetitionInfo = detectRepetition(userInput, conversationHistory.slice(-3));

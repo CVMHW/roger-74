@@ -25,8 +25,15 @@ export const createSadnessResponse = (userInput: string): string | null => {
   // Check for specific spouse/relationship keywords
   const hasRelationshipTerms = /wife|husband|spouse|partner|marriage|divorce|left me|broke up|relationship|ex-/i.test(userInput);
   
+  // Check for job loss keywords
+  const hasJobLossTerms = /job|work|career|unemployed|fired|laid off|lost.*job|let go|position|employment/i.test(userInput);
+  
   if (hasRelationshipTerms) {
     return `I can hear that you're feeling ${specificFeeling} about this relationship situation. That's completely understandable. When someone significant in our lives leaves, it can be incredibly painful. Would you like to talk more about what you're going through right now?`;
+  }
+  
+  if (hasJobLossTerms) {
+    return `I understand you're feeling ${specificFeeling} about losing your job. That's a completely natural reaction. Job loss can impact not only our finances but also our sense of identity and purpose. Would you like to talk about what this change means for you?`;
   }
   
   switch (sadnessDistinction.context) {
