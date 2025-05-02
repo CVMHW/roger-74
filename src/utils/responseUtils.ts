@@ -1,4 +1,3 @@
-
 // Add this function to the existing responseUtils.ts file
 
 /**
@@ -33,7 +32,7 @@ export const getMedicalConcernMessage = (): string => {
  * Get appropriate response for mental health concerns
  */
 export const getMentalHealthConcernMessage = (): string => {
-  return "I hear you describing experiences that might benefit from professional mental health support. Many people find that speaking with a therapist or counselor provides helpful strategies and relief. Would it be okay if we talked about what mental health resources might be available to you?";
+  return "I hear you describing experiences that might benefit from professional mental health support. Many people find that speaking with a therapist or counselor provides helpful strategies and relief. Would it be okay if we talked more about what mental health resources might be available to you?";
 };
 
 /**
@@ -75,7 +74,7 @@ export const getTraumaResponseMessage = (userInput: string): string => {
  * Generate a deescalation response based on defensive reaction type
  */
 export const generateDeescalationResponse = (
-  reactionType: 'denial' | 'anger' | 'bargaining' | 'minimizing',
+  reactionType: 'denial' | 'anger' | 'bargaining' | 'minimizing' | 'accusation' | 'profanity' | 'dismissal',
   suggestedConcern: string
 ): string => {
   switch (reactionType) {
@@ -87,8 +86,13 @@ export const generateDeescalationResponse = (
       return `I hear you trying to make sense of these experiences. It's natural to look for explanations and solutions. I'm here to support you in finding what works best for your unique situation, without any pressure or expectations.`;
     case 'minimizing':
       return `I notice you might be downplaying what you're going through, which many people do. Even challenges that seem small can have a big impact, and your experiences are valid. I'm here to listen without judgment, whatever you'd like to discuss.`;
+    case 'accusation':
+      return `I hear that you feel I've misunderstood or misjudged you, which wasn't my intention. Your experience and perspective are what matter most here. I'm here to listen and understand, not to make judgments.`;
+    case 'profanity':
+      return `I can tell you have strong feelings about this, which is completely understandable. Strong emotions are a natural response to difficult situations. I'm here to listen without judgment whenever you're ready to talk more.`;
+    case 'dismissal':
+      return `I understand you might not want to discuss this further, and that's completely your choice. I respect your decision about what you want to talk about, and I'm here whenever you'd like to explore any topic that feels helpful.`;
     default:
       return `I'm here to listen and support you, without any assumptions or judgments. We can talk about whatever feels most helpful for you right now.`;
   }
 };
-

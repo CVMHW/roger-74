@@ -194,7 +194,7 @@ export const useResponseGenerator = ({
     // If we have a defensive reaction, generate a de-escalation response
     return generateDeescalationResponse(
       defensiveReaction.reactionType || 'denial',
-      defensiveReaction.suggestedConcern
+      defensiveReaction.suggestedConcern || ''
     );
   };
   
@@ -357,3 +357,5 @@ export const useResponseGenerator = ({
     generateResponse
   };
 };
+
+export { useResponseGenerator };
