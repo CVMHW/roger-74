@@ -1,4 +1,3 @@
-
 /**
  * Utilities for detecting various concerns in user messages
  */
@@ -207,76 +206,111 @@ export const detectPTSDConcerns = (message: string): { detected: boolean; severi
   
   const lowerMessage = message.toLowerCase();
   
-  // Severe PTSD indicators based on PCL-5 and clinical literature
-  const severePTSDKeywords = [
-    'flashback', 'reliving trauma', 'can\'t sleep at all', 'severe nightmares', 
-    'always on guard', 'completely numb', 'extreme anger', 'suicidal thoughts',
-    'can\'t function', 'lost control', 'completely avoid', 'completely cut off',
-    'constant nightmares', 'constant fear', 'extreme reactions', 'unable to work',
-    'cant live like this', 'traumatized', 'can\'t escape the memories'
+  // PCL5-based symptom clusters
+  const intrusionSymptoms = [
+    'flashback', 'nightmare', 'dream about', 'keeps coming back', 'intrusive',
+    'memories of', 'reminded of', 'triggered', 'reliving'
   ];
   
-  // Moderate PTSD indicators
-  const moderatePTSDKeywords = [
-    'ptsd', 'post traumatic', 'traumatic stress', 'nightmares', 'flashbacks',
-    'triggered', 'avoid places', 'avoid people', 'hypervigilant', 'jumpy',
-    'trouble sleeping', 'bad dreams', 'memory problems', 'feeling unsafe',
-    'combat', 'assault', 'military trauma', 'trauma', 'sexual assault',
-    'physically attacked', 'started after'
+  const avoidanceSymptoms = [
+    'avoid', 'stay away from', 'can\'t talk about', 'don\'t want to remember',
+    'trying not to think about', 'refuse to', 'won\'t go near', 'can\'t face'
   ];
   
-  // Mild or general trauma indicators
-  const mildTraumaKeywords = [
-    'bad experience', 'difficult event', 'upsetting memory', 'stressful situation',
-    'uncomfortable around', 'bothered by', 'reminded me of', 'thinking about it',
-    'hard to forget', 'disturbing'
+  const negativeAlterations = [
+    'can\'t feel anything', 'numb', 'disconnected', 'detached', 'the world isn\'t real',
+    'blame myself', 'no one can understand', 'can\'t trust anyone', 'always on guard',
+    'never safe', 'permanently damaged', 'never be the same'
   ];
   
-  // Sleep disturbance indicators (particularly relevant for PTSD)
-  const sleepDisturbanceKeywords = [
-    'night sweats', 'wake up scared', 'trouble falling asleep', 'wake up frequently',
-    'nightmares', 'dream about it', 'can\'t sleep', 'disrupted sleep',
-    'insomnia', 'scream in sleep', 'night terror', 'thrash in sleep',
-    'act out dreams', 'violent dreams'
+  const arousalSymptoms = [
+    'hypervigilant', 'jumpy', 'startle easily', 'can\'t sleep', 'nightmares',
+    'on edge', 'irritable', 'angry outbursts', 'self-destructive', 'can\'t concentrate',
+    'can\'t focus', 'always watching', 'checking for danger'
   ];
   
-  // New: Anxiety comorbidity indicators specific to PTSD vs GAD differentiation
-  const anxietyComorbidityKeywords = [
-    'worried all the time', 'constant worry', 'excessive worry',
-    'generalized anxiety', 'gad', 'worry about everything',
-    'can\'t stop worrying', 'anxious thoughts', 'ruminating'
+  // Specific trauma types mentioned
+  const traumas = [
+    'trauma', 'ptsd', 'assault', 'attack', 'accident', 'combat', 'war', 'disaster',
+    'shooting', 'violent', 'abuse', 'neglect', 'witness', 'threatened', 
+    'sexual assault', 'rape', 'military', 'veteran'
   ];
   
-  // Check if anxiety appears to be primary concern (GAD) vs trauma-related
-  const hasGeneralAnxietyFocus = anxietyComorbidityKeywords.some(keyword => lowerMessage.includes(keyword)) &&
-                               !moderatePTSDKeywords.some(keyword => lowerMessage.includes(keyword));
+  // 4F responses (from Walker's model)
+  const fight4F = [
+    'rage', 'anger issues', 'can\'t control anger', 'lash out', 'explode',
+    'yell at people', 'always fighting', 'conflict', 'aggressive'
+  ];
   
-  // If anxiety appears to be primary without trauma indicators, don't classify as PTSD
-  if (hasGeneralAnxietyFocus) {
-    return { detected: false, severity: 'mild' };
+  const flight4F = [
+    'can\'t sit still', 'always busy', 'workaholic', 'can\'t relax', 'anxious',
+    'panic', 'obsessing', 'overthinking', 'planning escape routes'
+  ];
+  
+  const freeze4F = [
+    'freeze up', 'shut down', 'dissociate', 'space out', 'numb out',
+    'can\'t move', 'paralyzed', 'blank mind', 'brain fog', 'hiding'
+  ];
+  
+  const fawn4F = [
+    'people pleaser', 'can\'t say no', 'always apologizing', 'caretaking',
+    'put others first', 'fear rejection', 'codependent', 'need approval'
+  ];
+  
+  // Check for matches in each category
+  const intrusions = intrusionSymptoms.filter(symptom => lowerMessage.includes(symptom)).length;
+  const avoidances = avoidanceSymptoms.filter(symptom => lowerMessage.includes(symptom)).length;
+  const negatives = negativeAlterations.filter(symptom => lowerMessage.includes(symptom)).length;
+  const arousal = arousalSymptoms.filter(symptom => lowerMessage.includes(symptom)).length;
+  const traumaTypes = traumas.filter(trauma => lowerMessage.includes(trauma)).length;
+  
+  // Check for 4F patterns
+  const fightPatterns = fight4F.filter(pattern => lowerMessage.includes(pattern)).length;
+  const flightPatterns = flight4F.filter(pattern => lowerMessage.includes(pattern)).length;
+  const freezePatterns = freeze4F.filter(pattern => lowerMessage.includes(pattern)).length;
+  const fawnPatterns = fawn4F.filter(pattern => lowerMessage.includes(pattern)).length;
+  
+  // Total up the scores
+  const symptomScore = intrusions + avoidances + negatives + arousal;
+  const traumaMentioned = traumaTypes > 0;
+  const fourFScore = fightPatterns + flightPatterns + freezePatterns + fawnPatterns;
+  
+  // Determine if PTSD is likely present and at what severity
+  let detected = false;
+  let severity: 'mild' | 'moderate' | 'severe' = 'mild';
+  
+  // PCL5-based detection criteria
+  if ((symptomScore >= 4 && traumaMentioned) || (symptomScore >= 6)) {
+    detected = true;
+    
+    if (symptomScore >= 10 || (symptomScore >= 6 && traumaMentioned)) {
+      severity = 'severe';
+    } else if (symptomScore >= 6 || (symptomScore >= 4 && traumaMentioned)) {
+      severity = 'moderate';
+    }
+  }
+  // 4F model detection criteria
+  else if (fourFScore >= 3) {
+    detected = true;
+    
+    if (fourFScore >= 6 || (fourFScore >= 4 && traumaMentioned)) {
+      severity = 'moderate';
+    } else {
+      severity = 'mild';
+    }
+  }
+  // Lower threshold with explicit trauma mention
+  else if (traumaMentioned && symptomScore >= 2) {
+    detected = true;
+    severity = 'mild';
+  }
+  // Check for PTSD explicit mention
+  else if (lowerMessage.includes('ptsd') || lowerMessage.includes('post traumatic') || lowerMessage.includes('post-traumatic')) {
+    detected = true;
+    severity = 'mild';
   }
   
-  // Check for severity based on quantity and quality of symptoms described
-  // If severe PTSD keywords are present or many moderate ones
-  if (severePTSDKeywords.some(keyword => lowerMessage.includes(keyword)) ||
-      (moderatePTSDKeywords.filter(keyword => lowerMessage.includes(keyword)).length >= 3)) {
-    return { detected: true, severity: 'severe' };
-  }
-  
-  // If moderate PTSD keywords are present or combination with sleep disturbances
-  if (moderatePTSDKeywords.some(keyword => lowerMessage.includes(keyword)) ||
-      (mildTraumaKeywords.some(keyword => lowerMessage.includes(keyword)) && 
-       sleepDisturbanceKeywords.some(keyword => lowerMessage.includes(keyword)))) {
-    return { detected: true, severity: 'moderate' };
-  }
-  
-  // If only mild trauma indicators are present
-  if (mildTraumaKeywords.some(keyword => lowerMessage.includes(keyword)) ||
-      sleepDisturbanceKeywords.some(keyword => lowerMessage.includes(keyword))) {
-    return { detected: true, severity: 'mild' };
-  }
-  
-  return { detected: false, severity: 'mild' };
+  return { detected, severity };
 };
 
 // Tentative harmful language detection
@@ -434,3 +468,184 @@ export const distinguishSadnessFromDepression = (message: string): {
     context
   };
 };
+
+/**
+ * Enhanced PTSD detection using PCL5 criteria and 4F trauma model
+ * @param text User input to analyze
+ * @returns Object with detection result and severity
+ */
+export function detectPTSDConcerns(text: string): { detected: boolean; severity: 'mild' | 'moderate' | 'severe' } {
+  if (!text) return { detected: false, severity: 'mild' };
+  
+  const lowerText = text.toLowerCase();
+  
+  // PCL5-based symptom clusters
+  const intrusionSymptoms = [
+    'flashback', 'nightmare', 'dream about', 'keeps coming back', 'intrusive',
+    'memories of', 'reminded of', 'triggered', 'reliving'
+  ];
+  
+  const avoidanceSymptoms = [
+    'avoid', 'stay away from', 'can\'t talk about', 'don\'t want to remember',
+    'trying not to think about', 'refuse to', 'won\'t go near', 'can\'t face'
+  ];
+  
+  const negativeAlterations = [
+    'can\'t feel anything', 'numb', 'disconnected', 'detached', 'the world isn\'t real',
+    'blame myself', 'no one can understand', 'can\'t trust anyone', 'always on guard',
+    'never safe', 'permanently damaged', 'never be the same'
+  ];
+  
+  const arousalSymptoms = [
+    'hypervigilant', 'jumpy', 'startle easily', 'can\'t sleep', 'nightmares',
+    'on edge', 'irritable', 'angry outbursts', 'self-destructive', 'can\'t concentrate',
+    'can\'t focus', 'always watching', 'checking for danger'
+  ];
+  
+  // Specific trauma types mentioned
+  const traumas = [
+    'trauma', 'ptsd', 'assault', 'attack', 'accident', 'combat', 'war', 'disaster',
+    'shooting', 'violent', 'abuse', 'neglect', 'witness', 'threatened', 
+    'sexual assault', 'rape', 'military', 'veteran'
+  ];
+  
+  // 4F responses (from Walker's model)
+  const fight4F = [
+    'rage', 'anger issues', 'can\'t control anger', 'lash out', 'explode',
+    'yell at people', 'always fighting', 'conflict', 'aggressive'
+  ];
+  
+  const flight4F = [
+    'can\'t sit still', 'always busy', 'workaholic', 'can\'t relax', 'anxious',
+    'panic', 'obsessing', 'overthinking', 'planning escape routes'
+  ];
+  
+  const freeze4F = [
+    'freeze up', 'shut down', 'dissociate', 'space out', 'numb out',
+    'can\'t move', 'paralyzed', 'blank mind', 'brain fog', 'hiding'
+  ];
+  
+  const fawn4F = [
+    'people pleaser', 'can\'t say no', 'always apologizing', 'caretaking',
+    'put others first', 'fear rejection', 'codependent', 'need approval'
+  ];
+  
+  // Check for matches in each category
+  const intrusions = intrusionSymptoms.filter(symptom => lowerText.includes(symptom)).length;
+  const avoidances = avoidanceSymptoms.filter(symptom => lowerText.includes(symptom)).length;
+  const negatives = negativeAlterations.filter(symptom => lowerText.includes(symptom)).length;
+  const arousal = arousalSymptoms.filter(symptom => lowerText.includes(symptom)).length;
+  const traumaTypes = traumas.filter(trauma => lowerText.includes(trauma)).length;
+  
+  // Check for 4F patterns
+  const fightPatterns = fight4F.filter(pattern => lowerText.includes(pattern)).length;
+  const flightPatterns = flight4F.filter(pattern => lowerText.includes(pattern)).length;
+  const freezePatterns = freeze4F.filter(pattern => lowerText.includes(pattern)).length;
+  const fawnPatterns = fawn4F.filter(pattern => lowerText.includes(pattern)).length;
+  
+  // Total up the scores
+  const symptomScore = intrusions + avoidances + negatives + arousal;
+  const traumaMentioned = traumaTypes > 0;
+  const fourFScore = fightPatterns + flightPatterns + freezePatterns + fawnPatterns;
+  
+  // Determine if PTSD is likely present and at what severity
+  let detected = false;
+  let severity: 'mild' | 'moderate' | 'severe' = 'mild';
+  
+  // PCL5-based detection criteria
+  if ((symptomScore >= 4 && traumaMentioned) || (symptomScore >= 6)) {
+    detected = true;
+    
+    if (symptomScore >= 10 || (symptomScore >= 6 && traumaMentioned)) {
+      severity = 'severe';
+    } else if (symptomScore >= 6 || (symptomScore >= 4 && traumaMentioned)) {
+      severity = 'moderate';
+    }
+  }
+  // 4F model detection criteria
+  else if (fourFScore >= 3) {
+    detected = true;
+    
+    if (fourFScore >= 6 || (fourFScore >= 4 && traumaMentioned)) {
+      severity = 'moderate';
+    } else {
+      severity = 'mild';
+    }
+  }
+  // Lower threshold with explicit trauma mention
+  else if (traumaMentioned && symptomScore >= 2) {
+    detected = true;
+    severity = 'mild';
+  }
+  // Check for PTSD explicit mention
+  else if (lowerText.includes('ptsd') || lowerText.includes('post traumatic') || lowerText.includes('post-traumatic')) {
+    detected = true;
+    severity = 'mild';
+  }
+  
+  return { detected, severity };
+}
+
+/**
+ * Generate a mild PTSD response that's trauma-informed but not clinical
+ * Based on 4F model and polyvagal theory
+ */
+export function getMildPTSDResponse(userInput: string): string {
+  // Import trauma response patterns module
+  let traumaResponseModule;
+  try {
+    traumaResponseModule = require('./response/traumaResponsePatterns');
+  } catch (e) {
+    console.log("Trauma response module not available yet");
+    // Fallback response if module not loaded
+    return "I notice you're describing some challenging experiences that might be related to past difficult events. It's common for our bodies and minds to develop protective responses to help us cope. Would you like to talk more about what you're experiencing, or perhaps explore some ways that others have found helpful in similar situations?";
+  }
+  
+  // If module is available, use it for advanced analysis
+  if (traumaResponseModule && traumaResponseModule.detectTraumaResponsePatterns) {
+    const analysis = traumaResponseModule.detectTraumaResponsePatterns(userInput);
+    
+    if (analysis) {
+      return traumaResponseModule.generateTraumaInformedResponse(analysis);
+    }
+  }
+  
+  // Default responses based on common themes if detailed analysis not available
+  const lowerInput = userInput.toLowerCase();
+  
+  // Check for hyperarousal symptoms
+  if (lowerInput.includes('jumpy') || 
+      lowerInput.includes('startle') || 
+      lowerInput.includes('alert') || 
+      lowerInput.includes('vigilant') ||
+      lowerInput.includes('on guard')) {
+    return "I notice you're describing feeling on high alert or easily startled. This is often our body's way of trying to keep us safe after difficult experiences. Many people find that grounding techniques and slowly building a sense of safety can help. Would you like to explore what might help your nervous system feel more at ease?";
+  }
+  
+  // Check for avoidance
+  if (lowerInput.includes('avoid') || 
+      lowerInput.includes('can\'t go') || 
+      lowerInput.includes('stay away') || 
+      lowerInput.includes('scared to')) {
+    return "I hear that there are situations or memories that feel too difficult to approach right now. Avoidance is a natural protective response. Many people find that gradually approaching difficult situations with support can be helpful, but only when you feel ready. What do you think might be a small step that would feel manageable?";
+  }
+  
+  // Check for intrusive thoughts/memories
+  if (lowerInput.includes('flashback') || 
+      lowerInput.includes('memory') || 
+      lowerInput.includes('keeps coming back') || 
+      lowerInput.includes('triggered')) {
+    return "It sounds like you're experiencing memories or feelings that keep returning, which can be really challenging. This is a common response to significant stress or difficult experiences. Many people find that grounding in the present moment can help remind your brain and body that you're safe now. Would you like to talk about what might help when these experiences arise?";
+  }
+  
+  // Check for numbing/disconnection
+  if (lowerInput.includes('numb') || 
+      lowerText.includes('disconnected') || 
+      lowerText.includes('don\'t feel anything') || 
+      lowerText.includes('spaced out')) {
+    return "I notice you're describing feeling disconnected or numb, which is often the mind's way of protecting us when emotions feel too intense. This is a common response to overwhelming experiences. Many people find that gentle sensory activities can help reconnect with the present moment. What helps you feel more present and connected?";
+  }
+  
+  // General trauma-informed response
+  return "I hear you describing some challenging reactions that can follow difficult life experiences. Our bodies and minds develop these responses to try to protect us, though sometimes they continue even when the danger has passed. Would it be helpful to explore some approaches that others have found supportive in similar situations?";
+}

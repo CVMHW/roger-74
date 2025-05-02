@@ -11,8 +11,8 @@ export type DevelopmentalStage = 'infant_toddler' | 'young_child' | 'middle_chil
 
 export type ChildEmotionCategory = 'happy' | 'mad' | 'sad' | 'scared' | 'excited' | 'tired' | 'worried' | 'loved' | 'confused' | 'silly' | 'hungry' | 'calm';
 
-// Updated to include PTSD and mild-gambling
-export type ConcernType = 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | 'mild-gambling' | 'ptsd' | 'ptsd-mild' | null;
+// Updated to include PTSD, trauma-response, ptsd-mild
+export type ConcernType = 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | 'mild-gambling' | 'ptsd' | 'ptsd-mild' | 'trauma-response' | null;
 
 export interface FeelingsWheelEmotion {
   name: string;
@@ -94,3 +94,16 @@ export interface ReflectionPrinciple {
   approach?: string;
   goal?: string;
 }
+
+// New trauma-related types
+export interface TraumaResponseType {
+  fightResponse?: boolean;
+  flightResponse?: boolean;
+  freezeResponse?: boolean;
+  fawnResponse?: boolean;
+  dominantResponseType?: 'fight' | 'flight' | 'freeze' | 'fawn' | 'hybrid';
+  intensity?: 'mild' | 'moderate' | 'severe' | 'extreme';
+}
+
+// Add anger thermometer levels
+export type AngerLevel = 'calm' | 'annoyed' | 'frustrated' | 'angry' | 'enraged';

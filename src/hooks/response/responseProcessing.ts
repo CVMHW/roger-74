@@ -40,20 +40,38 @@ export const useResponseProcessing = ({
     const isMentalHealth = concernType === 'mental-health';
     const isMedical = concernType === 'medical' || concernType === 'eating-disorder';
     const isMildGambling = concernType === 'mild-gambling';
+    const isPTSD = concernType === 'ptsd' || concernType === 'ptsd-mild';
+    const isTraumaResponse = concernType === 'trauma-response';
     
     // Detect grief themes for response timing
     const griefThemes = detectGriefThemes(userInput);
     const hasSignificantGrief = griefThemes.themeIntensity >= 4;
     
+    // Check for trauma response patterns
+    let traumaResponsePatterns = null;
+    try {
+      // Dynamic import to avoid circular dependencies
+      const traumaModule = require('../../utils/response/traumaResponsePatterns');
+      if (traumaModule.detectTraumaResponsePatterns) {
+        traumaResponsePatterns = traumaModule.detectTraumaResponsePatterns(userInput);
+      }
+    } catch (e) {
+      console.log("Trauma patterns module not available:", e);
+    }
+    
     // Adjust complexity and emotional weight based on concerns and grief levels
     let estimatedComplexity = isCrisis ? 8 : 
                              isMentalHealth ? 7 :
                              isMedical ? 7 : 
+                             isPTSD ? 8 :  // Higher complexity for PTSD
+                             isTraumaResponse ? 7 : // Higher for trauma responses
                              isMildGambling ? 4 : 
                              hasSignificantGrief ? 6 : 5;
     
     let estimatedEmotionalWeight = isCrisis ? 9 : 
                                   concernType === 'substance-use' || isMentalHealth ? 7 : 
+                                  isPTSD ? 8 : // Higher emotional weight for PTSD
+                                  isTraumaResponse ? 7 : 
                                   isMildGambling ? 3 : 
                                   hasSignificantGrief ? 7 : 4;
     
@@ -78,6 +96,41 @@ export const useResponseProcessing = ({
       // If grief mentions non-linear or roller coaster metaphors, increase complexity
       if (griefThemes.griefMetaphorModel === 'roller-coaster') {
         estimatedComplexity = Math.min(estimatedComplexity + 1, 9);
+      }
+    }
+    
+    // Further adjust for trauma response patterns if detected
+    if (traumaResponsePatterns && traumaResponsePatterns.dominant4F) {
+      const intensityMap = {
+        'mild': 1,
+        'moderate': 2,
+        'severe': 3,
+        'extreme': 4
+      };
+      
+      const intensity = intensityMap[traumaResponsePatterns.dominant4F.intensity] || 1;
+      
+      // Increase complexity based on intensity and dominant pattern
+      if (traumaResponsePatterns.dominant4F.type === 'freeze' || 
+          traumaResponsePatterns.dominant4F.type === 'fawn') {
+        // For freeze and fawn, which need more delicate responses
+        estimatedComplexity += Math.min(intensity, 2);
+      }
+      
+      // For hybrid responses (multiple strong patterns), increase complexity
+      if (traumaResponsePatterns.secondary4F) {
+        estimatedComplexity += 1;
+      }
+      
+      // Increase emotional weight for higher intensity responses
+      if (intensity >= 3) {
+        estimatedEmotionalWeight += 1;
+      }
+      
+      // If anger level is high in trauma response, increase emotional weight
+      if (traumaResponsePatterns.angerLevel === 'angry' || 
+          traumaResponsePatterns.angerLevel === 'enraged') {
+        estimatedEmotionalWeight += 1;
       }
     }
     

@@ -155,6 +155,28 @@ export const useResponseGenerator = ({
     }
   };
   
+  /**
+   * Creates a trauma-informed response for users showing trauma response patterns
+   * but not at clinical PTSD levels
+   */
+  const createTraumaResponseMessage = (userInput: string): string | null => {
+    try {
+      // Import the trauma response patterns module
+      const traumaResponseModule = require('../../utils/response/traumaResponsePatterns');
+      const analysis = traumaResponseModule.detectTraumaResponsePatterns(userInput);
+      
+      // If we have a valid analysis, generate a trauma-informed response
+      if (analysis && analysis.dominant4F) {
+        return traumaResponseModule.generateTraumaInformedResponse(analysis);
+      }
+    } catch (e) {
+      console.log("Error in trauma response generation:", e);
+    }
+    
+    // If module not available or analysis failed, return null to use other response types
+    return null;
+  };
+  
   const generateResponse = (
     userInput: string, 
     concernType: ConcernType
@@ -167,9 +189,19 @@ export const useResponseGenerator = ({
           return createMildGamblingResponse(userInput);
         }
         
-        // New special handling for mild PTSD
+        // Special handling for mild PTSD
         if (concernType === 'ptsd-mild') {
           return getMildPTSDResponse(userInput);
+        }
+        
+        // New handling for trauma responses that aren't PTSD
+        if (concernType === 'trauma-response') {
+          const traumaResponse = createTraumaResponseMessage(userInput);
+          if (traumaResponse) {
+            return traumaResponse;
+          }
+          // Fallback if trauma response generation fails
+          return "I notice you're describing experiences that might relate to challenging past events. Our minds and bodies develop protective responses that can persist even when the danger has passed. Would it help to explore what might support you when these responses arise?";
         }
         
         switch (concernType) {

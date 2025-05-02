@@ -1,4 +1,3 @@
-
 /**
  * Standard responses to various concerns
  */
@@ -34,49 +33,20 @@ export const getTentativeHarmMessage = (): string => {
 };
 
 // New: PTSD response for moderate to severe cases
-export const getPTSDMessage = (): string => {
-  return "I notice you're describing experiences that may be related to trauma or PTSD. These can significantly impact quality of life, including sleep and daily functioning. While I can offer peer support, trauma-specific therapy approaches like CPT, PE, or EMDR provided by a specialized professional can be particularly helpful. The VA's National Center for PTSD or trauma-focused therapists can offer appropriate care. Would it help to discuss what reaching out for that support might look like?";
-};
+export function getPTSDMessage(): string {
+  return "I notice you're describing experiences that might be related to trauma. These responses are your mind and body's way of trying to protect you, even though they can be distressing. A trauma specialist can provide specific support that can make a real difference. While I'm here to listen, connecting with the CVMHW team would be a good next step for getting specialized help. Would you like me to share more about trauma-informed resources that might be helpful?";
+}
 
 // New: Mild PTSD conversational response
 export const getMildPTSDResponse = (userInput: string): string => {
-  const lowerInput = userInput.toLowerCase();
-  
-  // Check for sleep-related symptoms since they're common in PTSD
-  const hasSleepIssues = 
-    lowerInput.includes("nightmare") || 
-    lowerInput.includes("can't sleep") || 
-    lowerInput.includes("trouble sleeping") || 
-    lowerInput.includes("wake up") ||
-    lowerInput.includes("bad dream") ||
-    lowerInput.includes("night sweat");
-  
-  // Check for hypervigilance/startle symptoms
-  const hasHypervigilance = 
-    lowerInput.includes("always alert") || 
-    lowerInput.includes("jumpy") || 
-    lowerInput.includes("startle") || 
-    lowerInput.includes("on guard") ||
-    lowerInput.includes("looking over") ||
-    lowerInput.includes("easily frightened");
-    
-  // Check for avoidance symptoms
-  const hasAvoidance = 
-    lowerInput.includes("avoid") || 
-    lowerInput.includes("don't want to go") || 
-    lowerInput.includes("stay away from") || 
-    lowerInput.includes("can't handle") ||
-    lowerInput.includes("don't like crowds") ||
-    lowerInput.includes("uncomfortable around");
-    
-  // Different responses based on symptom clusters
-  if (hasSleepIssues) {
-    return "I notice you mentioned difficulties with sleep, which can be common after experiencing stressful events. Sleep disturbances like nightmares or insomnia are actually one of the most reported symptoms following trauma. Would you like to talk more about how these sleep issues have been affecting you day-to-day?";
-  } else if (hasHypervigilance) {
-    return "It sounds like you've been feeling on high alert or easily startled. This heightened awareness is actually a common response after stressful experiences - your brain is trying to keep you safe. How has this been impacting your daily activities or interactions with others?";
-  } else if (hasAvoidance) {
-    return "I'm hearing that there are situations or places that you've been avoiding. This is a natural protective response that many people experience after difficult events. Would it help to talk more about how this avoidance has been affecting your everyday life?";
-  } else {
-    return "Thank you for sharing your experiences. Difficult events can affect each person differently, and the feelings or reactions you're describing are understandable responses to stress. Would it help to explore how these experiences have been impacting different areas of your life?";
+  // This function imports and uses the detection utils function
+  // It's implemented there to avoid circular dependencies
+  let detectionUtils;
+  try {
+    detectionUtils = require('./detectionUtils');
+    return detectionUtils.getMildPTSDResponse(userInput);
+  } catch (e) {
+    console.log("Error loading detection utils:", e);
+    return "I notice you're describing some experiences that can follow difficult events. Would you like to talk more about what you're experiencing and what might be helpful?";
   }
 };

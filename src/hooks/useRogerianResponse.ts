@@ -110,16 +110,40 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
       if (griefThemes.detectedGriefStages.length >= 3) {
         responseTimeMultiplier += 0.1;
       }
+    }
+    
+    // Check for trauma response patterns to adjust response time
+    let traumaResponsePatterns = null;
+    try {
+      const traumaModule = require('../utils/response/traumaResponsePatterns');
+      if (traumaModule && traumaModule.detectTraumaResponsePatterns) {
+        traumaResponsePatterns = traumaModule.detectTraumaResponsePatterns(userInput);
+      }
+    } catch (e) {
+      console.log("Trauma module not available for response timing:", e);
+    }
+    
+    // Adjust response time for trauma responses
+    if (traumaResponsePatterns && traumaResponsePatterns.dominant4F) {
+      const intensityMap = {
+        'mild': 1.1,
+        'moderate': 1.3,
+        'severe': 1.4,
+        'extreme': 1.5
+      };
       
-      // Update conversation stage before processing
-      updateStage();
+      // Base multiplier on intensity
+      const intensityMultiplier = intensityMap[traumaResponsePatterns.dominant4F.intensity] || 1.0;
       
-      return baseProcessUserMessage(
-        userInput,
-        responseGenerator,
-        detectConcerns,
-        responseTimeMultiplier // Pass the multiplier to adjust response time
-      );
+      // If the current multiplier from grief is lower, use the trauma multiplier
+      if (intensityMultiplier > responseTimeMultiplier) {
+        responseTimeMultiplier = intensityMultiplier;
+      }
+      
+      // Add extra time for hybrid responses (multiple strong patterns)
+      if (traumaResponsePatterns.secondary4F) {
+        responseTimeMultiplier += 0.1;
+      }
     }
     
     // Update conversation stage before processing
@@ -128,7 +152,8 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     return baseProcessUserMessage(
       userInput,
       responseGenerator,
-      detectConcerns
+      detectConcerns,
+      responseTimeMultiplier // Pass the multiplier to adjust response time
     );
   };
   
