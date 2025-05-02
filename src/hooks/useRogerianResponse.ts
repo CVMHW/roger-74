@@ -1,48 +1,13 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { MessageType } from '../components/Message';
-import { 
-  detectCrisisKeywords, 
-  detectMedicalConcerns,
-  detectMentalHealthConcerns,
-  detectEatingDisorderConcerns,
-  detectSubstanceUseConcerns,
-  detectTentativeHarmLanguage
-} from '../utils/detectionUtils';
-import {
-  createMessage
-} from '../utils/messageUtils';
-import {
-  getCrisisMessage,
-  getMedicalConcernMessage,
-  getMentalHealthConcernMessage,
-  getEatingDisorderMessage,
-  getSubstanceUseMessage,
-  getTentativeHarmMessage
-} from '../utils/responseUtils';
-import { useToast } from '@/components/ui/use-toast';
 import useTypingEffect from './useTypingEffect';
 import useAdaptiveResponse from './useAdaptiveResponse';
-import { 
-  MASTER_RULES, 
-  isUniqueResponse, 
-  calculateMinimumResponseTime,
-  isIntroduction,
-  generateIntroductionResponse,
-  isSmallTalk,
-  generateSmallTalkResponse,
-  isPersonalSharing,
-  generatePersonalSharingResponse
-} from '../utils/masterRules';
-import { generateReflectionResponse } from '../utils/reflectionUtils';
-
-interface ConcernState {
-  crisis: boolean;
-  medical: boolean;
-  mentalHealth: boolean;
-  eatingDisorder: boolean;
-  substanceUse: boolean;
-  tentativeHarm: boolean;
-}
+import { useConcernDetection } from './response/concernDetection';
+import { useConversationStage } from './response/conversationStageManager';
+import { useResponseCompliance } from './response/responseCompliance';
+import { useResponseGenerator } from './response/responseGenerator';
+import { useResponseProcessing } from './response/responseProcessing';
 
 interface UseRogerianResponseReturn {
   isTyping: boolean;
@@ -52,252 +17,60 @@ interface UseRogerianResponseReturn {
 }
 
 export const useRogerianResponse = (): UseRogerianResponseReturn => {
-  const [isTyping, setIsTyping] = useState(false);
-  const [concernsShown, setConcernsShown] = useState<ConcernState>({
-    crisis: false,
-    medical: false,
-    mentalHealth: false,
-    eatingDisorder: false,
-    substanceUse: false,
-    tentativeHarm: false
-  });
-  // Track previous responses to prevent repetition (master rule)
-  const [previousResponses, setPreviousResponses] = useState<string[]>([]);
-  // Track conversation stage
-  const [conversationStage, setConversationStage] = useState<'initial' | 'early' | 'established'>('initial');
+  // Hook for conversation stage management
+  const { 
+    conversationStage, 
+    messageCount, 
+    introductionMade,
+    updateStage, 
+    setIntroductionMade 
+  } = useConversationStage();
   
-  // Flag to track if an introduction has already been made
-  const [introductionMade, setIntroductionMade] = useState(false);
-  
-  // Track conversation duration for the 10-minute rule (using message count as proxy)
-  const [messageCount, setMessageCount] = useState(0);
-  const EARLY_CONVERSATION_MESSAGE_THRESHOLD = 10; // Roughly equivalent to 10 minutes
-  
-  const { toast } = useToast();
-  const { calculateResponseTime, simulateTypingResponse } = useTypingEffect();
+  // Hook for adaptive response generation strategy
   const { generateAdaptiveResponse, currentApproach } = useAdaptiveResponse();
-
-  // Function to ensure response complies with the master rules
-  const ensureResponseCompliance = (proposedResponse: string): string => {
-    // Check if this exact response has been used before
-    if (previousResponses.includes(proposedResponse)) {
-      // If it's a duplicate, make slight modifications to ensure uniqueness
-      const modifiers = [
-        "I want to emphasize that ",
-        "To put it another way, ",
-        "In other words, ",
-        "Let me express this differently: ",
-        "From another perspective, ",
-        "I'd like to rephrase: ",
-        "To clarify, ",
-        "What I'm hearing is that ",
-        "It seems like ",
-        "The way I understand it, "
-      ];
-      
-      // Select a random modifier and add it to the beginning of the response
-      const modifier = modifiers[Math.floor(Math.random() * modifiers.length)];
-      return modifier + proposedResponse;
-    }
-    
-    // If the response is already unique, return it as is
-    return proposedResponse;
-  };
-
-  const showConcernToast = (concernType: string) => {
-    let title = "Important Notice";
-    let description = "";
-    
-    switch(concernType) {
-      case 'crisis':
-        description = "This appears to be a sensitive topic. Crisis resources are available below.";
-        break;
-      case 'medical':
-        description = "I notice you mentioned physical health concerns. Please consult a medical professional.";
-        break;
-      case 'mental-health':
-        description = "For bipolar symptoms or severe mental health concerns, please contact a professional.";
-        break;
-      case 'eating-disorder':
-        description = "For concerns about eating or body image, the Emily Program has specialists who can help.";
-        break;
-      case 'substance-use':
-        description = "For substance use concerns, specialized support is available in the resources below.";
-        break;
-      case 'tentative-harm':
-        description = "I've noticed concerning language that requires professional support. Please see scheduling link below.";
-        break;
-      default:
-        description = "Please see the resources below for support with your concerns.";
-    }
-    
-    toast({
-      title,
-      description,
-      duration: 6000,
-    });
-  };
-
-  // Process the user's message and generate a response
+  
+  // Hook for concern detection
+  const { detectConcerns } = useConcernDetection();
+  
+  // Hook for response compliance with master rules
+  const { 
+    previousResponses, 
+    ensureResponseCompliance, 
+    addToResponseHistory,
+    setPreviousResponses 
+  } = useResponseCompliance();
+  
+  // Hook for typing effect simulation
+  const { calculateResponseTime, simulateTypingResponse } = useTypingEffect();
+  
+  // Hook for response generation
+  const { generateResponse } = useResponseGenerator({
+    conversationStage,
+    messageCount,
+    introductionMade,
+    adaptiveResponseFn: generateAdaptiveResponse
+  });
+  
+  // Hook for response processing
+  const { isTyping, processUserMessage: baseProcessUserMessage } = useResponseProcessing({
+    ensureResponseCompliance,
+    addToResponseHistory,
+    calculateResponseTime,
+    simulateTypingResponse
+  });
+  
+  // Process user message with stage update
   const processUserMessage = async (userInput: string): Promise<MessageType> => {
-    setIsTyping(true);
+    // Update conversation stage before processing
+    updateStage();
     
-    // Increment message count to track conversation progression
-    setMessageCount(prev => prev + 1);
-    
-    // Check for various concern keywords
-    const containsCrisisKeywords = detectCrisisKeywords(userInput);
-    const containsMedicalConcerns = detectMedicalConcerns(userInput);
-    const containsMentalHealthConcerns = detectMentalHealthConcerns(userInput);
-    const containsEatingDisorderConcerns = detectEatingDisorderConcerns(userInput);
-    const containsSubstanceUseConcerns = detectSubstanceUseConcerns(userInput);
-    const containsTentativeHarmLanguage = detectTentativeHarmLanguage(userInput);
-    
-    // Update conversation stage based on message count
-    if (conversationStage === 'initial') {
-      setConversationStage('early');
-      // Mark that an introduction has been made after the first message
-      setIntroductionMade(true);
-    } else if (conversationStage === 'early' && (previousResponses.length >= 3 || messageCount >= EARLY_CONVERSATION_MESSAGE_THRESHOLD)) {
-      setConversationStage('established');
-    }
-    
-    // Show appropriate alerts based on detected concerns
-    if (containsTentativeHarmLanguage && !concernsShown.tentativeHarm) {
-      setConcernsShown(prev => ({ ...prev, tentativeHarm: true }));
-      showConcernToast('tentative-harm');
-    }
-    else if (containsCrisisKeywords && !concernsShown.crisis) {
-      setConcernsShown(prev => ({ ...prev, crisis: true }));
-      showConcernToast('crisis');
-    }
-    else if (containsMedicalConcerns && !concernsShown.medical) {
-      setConcernsShown(prev => ({ ...prev, medical: true }));
-      showConcernToast('medical');
-    }
-    else if (containsMentalHealthConcerns && !concernsShown.mentalHealth) {
-      setConcernsShown(prev => ({ ...prev, mentalHealth: true }));
-      showConcernToast('mental-health');
-    }
-    else if (containsEatingDisorderConcerns && !concernsShown.eatingDisorder) {
-      setConcernsShown(prev => ({ ...prev, eatingDisorder: true }));
-      showConcernToast('eating-disorder');
-    }
-    else if (containsSubstanceUseConcerns && !concernsShown.substanceUse) {
-      setConcernsShown(prev => ({ ...prev, substanceUse: true }));
-      showConcernToast('substance-use');
-    }
-
-    // Calculate response time based on message complexity and emotional weight
-    // For sensitive topics, use the master rules to ensure appropriate pacing
-    let responseTime = calculateResponseTime(userInput);
-    
-    // Estimate message complexity and emotional weight for timing adjustments
-    const estimatedComplexity = containsCrisisKeywords || containsMentalHealthConcerns ? 8 : 
-                               containsMedicalConcerns || containsEatingDisorderConcerns ? 7 : 5;
-    
-    const estimatedEmotionalWeight = containsCrisisKeywords || containsTentativeHarmLanguage ? 9 : 
-                                    containsSubstanceUseConcerns || containsMentalHealthConcerns ? 7 : 4;
-    
-    // Get minimum response time from master rules
-    const minimumTime = calculateMinimumResponseTime(estimatedComplexity, estimatedEmotionalWeight);
-    
-    // Ensure response time meets the minimum requirement
-    responseTime = Math.max(responseTime, minimumTime);
-    
-    // Return a promise that resolves with the appropriate response
-    return new Promise(resolve => {
-      setTimeout(() => {
-        let responseText;
-        let concernType = null;
-        
-        // Safety concerns always take precedence as per master rules
-        if (containsTentativeHarmLanguage) {
-          responseText = getTentativeHarmMessage();
-          concernType = 'tentative-harm';
-        }
-        else if (containsCrisisKeywords) {
-          responseText = getCrisisMessage();
-          concernType = 'crisis';
-        } 
-        else if (containsMedicalConcerns) {
-          responseText = getMedicalConcernMessage();
-          concernType = 'medical';
-        }
-        else if (containsMentalHealthConcerns) {
-          responseText = getMentalHealthConcernMessage();
-          concernType = 'mental-health';
-        }
-        else if (containsEatingDisorderConcerns) {
-          responseText = getEatingDisorderMessage();
-          concernType = 'eating-disorder';
-        }
-        else if (containsSubstanceUseConcerns) {
-          responseText = getSubstanceUseMessage();
-          concernType = 'substance-use';
-        } 
-        // Enhanced social interaction flow based on master rules
-        // Check for introductions and greetings - but only for initial messages
-        else if (isIntroduction(userInput) && !introductionMade) {
-          responseText = generateIntroductionResponse();
-          setIntroductionMade(true);
-        }
-        // Implementation of the 10-minute rule for reflections - prioritize in early conversation
-        else if (messageCount <= EARLY_CONVERSATION_MESSAGE_THRESHOLD) {
-          // First try a reflection response for early conversation (first 10 minutes/messages)
-          const reflectionResponse = generateReflectionResponse(userInput, conversationStage);
-          if (reflectionResponse) {
-            responseText = reflectionResponse;
-          }
-          // If no reflection was generated, fall back to other response types
-          else if (isPersonalSharing(userInput)) {
-            responseText = generatePersonalSharingResponse(userInput);
-          }
-          else if (isSmallTalk(userInput)) {
-            responseText = generateSmallTalkResponse(userInput);
-          }
-          else {
-            responseText = generateAdaptiveResponse(userInput);
-          }
-        }
-        // Check for personal sharing - provide validating responses
-        else if (isPersonalSharing(userInput)) {
-          responseText = generatePersonalSharingResponse(userInput);
-        }
-        // Check for small talk - natural conversation flow
-        else if (isSmallTalk(userInput)) {
-          responseText = generateSmallTalkResponse(userInput);
-        }
-        else {
-          // Try a reflection response first (but less frequently in established conversation)
-          const reflectionResponse = generateReflectionResponse(userInput, conversationStage);
-          if (reflectionResponse) {
-            responseText = reflectionResponse;
-          } else {
-            // If no reflection was appropriate, generate an adaptive response
-            responseText = generateAdaptiveResponse(userInput);
-          }
-        }
-        
-        // Apply master rules to ensure no repetition
-        responseText = ensureResponseCompliance(responseText);
-        
-        // Add this response to the history to prevent future repetition
-        setPreviousResponses(prev => [...prev, responseText]);
-        
-        // Limit history size to prevent memory issues
-        if (previousResponses.length > 20) {
-          setPreviousResponses(prev => prev.slice(-20));
-        }
-        
-        // Create response message
-        const rogerResponse = createMessage(responseText, 'roger', concernType);
-        setIsTyping(false);
-        resolve(rogerResponse);
-      }, responseTime);
-    });
+    return baseProcessUserMessage(
+      userInput,
+      generateResponse,
+      detectConcerns
+    );
   };
-
+  
   return {
     isTyping,
     processUserMessage,
