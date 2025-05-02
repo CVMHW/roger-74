@@ -1,503 +1,269 @@
 
 /**
- * Utility for managing Ohio-specific cultural references and context
- * Helps Roger connect with users through local knowledge
+ * Ohio Context Manager
+ * 
+ * Manages the detection and response to Ohio-specific contexts in conversation.
+ * Helps Roger connect with patients through local knowledge and references.
  */
 
-// Common Ohio locations and their associations
-export const ohioLocations = {
-  'cleveland': {
-    region: 'northeast',
-    nicknames: ['the land', 'cle', 'the 216'],
-    teams: ['Browns', 'Guardians', 'Cavaliers'],
-    landmarks: ['Rock & Roll Hall of Fame', 'West Side Market', 'Cleveland Clinic']
-  },
-  'columbus': {
-    region: 'central',
-    nicknames: ['cbus', 'the 614', 'cap city'],
-    teams: ['Blue Jackets', 'Crew', 'Buckeyes'],
-    landmarks: ['Ohio State University', 'Short North', 'German Village']
-  },
-  'cincinnati': {
-    region: 'southwest',
-    nicknames: ['cincy', 'the nasty nati', 'queen city'],
-    teams: ['Bengals', 'Reds', 'FC Cincinnati'],
-    landmarks: ['Findlay Market', 'Over-the-Rhine', 'Cincinnati Zoo']
-  },
-  'toledo': {
-    region: 'northwest',
-    nicknames: ['glass city', 'the 419'],
-    teams: ['Mud Hens', 'Walleye'],
-    landmarks: ['Toledo Museum of Art', 'Toledo Zoo']
-  },
-  'dayton': {
-    region: 'southwest',
-    nicknames: ['gem city'],
-    teams: ['Dayton Flyers'],
-    landmarks: ['National Museum of the US Air Force', 'Wright Brothers National Memorial']
-  }
-};
-
-// Ohio cultural references and their emotional/psychological connections
-export const ohioCulturalReferences = {
-  'buckeye': {
-    type: 'symbol',
-    description: 'State symbol, Ohio State University mascot, and chocolate-peanut butter candy',
-    emotionalAssociation: ['pride', 'community', 'tradition', 'comfort food']
-  },
-  'o-h-i-o': {
-    type: 'chant',
-    description: 'Call-and-response chant for Ohio State fans',
-    emotionalAssociation: ['belonging', 'excitement', 'identity', 'team spirit']
-  },
-  'skyline chili': {
-    type: 'food',
-    description: 'Cincinnati-style chili served over spaghetti or hot dogs',
-    emotionalAssociation: ['comfort', 'nostalgia', 'regional identity', 'debate']
-  },
-  'arnold festival': {
-    type: 'event',
-    description: 'Annual fitness festival in Columbus started by Arnold Schwarzenegger',
-    emotionalAssociation: ['motivation', 'health focus', 'achievement', 'self-improvement']
-  },
-  'hocking hills': {
-    type: 'nature',
-    description: 'Scenic state park known for hiking, waterfalls, and outdoor recreation',
-    emotionalAssociation: ['peace', 'escape', 'natural beauty', 'reflection']
-  }
-};
-
-// Child-friendly references for connecting with younger patients
-export const childFriendlyReferences = {
-  'zoo animals': {
-    type: 'attraction',
-    description: 'Cleveland Metroparks Zoo animals like lions, elephants, and giraffes',
-    engagingQuestions: [
-      "What's your favorite zoo animal?",
-      "Ever seen the monkeys in the zoo's RainForest?",
-      "The zoo has a cool dinosaur exhibit! Do you like dinosaurs?"
-    ]
-  },
-  'sports mascots': {
-    type: 'sports',
-    description: 'Cleveland sports team mascots like Chomps (Browns), Moondog (Cavaliers)',
-    engagingQuestions: [
-      "Have you seen Chomps at a Browns game?",
-      "Do you like watching the Cavs' halftime shows?",
-      "Ever been to a Guardians game where kids can run the bases?"
-    ]
-  },
-  'treats': {
-    type: 'food',
-    description: 'Kid-friendly treats in Cleveland like Mitchell\'s Ice Cream and Malley\'s Chocolates',
-    engagingQuestions: [
-      "What's your favorite ice cream flavor?",
-      "Ever tried chocolate pretzels from Malley's?",
-      "Have you had a hot dog at a Guardians game?"
-    ]
-  },
-  'museums': {
-    type: 'attraction',
-    description: 'Kid-friendly museums like Children\'s Museum of Cleveland and Great Lakes Science Center',
-    engagingQuestions: [
-      "Been to the Children's Museum's big playhouse?",
-      "Want to see a space shuttle at the Science Center?",
-      "Have you seen the dinosaurs at the Natural History Museum?"
-    ]
-  },
-  'parks': {
-    type: 'outdoors',
-    description: 'Cleveland Metroparks system with playgrounds, beaches, and trails',
-    engagingQuestions: [
-      "Like making sandcastles at Edgewater Beach?",
-      "Have you gone hiking in the Metroparks?",
-      "Ever flown a kite by Lake Erie?"
-    ]
-  }
-};
-
-// Newcomer-friendly references for connecting with international/refugee patients
-export const newcomerFriendlyReferences = {
-  'welcome centers': {
-    type: 'community',
-    description: 'Organizations like The Welcome Center and Global Cleveland that help newcomers',
-    engagingQuestions: [
-      "Have you visited the Welcome Center on Fulton Parkway?",
-      "Has your family been to any Global Cleveland events?",
-      "Do you know about any community centers near you?"
-    ]
-  },
-  'international food': {
-    type: 'food',
-    description: 'Cleveland's diverse food scene including West Side Market international vendors and Asia Plaza',
-    engagingQuestions: [
-      "Have you found foods from your home country in Cleveland?",
-      "Have you been to Asia Plaza for noodles or dumplings?",
-      "Do you have a favorite treat from the West Side Market?"
-    ]
-  },
-  'multicultural events': {
-    type: 'events',
-    description: 'Cleveland events like World Refugee Day, Hispanic Alliance Festival, and more',
-    engagingQuestions: [
-      "Have you been to World Refugee Day at Edgewater?",
-      "Do you enjoy festivals with music and food from different countries?",
-      "Has your family attended any cultural celebrations in Cleveland?"
-    ]
-  },
-  'school support': {
-    type: 'education',
-    description: 'Programs for newcomer students including ESL classes and after-school programs',
-    engagingQuestions: [
-      "Are you taking English classes at school?",
-      "Have you joined any clubs or after-school activities?",
-      "Do you get homework help at the library?"
-    ]
-  }
-};
-
-/**
- * Detects Ohio-specific references in user input
- * @param input User's message
- * @returns Object containing detected references and their context
- */
-export const detectOhioReferences = (input: string): {
+// Ohio reference categories for detection
+interface OhioReferences {
   hasOhioReference: boolean;
   detectedLocations: string[];
   detectedCulturalReferences: string[];
   detectedChildReferences: string[];
   detectedNewcomerReferences: string[];
-  emotionalAssociations: string[];
-  isChildFriendly: boolean;
-  isNewcomerFriendly: boolean;
-} => {
-  const lowerInput = input.toLowerCase();
-  const result = {
-    hasOhioReference: false,
-    detectedLocations: [] as string[],
-    detectedCulturalReferences: [] as string[],
-    detectedChildReferences: [] as string[],
-    detectedNewcomerReferences: [] as string[],
-    emotionalAssociations: [] as string[],
-    isChildFriendly: false,
-    isNewcomerFriendly: false
-  };
-  
-  // Check for location references
-  for (const [location, data] of Object.entries(ohioLocations)) {
-    if (lowerInput.includes(location)) {
-      result.detectedLocations.push(location);
-      result.hasOhioReference = true;
-    }
-    
-    // Check for location nicknames
-    for (const nickname of data.nicknames) {
-      if (lowerInput.includes(nickname)) {
-        result.detectedLocations.push(location);
-        result.hasOhioReference = true;
-        break; // Found one nickname, no need to check others
-      }
-    }
-    
-    // Check for team names
-    for (const team of data.teams) {
-      if (lowerInput.includes(team.toLowerCase())) {
-        result.detectedLocations.push(location);
-        result.hasOhioReference = true;
-        break;
-      }
-    }
-  }
-  
-  // Check for cultural references
-  for (const [reference, data] of Object.entries(ohioCulturalReferences)) {
-    if (lowerInput.includes(reference)) {
-      result.detectedCulturalReferences.push(reference);
-      result.emotionalAssociations = [
-        ...result.emotionalAssociations,
-        ...data.emotionalAssociation
-      ];
-      result.hasOhioReference = true;
-    }
-  }
+}
 
-  // Check for child-friendly references
-  const childKeywords = [
-    'kids', 'children', 'child', 'playground', 'game', 'play', 'fun',
-    'zoo', 'animals', 'mascot', 'ice cream', 'candy', 'chocolate', 
-    'museum', 'park', 'dinosaur', 'toy', 'school'
-  ];
-  
-  const hasChildReference = childKeywords.some(word => lowerInput.includes(word));
-  if (hasChildReference) {
-    result.isChildFriendly = true;
-    
-    // Check for specific child-friendly references
-    for (const [reference, data] of Object.entries(childFriendlyReferences)) {
-      if (lowerInput.includes(reference) || 
-          lowerInput.includes(data.type) || 
-          lowerInput.includes(data.description.toLowerCase())) {
-        result.detectedChildReferences.push(reference);
-        result.hasOhioReference = true;
-      }
-    }
-  }
-
-  // Check for newcomer-friendly references  
-  const newcomerKeywords = [
-    'new to', 'moved to', 'immigrant', 'refugee', 'foreign', 'international',
-    'welcome', 'newcomer', 'language', 'english class', 'esl', 'country', 
-    'culture', 'home country', 'community center'
-  ];
-  
-  const hasNewcomerReference = newcomerKeywords.some(word => lowerInput.includes(word));
-  if (hasNewcomerReference) {
-    result.isNewcomerFriendly = true;
-    
-    // Check for specific newcomer-friendly references
-    for (const [reference, data] of Object.entries(newcomerFriendlyReferences)) {
-      if (lowerInput.includes(reference) || 
-          lowerInput.includes(data.type) || 
-          lowerInput.includes(data.description.toLowerCase())) {
-        result.detectedNewcomerReferences.push(reference);
-        result.hasOhioReference = true;
-      }
-    }
-  }
-  
-  // Remove duplicates from emotional associations
-  result.emotionalAssociations = [...new Set(result.emotionalAssociations)];
-  
-  return result;
-};
-
-/**
- * Generates an Ohio-relevant response based on detected references
- * @param detectedReferences Object containing detected Ohio references
- * @returns Appropriate response opener leveraging local knowledge
- */
-export const generateOhioContextResponse = (
-  detectedReferences: ReturnType<typeof detectOhioReferences>
-): {
+// Response strategy for Ohio context
+interface OhioContextStrategy {
   opener: string;
   shouldIncludeLocalReference: boolean;
-  suggestedEmotionalFocus: string | null;
-} => {
-  if (!detectedReferences.hasOhioReference) {
-    return {
-      opener: "",
-      shouldIncludeLocalReference: false,
-      suggestedEmotionalFocus: null
-    };
-  }
-  
-  let opener = "";
-  let suggestedEmotionalFocus = null;
-  
-  // Handle child-friendly responses first (highest priority for younger patients)
-  if (detectedReferences.isChildFriendly && detectedReferences.detectedChildReferences.length > 0) {
-    const childReference = detectedReferences.detectedChildReferences[0];
-    const referenceData = childFriendlyReferences[childReference as keyof typeof childFriendlyReferences];
-    
-    if (referenceData) {
-      // Select a random child-friendly question
-      const questions = referenceData.engagingQuestions;
-      opener = questions[Math.floor(Math.random() * questions.length)];
-      return {
-        opener,
-        shouldIncludeLocalReference: true,
-        suggestedEmotionalFocus: 'comfort'
-      };
-    }
-  }
-  
-  // Handle newcomer-friendly responses (second priority)
-  if (detectedReferences.isNewcomerFriendly && detectedReferences.detectedNewcomerReferences.length > 0) {
-    const newcomerReference = detectedReferences.detectedNewcomerReferences[0];
-    const referenceData = newcomerFriendlyReferences[newcomerReference as keyof typeof newcomerFriendlyReferences];
-    
-    if (referenceData) {
-      // Select a random newcomer-friendly question
-      const questions = referenceData.engagingQuestions;
-      opener = questions[Math.floor(Math.random() * questions.length)];
-      return {
-        opener,
-        shouldIncludeLocalReference: true,
-        suggestedEmotionalFocus: 'belonging'
-      };
-    }
-  }
-  
-  // Handle location-specific responses (third priority)
-  if (detectedReferences.detectedLocations.length > 0) {
-    const location = detectedReferences.detectedLocations[0]; // Use first detected location
-    const locationData = ohioLocations[location as keyof typeof ohioLocations];
-    
-    if (locationData) {
-      // Generate location-specific opener
-      const locationOpeners = [
-        `I hear you mentioning ${location}! `,
-        `Speaking of ${location}, that's a great part of Ohio. `,
-        `${location} has a lot to offer. `
-      ];
-      
-      opener = locationOpeners[Math.floor(Math.random() * locationOpeners.length)];
-    }
-  }
-  
-  // Handle cultural reference responses (lowest priority)
-  if (detectedReferences.detectedCulturalReferences.length > 0) {
-    const reference = detectedReferences.detectedCulturalReferences[0];
-    const referenceData = ohioCulturalReferences[reference as keyof typeof ohioCulturalReferences];
-    
-    if (referenceData) {
-      if (!opener) {
-        // Create an opener based on the cultural reference
-        const culturalOpeners = [
-          `I see you mentioned ${reference}! `,
-          `${reference} is definitely a big part of Ohio culture. `,
-          `I recognize that reference to ${reference}! `
-        ];
-        
-        opener = culturalOpeners[Math.floor(Math.random() * culturalOpeners.length)];
-      }
-      
-      // Suggest emotional focus based on associations
-      if (referenceData.emotionalAssociation.length > 0) {
-        suggestedEmotionalFocus = referenceData.emotionalAssociation[
-          Math.floor(Math.random() * referenceData.emotionalAssociation.length)
-        ];
-      }
-    }
-  }
-  
-  return {
-    opener,
-    shouldIncludeLocalReference: true,
-    suggestedEmotionalFocus
-  };
-};
+  shouldIncludeMentalHealthConnection: boolean;
+}
 
 /**
- * Maps Ohio-specific references to mental health topics for refocusing conversations
- * @param reference The detected Ohio reference
- * @returns Refocusing question connecting the reference to mental health
- */
-export const mapReferenceToMentalHealthTopic = (reference: string): string => {
-  // First check for child-friendly references to adapt the response
-  for (const [key, data] of Object.entries(childFriendlyReferences)) {
-    if (reference.toLowerCase().includes(key)) {
-      // Use a gentler, child-appropriate connection to feelings
-      const childFriendlyResponses = [
-        `Talking about ${key} is fun! How have you been feeling today while waiting?`,
-        `${key} can be exciting! How are you feeling about seeing Dr. Eric today?`,
-        `It's cool that you like ${key}. What kinds of things make you happy when you visit here?`
-      ];
-      return childFriendlyResponses[Math.floor(Math.random() * childFriendlyResponses.length)];
-    }
-  }
-
-  // Check for newcomer-friendly references to adapt the response
-  for (const [key, data] of Object.entries(newcomerFriendlyReferences)) {
-    if (reference.toLowerCase().includes(key)) {
-      // Use a culturally sensitive connection to feelings
-      const newcomerResponses = [
-        `Moving to a new place like Cleveland can bring up lots of feelings. How has that been for you?`,
-        `Adjusting to Cleveland can be both exciting and challenging. What's been the best part so far?`,
-        `Finding community in a new city is important. How have you been settling in emotionally?`
-      ];
-      return newcomerResponses[Math.floor(Math.random() * newcomerResponses.length)];
-    }
-  }
-
-  // Standard mental health mappings for adult patients
-  const mentalHealthMappings: Record<string, string[]> = {
-    // Locations
-    'cleveland': [
-      "Cleveland has its ups and downs, just like our emotional well-being. How have your emotions been lately?",
-      "Cleveland's weather can change quickly, like our moods. How have you been managing your emotions?"
-    ],
-    'columbus': [
-      "Columbus has so many different neighborhoods, each with its own vibe. How would you describe your emotional neighborhood right now?",
-      "Columbus is growing and changing, just like we all do. What changes are you experiencing in your life currently?"
-    ],
-    'cincinnati': [
-      "Cincinnati sits on seven hills - some ups and downs. How has your emotional landscape been lately?",
-      "Cincinnati has both historic and modern sides. Are you feeling more connected to your past or focused on the future right now?"
-    ],
-    
-    // Cultural references
-    'buckeye': [
-      "Buckeyes are known for bringing luck. What brings you a sense of comfort these days?",
-      "Like the buckeye tradition, what personal traditions help keep you grounded?"
-    ],
-    'o-h-i-o': [
-      "That chant creates such a sense of belonging. Where do you feel most like you belong these days?",
-      "The O-H-I-O chant connects people. How connected have you been feeling to others recently?"
-    ],
-    'skyline chili': [
-      "Skyline Chili can be divisive - some love it, some don't. What's something in your life that brings mixed feelings?",
-      "Comfort foods like Skyline often connect us to memories. What helps you feel comforted when you're stressed?"
-    ],
-    'hocking hills': [
-      "Hocking Hills offers such peaceful natural settings. Where do you find peace in your daily life?",
-      "Many people go to Hocking Hills to disconnect and recharge. How do you recharge when life gets overwhelming?"
-    ]
-  };
-  
-  // Find matching reference
-  for (const [key, questions] of Object.entries(mentalHealthMappings)) {
-    if (reference.toLowerCase().includes(key)) {
-      return questions[Math.floor(Math.random() * questions.length)];
-    }
-  }
-  
-  // Default refocusing question
-  return "Speaking of Ohio, how have you been feeling lately while you're waiting to see Dr. Eric?";
-};
-
-/**
- * Determines if the conversation is with a child based on context clues
- * @param userInput User's message
- * @returns Boolean indicating if the user appears to be a child
+ * Detects if the user is likely a child patient
  */
 export const detectChildPatient = (userInput: string): boolean => {
-  const lowerInput = userInput.toLowerCase();
-  
-  // Check for child-like language patterns
-  const childPatterns = [
-    /my mom|my dad/i,
-    /school|homework|teacher/i,
-    /play|game|toy/i,
-    /\bcool\b|\bawesome\b|\bfun\b/i,
-    /cartoon|pokemon|minecraft|fortnite|roblox/i
+  const childSignals = [
+    /\b(mom|mommy|dad|daddy)\b/i,
+    /\b(school|teacher|homework|class|recess)\b/i,
+    /\b(playdate|toy|game|playground)\b/i,
+    /\b(cartoon|pokemon|minecraft|fortnite|roblox)\b/i,
+    /\bi('m| am) (\d|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen)\b/i,
+    /\b(drawing|coloring|crayon)\b/i,
+    /\bcool\b|\bawesome\b|\bfun\b/i
   ];
   
-  // Calculate how many child patterns appear in the input
-  const matchCount = childPatterns.filter(pattern => pattern.test(lowerInput)).length;
-  
-  // If at least two patterns match, consider this likely a child
-  return matchCount >= 2;
+  return childSignals.some(pattern => pattern.test(userInput));
 };
 
 /**
- * Determines if the conversation is with a newcomer/immigrant based on context clues
- * @param userInput User's message
- * @returns Boolean indicating if the user appears to be a newcomer
+ * Detects if the user is likely a newcomer patient
  */
 export const detectNewcomerPatient = (userInput: string): boolean => {
-  const lowerInput = userInput.toLowerCase();
-  
-  // Check for newcomer/immigrant context clues
-  const newcomerPatterns = [
-    /new (to|in) (cleveland|ohio|america|usa|united states)/i,
-    /moved (here|to cleveland|to ohio|to america)/i,
-    /refugee|immigrant|newcomer/i,
-    /learning english|english class|esl/i,
-    /my (home|old) country|my culture/i,
-    /in my country/i
+  const newcomerSignals = [
+    /\bnew (to|in) (cleveland|ohio|america|usa|united states)\b/i,
+    /\bmoved (here|to cleveland|to ohio|to america)\b/i,
+    /\b(refugee|immigrant|newcomer)\b/i,
+    /\b(learning english|english class|esl)\b/i,
+    /\b(miss|missing) (home|country|family|homeland)\b/i,
+    /\b(translator|translate|not understand)\b/i,
+    /\b(in my country|where I( am)? from)\b/i
   ];
   
-  // If any pattern matches, consider this likely a newcomer
-  return newcomerPatterns.some(pattern => pattern.test(lowerInput));
+  return newcomerSignals.some(pattern => pattern.test(userInput));
+};
+
+/**
+ * Detects Ohio-specific references in the user's message
+ */
+export const detectOhioReferences = (userInput: string): OhioReferences => {
+  // Define Ohio-specific patterns for detection
+  const locations = [
+    'cleveland', 'ohio', 'cuyahoga', 'akron', 'parma', 'shaker heights', 
+    'lakewood', 'west side', 'east side', 'downtown', 'flats', 
+    'tremont', 'ohio city', 'university circle', 'little italy', 
+    'glenville', 'fairfax', 'western reserve', 'euclid', 'mayfield'
+  ];
+  
+  const culturalReferences = [
+    'browns', 'cavaliers', 'cavs', 'guardians', 'indians', 'monsters', 
+    'lake erie', 'cuyahoga river', 'west side market', 'rock hall', 
+    'rock and roll hall of fame', 'metroparks', 'edgewater', 'severance', 
+    'playhouse square', 'terminal tower', 'public square', 'cleveland clinic', 
+    'university hospitals', 'case western', 'csU', 'john carroll'
+  ];
+  
+  const childReferences = [
+    'zoo', 'aquarium', 'children\'s museum', 'great lakes science center', 
+    'natural history museum', 'botanical garden', 'ice cream', 
+    'mitchell\'s', 'malley\'s', 'cedar point', 'museum of art', 'goodyear'
+  ];
+  
+  const newcomerReferences = [
+    'international', 'welcome center', 'global cleveland', 'us together', 
+    'hope center', 'refugee', 'immigrant', 'newcomer', 'catholic charities', 
+    'english class', 'esl', 'migration', 'visa', 'green card'
+  ];
+  
+  // Create regex patterns to find matches
+  const locationMatches = locations.filter(loc => 
+    new RegExp(`\\b${loc}\\b`, 'i').test(userInput)
+  );
+  
+  const culturalMatches = culturalReferences.filter(ref => 
+    new RegExp(`\\b${ref}\\b`, 'i').test(userInput)
+  );
+  
+  const childMatches = childReferences.filter(ref => 
+    new RegExp(`\\b${ref}\\b`, 'i').test(userInput)
+  );
+  
+  const newcomerMatches = newcomerReferences.filter(ref => 
+    new RegExp(`\\b${ref}\\b`, 'i').test(userInput)
+  );
+  
+  // Determine if any Ohio reference was detected
+  const hasOhioReference = locationMatches.length > 0 || 
+                          culturalMatches.length > 0 ||
+                          childMatches.length > 0 ||
+                          newcomerMatches.length > 0;
+  
+  return {
+    hasOhioReference,
+    detectedLocations: locationMatches,
+    detectedCulturalReferences: culturalMatches,
+    detectedChildReferences: childMatches,
+    detectedNewcomerReferences: newcomerMatches
+  };
+};
+
+// Map of references to mental health topics
+const referenceToMentalHealthMap = {
+  'weather': {
+    type: 'environment',
+    description: 'Cleveland weather and its impact on mood',
+    engagingQuestions: [
+      "How does Cleveland's changing weather affect how you feel?",
+      "Have you noticed any connections between weather and your mood?",
+      "Some people find the lake effect weather challenging. How about you?"
+    ]
+  },
+  'browns': {
+    type: 'hobby',
+    description: 'Cleveland Browns and sports as stress relief',
+    engagingQuestions: [
+      "Do you find watching the Browns helps take your mind off stress?",
+      "Sports can be a great emotional outlet. Is following the Browns that for you?",
+      "Many fans ride the emotional rollercoaster with Cleveland sports. How does that affect you?"
+    ]
+  },
+  'cavaliers': {
+    type: 'hobby',
+    description: 'Cleveland Cavaliers and sports as community connection',
+    engagingQuestions: [
+      "Do the Cavs games help you feel connected to the Cleveland community?",
+      "Sports teams can bring people together. Has that been your experience?"
+    ]
+  },
+  'guardians': {
+    type: 'hobby',
+    description: 'Cleveland Guardians and recreation for mental wellness',
+    engagingQuestions: [
+      "Baseball season can be a nice routine. Does following the Guardians provide structure?",
+      "Do you find baseball games relaxing or exciting?"
+    ]
+  },
+  'west side market': {
+    type: 'community',
+    description: 'West Side Market as a social and cultural hub',
+    engagingQuestions: [
+      "Places like the West Side Market can help us feel connected. Do you enjoy visiting there?",
+      "Community spaces are important for wellbeing. Is that market one of your go-to places?"
+    ]
+  },
+  'metroparks': {
+    type: 'nature',
+    description: 'Cleveland Metroparks system for nature therapy',
+    engagingQuestions: [
+      "The Metroparks are wonderful for reducing stress. Do you spend time there?",
+      "Nature can be healing. Do you find the parks help with your mental wellbeing?"
+    ]
+  },
+  'lake erie': {
+    type: 'nature',
+    description: 'Lake Erie and water as calming elements',
+    engagingQuestions: [
+      "Many find the lake calming to look at. Do you ever go there when stressed?",
+      "Water can have a soothing effect. Does Lake Erie have that impact for you?"
+    ]
+  },
+  'international food': {
+    type: 'food',
+    description: "Cleveland's diverse food scene including West Side Market international vendors and Asia Plaza",
+    engagingQuestions: [
+      "Have you found foods from your home country in Cleveland?",
+      "Familiar foods can be comforting when adjusting to a new place. Have you found comfort foods here?"
+    ]
+  }
+};
+
+/**
+ * Maps a detected Ohio reference to a relevant mental health topic
+ */
+export const mapReferenceToMentalHealthTopic = (reference: string): string => {
+  const lowerRef = reference.toLowerCase();
+  
+  // Check for direct matches
+  for (const [key, value] of Object.entries(referenceToMentalHealthMap)) {
+    if (lowerRef.includes(key)) {
+      // Get a random engaging question
+      const randomQuestion = value.engagingQuestions[
+        Math.floor(Math.random() * value.engagingQuestions.length)
+      ];
+      
+      return ` ${randomQuestion}`;
+    }
+  }
+  
+  // Handle general types of references
+  if (lowerRef.includes('park') || lowerRef.includes('garden')) {
+    return " Nature spaces like this can be great for reducing stress. Do you find outdoor areas help your mental wellbeing?";
+  }
+  
+  if (lowerRef.includes('museum') || lowerRef.includes('art')) {
+    return " Cultural spaces can stimulate our minds in positive ways. Do you find places like this help your mood?";
+  }
+  
+  if (lowerRef.includes('food') || lowerRef.includes('restaurant')) {
+    return " Food experiences can be comforting. Do you have places here that remind you of happy memories?";
+  }
+  
+  // Default connection
+  return " These local connections can be important for feeling a sense of belonging. How has your experience been in Cleveland?";
+};
+
+/**
+ * Generates a context-aware response strategy based on Ohio references
+ */
+export const generateOhioContextResponse = (references: OhioReferences): OhioContextStrategy => {
+  // Default strategy
+  const strategy: OhioContextStrategy = {
+    opener: '',
+    shouldIncludeLocalReference: false,
+    shouldIncludeMentalHealthConnection: false
+  };
+  
+  // If no Ohio references, return empty strategy
+  if (!references.hasOhioReference) {
+    return strategy;
+  }
+  
+  // Determine if we should make a local connection
+  strategy.shouldIncludeLocalReference = true;
+  
+  // Decide whether to include mental health connection based on relevance
+  strategy.shouldIncludeMentalHealthConnection = Math.random() > 0.5; // 50% chance
+  
+  // Generate appropriate opener based on detected references
+  if (references.detectedLocations.length > 0) {
+    const location = references.detectedLocations[0];
+    strategy.opener = `I notice you mentioned ${location}. `;
+  } 
+  else if (references.detectedCulturalReferences.length > 0) {
+    const culturalRef = references.detectedCulturalReferences[0];
+    strategy.opener = `${culturalRef} is definitely a big part of Cleveland culture! `;
+  }
+  else if (references.detectedChildReferences.length > 0) {
+    const childRef = references.detectedChildReferences[0];
+    strategy.opener = `The ${childRef} is a fun spot in Cleveland! `;
+  }
+  else if (references.detectedNewcomerReferences.length > 0) {
+    const newcomerRef = references.detectedNewcomerReferences[0];
+    strategy.opener = `Cleveland has great ${newcomerRef} resources to help people feel welcome. `;
+  }
+  
+  return strategy;
 };

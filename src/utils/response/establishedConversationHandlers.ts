@@ -1,7 +1,7 @@
 
 import { isSmallTalk } from '../../utils/masterRules';
 import { generateReflectionResponse } from '../reflection';
-import { generateSmallTalkResponse } from '../conversation/smallTalkUtils';
+import { generateSmallTalkResponse } from '../conversation/smallTalk';
 import { ConversationStage } from '../../hooks/response/conversationStageManager';
 import { getRogerPerspectivePhrase } from './personalityHelpers';
 

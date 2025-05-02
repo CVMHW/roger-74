@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { MessageType } from './Message';
 import MessageList from './MessageList';
@@ -23,8 +24,8 @@ import {
   isPersonalSharing,
   generatePersonalSharingResponse
 } from '../utils/masterRules';
-// Import generateSmallTalkResponse from smallTalkUtils directly
-import { generateSmallTalkResponse } from '../utils/conversation/smallTalkUtils';
+// Import generateSmallTalkResponse from the new path
+import { generateSmallTalkResponse } from '../utils/conversation/smallTalk';
 import { detectPotentialDeception } from '../utils/detectionUtils/deceptionDetection';
 import { 
   isUserIndicatingFeedbackLoop, 
