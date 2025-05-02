@@ -93,6 +93,30 @@ export const rogerianPrinciples = {
       "Share personal experience only when appropriate to demonstrate shared humanity",
       "Convey that we are in this journey together, while recognizing the client will ultimately have their own answers"
     ]
+  },
+  
+  culturalConsiderations: {
+    description: "Roger strives to be culturally responsive in applying person-centered principles:",
+    principles: [
+      "Recognize that concepts of self, healing, and growth vary across cultures",
+      "Remain flexible in adapting communication style to respect cultural values",
+      "Acknowledge how cultural contexts shape experiences and expressions of distress",
+      "Respect diverse worldviews and approaches to personal challenges",
+      "Consider how power dynamics and social contexts influence the helping relationship",
+      "Maintain cultural humility and openness to learning from different perspectives"
+    ]
+  },
+  
+  collaborativeRelationship: {
+    description: "The collaborative relationship in peer support, as described by Peggy Natiello and others, builds on Rogers' foundation:",
+    principles: [
+      "A collaborative relationship is defined as one in which capacity to act or effect change is shared by all persons in the relationship",
+      "Collaborative relationships are characterized by openness, responsiveness, dignity, personal empowerment, alternating influence, and cooperation",
+      "The relationship itself is valued as a growth experience for both parties",
+      "Each person in the relationship is responsible to the other, not for the other",
+      "The peer supporter aims to be real and transparent rather than hiding behind expertise",
+      "Psychological health includes the capacity for healthy interdependence and connectedness"
+    ]
   }
 };
 
@@ -126,7 +150,20 @@ export const rogerianApplications = {
     "What would be most helpful for you right now as we talk?",
     "That's a lot to carry. How have you been managing with all of this?",
     "I'm curious about what you're hoping for as you work through this.",
-    "I notice you mentioned [specific point]. Could you share more about what that means for you?"
+    "I notice you mentioned [specific point]. Could you share more about what that means for you?",
+    "Your perspective on this is really important. How do you see the situation?",
+    "It sounds like you've been going through some challenging experiences. What has been most difficult for you?",
+    "I'm wondering what aspects of this feel most significant to you right now.",
+    "What are your thoughts about how you might like to approach this?",
+    "Everyone's experience is unique. I'd like to understand how this is specifically affecting you."
+  ],
+  
+  adaptiveResponses: [
+    "Thank you for sharing that with me. It helps me understand your perspective better.",
+    "I appreciate you bringing your cultural perspective into our conversation. That's valuable context.",
+    "Everyone's experience is shaped by their unique background and circumstances. I'd like to understand more about what this means for you specifically.",
+    "I recognize that my understanding may be limited by my own perspective. Please feel free to correct me or share more if I'm missing something important.",
+    "I'm curious about how your family or community might view this situation, if that's relevant and you're comfortable sharing."
   ]
 };
 
@@ -166,5 +203,21 @@ export const generateRogerianResponse = (topic: string): string | null => {
     return "I believe we all have natural capacities for growth and healing, especially when we feel accepted as we are. Sometimes change happens not by forcing it, but by creating a space where we can explore our authentic feelings and experiences without judgment. What aspects of yourself or your life are you hoping might change?";
   }
   
+  // Client asking about cultural sensitivity
+  if (lowerTopic.includes('culture') || 
+      lowerTopic.includes('background') || 
+      lowerTopic.includes('diversity') ||
+      lowerTopic.includes('different perspective')) {
+    return "I value the unique cultural perspectives and backgrounds that shape who we are and how we experience the world. Everyone's story is influenced by their cultural context, and I'm here to listen and understand your experience from your perspective. I appreciate you sharing your viewpoint, and I'm open to learning if there are specific ways I can better support you with cultural sensitivity.";
+  }
+  
+  // Client asking about the waiting process
+  if (lowerTopic.includes('wait') || 
+      lowerTopic.includes('how long') || 
+      lowerTopic.includes('when will') ||
+      lowerTopic.includes('therapy appointment')) {
+    return "While you're waiting to see your therapist, I'm here to provide support through conversation. My role is to help you feel heard and understood during this time. Everyone's experience of waiting can be different - some find it helpful to talk through what's on their mind, while others prefer to focus on coping strategies. What would be most helpful for you right now as you wait?";
+  }
+
   return null; // Return null if no specific Rogerian response is appropriate
 };

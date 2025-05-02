@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Send } from 'lucide-react';
-import Message, { MessageType } from './Message';
+
+import React, { useState } from 'react';
+import { useToast } from "@/components/ui/use-toast";
+import { MessageType } from './Message';
+import MessageList from './MessageList';
+import MessageInput from './MessageInput';
 import { 
   detectCrisisKeywords, 
   detectMedicalConcerns,
@@ -19,27 +20,16 @@ import {
   generateConversationalResponse,
   storeFeedback
 } from '../utils/conversationUtils';
-import { useToast } from "@/components/ui/use-toast";
 
-const ChatInterface = () => {
+const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<MessageType[]>(getInitialMessages());
-  const [userInput, setUserInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [shouldShowCrisisAlert, setShouldShowCrisisAlert] = useState(false);
   const [shouldShowMedicalAlert, setShouldShowMedicalAlert] = useState(false);
   const [shouldShowMentalHealthAlert, setShouldShowMentalHealthAlert] = useState(false);
   const [shouldShowEatingDisorderAlert, setShouldShowEatingDisorderAlert] = useState(false);
   const [shouldShowSubstanceUseAlert, setShouldShowSubstanceUseAlert] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const scrollToBottom = () => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
 
   // Calculate dynamic response time based on message length and complexity
   const calculateResponseTime = (message: string): number => {
@@ -170,7 +160,7 @@ const ChatInterface = () => {
     });
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = (userInput: string) => {
     if (!userInput.trim()) return;
 
     // Add user message
@@ -206,8 +196,7 @@ const ChatInterface = () => {
       showConcernToast('substance-use');
     }
 
-    // Clear input and show typing indicator
-    setUserInput('');
+    // Show typing indicator
     setIsTyping(true);
 
     // Store the current message to use in the response
@@ -262,59 +251,15 @@ const ChatInterface = () => {
     }, responseTime);
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="chat-container" id="chat-container">
-        {messages.map(message => (
-          <Message 
-            key={message.id} 
-            message={message} 
-            onFeedback={message.sender === 'roger' ? handleFeedback : undefined}
-          />
-        ))}
-        
-        {isTyping && (
-          <div className="flex items-center space-x-2 ml-2">
-            <div className="h-8 w-8 rounded-full bg-roger flex items-center justify-center">
-              <span className="text-white font-medium text-sm">R</span>
-            </div>
-            <div className="bg-gray-100 px-4 py-2 rounded-lg">
-              <div className="flex space-x-1">
-                <div className="h-2 w-2 bg-gray-400 rounded-full animate-pulse"></div>
-                <div className="h-2 w-2 bg-gray-400 rounded-full animate-pulse delay-100"></div>
-                <div className="h-2 w-2 bg-gray-400 rounded-full animate-pulse delay-200"></div>
-              </div>
-            </div>
-          </div>
-        )}
-        <div ref={chatEndRef} />
-      </div>
+      <MessageList 
+        messages={messages} 
+        isTyping={isTyping} 
+        onFeedback={handleFeedback}
+      />
       
-      <div className="border-t p-4">
-        <div className="flex space-x-2">
-          <Textarea
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={handleKeyPress}
-            placeholder="Type your message here..."
-            className="resize-none"
-            rows={2}
-          />
-          <Button onClick={handleSendMessage} className="bg-roger hover:bg-roger-dark">
-            <Send size={18} />
-          </Button>
-        </div>
-        <p className="text-xs text-gray-500 mt-2">
-          Roger is a peer support companion, not a licensed therapist. For immediate crisis support, please use the resources below.
-        </p>
-      </div>
+      <MessageInput onSendMessage={handleSendMessage} />
     </div>
   );
 };

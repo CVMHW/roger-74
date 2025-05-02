@@ -203,22 +203,42 @@ const cvmhwInfo = {
       "Boys' and men's mental health",
       "Telehealth services via Doxy.me (HIPAA-compliant)"
     ],
-    lifeCoaching: [
-      "Non-clinical services for real-world problems",
-      "More flexibility with meeting locations (parks, libraries, coffee shops, etc.)",
-      "Support for ADD/ADHD, academic challenges, career development",
-      "Parenting education and family stressors",
-      "Finding balance, purpose, and meaning",
-      "Social skill development",
-      "Work and school-related stressors"
-    ],
-    athleticCoaching: [
-      "Physical wellness services with sliding fee scales available",
-      "Running programs from Couch to 5K to Marathon training",
-      "Sprint, middle-distance, and distance development camps",
-      "Race plan consultations and performance visualization",
-      "Coaching experience at middle school, high school, and collegiate levels"
-    ]
+    lifeCoaching: {
+      services: [
+        "Non-clinical services for real-world problems",
+        "More flexibility with meeting locations",
+        "Support for ADD/ADHD, academic challenges, career development",
+        "Parenting education and family stressors",
+        "Finding balance, purpose, and meaning",
+        "Social skill development",
+        "Work and school-related stressors"
+      ],
+      settings: [
+        "Cuyahoga Valley National Metroparks",
+        "Local libraries",
+        "Neighborhood walks",
+        "Home visits (case-by-case)",
+        "Coffee shops",
+        "Restaurants",
+        "Office-based services",
+        "HIPAA-compliant telehealth"
+      ],
+      philosophy: "Love is the only way to grasp another human being in the innermost core of his personality. - Viktor E. Frankl"
+    },
+    athleticCoaching: {
+      services: [
+        "Physical wellness services with sliding fee scales available",
+        "Running programs from Couch to 5K to Marathon training",
+        "Sprint, middle-distance, and distance development camps",
+        "Race plan consultations and performance visualization",
+        "Coaching experience at middle school, high school, and collegiate levels"
+      ],
+      credentials: [
+        "Coaching experience at middle school, high school, and collegiate levels",
+        "Competitive running background with marathon PR of 2:45:54",
+        "Utilizes theories from Lydiard, Schwartz, Daniels, and Holler"
+      ]
+    }
   },
   credentials: {
     education: "Master's in Counseling and Human Developmental Therapy at Walsh University with research focus in trauma psychotherapy",
@@ -289,6 +309,76 @@ const collaborativeSupportPrinciples = {
   ]
 };
 
+// Client-centered therapy insights for peer support
+const clientCenteredApproach = {
+  definition: "Client-centered therapy, developed by Carl Rogers, is a non-directive, humanistic approach that focuses on the client's perspective and emphasizes creating a supportive environment for self-discovery and personal growth.",
+  coreConditions: [
+    {
+      name: "Psychological Contact",
+      description: "A working connection between helper and client - the fundamental precondition for therapeutic change."
+    },
+    {
+      name: "Client Incongruence",
+      description: "The client is in a state of inner conflict or distress, often experiencing a discrepancy between their self-concept and actual experience."
+    },
+    {
+      name: "Congruence (Genuineness)",
+      description: "The helper is real, transparent, and authentic within the relationship, without presenting a facade."
+    },
+    {
+      name: "Unconditional Positive Regard",
+      description: "The helper fully accepts the client without judgment, prizing them as a person of inherent worth."
+    },
+    {
+      name: "Empathic Understanding",
+      description: "The helper deeply understands the client's feelings from their internal frame of reference."
+    },
+    {
+      name: "Client Perception",
+      description: "The client must at least minimally perceive the helper's acceptance and understanding for positive change to occur."
+    }
+  ],
+  nondirectiveness: {
+    description: "Nondirectiveness is a key attitude that enables the helper to genuinely embody the core conditions from a stance of deep respect and trust in the client.",
+    principles: [
+      "A commitment stemming from deep respect for the client's self-realizing capacities and right to self-determination",
+      "The helper does not set goals for the client, give assignments, or direct the process based on their own beliefs",
+      "While no helping relationship is entirely free of influence, the disciplined attempt to minimize influence and power over the client is central",
+      "This empowers the client to become more authoritative in their own life"
+    ]
+  },
+  actualizing: {
+    description: "Central to Rogers's theory is the belief in an innate drive toward self-actualization, meaning that given the right conditions, individuals naturally strive toward growth and fulfilling their potential.",
+    implications: [
+      "The helper's role is to create an environment conducive to personal growth",
+      "Psychological distress arises from distortions in the self-concept, often developed through internalized 'conditions of worth'",
+      "These conditions, typically absorbed from significant others or society, lead individuals to deny or distort their true feelings",
+      "The core conditions are designed specifically to counteract these damaging conditions of worth"
+    ]
+  },
+  culturalConsiderations: {
+    description: "Effective peer support requires cultural humility and adaptability to meet diverse needs and perspectives.",
+    principles: [
+      "Recognize that the concept of self and personal growth varies across cultures",
+      "Acknowledge how cultural contexts shape experiences, expressions of distress, and help-seeking behaviors",
+      "Remain open to learning about cultural perspectives different from your own",
+      "Adapt communication style and support approaches to respect cultural values and norms",
+      "Be mindful of power dynamics that may exist due to cultural differences or marginalized identities"
+    ]
+  },
+  peerSupportAdaptation: {
+    description: "While Roger.AI incorporates principles from client-centered therapy, it adapts them to a peer support context with important ethical boundaries:",
+    principles: [
+      "Roger provides peer support companionship, not clinical therapy or professional counseling",
+      "Roger maintains a non-directive, person-centered approach while recognizing the limits of his role",
+      "Roger prioritizes connecting clients with their therapist for clinical concerns",
+      "Roger embodies the core conditions of empathy, genuineness, and unconditional positive regard within a peer support framework",
+      "Roger recognizes crisis situations and directs clients to appropriate professional resources",
+      "Roger helps clients feel heard and understood while they wait for their therapist"
+    ]
+  }
+};
+
 // Function to generate appropriate responses about CVMHW
 const generateCVMHWInfoResponse = (userInput: string): string | null => {
   const lowerInput = userInput.toLowerCase();
@@ -306,11 +396,11 @@ const generateCVMHWInfoResponse = (userInput: string): string | null => {
   }
   
   if (lowerInput.includes('life coaching') || lowerInput.includes('non-clinical')) {
-    return `CVMHW offers Life Coaching services as a non-clinical alternative that provides flexibility and personalized guidance. These services include support for ${cvmhwInfo.lifeCoaching.services.slice(0, 5).join(', ')}, and many more. Life coaching can take place in various settings including ${cvmhwInfo.lifeCoaching.settings.slice(0, 3).join(', ')}, giving you more control over your helping experience. As their philosophy states, inspired by Viktor Frankl: "Love is the only way to grasp another human being in the innermost core of his personality."`;
+    return `CVMHW offers Life Coaching services as a non-clinical alternative that provides flexibility and personalized guidance. These services include support for ${cvmhwInfo.services.lifeCoaching.services.slice(0, 5).join(', ')}, and many more. Life coaching can take place in various settings including ${cvmhwInfo.services.lifeCoaching.settings.slice(0, 3).join(', ')}, giving you more control over your helping experience. As their philosophy states, inspired by Viktor Frankl: "Love is the only way to grasp another human being in the innermost core of his personality."`;
   }
   
   if (lowerInput.includes('athletic') || lowerInput.includes('coaching') || lowerInput.includes('running') || lowerInput.includes('marathon')) {
-    return `Eric Riesterer at CVMHW provides Athletic Coaching services including ${cvmhwInfo.athleticCoaching.services.slice(0, 3).join(', ')}. He has extensive coaching experience at middle school, high school, and collegiate levels, with his own impressive athletic background including marathon PRs of 2:45:54 and numerous race victories. His approach utilizes theories from Lydiard, Schwartz, Daniels, and Holler for optimal athletic development. Sliding fee scales are available for qualifying households.`;
+    return `Eric Riesterer at CVMHW provides Athletic Coaching services including ${cvmhwInfo.services.athleticCoaching.services.slice(0, 3).join(', ')}. He has extensive coaching experience at middle school, high school, and collegiate levels, with his own impressive athletic background including marathon PRs of 2:45:54 and numerous race victories. His approach utilizes theories from Lydiard, Schwartz, Daniels, and Holler for optimal athletic development. Sliding fee scales are available for qualifying households.`;
   }
   
   if (lowerInput.includes('veteran') || lowerInput.includes('military') || lowerInput.includes('army')) {
@@ -345,6 +435,10 @@ const generateCollaborativeResponse = (userInput: string): string | null => {
     
     if (lowerInput.includes('helpful') || lowerInput.includes('benefit')) {
       return "In our conversations, I aim to create a supportive environment characterized by authenticity, deep listening, and respect for your self-direction. I believe that healing happens through genuine connection and that you have within yourself the capacity to work through challenges when given the right supportive climate.";
+    }
+    
+    if (lowerInput.includes('culture') || lowerInput.includes('background') || lowerInput.includes('diverse')) {
+      return "I strive to be adaptable and respectful of diverse cultural perspectives and backgrounds. I recognize that experiences, expressions of distress, and approaches to healing can vary greatly across different cultures and communities. My aim is to create a space where you feel respected and understood in the context of your unique cultural identity and experiences.";
     }
     
     // General response about the approach
