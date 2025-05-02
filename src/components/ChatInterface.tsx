@@ -12,7 +12,15 @@ import {
   storeFeedback
 } from '../utils/messageUtils';
 import useRogerianResponse from '../hooks/useRogerianResponse';
-import { MASTER_RULES } from '../utils/masterRules';
+import { 
+  MASTER_RULES, 
+  isIntroduction, 
+  generateIntroductionResponse,
+  isSmallTalk,
+  generateSmallTalkResponse,
+  isPersonalSharing,
+  generatePersonalSharingResponse
+} from '../utils/masterRules';
 
 const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<MessageType[]>(getInitialMessages());

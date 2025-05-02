@@ -30,7 +30,9 @@ import {
   isIntroduction,
   generateIntroductionResponse,
   isSmallTalk,
-  generateSmallTalkResponse
+  generateSmallTalkResponse,
+  isPersonalSharing,
+  generatePersonalSharingResponse
 } from '../utils/masterRules';
 
 interface ConcernState {
@@ -79,7 +81,11 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
         "In other words, ",
         "Let me express this differently: ",
         "From another perspective, ",
-        "I'd like to rephrase: "
+        "I'd like to rephrase: ",
+        "To clarify, ",
+        "What I'm hearing is that ",
+        "It seems like ",
+        "The way I understand it, "
       ];
       
       // Select a random modifier and add it to the beginning of the response
@@ -218,16 +224,21 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
           responseText = getSubstanceUseMessage();
           concernType = 'substance-use';
         } 
+        // Enhanced social interaction flow based on master rules
         // Check for introductions and greetings - prioritize human-like interaction
         else if (isIntroduction(userInput)) {
           responseText = generateIntroductionResponse();
+        }
+        // Check for personal sharing - provide validating responses
+        else if (isPersonalSharing(userInput)) {
+          responseText = generatePersonalSharingResponse(userInput);
         }
         // Check for small talk - natural conversation flow
         else if (isSmallTalk(userInput)) {
           responseText = generateSmallTalkResponse(userInput);
         }
         else {
-          // Generate an adaptive response based on the client's input
+          // If no special interaction pattern is detected, generate an adaptive response
           responseText = generateAdaptiveResponse(userInput);
         }
         
