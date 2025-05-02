@@ -5,22 +5,34 @@
  * Central export point for all master rules that govern Roger's behavior
  */
 
-// Only export functions that actually exist in unconditionalRuleProtections
+// Import from unconditionalRuleProtections
 import {
   isIntroduction as isIntroductionUnconditional,
   isSmallTalk as isSmallTalkUnconditional,
   isPersonalSharing as isPersonalSharingUnconditional,
   generateIntroductionResponse as generateIntroductionResponseUnconditional,
-  generatePersonalSharingResponse as generatePersonalSharingResponseUnconditional
+  generatePersonalSharingResponse as generatePersonalSharingResponseUnconditional,
+  isEmergency,
+  handleEmergency,
+  isDirectMedicalAdvice,
+  handleDirectMedicalAdvice,
+  isSuicidalIdeation,
+  handleSuicidalIdeation
 } from './unconditionalRuleProtections';
 
-// Re-export with distinct names
+// Re-export with distinct names to avoid conflicts
 export {
   isIntroductionUnconditional as isIntroduction,
   isSmallTalkUnconditional as isSmallTalk,
   isPersonalSharingUnconditional as isPersonalSharing,
   generateIntroductionResponseUnconditional as generateIntroductionResponse,
-  generatePersonalSharingResponseUnconditional as generatePersonalSharingResponse
+  generatePersonalSharingResponseUnconditional as generatePersonalSharingResponse,
+  isEmergency,
+  handleEmergency,
+  isDirectMedicalAdvice,
+  handleDirectMedicalAdvice,
+  isSuicidalIdeation,
+  handleSuicidalIdeation
 };
 
 // Export other rule systems
