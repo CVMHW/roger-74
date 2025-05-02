@@ -1,0 +1,23 @@
+
+import { ConversationStage } from '../reflectionTypes';
+import { generateContextAwareReflection } from './contextAwareGenerator';
+
+/**
+ * Generate a reflection response based on user input and conversation context
+ */
+export const generateReflectionResponse = (
+  userInput: string,
+  conversationStage: ConversationStage,
+  messageCount: number
+): string | null => {
+  // Try to generate a context-aware reflection first
+  const contextReflection = generateContextAwareReflection(userInput);
+  
+  if (contextReflection) {
+    return contextReflection;
+  }
+  
+  // If no context-specific reflection was generated, return null
+  // This will allow the calling code to fall back to other response types
+  return null;
+};
