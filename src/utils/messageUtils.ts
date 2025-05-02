@@ -16,7 +16,7 @@ export const createMessage = (
     text,
     sender,
     timestamp: new Date(),
-    concernType: concernType as MessageType['concernType'],
+    concernType,
     locationData: null // Initialize location data as null
   };
 };

@@ -7,7 +7,11 @@ export type MessageType = {
   sender: 'user' | 'roger';
   timestamp: Date;
   feedback?: 'positive' | 'negative' | null;
-  concernType?: 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | 'mild-gambling' | 'ptsd' | 'ptsd-mild' | null;
+  concernType?: 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | 'mild-gambling' | 'ptsd' | 'ptsd-mild' | 'trauma-response' | null;
+  locationData?: {
+    state?: string;
+    city?: string;
+  } | null;
 };
 
 interface MessageProps {
@@ -59,6 +63,8 @@ const Message: React.FC<MessageProps> = ({ message, onFeedback }) => {
       case 'ptsd':
         return 'border-l-4 border-pink-500 pl-2 bg-pink-50';
       case 'ptsd-mild':
+        return 'border-l-4 border-pink-500 pl-2 bg-pink-50';
+      case 'trauma-response':
         return 'border-l-4 border-pink-500 pl-2 bg-pink-50';
       default:
         return '';

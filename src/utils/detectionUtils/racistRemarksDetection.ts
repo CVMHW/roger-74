@@ -11,7 +11,18 @@ export const detectRacistRemarks = (text: string): boolean => {
   // This is a simplified implementation - in a real application, this would be more comprehensive
   // and would use more sophisticated techniques like ML models
   const racistPatterns = [
-    // Racial slurs - implementation uses general patterns to avoid writing actual slurs
+    // Specifically identified slurs
+    /nigger/i,
+    /nigga/i,
+    /spick/i,
+    /faggot/i,
+    /communist/i,
+    /commie/i,
+    /retard/i,
+    /chink/i,
+    /dirty \w+/i, // "dirty" followed by any nationality or group
+    
+    // Additional general patterns - implementation uses general patterns
     /\bn[^a-z]*word\b/i,
     /\bc[^a-z]*word\b/i,
     /\bs[^a-z]*word\b/i,
