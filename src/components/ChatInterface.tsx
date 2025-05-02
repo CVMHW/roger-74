@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { MessageType } from './Message';
 import MessageList from './MessageList';
@@ -8,7 +9,11 @@ import {
 import {
   getInitialMessages,
   createMessage,
-  storeFeedback
+  storeFeedback,
+  isLocationDataNeeded,
+  generateLocationRequestMessage,
+  extractPossibleLocation,
+  updateMessageWithLocation
 } from '../utils/messageUtils';
 import useRogerianResponse from '../hooks/useRogerianResponse';
 import { 
@@ -28,6 +33,13 @@ const ChatInterface: React.FC = () => {
   
   // Track all Roger responses to prevent repetition (in accordance with master rules)
   const [rogerResponseHistory, setRogerResponseHistory] = useState<string[]>([]);
+  
+  // Track active concerns that need location data
+  const [activeLocationConcern, setActiveLocationConcern] = useState<{
+    concernType: string | null;
+    messageId: string;
+    askedForLocation: boolean;
+  } | null>(null);
   
   // On component mount, extract existing Roger responses for the history
   useEffect(() => {
@@ -69,6 +81,30 @@ const ChatInterface: React.FC = () => {
     const newUserMessage = createMessage(userInput, 'user');
     setMessages(prevMessages => [...prevMessages, newUserMessage]);
     
+    // Check if this message might contain location data if we're currently asking for it
+    if (activeLocationConcern && activeLocationConcern.askedForLocation) {
+      const possibleLocation = extractPossibleLocation(userInput);
+      
+      if (possibleLocation) {
+        // Update the message that triggered the location request with the discovered location
+        setMessages(prevMessages => 
+          updateMessageWithLocation(prevMessages, activeLocationConcern.messageId, possibleLocation)
+        );
+        
+        // Clear the active location concern since we got the data
+        setActiveLocationConcern(null);
+        
+        // Process the user's message normally since they've provided location data
+        processResponse(userInput);
+        return;
+      }
+    }
+    
+    // Process user input normally
+    processResponse(userInput);
+  };
+  
+  const processResponse = (userInput: string) => {
     // Process user input to generate Roger's response
     processUserMessage(userInput).then(rogerResponse => {
       // Add the response to history to prevent future repetition
@@ -76,6 +112,19 @@ const ChatInterface: React.FC = () => {
       
       // Add the empty response message first (will be updated during typing simulation)
       setMessages(prevMessages => [...prevMessages, rogerResponse]);
+      
+      // Check if this response has a concern that needs location data
+      if (rogerResponse.concernType && 
+          isLocationDataNeeded(rogerResponse.concernType) && 
+          !activeLocationConcern) {
+        
+        // Set up to request location after this message
+        setActiveLocationConcern({
+          concernType: rogerResponse.concernType,
+          messageId: rogerResponse.id,
+          askedForLocation: false
+        });
+      }
       
       // Simulate typing with a callback to update the message text
       simulateTypingResponse(rogerResponse.text, (text) => {
@@ -87,6 +136,31 @@ const ChatInterface: React.FC = () => {
       });
     });
   };
+  
+  // Effect to ask for location when needed after the previous message is fully typed
+  useEffect(() => {
+    // If we have an active concern that needs location data and we haven't asked yet
+    if (activeLocationConcern && !activeLocationConcern.askedForLocation && !isTyping) {
+      // Mark that we've asked
+      setActiveLocationConcern(prev => prev ? { ...prev, askedForLocation: true } : null);
+      
+      // Generate a location request message
+      const locationRequestText = generateLocationRequestMessage(activeLocationConcern.concernType as any);
+      const locationRequestMessage = createMessage(locationRequestText, 'roger');
+      
+      // Add the location request message
+      setMessages(prevMessages => [...prevMessages, locationRequestMessage]);
+      
+      // Simulate typing for the location request
+      simulateTypingResponse(locationRequestText, (text) => {
+        setMessages(prevMessages => 
+          prevMessages.map(msg => 
+            msg.id === locationRequestMessage.id ? { ...msg, text } : msg
+          )
+        );
+      });
+    }
+  }, [activeLocationConcern, isTyping]);
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
