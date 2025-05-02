@@ -71,6 +71,29 @@ export const smallTalkTopics = [
       "Sometimes waiting rooms can be a lot. Is the temperature in here okay for you?",
       "I'm here to make your wait easier. Would you prefer to chat or have some quiet time?"
     ]
+  },
+  // New categories for children and newcomers
+  {
+    category: "child_friendly",
+    questions: [
+      "Have you seen the dinosaur exhibit at the Cleveland Zoo?",
+      "Do you have a favorite sports team in Cleveland?",
+      "Have you tried Mitchell's Ice Cream? They have so many flavors!",
+      "The Children's Museum has a cool climbing wall. Have you been there?",
+      "What kind of things do you like to do for fun around Cleveland?",
+      "Do you have a favorite park or playground in Cleveland?"
+    ]
+  },
+  {
+    category: "newcomer_friendly",
+    questions: [
+      "How long have you been in Cleveland?",
+      "Have you found any foods or restaurants that remind you of home?",
+      "What's been your favorite thing about Cleveland so far?",
+      "Have you been to any of the community centers in the area?",
+      "The West Side Market has foods from all over the world. Have you visited it?",
+      "Cleveland has lots of festivals celebrating different cultures. Have you been to any?"
+    ]
   }
 ];
 
@@ -208,6 +231,49 @@ export const shouldUseSmallTalk = (
 };
 
 /**
+ * Detects if the user is likely a child based on their message
+ */
+export const isLikelyChild = (userInput: string): boolean => {
+  // Import the child detection function from ohioContextManager
+  // for consistency across the application
+  try {
+    const { detectChildPatient } = require('../conversationEnhancement/ohioContextManager');
+    return detectChildPatient(userInput);
+  } catch (e) {
+    // Fallback if import fails
+    const childlikePatterns = [
+      /my mom|my dad/i,
+      /school|homework|teacher/i,
+      /play|game|toy/i,
+      /\bcool\b|\bawesome\b|\bfun\b/i,
+      /cartoon|pokemon|minecraft|fortnite|roblox/i
+    ];
+    return childlikePatterns.some(pattern => pattern.test(userInput));
+  }
+};
+
+/**
+ * Detects if the user is likely a newcomer based on their message
+ */
+export const isLikelyNewcomer = (userInput: string): boolean => {
+  // Import the newcomer detection function from ohioContextManager
+  // for consistency across the application
+  try {
+    const { detectNewcomerPatient } = require('../conversationEnhancement/ohioContextManager');
+    return detectNewcomerPatient(userInput);
+  } catch (e) {
+    // Fallback if import fails
+    const newcomerPatterns = [
+      /new (to|in) (cleveland|ohio|america|usa|united states)/i,
+      /moved (here|to cleveland|to ohio|to america)/i,
+      /refugee|immigrant|newcomer/i,
+      /learning english|english class|esl/i
+    ];
+    return newcomerPatterns.some(pattern => pattern.test(userInput));
+  }
+};
+
+/**
  * Generates appropriate small talk based on the conversation stage 
  * using a variety of approaches from the provided materials
  */
@@ -219,15 +285,40 @@ export const generateSmallTalkResponse = (
   if (detectSocialOverstimulation(userInput)) {
     return "I understand you might need some space. It's completely fine to take a break from conversation. I'm here when you're ready to talk again.";
   }
+
+  // Check if user is likely a child or newcomer for tailored responses
+  const isChild = isLikelyChild(userInput);
+  const isNewcomer = isLikelyNewcomer(userInput);
   
   // Very early conversation (first 3 messages) - focus on welcoming and comfort
   if (messageCount <= 3) {
+    // Child-friendly early responses
+    if (isChild) {
+      const childEarlyResponses = [
+        "Hi there! I'm Roger. I'm here to chat while you wait to see Dr. Eric. Do you like sports or have any cool hobbies?",
+        "Hello! I'm Roger. While you're waiting, we can talk about fun things like games or your favorite places in Cleveland if you'd like.",
+        "Hey! I'm Roger. You'll be seeing Dr. Eric soon. In the meantime, would you like to talk about something fun like animals or your favorite foods?"
+      ];
+      return childEarlyResponses[Math.floor(Math.random() * childEarlyResponses.length)];
+    }
+    
+    // Newcomer-friendly early responses
+    if (isNewcomer) {
+      const newcomerEarlyResponses = [
+        "Hello! I'm Roger. Welcome to Cleveland. How has your experience been so far while settling in?",
+        "Hi there! I'm Roger. While you're waiting for Dr. Eric, we can chat about Cleveland or whatever you'd like to talk about.",
+        "Welcome! I'm Roger. Have you discovered any interesting places in Cleveland yet? I'm here to chat while you wait for your appointment."
+      ];
+      return newcomerEarlyResponses[Math.floor(Math.random() * newcomerEarlyResponses.length)];
+    }
+    
+    // Standard early responses
     const earlyResponses = [
       "While you're waiting for Eric, I'm here to chat. How are you feeling today?",
       "It's nice to have this time to connect while you're waiting. Is there anything specific you'd like to talk about?",
       "Sometimes the waiting room can be a good place to collect your thoughts. How are you doing today?",
       "I'm here to help make your wait more comfortable. How has your day been going so far?",
-      // New Cleveland-specific early responses
+      // Cleveland-specific early responses
       "Cleveland weather keeps us guessing. How's your day going so far?",
       "While you're waiting to see Dr. Eric, we can chat about anything you'd like - maybe something about Cleveland or just how your day's going?"
     ];
@@ -239,8 +330,23 @@ export const generateSmallTalkResponse = (
   
   if (messageCount <= 10) {
     if (shouldAskQuestion) {
-      // Select a random topic and question
-      const topic = smallTalkTopics[Math.floor(Math.random() * smallTalkTopics.length)];
+      // Select appropriate category based on user type
+      let categories = smallTalkTopics;
+      
+      if (isChild) {
+        // Filter for child-appropriate categories
+        categories = smallTalkTopics.filter(topic => 
+          ["child_friendly", "environment", "interests"].includes(topic.category)
+        );
+      } else if (isNewcomer) {
+        // Filter for newcomer-appropriate categories
+        categories = smallTalkTopics.filter(topic => 
+          ["newcomer_friendly", "cleveland_local", "environment", "general_wellness"].includes(topic.category)
+        );
+      }
+      
+      // Select a random topic and question from appropriate categories
+      const topic = categories[Math.floor(Math.random() * categories.length)];
       const question = topic.questions[Math.floor(Math.random() * topic.questions.length)];
       
       // Add a turn-taking prompt occasionally
@@ -265,7 +371,7 @@ export const generateSmallTalkResponse = (
     "Sometimes a short conversation can help pass the time. Is there a topic you'd enjoy discussing?",
     "How are you feeling about your upcoming session with Eric?",
     "Is there anything that would make you more comfortable while waiting?",
-    // New Cleveland-specific later responses
+    // Cleveland-specific later responses
     "Cleveland has some great places to visit. Any spots around here you enjoy?",
     "The Cleveland weather has been interesting lately. How has it been affecting your week?"
   ];

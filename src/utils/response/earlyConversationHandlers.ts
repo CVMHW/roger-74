@@ -1,7 +1,7 @@
 
 import { isIntroduction, generateIntroductionResponse, isSmallTalk, isPersonalSharing, generatePersonalSharingResponse } from '../../utils/masterRules';
 import { generateReflectionResponse } from '../reflection';
-import { generateSmallTalkResponse } from '../conversation/smallTalkUtils';
+import { generateSmallTalkResponse, isLikelyChild, isLikelyNewcomer } from '../conversation/smallTalkUtils';
 import { ConversationStage } from '../../hooks/response/conversationStageManager';
 import { detectDevelopmentalStage } from '../reflection/reflectionStrategies';
 import { shouldUseConversationStarter, generateConversationStarterResponse } from '../reflection/ageAppropriateConversation';
@@ -22,6 +22,10 @@ export const handleEarlyConversation = (
   if (isIntroduction(userInput) && !introductionMade) {
     return generateIntroductionResponse();
   }
+  
+  // Check for child or newcomer patterns to adapt our response approach
+  const isChild = isLikelyChild(userInput);
+  const isNewcomer = isLikelyNewcomer(userInput);
   
   // Check for Ohio-specific contexts to create more locally-aware responses
   // This helps Roger connect through regional knowledge
@@ -68,7 +72,7 @@ export const handleEarlyConversation = (
   
   // Occasionally add Roger's perspective
   const perspectivePhrase = getRogerPerspectivePhrase(userInput, messageCount);
-  if (perspectivePhrase) {
+  if (perspectivePhrase && !isChild) { // Skip perspective phrases for children
     return response + perspectivePhrase;
   }
   
