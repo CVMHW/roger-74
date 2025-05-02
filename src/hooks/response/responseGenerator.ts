@@ -1,4 +1,3 @@
-
 import { 
   isIntroduction,
   generateIntroductionResponse,
@@ -344,7 +343,8 @@ export const useResponseGenerator = ({
         
         // If no reflection was generated, check for small talk
         if (isSmallTalk(userInput)) {
-          return generateSmallTalkResponse(userInput);
+          // Pass messageCount as the second parameter
+          return generateSmallTalkResponse(userInput, messageCount);
         }
         else {
           // Use adaptive response as last resort in early conversation
@@ -362,7 +362,8 @@ export const useResponseGenerator = ({
       
       // Check for small talk
       if (isSmallTalk(userInput)) {
-        return generateSmallTalkResponse(userInput);
+        // Pass messageCount as the second parameter
+        return generateSmallTalkResponse(userInput, messageCount);
       }
       
       // Try a reflection response (but less frequently in established conversation)

@@ -21,10 +21,11 @@ import {
   isIntroduction, 
   generateIntroductionResponse,
   isSmallTalk,
-  generateSmallTalkResponse,
   isPersonalSharing,
   generatePersonalSharingResponse
 } from '../utils/masterRules';
+// Import generateSmallTalkResponse from smallTalkUtils directly
+import { generateSmallTalkResponse } from '../utils/conversation/smallTalkUtils';
 import { detectPotentialDeception } from '../utils/detectionUtils/deceptionDetection';
 
 const ChatInterface: React.FC = () => {
