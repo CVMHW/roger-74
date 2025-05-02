@@ -17,14 +17,17 @@ import {
   generateIntroductionResponse,
   isSmallTalk,
   isPersonalSharing,
-  generatePersonalSharingResponse,
+  generatePersonalSharingResponse
+} from '../masterRules/unconditionalRuleProtections';
+
+import {
   isEmergency,
   handleEmergency,
   isDirectMedicalAdvice,
   handleDirectMedicalAdvice,
   isSuicidalIdeation,
   handleSuicidalIdeation
-} from '../masterRules/unconditionalRuleProtections';
+} from '../masterRules/safety/safetyUtils';
 
 import {
   requiresClinicianReferral,
@@ -50,8 +53,34 @@ import {
 export const applyUnconditionalRules = (
   response: string, 
   userInput: string,
-  messageCount: number
+  messageCount: number,
+  conversationHistory: string[] = []
 ): string => {
+  // CRITICAL: Check for user message explaining their situation, prevent redundant questions
+  if (userInput && userInput.length > 20 && 
+      (response.includes("What's been going on?") || 
+       response.includes("What's going on?") || 
+       response.includes("What's been happening?") ||
+       response.includes("What's been going on with you?"))) {
+    
+    // Use conversation history to extract topics
+    const topics = extractUserTopics(userInput);
+    
+    if (topics.length > 0) {
+      // Replace generic question with acknowledgment
+      return response.replace(
+        /(What's been going on\??|What's going on\??|What's been happening\??|What's been going on with you\??)/,
+        `I understand you're dealing with ${topics.join(" and ")}. How has this been affecting you?`
+      );
+    } else {
+      // If no specific topics found, use generic acknowledgment
+      return response.replace(
+        /(What's been going on\??|What's going on\??|What's been happening\??|What's been going on with you\??)/,
+        "I'm here to listen. Could you tell me more about how this has been affecting you?"
+      );
+    }
+  }
+  
   // HIGHEST PRIORITY: Check for emergencies first
   if (isEmergency(userInput) || isSuicidalIdeation(userInput)) {
     return isEmergency(userInput) ? handleEmergency() : handleSuicidalIdeation();
@@ -128,8 +157,35 @@ export const applyUnconditionalRules = (
 export const enhanceResponseWithRapport = (
   response: string,
   userInput: string,
-  messageCount: number
+  messageCount: number,
+  conversationHistory: string[] = []
 ): string => {
+  // CRITICAL: Check if response is redundantly asking what's going on when user already explained
+  if ((response.includes("What's been going on?") || 
+       response.includes("What's going on?") || 
+       response.includes("What's been happening?")) && 
+      conversationHistory.length >= 2) {
+    
+    // Extract topics from recent conversation
+    const recentHistory = conversationHistory.slice(-4);
+    const topics = [];
+    
+    for (const msg of recentHistory) {
+      const msgTopics = extractUserTopics(msg);
+      topics.push(...msgTopics);
+    }
+    
+    const uniqueTopics = [...new Set(topics)];
+    
+    if (uniqueTopics.length > 0) {
+      // Replace the redundant question with an acknowledgment and deeper follow-up
+      return response.replace(
+        /(What's been going on\??|What's going on\??|What's been happening\??)/,
+        `I understand you've mentioned ${uniqueTopics.join(" and ")}. How has this been impacting you?`
+      );
+    }
+  }
+  
   // Ensure early conversations always include follow-up questions
   if (messageCount <= 5 && !response.includes("?")) {
     return response + " What's been going on with you lately?";
@@ -152,17 +208,23 @@ export const enhanceResponseWithRapport = (
  * @returns Array of main topics
  */
 const extractUserTopics = (input: string): string[] => {
+  if (!input || typeof input !== 'string') {
+    return [];
+  }
+  
   const topics = [];
-  const potentialTopics = [
-    "work", "job", "school", "family", "relationship", "health", 
-    "sleep", "anxiety", "stress", "depression", "friend", 
-    "partner", "spouse", "child", "parent", "storm", "electricity",
-    "power", "outage", "presentation", "laptop", "frustration"
+  const topicPatterns = [
+    { regex: /wrench|tool|lost|find|found|missing/i, topic: "your lost wrench" },
+    { regex: /work|job|school|family|relationship|health/i, topic: "your situation" },
+    { regex: /sleep|anxious|anxiety|stress|depression|friend/i, topic: "how you're feeling" },
+    { regex: /partner|spouse|child|parent|storm|electricity/i, topic: "what you're dealing with" },
+    { regex: /power|outage|presentation|laptop|frustration/i, topic: "your frustration" },
+    { regex: /upset|angry|mad|sad|down|unhappy|worried/i, topic: "your feelings" }
   ];
   
-  for (const topic of potentialTopics) {
-    if (input.toLowerCase().includes(topic)) {
-      topics.push(topic);
+  for (const pattern of topicPatterns) {
+    if (pattern.regex.test(input.toLowerCase()) && !topics.includes(pattern.topic)) {
+      topics.push(pattern.topic);
     }
   }
   
@@ -176,5 +238,5 @@ const extractUserTopics = (input: string): string[] => {
  * @returns Whether response references user topics
  */
 const containsTopic = (response: string, topics: string[]): boolean => {
-  return topics.some(topic => response.toLowerCase().includes(topic));
+  return topics.some(topic => response.toLowerCase().includes(topic.toLowerCase()));
 };

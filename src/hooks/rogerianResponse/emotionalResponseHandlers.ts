@@ -2,6 +2,24 @@
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
 import { MessageType } from '../../components/Message';
 import { createMessage } from '../../utils/messageUtils';
+import { 
+  detectSarcasm, 
+  generateSarcasmResponse, 
+  detectContentConcerns,
+  detectRepetition
+} from '../../utils/conversationEnhancement/emotionalInputHandler';
+import { 
+  detectSimpleNegativeState, 
+  generateSimpleNegativeStateResponse,
+  detectPoliticalEmotions,
+  generatePoliticalEmotionResponse 
+} from '../../utils/conversationalUtils';
+import { 
+  extractConversationContext 
+} from '../../utils/conversationEnhancement/repetitionDetector';
+import { 
+  generateContextAcknowledgmentResponse 
+} from '../../utils/context/conversationContext';
 
 /**
  * Handles emotional responses and special patterns in user messages
@@ -41,7 +59,6 @@ export const handleEmotionalPatterns = async (
     }
     
     // HIGHEST PRIORITY: Check for sarcasm or frustration directed at Roger
-    const { detectSarcasm, generateSarcasmResponse, detectContentConcerns } = require('../../utils/conversationEnhancement/emotionalInputHandler');
     if (detectSarcasm(userInput) && 
         (userInput.toLowerCase().includes("robot") || 
          userInput.toLowerCase().includes("stupid") ||
@@ -63,14 +80,12 @@ export const handleEmotionalPatterns = async (
     // After any feedback loop detection, check if we have specific context to acknowledge
     if (conversationHistory.length >= 2) {
       try {
-        const { extractConversationContext } = require('../../utils/conversationEnhancement/repetitionDetector');
         const context = extractConversationContext(userInput, conversationHistory);
         
         if (context && context.hasContext && 
             (context.locations?.length > 0 || context.topics?.length >= 2 || context.keyPhrases?.length > 0) &&
             Math.random() < 0.7) { // 70% chance to use context-aware response when applicable
           
-          const { generateContextAcknowledgmentResponse } = require('../../utils/context/conversationContext');
           const contextResponse = generateContextAcknowledgmentResponse(userInput, conversationHistory);
           
           // Update conversation stage
@@ -87,7 +102,6 @@ export const handleEmotionalPatterns = async (
     // Check for repeated user concerns that aren't being addressed
     if (conversationHistory.length >= 2) {
       try {
-        const { detectRepetition } = require('../../utils/conversationEnhancement/emotionalInputHandler');
         const repetitionInfo = detectRepetition(userInput, conversationHistory.slice(-3));
         const contentInfo = detectContentConcerns(userInput);
         
@@ -119,7 +133,6 @@ export const handleEmotionalPatterns = async (
     
     // NEXT PRIORITY: Check for explicitly stated feelings first
     try {
-      const { detectSimpleNegativeState, generateSimpleNegativeStateResponse } = require('../../utils/conversationalUtils');
       const negativeStateInfo = detectSimpleNegativeState(userInput);
       if (negativeStateInfo && negativeStateInfo.isNegativeState) {
         // User has explicitly stated how they feel or is in a negative state - always acknowledge this first
@@ -141,7 +154,6 @@ export const handleEmotionalPatterns = async (
     
     // Check for political emotions as second highest priority
     try {
-      const { detectPoliticalEmotions, generatePoliticalEmotionResponse } = require('../../utils/conversationalUtils');
       const politicalInfo = detectPoliticalEmotions(userInput);
       if (politicalInfo && politicalInfo.isPolitical) {
         updateStage();
@@ -207,6 +219,7 @@ const extractRelevantTopics = (history: string[]): string[] => {
   
   const topics = [];
   const topicPatterns = [
+    { regex: /wrench|tool|lost|find|found|missing/i, topic: "your lost wrench" },
     { regex: /storm|electricity|power|outage/i, topic: "the power outage" },
     { regex: /presentation|work|job|boss|meeting|deadline/i, topic: "your work presentation" },
     { regex: /laptop|computer|device|phone|mobile/i, topic: "technology issues" },

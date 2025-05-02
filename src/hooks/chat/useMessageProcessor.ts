@@ -1,10 +1,10 @@
-
 import { useCallback } from 'react';
 import { MessageType } from '../../components/Message';
 import { isLocationDataNeeded } from '../../utils/messageUtils';
 import { createMessage } from '../../utils/messageUtils';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
 import { enhanceResponseWithContext } from '../../utils/conversation/contextAware';
+import { processResponseThroughMasterRules } from '../../utils/response/responseProcessor';
 
 interface MessageProcessorProps {
   processUserMessage: (userInput: string) => Promise<MessageType>;
@@ -75,11 +75,18 @@ export const useMessageProcessor = ({
   };
   
   // Track conversation history for context enhancement
-  const conversationHistory: string[] = [];
+  let conversationHistory: string[] = [];
   
   const processResponse = useCallback((userInput: string) => {
     // Add user input to conversation history
     conversationHistory.push(userInput);
+    
+    // Always keep only the most recent messages for context
+    if (conversationHistory.length > 10) {
+      conversationHistory = conversationHistory.slice(-10);
+    }
+    
+    console.log("Current conversation history:", conversationHistory);
     
     // Check if user is pointing out that Roger didn't listen/is repeating
     const isPointingOutNonResponsiveness = isUserPointingOutNonResponsiveness(userInput);
@@ -99,27 +106,29 @@ export const useMessageProcessor = ({
     if (isPointingOutNonResponsiveness && conversationHistory.length >= 3) {
       setTimeout(() => {
         // Generate a special acknowledgment response
-        const acknowledgmentResponse = createMessage(
-          "I apologize for not properly acknowledging what you've already shared. Looking back at our conversation, I see that you mentioned " + 
-          extractTopicsFromHistory(conversationHistory.slice(-3)) + 
-          ". Could you help me understand which aspects of this are most important for us to focus on right now?",
-          'roger'
-        );
+        let acknowledgmentResponse = "I apologize for not properly acknowledging what you've already shared. Looking back at our conversation, I see that you mentioned ";
+        
+        // Extract topics from conversation history
+        const topics = extractTopicsFromHistory(conversationHistory.slice(-3));
+        acknowledgmentResponse += topics + ". Could you help me understand which aspects of this are most important for us to focus on right now?";
+        
+        // Create message object
+        const responseMsg = createMessage(acknowledgmentResponse, 'roger');
         
         // Add the response
-        setMessages(prevMessages => [...prevMessages, acknowledgmentResponse]);
+        setMessages(prevMessages => [...prevMessages, responseMsg]);
         
         // Add response to conversation history
-        conversationHistory.push(acknowledgmentResponse.text);
+        conversationHistory.push(acknowledgmentResponse);
         
         // Update the response history to prevent future repetition
-        updateRogerResponseHistory(acknowledgmentResponse.text);
+        updateRogerResponseHistory(acknowledgmentResponse);
         
         // Simulate typing with a callback to update the message text
-        simulateTypingResponse(acknowledgmentResponse.text, (text) => {
+        simulateTypingResponse(acknowledgmentResponse, (text) => {
           setMessages(prevMessages => 
             prevMessages.map(msg => 
-              msg.id === acknowledgmentResponse.id ? { ...msg, text } : msg
+              msg.id === responseMsg.id ? { ...msg, text } : msg
             )
           );
           
@@ -146,27 +155,22 @@ export const useMessageProcessor = ({
       processUserMessage(userInput)
         .then(rogerResponse => {
           try {
-            // Enhance the response with contextual awareness before showing it
-            const enhancedResponse = enhanceResponseWithContext(
+            // Use master rules to process response with conversation context
+            const responseWithContextCheck = processResponseThroughMasterRules(
               rogerResponse.text,
               userInput,
-              conversationHistory.slice(-5)
-            );
-            
-            // Make sure Roger isn't asking "what's going on" if the user already explained
-            const responseWithHistoryCheck = preventRedundantQuestions(
-              enhancedResponse, 
-              conversationHistory.slice(-5)
+              conversationHistory.length,
+              conversationHistory
             );
             
             // Update the response with enhanced text that has contextual awareness
             const updatedResponse = {
               ...rogerResponse,
-              text: responseWithHistoryCheck
+              text: responseWithContextCheck
             };
             
             // Add the response to history to prevent future repetition
-            updateRogerResponseHistory(responseWithHistoryCheck);
+            updateRogerResponseHistory(responseWithContextCheck);
             
             // Check if this is a crisis-related response and store it for deception detection
             handleCrisisMessage(userInput, updatedResponse);
@@ -187,10 +191,10 @@ export const useMessageProcessor = ({
             }
             
             // Add response to conversation history for better context
-            conversationHistory.push(responseWithHistoryCheck);
+            conversationHistory.push(responseWithContextCheck);
             
             // Simulate typing with a callback to update the message text
-            simulateTypingResponse(responseWithHistoryCheck, (text) => {
+            simulateTypingResponse(responseWithContextCheck, (text) => {
               setMessages(prevMessages => 
                 prevMessages.map(msg => 
                   msg.id === updatedResponse.id ? { ...msg, text } : msg
@@ -280,6 +284,7 @@ export const useMessageProcessor = ({
     // Extract key nouns and topics from the message
     const topics = [];
     const topicPatterns = [
+      { regex: /wrench|tool|lost|find|found|missing/i, topic: "your lost wrench" },
       { regex: /storm|electricity|power|outage/i, topic: "the power outage" },
       { regex: /presentation|work|job|boss|meeting|deadline/i, topic: "your work presentation" },
       { regex: /laptop|computer|device|phone|mobile/i, topic: "technology issues" },
@@ -297,24 +302,6 @@ export const useMessageProcessor = ({
     }
     
     return topics.length > 0 ? topics.join(" and ") : "your concerns";
-  };
-
-  // Helper function to prevent redundant questions
-  const preventRedundantQuestions = (response: string, history: string[]): string => {
-    // Check if Roger is asking what's going on after user already explained
-    if (history.length >= 2 && 
-        (response.includes("What's been going on?") || 
-         response.includes("What's going on?") ||
-         response.includes("What's been happening?"))) {
-      
-      // Replace the redundant question with acknowledgment
-      return response.replace(
-        /(What's been going on\?|What's going on\?|What's been happening\?)/,
-        "I'd like to understand more about how this is affecting you."
-      );
-    }
-    
-    return response;
   };
 
   return { processResponse };
