@@ -20,3 +20,10 @@ export interface ReflectionPrinciple {
 
 // Define the allowed concern types for consistency across the application
 export type ConcernType = 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | null;
+
+// Add a new interface to support context-aware reflections
+export interface ContextAwareReflection {
+  feeling: FeelingCategory;
+  context: string;
+  reflection: string;
+}
