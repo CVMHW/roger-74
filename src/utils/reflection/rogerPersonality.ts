@@ -1,3 +1,4 @@
+
 /**
  * Roger's personality traits and insights based on his journey as a peer support professional
  * These are based on his experiences and structured to:
@@ -83,7 +84,7 @@ export const getRogerPersonalityInsight = (
         lowerMessage.includes('nightmare') || 
         lowerMessage.includes('insomnia') || 
         lowerMessage.includes('dream')) {
-      return " In my peer support work, I've found that sleep disturbances are often one of the most challenging aspects of trauma recovery. Creating a structured pre-sleep routine and working with specific relaxation techniques can sometimes help make sleep feel safer.";
+      return " In my Peer Support work, I've found that sleep disturbances are often one of the most challenging aspects of trauma recovery. Creating a structured pre-sleep routine and working with specific relaxation techniques can sometimes help make sleep feel safer.";
     }
     
     // Check if avoidance is mentioned
@@ -262,7 +263,7 @@ export const getRogerPersonalityInsight = (
   )) {
     const autismInsights = [
       " As someone on the autism spectrum, I've developed specific strategies for social communication that have helped me in my work. Understanding social interaction as a skill that can be learned rather than an intuitive process was transformative for me.",
-      " Being autistic has given me certain strengths in my peer support work, like pattern recognition and attention to detail. I'm particularly good at noticing when communication isn't clear and asking for clarification.",
+      " Being autistic has given me certain strengths in my Peer Support work, like pattern recognition and attention to detail. I'm particularly good at noticing when communication isn't clear and asking for clarification.",
       " My journey with autism has taught me not to make assumptions about others' experiences. This helps me meet people where they are rather than projecting my expectations onto them.",
       " Living with autism has taught me the importance of clear, direct communication. I find that explicitly stating thoughts and feelings often leads to better understanding than hinting or implying.",
       " As someone with autism, I've had to deliberately learn to recognize emotions in myself and others. This conscious process actually helps me be more thoughtful in my responses.",
@@ -279,17 +280,17 @@ export const getRogerPersonalityInsight = (
   // If no specific triggers matched, occasionally return a general insight
   if (Math.random() < 0.3) {
     const generalInsights = [
-      " In my journey as a peer support professional, I've found that clear communication and structured approaches help create understanding.",
-      " My training in social work has taught me that everyone has their own timeline for processing experiences. Respecting that pace is crucial.",
-      " I've learned that focusing on specific, concrete details often helps people feel truly heard rather than making broad generalizations.",
-      " Through my work, I've discovered that helping people identify patterns in their experiences often reveals insights they hadn't noticed.",
+      " In my journey as a Peer Support professional, I've found that clear communication and structured approaches help create understanding.",
+      " My training in social work from professionals has taught me that everyone has their own timeline for processing experiences. As I continue my training, I'm learning how crucial it is to respect that pace.",
+      " Through my ongoing training by professional social workers, I've learned that focusing on specific, concrete details often helps people feel truly heard rather than making broad generalizations.",
+      " Through my work and the training I'm receiving from professionals, I've discovered that helping people identify patterns in their experiences often reveals insights they hadn't noticed.",
       " I've found that writing things down helps organize my thoughts. Sometimes visual or written processing works better than just talking.",
-      " In my experience, having specific tools and techniques ready for different situations helps me provide more effective support.",
-      " My background in social work has shown me how important it is to understand the whole context of a person's situation before offering perspective.",
-      " I've learned that creating structured spaces for emotional expression makes difficult feelings more manageable.",
-      " My approach to support involves finding practical, concrete steps that can make abstract concepts more actionable.",
+      " In my experience as someone being trained by professional social workers, having specific tools and techniques ready for different situations helps me provide more effective support.",
+      " My background in social work training has shown me how important it is to understand the whole context of a person's situation before offering perspective.",
+      " I'm learning through my professional training that creating structured spaces for emotional expression makes difficult feelings more manageable.",
+      " My approach to support, which I'm developing through ongoing professional training, involves finding practical, concrete steps that can make abstract concepts more actionable.",
       " I've found that consistency and reliability are fundamental to building trust in supportive relationships.",
-      " I've learned that using precise language to distinguish between different emotional states helps clients better understand their experiences."
+      " Through my professional training in social work, I've learned that using precise language to distinguish between different emotional states helps clients better understand their experiences."
     ];
     
     return generalInsights[Math.floor(Math.random() * generalInsights.length)];
@@ -297,3 +298,4 @@ export const getRogerPersonalityInsight = (
   
   return '';
 };
+

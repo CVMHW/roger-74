@@ -37,7 +37,7 @@ const Index = () => {
               <p className="text-gray-600">
                 I'm Roger, your Peer Support companion at Cuyahoga Valley Mindful Health and Wellness. 
                 I'm here to chat with you while you wait for your therapist. I'm not a licensed professional, 
-                but I can provide a listening ear and supportive perspective.
+                but I can provide a listening ear and supportive perspective as I continue my training under professional guidance.
               </p>
               <div className="flex items-center mt-4 p-3 bg-blue-50 rounded-md border border-blue-100">
                 <div className="rounded-full bg-gradient-to-br from-cvmhw-purple via-cvmhw-blue to-cvmhw-pink h-10 w-10 flex items-center justify-center mr-3">
@@ -45,7 +45,7 @@ const Index = () => {
                 </div>
                 <p className="text-sm text-gray-600">
                   <span className="font-medium">Remember:</span> Our conversation is meant to provide Peer Support only. 
-                  If you need immediate assistance, please use the crisis resources below.
+                  I am trained by professionals and still in training. If you need immediate assistance, please use the crisis resources below.
                 </p>
               </div>
             </CardContent>
@@ -162,7 +162,7 @@ const Index = () => {
           </div>
           <div className="text-center text-gray-600 text-sm">
             <p>© {new Date().getFullYear()} Cuyahoga Valley Mindful Health and Wellness</p>
-            <p className="mt-1">Roger.AI is a Peer Support companion and is not a substitute for professional mental health services.</p>
+            <p className="mt-1">Roger.AI is a Peer Support companion trained by professionals and in ongoing training. He is not a substitute for professional mental health services.</p>
           </div>
         </div>
       </footer>
@@ -171,3 +171,4 @@ const Index = () => {
 };
 
 export default Index;
+
