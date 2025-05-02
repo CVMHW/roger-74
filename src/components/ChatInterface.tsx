@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MessageType } from './Message';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
@@ -12,11 +12,26 @@ import {
   storeFeedback
 } from '../utils/messageUtils';
 import useRogerianResponse from '../hooks/useRogerianResponse';
+import { MASTER_RULES } from '../utils/masterRules';
 
 const ChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<MessageType[]>(getInitialMessages());
   const { isTyping, processUserMessage, simulateTypingResponse, currentApproach } = useRogerianResponse();
   const { toast } = useToast();
+  
+  // Track all Roger responses to prevent repetition (in accordance with master rules)
+  const [rogerResponseHistory, setRogerResponseHistory] = useState<string[]>([]);
+  
+  // On component mount, extract existing Roger responses for the history
+  useEffect(() => {
+    const initialRogerMessages = messages
+      .filter(msg => msg.sender === 'roger')
+      .map(msg => msg.text);
+    
+    if (initialRogerMessages.length > 0) {
+      setRogerResponseHistory(initialRogerMessages);
+    }
+  }, []);
 
   // Handle feedback for Roger's messages
   const handleFeedback = (messageId: string, feedback: 'positive' | 'negative') => {
@@ -49,6 +64,9 @@ const ChatInterface: React.FC = () => {
     
     // Process user input to generate Roger's response
     processUserMessage(userInput).then(rogerResponse => {
+      // Add the response to history to prevent future repetition
+      setRogerResponseHistory(prev => [...prev, rogerResponse.text]);
+      
       // Add the empty response message first (will be updated during typing simulation)
       setMessages(prevMessages => [...prevMessages, rogerResponse]);
       

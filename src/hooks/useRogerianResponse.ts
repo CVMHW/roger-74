@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { MessageType } from '../components/Message';
 import { 
@@ -23,6 +22,7 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import useTypingEffect from './useTypingEffect';
 import useAdaptiveResponse from './useAdaptiveResponse';
+import { MASTER_RULES, isUniqueResponse, calculateMinimumResponseTime } from '../utils/masterRules';
 
 interface ConcernState {
   crisis: boolean;
@@ -50,9 +50,35 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
     substanceUse: false,
     tentativeHarm: false
   });
+  // Track previous responses to prevent repetition (master rule)
+  const [previousResponses, setPreviousResponses] = useState<string[]>([]);
+  
   const { toast } = useToast();
   const { calculateResponseTime, simulateTypingResponse } = useTypingEffect();
   const { generateAdaptiveResponse, currentApproach } = useAdaptiveResponse();
+
+  // Function to ensure response complies with the master rules
+  const ensureResponseCompliance = (proposedResponse: string): string => {
+    // Check if this exact response has been used before
+    if (previousResponses.includes(proposedResponse)) {
+      // If it's a duplicate, make slight modifications to ensure uniqueness
+      const modifiers = [
+        "I want to emphasize that ",
+        "To put it another way, ",
+        "In other words, ",
+        "Let me express this differently: ",
+        "From another perspective, ",
+        "I'd like to rephrase: "
+      ];
+      
+      // Select a random modifier and add it to the beginning of the response
+      const modifier = modifiers[Math.floor(Math.random() * modifiers.length)];
+      return modifier + proposedResponse;
+    }
+    
+    // If the response is already unique, return it as is
+    return proposedResponse;
+  };
 
   const showConcernToast = (concernType: string) => {
     let title = "Important Notice";
@@ -126,8 +152,22 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
       showConcernToast('substance-use');
     }
 
-    // Calculate response time based on message complexity
-    const responseTime = calculateResponseTime(userInput);
+    // Calculate response time based on message complexity and emotional weight
+    // For sensitive topics, use the master rules to ensure appropriate pacing
+    let responseTime = calculateResponseTime(userInput);
+    
+    // Estimate message complexity and emotional weight for timing adjustments
+    const estimatedComplexity = containsCrisisKeywords || containsMentalHealthConcerns ? 8 : 
+                               containsMedicalConcerns || containsEatingDisorderConcerns ? 7 : 5;
+    
+    const estimatedEmotionalWeight = containsCrisisKeywords || containsTentativeHarmLanguage ? 9 : 
+                                    containsSubstanceUseConcerns || containsMentalHealthConcerns ? 7 : 4;
+    
+    // Get minimum response time from master rules
+    const minimumTime = calculateMinimumResponseTime(estimatedComplexity, estimatedEmotionalWeight);
+    
+    // Ensure response time meets the minimum requirement
+    responseTime = Math.max(responseTime, minimumTime);
     
     // Return a promise that resolves with the appropriate response
     return new Promise(resolve => {
@@ -163,6 +203,17 @@ export const useRogerianResponse = (): UseRogerianResponseReturn => {
         else {
           // Generate an adaptive response based on the client's input
           responseText = generateAdaptiveResponse(userInput);
+        }
+        
+        // Apply master rules to ensure no repetition
+        responseText = ensureResponseCompliance(responseText);
+        
+        // Add this response to the history to prevent future repetition
+        setPreviousResponses(prev => [...prev, responseText]);
+        
+        // Limit history size to prevent memory issues
+        if (previousResponses.length > 20) {
+          setPreviousResponses(prev => prev.slice(-20));
         }
         
         // Create response message
