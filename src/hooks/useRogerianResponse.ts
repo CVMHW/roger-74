@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { MessageType } from '../components/Message';
 import { 
@@ -34,7 +33,7 @@ interface UseRogerianResponseReturn {
   isTyping: boolean;
   processUserMessage: (userInput: string) => Promise<MessageType>;
   simulateTypingResponse: (response: string, callback: (text: string) => void) => void;
-  currentApproach: 'rogerian' | 'mi' | 'existential' | 'conversational';
+  currentApproach: 'rogerian' | 'mi' | 'existential' | 'conversational' | 'socratic';
 }
 
 export const useRogerianResponse = (): UseRogerianResponseReturn => {

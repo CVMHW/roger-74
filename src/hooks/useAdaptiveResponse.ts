@@ -4,13 +4,14 @@ import { generateMIResponse } from '../utils/motivationalInterviewing';
 import { generateRogerianResponse } from '../utils/rogerianPrinciples';
 import { generateConversationalResponse } from '../utils/conversationalUtils';
 import { generateExistentialResponse } from '../utils/existentialPrinciples';
+import { generateSocraticResponse } from '../utils/socraticMethods';
 
 /**
  * Hook that adaptively selects the most appropriate response approach
  * based on client input and context
  */
 export const useAdaptiveResponse = () => {
-  const [currentApproach, setCurrentApproach] = useState<'rogerian' | 'mi' | 'existential' | 'conversational'>('rogerian');
+  const [currentApproach, setCurrentApproach] = useState<'rogerian' | 'mi' | 'existential' | 'conversational' | 'socratic'>('rogerian');
   
   /**
    * Analyzes user input to determine if the context suggests a shift in approach
@@ -86,6 +87,31 @@ export const useAdaptiveResponse = () => {
                                             lowerInput.includes('failed') ||
                                             lowerInput.includes('worried');
     
+    // Added: Look for patterns suggesting Socratic dialogue would be beneficial
+    const containsBeliefStatements = lowerInput.includes('i think') ||
+                                    lowerInput.includes('i believe') ||
+                                    lowerInput.includes('i know') ||
+                                    lowerInput.includes('always') ||
+                                    lowerInput.includes('never') ||
+                                    lowerInput.includes('everyone') ||
+                                    lowerInput.includes('no one');
+                                    
+    const containsAssumptions = lowerInput.includes('because') ||
+                               lowerInput.includes('since') ||
+                               lowerInput.includes('obviously') ||
+                               lowerInput.includes('clearly') ||
+                               lowerInput.includes('must be') ||
+                               lowerInput.includes('has to be');
+                               
+    const containsComplexConcepts = lowerInput.includes('right') ||
+                                   lowerInput.includes('wrong') ||
+                                   lowerInput.includes('good') ||
+                                   lowerInput.includes('bad') ||
+                                   lowerInput.includes('should') ||
+                                   lowerInput.includes('fair') ||
+                                   lowerInput.includes('unfair') ||
+                                   lowerInput.includes('truth');
+    
     // First try an Existential response if existential concerns are detected
     // Enhanced to detect more nuanced existential themes from lecture materials
     if (containsExistentialConcerns || containsExistentialVacuum || containsHyperreflection) {
@@ -93,6 +119,16 @@ export const useAdaptiveResponse = () => {
       if (existentialResponse) {
         setCurrentApproach('existential');
         return existentialResponse;
+      }
+    }
+    
+    // Try Socratic dialogue for belief statements, assumptions or complex concepts
+    // that benefit from deeper exploration through questioning
+    if (containsBeliefStatements || containsAssumptions || containsComplexConcepts) {
+      const socraticResponse = generateSocraticResponse(userInput);
+      if (socraticResponse) {
+        setCurrentApproach('socratic');
+        return socraticResponse;
       }
     }
     
