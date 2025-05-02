@@ -15,8 +15,10 @@ import {
   getSubstanceUseMessage,
   getTentativeHarmMessage,
   getPTSDMessage,
-  getMildPTSDResponse
+  getMildPTSDResponse,
+  generateDeescalationResponse
 } from '../../utils/responseUtils';
+import { detectDefensiveReaction } from '../../utils/safetySupport';
 import { ConversationStage } from './conversationStageManager';
 import { detectDevelopmentalStage } from '../../utils/reflection/reflectionStrategies';
 import { shouldUseConversationStarter, generateConversationStarterResponse } from '../../utils/reflection/ageAppropriateConversation';
@@ -177,11 +179,37 @@ export const useResponseGenerator = ({
     return null;
   };
   
+  /**
+   * Detects and responds to defensive reactions to mental health suggestions
+   * Particularly for strong emotional responses to potential diagnoses
+   */
+  const createDefensiveReactionResponse = (userInput: string): string | null => {
+    // Detect if the user's message contains a defensive reaction
+    const defensiveReaction = detectDefensiveReaction(userInput);
+    
+    if (!defensiveReaction.isDefensive) {
+      return null;
+    }
+    
+    // If we have a defensive reaction, generate a de-escalation response
+    return generateDeescalationResponse(
+      defensiveReaction.reactionType || 'denial',
+      defensiveReaction.suggestedConcern
+    );
+  };
+  
   const generateResponse = (
     userInput: string, 
     concernType: ConcernType
   ): string => {
     try {
+      // New: Check for defensive reactions to mental health suggestions first
+      // This takes highest precedence to immediately de-escalate
+      const defensiveReactionResponse = createDefensiveReactionResponse(userInput);
+      if (defensiveReactionResponse) {
+        return defensiveReactionResponse;
+      }
+      
       // Safety concerns always take precedence
       if (concernType) {
         // Special handling for mild gambling

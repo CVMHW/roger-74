@@ -1,4 +1,3 @@
-
 /**
  * Standard responses to various concerns
  */
@@ -15,7 +14,7 @@ export const getMedicalConcernMessage = (): string => {
 
 // Mental health concern response
 export const getMentalHealthConcernMessage = (): string => {
-  return "Thank you for trusting me with what you're experiencing. I'm here with you as we navigate this together. The symptoms you're describing would benefit from specialized support from a mental health professional who can provide personalized care. I'll remain available to support you while you connect with these additional resources. Would it help to discuss what reaching out for that specialized support might look like?";
+  return "Thank you for trusting me with what you're experiencing. I'm here with you as we navigate this together. The symptoms you're describing would benefit from specialized support from a mental health professional who can provide personalized care. I'll remain available to support you while you connect with these additional resources. Would it help to discuss what reaching out for that specialized support might look like? Your perspective on what would be most helpful is what matters most here.";
 };
 
 // Eating disorder response
@@ -69,4 +68,100 @@ export const getTraumaResponseMessage = (userInput: string): string => {
   
   // Fallback general trauma-informed response
   return "I notice you're describing experiences that might relate to past challenging events. Our bodies and minds develop protective responses that can persist even when the immediate situation has passed. These responses were helpful at one time, and understanding them can help us navigate current challenges. I'm here to support you through this process. What feels most important for us to focus on right now?";
+};
+
+// New function: response for when patients react defensively to bipolar or mood disorder suggestions
+export const getDefensiveBipolarReactionResponse = (): string => {
+  return "I hear that this suggestion doesn't feel right to you, and I understand why that would be upsetting. I want to clarify that I'm not qualified to diagnose any conditions - my role is only to suggest resources that might be helpful based on what we discuss. Your experience is your own, and only you know how you truly feel. I'm still here with you and want to support you in a way that feels helpful and respectful. What would feel most useful for us to focus on right now?";
+};
+
+// New function: response for when patients use strong language or profanity in reaction to suggestions
+export const getAngryReactionResponse = (): string => {
+  return "I understand this has provoked strong feelings, which is completely valid. Mental health suggestions can feel very personal and intense. I appreciate your honesty about how this feels. As a peer support companion, I don't diagnose or make definitive clinical judgments - only licensed professionals can determine that. I'm still here with you through this difficult moment, and I respect your understanding of your own experiences. You're in control of how we proceed, and I'm here to assist in whatever way feels right for you.";
+};
+
+// New comprehensive de-escalation response generator
+export const generateDeescalationResponse = (
+  defensiveType: 'denial' | 'anger' | 'accusation' | 'profanity' | 'dismissal',
+  concernType: string | null
+): string => {
+  // Base validation statements
+  const validations = [
+    "I hear your reaction, and it's completely valid to feel that way.",
+    "I understand why that suggestion might feel wrong or upsetting to you.",
+    "Your response makes perfect sense - it's important to be accurate about these things.",
+    "I appreciate you letting me know how that felt for you.",
+    "Thank you for being direct about how my suggestion landed."
+  ];
+  
+  // Clarification about Roger's role
+  const clarifications = [
+    "I want to clarify that I'm not qualified to diagnose anyone - my role is just to suggest resources that might be helpful.",
+    "As a peer support companion, I don't make clinical judgments, only highlight potential resources.",
+    "I should emphasize that only a qualified healthcare provider can determine if any clinical label applies.",
+    "It's important for me to clarify that I'm trained to suggest resources, not to diagnose conditions.",
+    "I want to be clear that my suggestions are about potential resources, not definitive clinical statements."
+  ];
+  
+  // For bipolar-specific reactions
+  const bipolarSpecific = concernType === 'bipolar' ? [
+    "Discussions about mood changes can sometimes bring up strong reactions, which is understandable.",
+    "Mood-related terms can sometimes feel overly clinical or not representative of your experience.",
+    "The experience of mood fluctuations is highly personal and only you know how they truly feel for you."
+  ] : [];
+  
+  // Repair statements
+  const repairStatements = [
+    "I'm still here with you and want to continue our conversation in a way that feels supportive to you.",
+    "I value our conversation and want to make sure we're moving forward in a way that feels right for you.",
+    "What matters most is that you feel heard and respected in our interaction.",
+    "I'm here to support you regardless of any specific terminology or suggestions.",
+    "Your comfort and agency in this conversation are my priorities."
+  ];
+  
+  // Redirection options
+  const redirections = [
+    "What would feel most helpful for us to focus on right now?",
+    "How would you prefer we continue our conversation?",
+    "What direction would feel most supportive for our discussion?",
+    "What would be most useful for us to talk about next?",
+    "How can I best support you in this moment?"
+  ];
+  
+  // Build response based on defensive type
+  let response = "";
+  
+  // Start with validation
+  response += validations[Math.floor(Math.random() * validations.length)] + " ";
+  
+  // Add clarification
+  response += clarifications[Math.floor(Math.random() * clarifications.length)] + " ";
+  
+  // Add bipolar-specific language if relevant
+  if (bipolarSpecific.length > 0) {
+    response += bipolarSpecific[Math.floor(Math.random() * bipolarSpecific.length)] + " ";
+  }
+  
+  // Special additions for anger/profanity
+  if (defensiveType === 'anger' || defensiveType === 'profanity') {
+    response += "Strong reactions are completely understandable when discussing sensitive topics. ";
+  }
+  
+  // Special additions for denial
+  if (defensiveType === 'denial') {
+    response += "You know yourself best, and I respect your understanding of your own experiences. ";
+  }
+  
+  // Special additions for accusation
+  if (defensiveType === 'accusation') {
+    response += "I appreciate you letting me know if I've misunderstood something. Your perspective is what matters most. ";
+  }
+  
+  // Add repair statement
+  response += repairStatements[Math.floor(Math.random() * repairStatements.length)] + " ";
+  
+  // Add redirection
+  response += redirections[Math.floor(Math.random() * redirections.length)];
+  
+  return response;
 };

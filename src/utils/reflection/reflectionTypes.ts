@@ -1,4 +1,3 @@
-
 // Define the type for concerns that might need special responses
 export type ConcernType = 
   'crisis' | 
@@ -63,6 +62,12 @@ export interface ContextAwareReflection {
   trigger: string[];
   response: string[];
   priority: number;
+  keywords?: string[];
+  feeling?: string;
+  wheelFeelingData?: ChildWheelEmotionData;
+  specificDetails?: string;
+  relationshipContext?: string;
+  timeContext?: string;
 }
 
 // Structure for reflection principles
