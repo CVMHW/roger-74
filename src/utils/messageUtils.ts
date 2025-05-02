@@ -28,6 +28,7 @@ export const getInitialMessages = (): MessageType[] => [
     text: "Hi, I'm Roger, your peer support companion. I'm here to listen and offer support. How can I help you today?",
     sender: 'roger',
     timestamp: new Date(),
+    locationData: null
   },
 ];
 

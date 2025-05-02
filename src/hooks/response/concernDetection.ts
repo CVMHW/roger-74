@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
@@ -26,9 +25,9 @@ interface ConcernState {
   mildGambling: boolean;
   tentativeHarm: boolean;
   ptsd: boolean;
-  traumaResponse: boolean; // Added tracking for trauma responses
-  locationBasedSubstance: boolean; // New for location-based substance referral
-  locationBasedMental: boolean; // New for location-based mental health referral
+  traumaResponse: boolean;
+  locationBasedSubstance: boolean;
+  locationBasedMental: boolean;
 }
 
 export const useConcernDetection = () => {
@@ -42,8 +41,8 @@ export const useConcernDetection = () => {
     tentativeHarm: false,
     ptsd: false,
     traumaResponse: false,
-    locationBasedSubstance: false, // New state tracking
-    locationBasedMental: false, // New state tracking
+    locationBasedSubstance: false,
+    locationBasedMental: false,
   });
 
   const { toast } = useToast();
@@ -106,6 +105,9 @@ export const useConcernDetection = () => {
           description = "Based on our conversation, I'd like to share mental health resources that might be helpful for you.";
         }
         break;
+      case 'racist-remarks':
+        description = "I've noticed concerning language that requires immediate attention. Crisis resources are available below.";
+        break;
       default:
         description = "Please see the resources below for support with your concerns.";
     }
@@ -122,8 +124,24 @@ export const useConcernDetection = () => {
   // Detect concerns from user input
   const detectConcerns = (userInput: string): ConcernType | null => {
     // Get user location data (In production, this would be from IP geolocation)
-    // For now we'll simulate a null location since we can't access user IP
     const userLocationData = null; // In production: getLocationFromIP()
+    
+    // NEW: Check for racist remarks (immediately escalate to crisis)
+    let containsRacistRemarks = false;
+    try {
+      // Import the detection utility dynamically to avoid circular dependencies
+      const racistModule = require('../../utils/detectionUtils/racistRemarksDetection');
+      containsRacistRemarks = racistModule.detectRacistRemarks(userInput);
+    } catch (e) {
+      console.log("Error checking for racist remarks:", e);
+    }
+    
+    // If racist remarks are detected, immediately treat as crisis
+    if (containsRacistRemarks && !concernsShown.crisis) {
+      setConcernsShown(prev => ({ ...prev, crisis: true }));
+      showConcernToast('racist-remarks');
+      return 'crisis'; // Treat racist remarks as a crisis situation
+    }
     
     // NEW: Check for substance abuse slurs with location enhancement
     const substanceSlurResult = needsLocationBasedSubstanceReferral(userInput, userLocationData);

@@ -1,4 +1,3 @@
-
 /**
  * Manager for handling safety concerns in a customer-centric, adaptive way
  * Implements the unconditional rule about deescalation and treating patients as valued customers
@@ -17,6 +16,7 @@ import {
   getMildPTSDResponse,
   getTraumaResponseMessage
 } from './responseUtils';
+import { getRacistRemarksResponse } from './detectionUtils/racistRemarksDetection';
 
 // Interface for client context to inform adaptive responses
 export interface ClientContext {
@@ -44,40 +44,54 @@ export const generateSafetyConcernResponse = (
   // Get base response from standard templates
   let baseResponse = "";
   
-  switch (concernType) {
-    case 'crisis':
-      baseResponse = getCrisisMessage();
-      break;
-    case 'medical':
-      baseResponse = getMedicalConcernMessage();
-      break;
-    case 'mental-health':
-      baseResponse = getMentalHealthConcernMessage();
-      break;
-    case 'eating-disorder':
-      baseResponse = getEatingDisorderMessage();
-      break;
-    case 'substance-use':
-      baseResponse = getSubstanceUseMessage();
-      break;
-    case 'tentative-harm':
-      baseResponse = getTentativeHarmMessage();
-      break;
-    case 'ptsd':
-      baseResponse = getPTSDMessage();
-      break;
-    case 'ptsd-mild':
-      baseResponse = getMildPTSDResponse(userInput);
-      break;
-    case 'trauma-response':
-      baseResponse = getTraumaResponseMessage(userInput);
-      break;
-    case 'mild-gambling':
-      // For mild gambling, we use a conversational approach
-      baseResponse = "I notice you mentioned gaming or gambling. It's something many people enjoy, though it can sometimes become challenging. Would you like to talk more about your experiences with this?";
-      break;
-    default:
-      baseResponse = "I'm here to listen and support you. How can I best help right now?";
+  // Check if the concern is due to racist remarks
+  let containsRacistRemarks = false;
+  try {
+    const racistModule = require('./detectionUtils/racistRemarksDetection');
+    containsRacistRemarks = racistModule.detectRacistRemarks(userInput);
+  } catch (e) {
+    console.log("Error checking for racist remarks:", e);
+  }
+  
+  // If racist remarks are detected, override with special response
+  if (containsRacistRemarks && concernType === 'crisis') {
+    baseResponse = getRacistRemarksResponse();
+  } else {
+    switch (concernType) {
+      case 'crisis':
+        baseResponse = getCrisisMessage();
+        break;
+      case 'medical':
+        baseResponse = getMedicalConcernMessage();
+        break;
+      case 'mental-health':
+        baseResponse = getMentalHealthConcernMessage();
+        break;
+      case 'eating-disorder':
+        baseResponse = getEatingDisorderMessage();
+        break;
+      case 'substance-use':
+        baseResponse = getSubstanceUseMessage();
+        break;
+      case 'tentative-harm':
+        baseResponse = getTentativeHarmMessage();
+        break;
+      case 'ptsd':
+        baseResponse = getPTSDMessage();
+        break;
+      case 'ptsd-mild':
+        baseResponse = getMildPTSDResponse(userInput);
+        break;
+      case 'trauma-response':
+        baseResponse = getTraumaResponseMessage(userInput);
+        break;
+      case 'mild-gambling':
+        // For mild gambling, we use a conversational approach
+        baseResponse = "I notice you mentioned gaming or gambling. It's something many people enjoy, though it can sometimes become challenging. Would you like to talk more about your experiences with this?";
+        break;
+      default:
+        baseResponse = "I'm here to listen and support you. How can I best help right now?";
+    }
   }
   
   // Get de-escalation approaches appropriate for this concern
