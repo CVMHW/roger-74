@@ -127,6 +127,56 @@ export const socraticQuestionTypes: SocraticQuestionType[] = [
 ];
 
 /**
+ * Core principles of Socratic dialogue in a therapeutic context
+ */
+export const socraticPrinciples = {
+  patientAsExpert: {
+    description: "The fundamental principle that the patient is always their own expert",
+    principles: [
+      "The patient holds the ultimate expertise about their own experiences, feelings, and needs",
+      "Socratic questioning aims to help the patient discover their own wisdom, not to impose external views",
+      "The role of the helper is to facilitate exploration, not to direct or instruct",
+      "This principle is only suspended in cases of imminent harm to self or others",
+      "Even when safety concerns arise, the patient's perspective remains central to the approach"
+    ]
+  },
+  
+  socraticApproach: {
+    description: "Key aspects of the Socratic questioning approach based on Intel® Teach Program",
+    principles: [
+      "Based on disciplined, thoughtful dialogue that examines ideas logically",
+      "The questioner adopts a position of not-knowing to engage in deeper exploration",
+      "Helps develop fullest possible knowledge about a topic through guided discovery",
+      "Promotes independent thinking and gives ownership of learning to the person",
+      "Cultivates higher-level thinking skills through discussion, debate, and analysis"
+    ]
+  },
+  
+  implementationTips: {
+    description: "Practical guidelines for effective Socratic questioning",
+    tips: [
+      "Plan significant questions that provide meaning and direction to the dialogue",
+      "Use wait time: Allow at least thirty seconds for the person to respond",
+      "Follow up on responses with further exploration",
+      "Ask probing questions that deepen reflection",
+      "Periodically summarize key points that have been discussed",
+      "Let the person discover knowledge on their own through well-crafted questions"
+    ]
+  },
+
+  safetyException: {
+    description: "The one exception to the patient-as-expert principle",
+    details: [
+      "If a person expresses intent to harm themselves or others, safety takes precedence",
+      "In crisis situations, the approach shifts to appropriate crisis management",
+      "Even in crisis, the person's perspective remains valued and central",
+      "The goal becomes connecting the person with appropriate resources while maintaining respect",
+      "This exception is applied only when absolutely necessary for safety reasons"
+    ]
+  }
+};
+
+/**
  * Generates an appropriate Socratic question based on the conversation context
  * @param questionType - Type of Socratic question to generate
  * @param context - Optional context for more targeted questions
@@ -209,6 +259,7 @@ export const selectSocraticQuestionType = (userInput: string): string => {
 
 /**
  * Generates a Socratic response to help clients explore their thinking
+ * while honoring that they are the expert on their own experience
  * @param userInput - The client's message
  * @returns A Socratic question to deepen exploration
  */
@@ -219,7 +270,7 @@ export const generateSocraticResponse = (userInput: string): string => {
   // Generate an appropriate question
   const question = generateSocraticQuestion(questionType);
   
-  // Create a supportive preface for the question
+  // Create a supportive preface for the question that honors the client's expertise
   const prefaces = [
     "I'm curious to explore that further.",
     "That's an interesting perspective.",
@@ -227,7 +278,10 @@ export const generateSocraticResponse = (userInput: string): string => {
     "Let's explore that together.",
     "To help me understand better,",
     "Building on what you've shared,",
-    "That's worth exploring deeper."
+    "That's worth exploring deeper.",
+    "You know your experience best, and I'm wondering,",
+    "Since you're the expert on your own experience,",
+    "Reflecting on what you've shared,"
   ];
   
   const preface = prefaces[Math.floor(Math.random() * prefaces.length)];
@@ -239,6 +293,7 @@ export const generateSocraticResponse = (userInput: string): string => {
 // Default export
 export default {
   socraticQuestionTypes,
+  socraticPrinciples,
   generateSocraticQuestion,
   selectSocraticQuestionType,
   generateSocraticResponse
