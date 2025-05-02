@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { MessageType } from '../../components/Message';
 import { createMessage } from '../../utils/messageUtils';
 import { calculateMinimumResponseTime } from '../../utils/masterRules';
+import { ConcernType } from '../../utils/reflection/reflectionTypes';
 
 interface ResponseProcessingParams {
   ensureResponseCompliance: (response: string) => string;
@@ -21,8 +21,8 @@ export const useResponseProcessing = ({
 
   const processUserMessage = async (
     userInput: string,
-    generateResponseFn: (userInput: string, concernType: string | null) => string,
-    detectConcernsFn: (userInput: string) => string | null
+    generateResponseFn: (userInput: string, concernType: ConcernType) => string,
+    detectConcernsFn: (userInput: string) => ConcernType
   ): Promise<MessageType> => {
     setIsTyping(true);
     
@@ -65,17 +65,8 @@ export const useResponseProcessing = ({
         // Add this response to the history to prevent future repetition
         addToResponseHistory(responseText);
         
-        // Create response message with proper typing
-        const typedConcernType = concernType === 'crisis' || 
-                               concernType === 'medical' || 
-                               concernType === 'mental-health' || 
-                               concernType === 'eating-disorder' || 
-                               concernType === 'substance-use' || 
-                               concernType === 'tentative-harm' ||
-                               concernType === 'mild-gambling' ? 
-                               concernType as 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | 'mild-gambling' | null : null;
-        
-        const rogerResponse = createMessage(responseText, 'roger', typedConcernType);
+        // Create response message
+        const rogerResponse = createMessage(responseText, 'roger', concernType);
         setIsTyping(false);
         resolve(rogerResponse);
       }, responseTime);

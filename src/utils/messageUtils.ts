@@ -3,12 +3,13 @@
  * Utilities for creating and managing messages
  */
 import { MessageType } from '../components/Message';
+import { ConcernType } from './reflection/reflectionTypes';
 
 // Create a new message with the given text and sender
 export const createMessage = (
   text: string, 
   sender: 'user' | 'roger', 
-  concernType: 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | 'mild-gambling' | null = null
+  concernType: ConcernType = null
 ): MessageType => {
   return {
     id: Date.now().toString(),

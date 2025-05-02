@@ -1,4 +1,3 @@
-
 /**
  * Type definitions for the reflection system
  * Enhanced with Feelings Wheel data structures
@@ -34,7 +33,7 @@ export interface ReflectionPrinciple {
 }
 
 // Define the allowed concern types for consistency across the application
-export type ConcernType = 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | null;
+export type ConcernType = 'crisis' | 'medical' | 'mental-health' | 'eating-disorder' | 'substance-use' | 'tentative-harm' | 'mild-gambling' | null;
 
 // New interface for feelings wheel data
 export interface WheelFeelingData {
