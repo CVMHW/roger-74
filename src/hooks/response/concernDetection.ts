@@ -9,6 +9,8 @@ import { detectAllProblems } from '../../utils/detectionUtils/problemDetection';
 export const useConcernDetection = () => {
   // Track previous concerns to maintain consistency
   const [previousConcern, setPreviousConcern] = useState<ConcernType | null>(null);
+  // Track detected age group for adaptive responses
+  const [detectedAgeGroup, setDetectedAgeGroup] = useState<'teen' | 'adult' | 'child' | null>(null);
   
   /**
    * Enhanced concern detection function
@@ -21,6 +23,16 @@ export const useConcernDetection = () => {
     try {
       // Use the enhanced unified detection system first
       const detectedConcern = detectAllProblems(message);
+      
+      // Try to detect age group from the common problems detection
+      try {
+        const commonProblems = require('../../utils/detectionUtils/problemDetection').detectCommonProblems(message);
+        if (commonProblems && commonProblems.ageGroup) {
+          setDetectedAgeGroup(commonProblems.ageGroup);
+        }
+      } catch (error) {
+        console.error("Error detecting age group:", error);
+      }
       
       if (detectedConcern) {
         // Update previous concern for consistency
@@ -36,5 +48,14 @@ export const useConcernDetection = () => {
     }
   };
   
-  return { detectConcerns };
+  /**
+   * Get the currently detected age group
+   * @returns The detected age group or null
+   */
+  const getDetectedAgeGroup = () => detectedAgeGroup;
+  
+  return { 
+    detectConcerns, 
+    getDetectedAgeGroup 
+  };
 };

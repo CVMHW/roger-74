@@ -69,7 +69,7 @@ const Message: React.FC<MessageProps> = ({ message, onFeedback }) => {
       case 'trauma-response':
         return 'border-l-4 border-pink-500 pl-2 bg-pink-50';
       case 'pet-illness':
-        return 'border-l-4 border-green-500 pl-2 bg-green-50'; // Add styling for pet-illness
+        return 'border-l-4 border-green-500 pl-2 bg-green-50';
       default:
         return '';
     }

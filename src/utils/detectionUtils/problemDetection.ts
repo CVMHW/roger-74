@@ -13,7 +13,11 @@ export const problemCategories = {
   WORK_EDUCATION: 'work_education',
   TECHNOLOGY: 'technology',
   LIFESTYLE: 'lifestyle',
-  PET_HEALTH: 'pet_health'
+  PET_HEALTH: 'pet_health',
+  TEEN_ACADEMIC: 'teen_academic',
+  TEEN_SOCIAL: 'teen_social',
+  TEEN_IDENTITY: 'teen_identity',
+  TEEN_FAMILY: 'teen_family'
 };
 
 /**
@@ -27,6 +31,11 @@ export const mapCategoryToConcernType = (category: string): ConcernType | null =
       return 'mental-health';
     case problemCategories.PET_HEALTH:
       return 'pet-illness';
+    case problemCategories.TEEN_SOCIAL:
+    case problemCategories.TEEN_IDENTITY:
+    case problemCategories.TEEN_ACADEMIC:
+    case problemCategories.TEEN_FAMILY:
+      return 'mental-health'; // Map teen concerns to mental health for now
     default:
       return null;
   }
@@ -42,6 +51,7 @@ export const detectCommonProblems = (message: string): {
   category: string | null;
   specificIssue: string | null;
   concernType: ConcernType | null;
+  ageGroup?: 'teen' | 'adult' | 'child' | null;
 } => {
   if (!message) return { detected: false, category: null, specificIssue: null, concernType: null };
   
@@ -52,7 +62,8 @@ export const detectCommonProblems = (message: string): {
     'pain', 'chronic', 'obesity', 'weight', 'sleep', 'insomnia', 'fatigue',
     'healthcare', 'medical', 'diagnosis', 'medication', 'disease', 'diabetes',
     'hypertension', 'allergies', 'dental', 'vision', 'hearing', 'infertility',
-    'arthritis', 'vaccine', 'epidemic', 'pandemic', 'genetic'
+    'arthritis', 'vaccine', 'epidemic', 'pandemic', 'genetic', 'acne', 'skin issues',
+    'braces', 'puberty', 'period', 'periods', 'growing pains'
   ];
   
   // Mental health detection
@@ -60,7 +71,41 @@ export const detectCommonProblems = (message: string): {
     'stress', 'anxiety', 'depression', 'lonely', 'loneliness', 'isolated',
     'self-esteem', 'confidence', 'burnout', 'grief', 'trauma', 'ptsd',
     'anger', 'purpose', 'meaning', 'fear', 'failure', 'rejection', 'body image',
-    'phobia', 'guilt', 'shame', 'overwhelmed', 'adhd', 'focus'
+    'phobia', 'guilt', 'shame', 'overwhelmed', 'adhd', 'focus', 'mood swings',
+    'irritability', 'misunderstood', 'comparison', 'fomo', 'overthinking'
+  ];
+  
+  // Teen-specific academic terms
+  const teenAcademicTerms = [
+    'grades', 'homework', 'exam', 'test', 'sat', 'act', 'college', 'application',
+    'study', 'teacher', 'school', 'class', 'assignment', 'project', 'presentation',
+    'gpa', 'course', 'tutor', 'major', 'scholarship', 'lecture', 'essay', 
+    'failing', 'cheating', 'academic', 'education', 'university'
+  ];
+  
+  // Teen social issues
+  const teenSocialTerms = [
+    'friends', 'popular', 'cool', 'left out', 'excluded', 'gossip', 'drama', 
+    'clique', 'judged', 'bully', 'teased', 'peer pressure', 'awkward', 
+    'crush', 'breakup', 'dating', 'reputation', 'party', 'hangout', 'bestie',
+    'fake friends', 'follower', 'likes', 'post', 'snapchat', 'instagram',
+    'tiktok', 'social media'
+  ];
+  
+  // Teen identity issues
+  const teenIdentityTerms = [
+    'who am i', 'identity', 'fitting in', 'values', 'beliefs', 'future', 'career',
+    'sexuality', 'gender', 'gay', 'lesbian', 'bi', 'trans', 'queer', 'lgbt',
+    'coming out', 'religion', 'culture', 'growing up', 'independence', 'adult',
+    'mature', 'purpose', 'passion', 'hobby', 'talent'
+  ];
+  
+  // Teen family issues
+  const teenFamilyTerms = [
+    'parents', 'mom', 'dad', 'mother', 'father', 'sibling', 'brother', 'sister',
+    'grounded', 'rules', 'curfew', 'chores', 'privacy', 'phone taken', 'punishment',
+    'strict', 'overprotective', 'divorce', 'fighting', 'argument', 'yelling',
+    'expectations', 'pressure', 'disappointed', 'move', 'moving', 'family'
   ];
   
   // Pet health detection - enhanced with more terms
@@ -71,25 +116,41 @@ export const detectCommonProblems = (message: string): {
     'euthanasia', 'animal hospital', 'pet emergency', 'pet suffering'
   ];
   
-  // Check for co-occurrence of health issues with pets
+  // Age indicators to help identify teens
+  const teenAgeIndicators = [
+    '16 year old', '16 years old', '16yo', '16-year-old', '16 yr old',
+    'high school', 'sophomore', 'junior', 'teenager', 'teen', 'adolescent',
+    'im 16', "i'm 16", 'im 15', "i'm 15", 'im 17', "i'm 17", 'im 14', "i'm 14",
+    'im 18', "i'm 18", "i'm in high school", "im in high school"
+  ];
+  
+  // Check for health issues with pets
   const healthIssues = [
     'sick', 'ill', 'pain', 'suffering', 'disease', 'cancer', 'tumor',
     'dying', 'death', 'euthanize', 'put down', 'not eating', 'treatment',
     'medication', 'operation', 'surgery'
   ];
   
-  // Check which category has the most matches
-  const physicalMatches = physicalHealthTerms.filter(term => lowerMessage.includes(term)).length;
-  const mentalMatches = mentalHealthTerms.filter(term => lowerMessage.includes(term)).length;
-  
-  // Special check for pet health - requires both pet term and health term
+  // Check for co-occurrence of pet terms and health terms
   const hasPetTerm = petHealthTerms.some(term => lowerMessage.includes(term));
   const hasHealthIssue = healthIssues.some(term => lowerMessage.includes(term));
   const isPetHealth = hasPetTerm && hasHealthIssue;
   
-  // Determine category based on matches
+  // Check for teen age indicators
+  const isLikelyTeen = teenAgeIndicators.some(term => lowerMessage.includes(term));
+  
+  // Check which category has the most matches
+  const physicalMatches = physicalHealthTerms.filter(term => lowerMessage.includes(term)).length;
+  const mentalMatches = mentalHealthTerms.filter(term => lowerMessage.includes(term)).length;
+  const teenAcademicMatches = teenAcademicTerms.filter(term => lowerMessage.includes(term)).length;
+  const teenSocialMatches = teenSocialTerms.filter(term => lowerMessage.includes(term)).length;
+  const teenIdentityMatches = teenIdentityTerms.filter(term => lowerMessage.includes(term)).length;
+  const teenFamilyMatches = teenFamilyTerms.filter(term => lowerMessage.includes(term)).length;
+  
+  // Determine category based on matches and age indicators
   let category = null;
   let specificIssue = null;
+  let ageGroup: 'teen' | 'adult' | 'child' | null = null;
 
   if (isPetHealth) {
     category = problemCategories.PET_HEALTH;
@@ -103,8 +164,86 @@ export const detectCommonProblems = (message: string): {
       }
     }
     if (!specificIssue) specificIssue = 'pet health issue';
-  } else if (physicalMatches > mentalMatches) {
+  } 
+  // For teen users, prioritize teen-specific concerns
+  else if (isLikelyTeen) {
+    ageGroup = 'teen';
+    
+    // Find the dominant teen concern category
+    const teenCategoryCounts = [
+      { category: problemCategories.TEEN_ACADEMIC, count: teenAcademicMatches },
+      { category: problemCategories.TEEN_SOCIAL, count: teenSocialMatches },
+      { category: problemCategories.TEEN_IDENTITY, count: teenIdentityMatches },
+      { category: problemCategories.TEEN_FAMILY, count: teenFamilyMatches },
+      { category: problemCategories.MENTAL_HEALTH, count: mentalMatches },
+      { category: problemCategories.PHYSICAL_HEALTH, count: physicalMatches }
+    ];
+    
+    // Sort by count descending and get the top category
+    teenCategoryCounts.sort((a, b) => b.count - a.count);
+    const topCategory = teenCategoryCounts[0];
+    
+    // Only assign if we have at least one match
+    if (topCategory.count > 0) {
+      category = topCategory.category;
+      
+      // Extract specific issue based on the category
+      switch (category) {
+        case problemCategories.TEEN_ACADEMIC:
+          for (const term of teenAcademicTerms) {
+            if (lowerMessage.includes(term)) {
+              specificIssue = term;
+              break;
+            }
+          }
+          break;
+        case problemCategories.TEEN_SOCIAL:
+          for (const term of teenSocialTerms) {
+            if (lowerMessage.includes(term)) {
+              specificIssue = term;
+              break;
+            }
+          }
+          break;
+        case problemCategories.TEEN_IDENTITY:
+          for (const term of teenIdentityTerms) {
+            if (lowerMessage.includes(term)) {
+              specificIssue = term;
+              break;
+            }
+          }
+          break;
+        case problemCategories.TEEN_FAMILY:
+          for (const term of teenFamilyTerms) {
+            if (lowerMessage.includes(term)) {
+              specificIssue = term;
+              break;
+            }
+          }
+          break;
+        case problemCategories.MENTAL_HEALTH:
+          for (const term of mentalHealthTerms) {
+            if (lowerMessage.includes(term)) {
+              specificIssue = term;
+              break;
+            }
+          }
+          break;
+        case problemCategories.PHYSICAL_HEALTH:
+          for (const term of physicalHealthTerms) {
+            if (lowerMessage.includes(term)) {
+              specificIssue = term;
+              break;
+            }
+          }
+          break;
+      }
+    }
+  } 
+  // Standard adult concerns
+  else if (physicalMatches > mentalMatches) {
     category = problemCategories.PHYSICAL_HEALTH;
+    ageGroup = 'adult';
     // Extract specific health issue if possible
     for (const term of physicalHealthTerms) {
       if (lowerMessage.includes(term)) {
@@ -114,6 +253,7 @@ export const detectCommonProblems = (message: string): {
     }
   } else if (mentalMatches > 0) {
     category = problemCategories.MENTAL_HEALTH;
+    ageGroup = 'adult';
     // Extract specific mental health issue if possible
     for (const term of mentalHealthTerms) {
       if (lowerMessage.includes(term)) {
@@ -130,7 +270,8 @@ export const detectCommonProblems = (message: string): {
     detected: !!category,
     category,
     specificIssue,
-    concernType
+    concernType,
+    ageGroup
   };
 };
 
