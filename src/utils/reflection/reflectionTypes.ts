@@ -59,9 +59,15 @@ export interface TraumaResponseAnalysis {
   recommendedApproach: string;
   triggerWords?: string[];
   topics?: string[];
-  dominant4F?: string;
-  secondary4F?: string;
-  angerLevel?: number;
+  dominant4F?: {
+    type: string;
+    intensity: string;
+  };
+  secondary4F?: {
+    type: string;
+    intensity: string;
+  };
+  angerLevel?: string;
   hybrid?: boolean;
 }
 
@@ -73,13 +79,20 @@ export interface ContextAwareReflection {
 }
 
 // Add the ChildEmotionCategory type
-export type ChildEmotionCategory = "happy" | "sad" | "angry" | "scared" | "confused";
+export type ChildEmotionCategory = 
+  | "happy" | "sad" | "angry" | "scared" | "confused"
+  | "excited" | "silly" | "calm" | "hungry" | "tired"
+  | "worried" | "mad";
 
 // Add the ChildWheelEmotionData interface
 export interface ChildWheelEmotionData {
   category: ChildEmotionCategory;
   emotions: string[];
   descriptions: string[];
+  detectedFeeling?: string;
+  color?: string;
+  simpleDescription?: string;
+  relatedFeelings?: string[];
 }
 
 // Add the ReflectionPhrases interface

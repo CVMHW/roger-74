@@ -132,13 +132,7 @@ export const useResponseGenerator = ({
       // Different handling based on conversation stage
       if (messageCount <= EARLY_CONVERSATION_MESSAGE_THRESHOLD) {
         // Early conversation handling
-        const earlyConversationResponse = handleEarlyConversation(
-          userInput, 
-          conversationStage,
-          messageCount,
-          introductionMade,
-          adaptiveResponseFn
-        );
+        const earlyConversationResponse = handleEarlyConversation(userInput, messageCount);
         
         if (earlyConversationResponse) {
           return earlyConversationResponse;

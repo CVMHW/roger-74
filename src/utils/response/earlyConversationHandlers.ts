@@ -12,7 +12,7 @@ import {
   generateTransitionToEric
 } from '../conversation/earlyEngagement/culturalConnector';
 
-// Import these from smallTalk directly to avoid issues
+// Import these from conversation/index.ts to ensure they're available
 import { 
   isLikelyTeen,
   isLikelyMale,
@@ -21,7 +21,7 @@ import {
   getAppropriateConversationStyle,
   identifyImmediateConcern,
   generateImmediateConcernResponse
-} from '../conversation/smallTalk';
+} from '../conversation';
 
 /**
  * Early Conversation Handlers

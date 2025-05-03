@@ -13,32 +13,13 @@ export * from './contextAware';
 export * from './cvmhwInfo';
 export * from './cvmhwResponseGenerator';
 
-// Import from theSmallStuff module
-import {
-  detectCommunicationStyle,
-  detectDemographicPatterns,
-  adaptResponseStyle,
-  generateFirstMessageResponse,
-  enhanceRapportInEarlyConversation,
-  identifyImmediateConcern as identifySmallStuffConcern,
-  generateImmediateConcernResponse as generateSmallStuffConcernResponse,
-  generateSmallTalkTransition
-} from './theSmallStuff';
+// Import directly from smallTalkUtils
+export * from './smallTalkUtils';
 
-// Re-export theSmallStuff functions
-export {
-  detectCommunicationStyle,
-  detectDemographicPatterns,
-  adaptResponseStyle,
-  generateFirstMessageResponse,
-  enhanceRapportInEarlyConversation,
-  identifySmallStuffConcern,
-  generateSmallStuffConcernResponse,
-  generateSmallTalkTransition
-};
-
-// Import from smallTalk module and re-export explicitly
+// Import and re-export from smallTalk
 import {
+  generateSmallTalkResponse,
+  isEnhancedSmallTalk,
   isLikelyChild,
   isLikelyNewcomer,
   detectSocialOverstimulation,
@@ -61,6 +42,8 @@ import {
 
 // Re-export smallTalk functions
 export {
+  generateSmallTalkResponse,
+  isEnhancedSmallTalk,
   isLikelyChild,
   isLikelyNewcomer,
   detectSocialOverstimulation,
@@ -95,7 +78,3 @@ export {
   generateConnectionStatement,
   generateTransitionToEric 
 };
-
-// Export smallTalkUtils directly
-export * from './smallTalkUtils';
-

@@ -140,6 +140,32 @@ export const isEnhancedSmallTalk = (userInput: string, conversationHistory: stri
   }
 };
 
+// Add missing exports required by other files
+export const isLikelyChild = (userInput: string): boolean => false;
+export const isLikelyNewcomer = (userInput: string): boolean => false;
+export const detectSocialOverstimulation = (userInput: string): boolean => false;
+export const smallTalkTopics: string[] = [];
+export const conversationStarters: string[] = [];
+export const turnTakingPrompts: string[] = [];
+export const isLikelyTeen = (userInput: string): boolean => false;
+export const isLikelyMale = (userInput: string): boolean => false;
+export const isLikelyBlueCollar = (userInput: string): boolean => false;
+export const mightPreferSimpleLanguage = (userInput: string): boolean => false;
+export const getAppropriateConversationStyle = (userInput: string): string => "friendly";
+export const shouldUseWaitingRoomEngagement = (userInput: string, messageCount: number): boolean => false;
+export const identifyImmediateConcern = (userInput: string): string | null => null;
+export const generateImmediateConcernResponse = (userInput: string, concernType: string): string => "";
+export const generateWaitingRoomEngagement = (messageCount: number, userInput: string): string => "";
+export const isWaitingRoomRelated = (userInput: string): boolean => {
+  return userInput.toLowerCase().includes('waiting') || userInput.toLowerCase().includes('lobby');
+};
+export const generateWaitingRoomResponse = (userInput: string): string => {
+  return "I understand waiting can be difficult. How can I help make this time more comfortable for you?";
+};
+export const shouldUseSmallTalk = (userInput: string): boolean => {
+  return userInput.length < 20 && !userInput.includes('?');
+};
+
 export default {
   generateSmallTalkResponse,
   isEnhancedSmallTalk

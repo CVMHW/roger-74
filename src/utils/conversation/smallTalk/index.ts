@@ -40,24 +40,25 @@ export const turnTakingPrompts = topics.turnTakingPrompts || [];
 
 // Export from responseGenerators
 export const getAppropriateConversationStyle = function(user: any) { return "friendly"; };
-export const shouldUseWaitingRoomEngagement = responseGenerators.shouldUseWaitingRoomEngagement || 
-  function(input: string, messageCount: number) { return false; };
+export const shouldUseWaitingRoomEngagement = function(input: string, messageCount: number) { return false; };
 export const identifyImmediateConcern = function(input: string) { return null; };
 export const generateImmediateConcernResponse = function(input: string, concernType: string) { return ""; };
-export const generateWaitingRoomEngagement = responseGenerators.generateWaitingRoomEngagement || 
-  function(messageCount: number, userInput: string) { return ""; };
+export const generateWaitingRoomEngagement = function(messageCount: number, userInput: string) { return ""; };
+export const generateWaitingRoomResponse = function(input: string) { 
+  return "I understand waiting can be difficult. How can I help make this time more comfortable for you?";
+};
+export const generateSmallTalkResponse = function(userInput: string, messageCount: number) { 
+  return "Sometimes these everyday conversations help us connect. What's been on your mind lately?";
+};
+export const isEnhancedSmallTalk = function(userInput: string, conversationHistory: string[] = []) { 
+  return false;
+};
 
 // Required by masterRules.ts
 export const isWaitingRoomRelated = function(input: string) { 
   return input.toLowerCase().includes('waiting') || input.toLowerCase().includes('lobby'); 
 };
 
-export const generateWaitingRoomResponse = responseGenerators.generateWaitingRoomResponse || 
-  function(input: string) { 
-    return "I understand waiting can be difficult. How can I help make this time more comfortable for you?";
-  };
-
 export const shouldUseSmallTalk = function(input: string) { 
   return input.length < 20 && !input.includes('?'); 
 };
-

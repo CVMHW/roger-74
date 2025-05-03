@@ -58,14 +58,15 @@ export const adjustForTraumaPatterns = (
   let adjustedEmotionalWeight = estimatedEmotionalWeight;
   
   if (traumaResponsePatterns && traumaResponsePatterns.dominant4F) {
-    const intensityMap = {
+    const intensityMap: {[key: string]: number} = {
       'mild': 1,
       'moderate': 2,
       'severe': 3,
       'extreme': 4
     };
     
-    const intensity = intensityMap[traumaResponsePatterns.dominant4F.intensity] || 1;
+    const intensity = traumaResponsePatterns.dominant4F.intensity ? 
+      intensityMap[traumaResponsePatterns.dominant4F.intensity] || 1 : 1;
     
     // Increase complexity based on intensity and dominant pattern
     if (traumaResponsePatterns.dominant4F.type === 'freeze' || 
