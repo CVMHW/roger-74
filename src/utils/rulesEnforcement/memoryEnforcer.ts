@@ -9,6 +9,7 @@
 
 import { getContextualMemory, recordToMemory, getAllMemory } from '../nlpProcessor';
 import { RuleType, RulePriority, withRuleEnforcement } from './rulesEnforcer';
+import { addToFiveResponseMemory, getLastPatientMessage, getFiveResponseMemory } from '../memory/fiveResponseMemory';
 
 // Memory reference patterns that should appear in responses
 const MEMORY_REFERENCE_PATTERNS = [
@@ -101,6 +102,17 @@ export const forceMemoryEnhancement = (response: string, userInput: string): str
   } catch (error) {
     console.error('Critical error in force memory enhancement:', error);
     
+    // CRITICAL: Try to use 5ResponseMemory as fallback
+    try {
+      const lastPatientMessage = getLastPatientMessage();
+      if (lastPatientMessage) {
+        const snippet = lastPatientMessage.substring(0, 30);
+        return `I remember you said "${snippet}..." ${response}`;
+      }
+    } catch (memoryError) {
+      console.error('Critical failure in 5ResponseMemory fallback:', memoryError);
+    }
+    
     // Even if everything fails, still add a basic memory reference
     return `I remember what you've shared with me. ${response}`;
   }
@@ -118,6 +130,9 @@ export const processResponseWithMemoryRules = (
   console.log("UNCONDITIONAL MEMORY RULE: Processing response");
   
   try {
+    // CRITICAL: Add to 5ResponseMemory 
+    addToFiveResponseMemory('patient', userInput);
+    
     // REQUIRED: Verify memory system is active
     const memory = getAllMemory();
     if (!memory.persistentMemory) {
@@ -133,17 +148,44 @@ export const processResponseWithMemoryRules = (
     if (!usesMemory) {
       console.warn("UNCONDITIONAL RULE ENFORCEMENT: Response requires memory enhancement");
       const enhancedResponse = forceMemoryEnhancement(response, userInput);
+      
       // Record the enhanced response to memory
       recordToMemory(userInput, enhancedResponse);
+      
+      // CRITICAL: Add to 5ResponseMemory
+      addToFiveResponseMemory('roger', enhancedResponse);
+      
       return enhancedResponse;
     }
     
     // Already uses memory - record and return
     recordToMemory(userInput, response);
+    
+    // CRITICAL: Add to 5ResponseMemory
+    addToFiveResponseMemory('roger', response);
+    
     return response;
     
   } catch (error) {
     console.error("CRITICAL ERROR in memory rule processing:", error);
+    
+    // CRITICAL: Try 5ResponseMemory fallback
+    try {
+      const fiveResponseMemory = getFiveResponseMemory();
+      const lastPatientMessage = getLastPatientMessage();
+      
+      if (lastPatientMessage) {
+        const snippet = lastPatientMessage.substring(0, 20);
+        const fallbackResponse = `I remember you mentioned "${snippet}..." ${response}`;
+        
+        // Record to 5ResponseMemory
+        addToFiveResponseMemory('roger', fallbackResponse);
+        
+        return fallbackResponse;
+      }
+    } catch (fiveResponseError) {
+      console.error("CRITICAL FAILURE in 5ResponseMemory fallback:", fiveResponseError);
+    }
     
     // UNCONDITIONAL: Even in critical failure, ensure memory reference
     const fallbackResponse = `I remember what you've shared with me. ${response}`;
@@ -151,6 +193,9 @@ export const processResponseWithMemoryRules = (
     try {
       // Try to record to memory even in error state
       recordToMemory(userInput, fallbackResponse);
+      
+      // Try to record to 5ResponseMemory
+      addToFiveResponseMemory('roger', fallbackResponse);
     } catch (memError) {
       console.error("CRITICAL MEMORY FAILURE:", memError);
     }
@@ -170,6 +215,9 @@ export const applyMemoryRules = (
 ): string => {
   console.log("APPLYING ALL MEMORY RULES: Beginning enforcement");
   
+  // CRITICAL: Record to 5ResponseMemory first
+  addToFiveResponseMemory('patient', userInput);
+  
   // Process through enforced rules
   const memoryEnforcedResponse = processWithEnforcedMemoryRules(
     response, 
@@ -184,8 +232,23 @@ export const applyMemoryRules = (
     conversationHistory
   );
   
+  // CRITICAL: Record to 5ResponseMemory
+  addToFiveResponseMemory('roger', memoryEnforcedResponse);
+  
   if (!finalCheckPassed) {
     console.error("CRITICAL VERIFICATION FAILURE: Memory rules not enforced correctly");
+    
+    // Try fallback from 5ResponseMemory first
+    try {
+      const lastPatient = getLastPatientMessage();
+      if (lastPatient) {
+        const snippet = lastPatient.substring(0, 20);
+        return `I remember our conversation about ${snippet}... ${memoryEnforcedResponse}`;
+      }
+    } catch (fallbackError) {
+      console.error("CRITICAL FAILURE in 5ResponseMemory fallback:", fallbackError);
+    }
+    
     // Last resort emergency fix
     return `I remember our conversation about ${userInput.substring(0, 20)}... ${memoryEnforcedResponse}`;
   }

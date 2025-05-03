@@ -28,9 +28,13 @@ import { initializeNLPModel } from '../../utils/nlpProcessor';
 import { processResponseThroughMasterRules } from '../../utils/response/responseProcessor';
 import { checkAllRules } from '../../utils/rulesEnforcement/rulesEnforcer';
 import { applyMemoryRules } from '../../utils/rulesEnforcement/memoryEnforcer';
+import { addToFiveResponseMemory, verifyFiveResponseMemorySystem } from '../../utils/memory/fiveResponseMemory';
 
 // Initialize the NLP model when the module loads
 initializeNLPModel().catch(error => console.error('Failed to initialize NLP model:', error));
+
+// Verify 5ResponseMemory system is operational
+verifyFiveResponseMemorySystem();
 
 /**
  * Hook for generating Rogerian responses to user messages
@@ -120,6 +124,9 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
       
       // Run rule enforcement check at beginning of processing
       checkAllRules();
+      
+      // CRITICAL: Record to 5ResponseMemory
+      addToFiveResponseMemory('patient', userInput);
       
       // UNCONDITIONAL RULE: Always update conversation history
       updateConversationHistory(userInput);
@@ -254,6 +261,9 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
       // UNCONDITIONAL RULE: Record final response to memory
       recordToMemory(userInput, finalResponseText);
       
+      // CRITICAL: Record to 5ResponseMemory
+      addToFiveResponseMemory('roger', finalResponseText);
+      
       // Return the memory-enhanced response
       const finalResponse = createMessage(finalResponseText, 'roger');
       return finalResponse;
@@ -264,6 +274,10 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
       // UNCONDITIONAL RULE: Even in error, attempt to record the interaction
       try {
         recordToMemory(userInput, "Error processing response");
+        
+        // CRITICAL: Record to 5ResponseMemory even in error case
+        addToFiveResponseMemory('patient', userInput);
+        addToFiveResponseMemory('roger', "Error processing response");
       } catch (memoryError) {
         console.error("Failed to record to memory during error:", memoryError);
       }

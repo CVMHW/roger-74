@@ -11,6 +11,7 @@ import { enforceMemoryRule, verifyMemoryUtilization } from '../masterRules/uncon
 import { getContextualMemory } from '../nlpProcessor';
 import { applyMemoryRules } from '../rulesEnforcement/memoryEnforcer';
 import { checkAllRules } from '../rulesEnforcement/rulesEnforcer';
+import { addToFiveResponseMemory, getLastPatientMessage } from '../memory/fiveResponseMemory';
 
 /**
  * Process any response through the MasterRules system
@@ -31,6 +32,9 @@ export const processResponseThroughMasterRules = (
     
     // MANDATORY: Check all system rules first
     checkAllRules();
+    
+    // CRITICAL: Record to 5ResponseMemory system - redundant protection
+    addToFiveResponseMemory('patient', userInput);
     
     // UNCONDITIONAL RULE: Enforce memory retention for all interactions
     enforceMemoryRule(userInput, response);
@@ -61,6 +65,9 @@ export const processResponseThroughMasterRules = (
     // FINAL CHECK: Verify response meets all requirements
     const finalCheckPassed = verifyMemoryUtilization(userInput, enhancedResponse, conversationHistory);
     
+    // CRITICAL: Record final response to 5ResponseMemory system
+    addToFiveResponseMemory('roger', enhancedResponse);
+    
     if (!finalCheckPassed) {
       console.error("CRITICAL ERROR: Final response fails memory verification");
       // Last-resort fix - add explicit memory reference
@@ -75,18 +82,32 @@ export const processResponseThroughMasterRules = (
     // UNCONDITIONAL RULE: Even on error, record to memory
     try {
       enforceMemoryRule(userInput, response);
+      
+      // CRITICAL: Use 5ResponseMemory as backup even in error case
+      addToFiveResponseMemory('patient', userInput);
+      addToFiveResponseMemory('roger', response);
     } catch (memoryError) {
       console.error('Failed to enforce memory rule during error recovery:', memoryError);
     }
     
     // Add memory reference even in error case
     try {
+      // Try to get memory from primary system first
       const memory = getContextualMemory(userInput);
+      
+      // If primary memory failed, try 5ResponseMemory as fallback
+      if (!memory.dominantTopics || memory.dominantTopics.length === 0) {
+        const lastPatientMessage = getLastPatientMessage();
+        if (lastPatientMessage) {
+          return `I remember what you said about "${lastPatientMessage.substring(0, 20)}..." ${response}`;
+        }
+      }
+      
       return `I remember what you've shared about ${memory.dominantTopics[0] || 'your situation'}. ${response}`;
     } catch (finalError) {
       console.error('Critical failure in error recovery:', finalError);
-      // Return original response if all else fails
-      return response;
+      // Return original response with basic memory reference if all else fails
+      return `I remember what you've told me. ${response}`;
     }
   }
 };
@@ -102,15 +123,33 @@ export const enhanceResponseWithMemory = (
   try {
     console.log("APPLYING MEMORY ENHANCEMENT");
     
+    // CRITICAL: Always record to 5ResponseMemory for redundancy
+    addToFiveResponseMemory('patient', userInput);
+    
     // Check if response already references memory
     if (verifyMemoryUtilization(userInput, response, conversationHistory)) {
+      // Still record the response to 5ResponseMemory
+      addToFiveResponseMemory('roger', response);
       return response;
     }
     
     // Apply full memory rules
-    return applyMemoryRules(response, userInput, conversationHistory);
+    const enhancedResponse = applyMemoryRules(response, userInput, conversationHistory);
+    
+    // CRITICAL: Record enhanced response to 5ResponseMemory
+    addToFiveResponseMemory('roger', enhancedResponse);
+    
+    return enhancedResponse;
   } catch (error) {
     console.error('Error enhancing response with memory:', error);
+    
+    // CRITICAL: Even in error case, ensure 5ResponseMemory recording
+    try {
+      addToFiveResponseMemory('roger', response);
+    } catch (memoryError) {
+      console.error('Critical failure in 5ResponseMemory:', memoryError);
+    }
+    
     return response;
   }
 };
