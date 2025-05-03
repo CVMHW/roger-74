@@ -9,7 +9,11 @@ import { calculateStringSimilarity } from './similarity-utils';
 import { extractPhrases, extractEntities, isLikelyFactualClaim } from './entity-extraction';
 
 // Import the types from their correct location
-import { HallucinationFlag } from '../../../types/hallucinationPrevention';
+import { 
+  HallucinationFlag,
+  HallucinationFlagType,
+  HallucinationSeverity
+} from '../../../types/hallucinationPrevention';
 
 /**
  * Detects references to memories that don't exist or contradict actual memories
