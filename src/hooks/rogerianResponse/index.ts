@@ -20,27 +20,26 @@ import { RecentCrisisMessage, UseRogerianResponseReturn } from './types';
 import { 
   detectEnhancedFeelings, 
   getPersistentFeelings, 
-  getDominantTopics, 
-  getAllMemory,
+  getDominantTopics,
   getContextualMemory,
   recordToMemory
 } from '../../utils/reflection/feelingDetection';
 import { initializeNLPModel } from '../../utils/nlpProcessor';
-import { 
-  enforceMemoryRule, 
-  verifyMemoryUtilization, 
-  forceMemoryEnhancement 
-} from '../../utils/masterRules/unconditionalRuleProtections';
 import { processResponseThroughMasterRules } from '../../utils/response/responseProcessor';
+import { checkAllRules } from '../../utils/rulesEnforcement/rulesEnforcer';
+import { applyMemoryRules } from '../../utils/rulesEnforcement/memoryEnforcer';
 
 // Initialize the NLP model when the module loads
 initializeNLPModel().catch(error => console.error('Failed to initialize NLP model:', error));
 
 /**
  * Hook for generating Rogerian responses to user messages
- * Enhanced with transformer-based NLP capabilities and UNCONDITIONAL memory retention
+ * Enhanced with pattern-matching NLP capabilities and UNCONDITIONAL memory retention
  */
 const useRogerianResponse = (): UseRogerianResponseReturn => {
+  // UNCONDITIONAL: Run rule compliance check on every execution
+  checkAllRules();
+  
   // Hook for conversation stage management
   const { 
     conversationStage, 
@@ -113,17 +112,21 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
     return handlePotentialDeception(originalMessage, followUpMessage, addToResponseHistory);
   }, [addToResponseHistory]);
   
-  // Enhanced process user message with NLP capabilities and UNCONDITIONAL memory utilization
+  // Enhanced process user message with pattern-matching NLP capabilities 
+  // and UNCONDITIONAL memory utilization
   const processUserMessage = useCallback(async (userInput: string): Promise<MessageType> => {
     try {
-      console.log("Current conversation history:", conversationHistory);
+      console.log("UNCONDITIONAL RULE: Processing new user message");
+      
+      // Run rule enforcement check at beginning of processing
+      checkAllRules();
       
       // UNCONDITIONAL RULE: Always update conversation history
       updateConversationHistory(userInput);
       
-      // Use enhanced NLP for better understanding
+      // Use enhanced pattern matching for better understanding
       try {
-        // Analyze message with transformer model
+        // Analyze message with pattern matching
         const feelingResult = await detectEnhancedFeelings(userInput);
         
         // Log enhanced understanding
@@ -147,7 +150,7 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
           
           // Acknowledge persistent emotions if present
           if (persistentFeelings.length > 0) {
-            enhancedResponse = `I notice you've mentioned feeling ${persistentFeelings.join(", ")} several times. `;
+            enhancedResponse = `I remember you've mentioned feeling ${persistentFeelings.join(", ")} several times. `;
             
             // Add relevant follow-up based on emotion
             if (persistentFeelings.includes('angry')) {
@@ -164,7 +167,7 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
             if (enhancedResponse) {
               enhancedResponse += "I also notice we've been talking about ";
             } else {
-              enhancedResponse = "I notice we've been focusing on ";
+              enhancedResponse = "I remember we've been focusing on ";
             }
             enhancedResponse += `${dominantTopics.join(", ")}. `;
           }
@@ -241,10 +244,12 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
         conversationHistory
       );
       
-      // Final check - if we still don't have memory utilization, force it
-      if (!verifyMemoryUtilization(userInput, finalResponseText, conversationHistory)) {
-        finalResponseText = forceMemoryEnhancement(finalResponseText);
-      }
+      // UNCONDITIONAL RULE: Force memory enhancement 
+      finalResponseText = applyMemoryRules(
+        finalResponseText,
+        userInput,
+        conversationHistory
+      );
       
       // UNCONDITIONAL RULE: Record final response to memory
       recordToMemory(userInput, finalResponseText);

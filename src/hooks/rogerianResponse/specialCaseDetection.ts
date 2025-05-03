@@ -1,6 +1,7 @@
 
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
 import { recordToMemory } from '../../utils/nlpProcessor';
+import { checkAllRules } from '../../utils/rulesEnforcement/rulesEnforcer';
 
 // Array of special case patterns for detection
 const SPECIAL_CASE_PATTERNS = [
@@ -28,10 +29,13 @@ const SPECIAL_CASE_PATTERNS = [
 
 /**
  * Detects special case patterns in the user's message
+ * UNCONDITIONAL RULE: All special cases must be detected and recorded
  * @param input User message text
  * @returns Object containing matched special cases
  */
 export const detectSpecialCasePatterns = (input: string) => {
+  console.log("UNCONDITIONAL RULE: Detecting special case patterns");
+  
   // Initialize results
   const matches: Record<string, any> = {};
   let hasMatch = false;
@@ -57,6 +61,8 @@ export const detectSpecialCasePatterns = (input: string) => {
         undefined, 
         Object.keys(matches)
       );
+      
+      console.log("UNCONDITIONAL RULE ENFORCED: Special cases recorded to memory");
     } catch (error) {
       console.error('Failed to record special case to memory:', error);
     }
@@ -84,6 +90,11 @@ export const analyzeSpecialCases = (
   input: string,
   concernType: ConcernType | undefined
 ) => {
+  // MANDATORY: Check all system rules before analysis
+  checkAllRules();
+  
+  console.log("UNCONDITIONAL RULE: Analyzing special cases");
+  
   const specialCaseResults = detectSpecialCasePatterns(input);
   
   // Always record to memory as part of UNCONDITIONAL_MEMORY_RULE
@@ -94,6 +105,8 @@ export const analyzeSpecialCases = (
       undefined,
       Object.keys(specialCaseResults.specialCases)
     );
+    
+    console.log("UNCONDITIONAL RULE ENFORCED: Analysis recorded to memory");
   } catch (error) {
     console.error('Error in special case memory recording:', error);
   }
