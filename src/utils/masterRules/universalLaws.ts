@@ -1,3 +1,4 @@
+
 /**
  * Universal Laws - Highest priority rules that govern Roger's behavior
  * These laws take precedence over all other functionality and cannot be overridden
@@ -5,7 +6,7 @@
 
 import { UNIVERSAL_LAW_MEANING } from './logotherapyLaws';
 import { enhanceWithLogotherapyPerspective } from '../logotherapy/logotherapyIntegration';
-import { checkLogotherapyHallucinations } from '../response/processor/hallucinationHandler/logotherapyHandler';
+import { handleLogotherapyHallucinations } from '../response/processor/hallucinationHandler/logotherapyHandler';
 
 /**
  * UNIVERSAL LAW: SPONTANEITY AND PERSONALITY VARIATION
@@ -151,9 +152,15 @@ export const enforceUniversalLaws = (
   let processedResponse = response;
   
   // Always check for logotherapy-related hallucinations first
-  const logotherapyCheck = checkLogotherapyHallucinations(processedResponse, userInput, conversationHistory);
-  if (logotherapyCheck.hasHallucination && logotherapyCheck.correctedResponse) {
-    processedResponse = logotherapyCheck.correctedResponse;
+  const logotherapyCheck = handleLogotherapyHallucinations(
+    processedResponse, 
+    userInput, 
+    conversationHistory,
+    []
+  );
+  
+  if (logotherapyCheck.wasHallucinationDetected) {
+    processedResponse = logotherapyCheck.processedResponse;
   }
   
   // Always enforce spontaneity as a universal law

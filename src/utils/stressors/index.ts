@@ -31,8 +31,11 @@ export {
   findRelatedAdultStressors
 } from './adultStressorData';
 
-// Export utility functions
+// Export utility functions with renamed exports to avoid conflicts
 export {
-  findRelatedStressors as findStressorRelationships,
-  getStressorsByCategory as getStressorsByCategoryType
+  findRelatedStressors as findStressorRelationships
+} from './stressorDetection';
+
+export {
+  getStressorsByCategory as getStressorsByCategoryType 
 } from './stressorDetection';

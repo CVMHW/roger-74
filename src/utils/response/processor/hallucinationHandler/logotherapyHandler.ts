@@ -1,12 +1,10 @@
-
 /**
  * Logotherapy Hallucination Handler
  * 
  * Specialized handler for preventing hallucinations in logotherapeutic responses
  */
 
-import { checkFalsePastReference } from '../../../../hallucinationPrevention/detector/detection-flags';
-import { MemoryPiece } from '../../../../memory/memoryBank';
+import { MemoryPiece } from '../.././../memory/memoryBank';
 
 /**
  * Handle potential hallucinations in logotherapeutic responses
@@ -65,6 +63,38 @@ export const handleLogotherapyHallucinations = (
       wasHallucinationDetected: false
     };
   }
+};
+
+/**
+ * Check for false references to past conversations
+ */
+const checkFalsePastReference = (
+  response: string, 
+  conversationHistory: string[]
+): boolean => {
+  // Look for phrases indicating reference to past conversation
+  const pastReferencePatterns = [
+    /as (we|you) (mentioned|discussed|talked about) (earlier|before|previously)/i,
+    /you (told|shared with) me (earlier|before|previously|last time)/i,
+    /in our (previous|earlier|last|prior) (conversation|session|discussion)/i,
+    /when we (last|previously) (spoke|talked|met)/i
+  ];
+  
+  // If no references to past conversation, no false reference
+  const hasPastReference = pastReferencePatterns.some(pattern => pattern.test(response));
+  if (!hasPastReference) {
+    return false;
+  }
+  
+  // If this is the first message, any past reference is false
+  if (conversationHistory.length <= 2) {
+    return true;
+  }
+  
+  // Otherwise, need more sophisticated checking
+  // This would involve checking if the content actually matches past conversation
+  // For now, a simplistic implementation
+  return false;
 };
 
 /**

@@ -114,11 +114,7 @@ export const addMemory = (
  * This function is for compatibility with older code
  */
 export const addToMemoryBank = (content: string, role: 'patient' | 'roger', context?: any, importance: number = 0.5): void => {
-  try {
-    addMemory(content, role, context, importance);
-  } catch (error) {
-    console.error("Error adding to memory bank:", error);
-  }
+  addMemory(content, role, context, importance);
 };
 
 /**
