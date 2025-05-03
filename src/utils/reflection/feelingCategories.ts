@@ -1,33 +1,5 @@
 
-/**
- * Feeling Categories
- * 
- * Provides a structured approach to categorizing feelings
- */
+// This file is now just a re-export of the core types to maintain backward compatibility
+// All feeling category definitions have been moved to core/feelingCategories.ts
 
-// Define the feeling categories and their associated words
-export const FEELING_WORDS: Record<FeelingCategory, string[]> = {
-  angry: ["angry", "mad", "furious", "annoyed", "irritated", "frustrated"],
-  happy: ["happy", "glad", "content", "excited", "joyful", "pleased"],
-  sad: ["sad", "unhappy", "depressed", "down", "melancholy", "gloomy"],
-  anxious: ["anxious", "worried", "nervous", "stressed", "tense", "concerned"],
-  confused: ["confused", "puzzled", "perplexed", "unsure", "uncertain", "bewildered"],
-  hurt: ["hurt", "pained", "wounded", "damaged", "injured", "harmed"],
-  embarrassed: ["embarrassed", "ashamed", "humiliated", "mortified", "self-conscious"],
-  guilty: ["guilty", "remorseful", "sorry", "regretful", "apologetic"],
-  ashamed: ["ashamed", "disgraced", "humiliated", "embarrassed", "self-conscious"],
-  afraid: ["afraid", "scared", "terrified", "fearful", "frightened", "panicked"],
-  hopeful: ["hopeful", "optimistic", "encouraged", "positive", "expectant"],
-  lonely: ["lonely", "isolated", "abandoned", "forsaken", "solitary", "alone"],
-  overwhelmed: ["overwhelmed", "swamped", "overloaded", "stressed", "burdened", "flooded"],
-  relieved: ["relieved", "unburdened", "calmed", "reassured", "eased", "comforted"]
-};
-
-// Also export FEELING_WORDS as feelingCategories for backward compatibility
-export const feelingCategories = FEELING_WORDS;
-
-// Define the FeelingCategory type
-export type FeelingCategory = 
-  | "angry" | "happy" | "sad" | "anxious" | "confused" 
-  | "hurt" | "embarrassed" | "guilty" | "ashamed" | "afraid" 
-  | "hopeful" | "lonely" | "overwhelmed" | "relieved";
+export * from './core/feelingCategories';

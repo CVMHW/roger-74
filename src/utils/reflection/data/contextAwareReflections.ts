@@ -1,5 +1,5 @@
 
-import { ContextAwareReflection } from '../reflectionTypes';
+import { ContextAwareReflection } from '../core/types';
 
 // Define context-aware reflections
 export const contextAwareReflections: ContextAwareReflection[] = [

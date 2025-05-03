@@ -1,5 +1,5 @@
 
-import type { ConversationStage } from '../reflectionTypes';
+import type { ConversationStage } from '../core/types';
 import { generateContextAwareReflection } from './contextAwareGenerator';
 
 /**

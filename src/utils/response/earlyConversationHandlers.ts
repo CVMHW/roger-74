@@ -56,7 +56,7 @@ export const generateEarlyConversationResponse = (
   
   // Generate cultural connection prompt
   if (messageCount <= 5) {
-    const culturalConnectionPrompt = generateCulturalConnectionPrompt();
+    const culturalConnectionPrompt = generateCulturalConnectionPrompt(userInput, messageCount);
     if (culturalConnectionPrompt) {
       return culturalConnectionPrompt;
     }

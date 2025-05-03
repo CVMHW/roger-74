@@ -10,7 +10,7 @@ export const generateContextAwareReflection = (input: string): string | null => 
   const lowerInput = input.toLowerCase();
   
   // HIGHEST PRIORITY: Check for everyday concerns that need immediate acknowledgment
-  // This addresses the core issue of Roger not immediately recognizing concerns like spills
+  // This addresses the core issue of Roger not immediately recognizing concerns
   const everydayConcerns = detectEverydayConcerns(input);
   if (everydayConcerns) {
     return everydayConcerns;
