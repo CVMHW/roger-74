@@ -22,6 +22,7 @@ export const detectRepeatedPhrases = (responseText: string): boolean => {
     // Compare sentences for similarity
     const similarity = calculateSimilarity(currentSentence, nextSentence);
     if (similarity > 0.7) {
+      console.log("REPETITION DETECTED: High similarity between consecutive sentences");
       return true;
     }
   }
@@ -39,6 +40,7 @@ export const detectRepeatedPhrases = (responseText: string): boolean => {
       phrases[phrase] = (phrases[phrase] || 0) + 1;
       
       if (phrases[phrase] > 1 && phrase.length > 10) {
+        console.log("REPETITION DETECTED: Repeated n-gram phrase:", phrase);
         return true;
       }
     }
@@ -65,7 +67,13 @@ export const detectRepeatedPhrases = (responseText: string): boolean => {
     /I hear that.*I hear that/i,
     /you('re| are) dealing with/i,
     /I understand.*I understand.*I understand/i,
-    /seems like you.*seems like you/i
+    /seems like you.*seems like you/i,
+    // Add checks for diagnosis/label-related phrases that shouldn't appear
+    /diagnoses/i,
+    /diagnostic/i,
+    /labels/i,
+    /uncomfortable.*labels/i,
+    /see your experiences/i
   ];
   
   for (const pattern of dangerousPatterns) {
@@ -83,6 +91,11 @@ export const detectRepeatedPhrases = (responseText: string): boolean => {
     const regex = new RegExp(phrase, 'gi');
     const matches = responseText.match(regex) || [];
     memoryPhraseCount += matches.length;
+    
+    if (matches.length > 1) {
+      console.log("REPETITION DETECTED: Multiple memory phrases:", phrase);
+      return true;
+    }
   }
   
   return memoryPhraseCount > 2;

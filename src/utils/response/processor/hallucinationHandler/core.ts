@@ -7,6 +7,7 @@ import { preventHallucinations } from '../../../hallucinationPrevention';
 import { getConversationMessageCount } from '../../../memory/newConversationDetector';
 import { HallucinationPreventionOptions, HallucinationProcessResult } from '../../../../types/hallucinationPrevention';
 import { detectRepeatedPhrases } from './repetitionDetector';
+import { hasRepeatedContent, fixRepeatedContent } from '../../../hallucinationPrevention/repetitionHandler';
 
 /**
  * Apply hallucination prevention to a response
@@ -63,6 +64,19 @@ export const handlePotentialHallucinations = (
       {
         pattern: /I hear (you'?re|you are) dealing with.*?I hear/i,
         replacement: 'I hear'
+      },
+      // Add patterns to remove diagnoses/labels related content
+      {
+        pattern: /I understand that (labels|diagnoses) (can|may) sometimes feel uncomfortable/i,
+        replacement: "I'm here to listen and support you"
+      },
+      {
+        pattern: /It's completely okay to see your experiences in your own way/i,
+        replacement: "Would you like to tell me more about how you're feeling?"
+      },
+      {
+        pattern: /labels or diagnoses/i,
+        replacement: "these situations"
       }
     ];
     
@@ -85,6 +99,16 @@ export const handlePotentialHallucinations = (
       hasRepetitionIssue = true;
     }
     
+    // Check for diagnoses or labels mentions that shouldn't be there
+    if (/diagnoses|labels|diagnostic|uncomfortable way/i.test(fixedResponse)) {
+      console.warn("CONTENT ERROR: Removing inappropriate diagnoses or labels references");
+      fixedResponse = fixedResponse.replace(
+        /I understand that (labels|diagnoses) can sometimes feel uncomfortable\. It's completely okay to see your experiences in your own way\./gi, 
+        "I'm listening to what you're sharing."
+      );
+      hasRepetitionIssue = true;
+    }
+    
     // If we fixed repetition, return immediately
     if (hasRepetitionIssue) {
       return {
@@ -98,6 +122,26 @@ export const handlePotentialHallucinations = (
           processingTime: 0,
           confidence: 0.3,
           issueDetails: ["Fixed dangerous repetition pattern"]
+        }
+      };
+    }
+    
+    // Use the repetition handler to fix any other repeated content
+    if (hasRepeatedContent(responseText)) {
+      const correctedText = fixRepeatedContent(responseText);
+      console.log("REPETITION FIXED: Using repetition handler");
+      
+      return {
+        processedResponse: correctedText,
+        hallucinationData: {
+          processedResponse: correctedText,
+          wasRevised: true,
+          reasoningApplied: false,
+          detectionApplied: true,
+          ragApplied: false,
+          processingTime: 0,
+          confidence: 0.4,
+          issueDetails: ["Fixed repeated content"]
         }
       };
     }
@@ -157,42 +201,16 @@ export const handlePotentialHallucinations = (
       };
     }
     
-    // Check for "you may have indicated" phrases - these often lead to confusion
-    const indicatedPattern = /you may have indicated/i;
-    if (indicatedPattern.test(responseText)) {
-      console.log("DETECTED 'you may have indicated' PATTERN: Fixing directly");
-      
-      // Direct fix for this phrasing issue
-      const correctedResponse = responseText.replace(
-        indicatedPattern,
-        "about"
-      );
-      
-      return {
-        processedResponse: correctedResponse,
-        hallucinationData: {
-          processedResponse: correctedResponse,
-          wasRevised: true,
-          reasoningApplied: false,
-          detectionApplied: true,
-          ragApplied: false,
-          processingTime: 0,
-          confidence: 0.4,
-          issueDetails: ["Fixed confusing phrasing"]
-        }
-      };
-    }
-    
     // For responses with potential repetition, apply special prevention focused on repetition
     if (detectRepeatedPhrases(responseText)) {
       console.log("REPETITION DETECTED: Applying specialized repetition correction");
       
       // Use options focused on repetition detection
       const hallucinationResult = preventHallucinations(responseText, userInput, conversationHistory, {
-        detectionSensitivity: 0.9,
-        enableReasoning: false,
+        detectionSensitivity: 0.95, // Increased from 0.9 for more aggressive detection
+        enableReasoning: true, // Added reasoning
         enableRAG: false,
-        enableTokenLevelDetection: false,
+        enableTokenLevelDetection: true, // Added token-level detection
         enableReranking: true
       });
       
@@ -209,7 +227,7 @@ export const handlePotentialHallucinations = (
         enableReasoning: true,
         enableRAG: true,
         enableDetection: true,
-        detectionSensitivity: 0.75,
+        detectionSensitivity: 0.8, // Increased from 0.75
         reasoningThreshold: 0.7,
         enableTokenLevelDetection: true
       };
@@ -228,8 +246,8 @@ export const handlePotentialHallucinations = (
       enableReasoning: false,
       enableRAG: false,
       enableDetection: true,
-      detectionSensitivity: 0.5,
-      enableTokenLevelDetection: false
+      detectionSensitivity: 0.65, // Increased from 0.5
+      enableTokenLevelDetection: true // Added token-level detection
     });
     
     if (basicCheck.wasRevised) {

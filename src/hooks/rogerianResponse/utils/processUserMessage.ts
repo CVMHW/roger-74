@@ -95,8 +95,8 @@ export const processUserMessage = async (
       return emotionalResponse;
     }
     
-    // Fix: Pass the individual parameters to the function instead of an object
-    // The error indicates the processMessage function expects 7 individual arguments
+    // CRITICAL FIX: Pass the 7 INDIVIDUAL parameters that processMessage expects
+    // NOT as an object but as separate arguments in the correct order
     const response = await processMessage(
       userInput,
       detectConcerns,
