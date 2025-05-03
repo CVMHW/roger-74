@@ -1,7 +1,35 @@
 
 /**
  * Safety utilities for handling emergency and crisis situations
+ * PRIORITIZED: Safety is top priority, memory is second priority
  */
+
+import { recordToMemory } from '../../nlpProcessor';
+import { addToFiveResponseMemory } from '../../memory/fiveResponseMemory';
+
+/**
+ * Records safety interactions to ALL memory systems
+ * This ensures critical safety responses are never lost
+ */
+const recordSafetyInteractionToAllMemorySystems = (userInput: string, response: string) => {
+  try {
+    // Record to primary memory system
+    recordToMemory(userInput, response);
+    
+    // Record to 5ResponseMemory backup system 
+    addToFiveResponseMemory('patient', userInput);
+    addToFiveResponseMemory('roger', response);
+  } catch (error) {
+    console.error("CRITICAL ERROR: Failed to record safety interaction to memory:", error);
+    
+    // Try again with emergency prefix to highlight importance
+    try {
+      recordToMemory("EMERGENCY: " + userInput, response);
+    } catch (secondError) {
+      console.error("CATASTROPHIC MEMORY FAILURE during safety response:", secondError);
+    }
+  }
+};
 
 /**
  * Checks if user input indicates an emergency situation
@@ -22,8 +50,13 @@ export const isEmergency = (userInput: string): boolean => {
  * Generates an appropriate response for emergency situations
  * @returns Emergency response message
  */
-export const handleEmergency = (): string => {
-  return "I'm concerned about what you're sharing. If you're in immediate danger or experiencing a mental health emergency, please reach out to emergency services by calling 911 or a crisis hotline like the 988 Suicide & Crisis Lifeline (call or text 988). Would you like me to share more crisis resources with you?";
+export const handleEmergency = (userInput: string): string => {
+  const response = "I'm concerned about what you're sharing. If you're in immediate danger or experiencing a mental health emergency, please reach out to emergency services by calling 911 or a crisis hotline like the 988 Suicide & Crisis Lifeline (call or text 988). Would you like me to share more crisis resources with you?";
+  
+  // CRITICAL: Record emergency interaction to ALL memory systems
+  recordSafetyInteractionToAllMemorySystems(userInput, response);
+  
+  return response;
 };
 
 /**
@@ -48,8 +81,13 @@ export const isDirectMedicalAdvice = (userInput: string): boolean => {
  * Generates a response for requests for medical advice
  * @returns Medical advice boundary response
  */
-export const handleDirectMedicalAdvice = (): string => {
-  return "I understand you're asking about medical advice, but I'm not qualified to give medical or medication guidance. These questions are best directed to your healthcare provider who knows your full medical history and can give you proper advice. Would it be helpful to talk about strategies for discussing this with your doctor?";
+export const handleDirectMedicalAdvice = (userInput: string): string => {
+  const response = "I understand you're asking about medical advice, but I'm not qualified to give medical or medication guidance. These questions are best directed to your healthcare provider who knows your full medical history and can give you proper advice. Would it be helpful to talk about strategies for discussing this with your doctor?";
+  
+  // Record to ALL memory systems
+  recordSafetyInteractionToAllMemorySystems(userInput, response);
+  
+  return response;
 };
 
 /**
@@ -71,6 +109,11 @@ export const isSuicidalIdeation = (userInput: string): boolean => {
  * Generates a response for suicidal ideation
  * @returns Suicidal ideation response with resources
  */
-export const handleSuicidalIdeation = (): string => {
-  return "I'm really concerned about what you're sharing. Your life matters, and there are people who want to help. Please consider calling the 988 Suicide & Crisis Lifeline (call or text 988) to speak with a trained counselor, or go to your nearest emergency room. Would it be helpful if I shared some additional crisis resources with you?";
+export const handleSuicidalIdeation = (userInput: string): string => {
+  const response = "I'm really concerned about what you're sharing. Your life matters, and there are people who want to help. Please consider calling the 988 Suicide & Crisis Lifeline (call or text 988) to speak with a trained counselor, or go to your nearest emergency room. Would it be helpful if I shared some additional crisis resources with you?";
+  
+  // CRITICAL PRIORITY: Record to ALL memory systems
+  recordSafetyInteractionToAllMemorySystems(userInput, response);
+  
+  return response;
 };

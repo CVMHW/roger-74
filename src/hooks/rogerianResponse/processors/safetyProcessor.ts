@@ -2,9 +2,12 @@
 import { ConcernType } from '../../../utils/reflection/reflectionTypes';
 import { MessageType } from '../../../components/Message';
 import { generateSafetyResponse } from '../safetyResponseGenerator';
+import { recordToMemory } from '../../../utils/nlpProcessor';
+import { addToFiveResponseMemory } from '../../../utils/memory/fiveResponseMemory';
 
 /**
  * Processes and handles safety-related messages with highest priority
+ * With MULTI-MEMORY system integration
  */
 export const processSafetyConcerns = async (
   userInput: string,
@@ -18,16 +21,26 @@ export const processSafetyConcerns = async (
   if (concernType === 'tentative-harm' || concernType === 'crisis') {
     console.log(`CRITICAL: Processing ${concernType} concern`);
     
+    // CRITICAL: Record to BOTH memory systems immediately
+    recordToMemory(userInput, `SAFETY CONCERN: ${concernType}`);
+    addToFiveResponseMemory('patient', userInput);
+    
     // Update conversation stage
     updateStage();
     
-    // Use safety response generator for critical messages
-    return baseProcessUserMessage(
+    // Generate safety response
+    const response = await baseProcessUserMessage(
       userInput,
       () => generateSafetyResponse(userInput, concernType, clientPreferences, conversationHistory),
       () => concernType,
       1.0 // No delay for critical concerns
     );
+    
+    // CRITICAL: Record response to BOTH memory systems
+    recordToMemory(userInput, response.text);
+    addToFiveResponseMemory('roger', response.text);
+    
+    return response;
   }
   
   return null;

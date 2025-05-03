@@ -11,7 +11,7 @@ import { enforceMemoryRule, verifyMemoryUtilization } from '../masterRules/uncon
 import { getContextualMemory } from '../nlpProcessor';
 import { applyMemoryRules } from '../rulesEnforcement/memoryEnforcer';
 import { checkAllRules } from '../rulesEnforcement/rulesEnforcer';
-import { addToFiveResponseMemory, getLastPatientMessage } from '../memory/fiveResponseMemory';
+import { addToFiveResponseMemory, getLastPatientMessage, getFiveResponseMemory, verifyFiveResponseMemorySystem } from '../memory/fiveResponseMemory';
 
 /**
  * Process any response through the MasterRules system
@@ -29,6 +29,12 @@ export const processResponseThroughMasterRules = (
 ): string => {
   try {
     console.log("MASTER RULES: Beginning response processing");
+    
+    // CRITICAL: First verify the 5ResponseMemory system is operational
+    const fiveResponseMemoryOperational = verifyFiveResponseMemorySystem();
+    if (!fiveResponseMemoryOperational) {
+      console.error("CRITICAL: 5ResponseMemory system failure detected");
+    }
     
     // MANDATORY: Check all system rules first
     checkAllRules();
@@ -62,15 +68,29 @@ export const processResponseThroughMasterRules = (
       conversationHistory
     );
     
-    // FINAL CHECK: Verify response meets all requirements
-    const finalCheckPassed = verifyMemoryUtilization(userInput, enhancedResponse, conversationHistory);
+    // FINAL CHECK: Verify response meets all requirements through both systems
+    const primaryMemoryCheck = verifyMemoryUtilization(userInput, enhancedResponse, conversationHistory);
     
     // CRITICAL: Record final response to 5ResponseMemory system
     addToFiveResponseMemory('roger', enhancedResponse);
     
-    if (!finalCheckPassed) {
-      console.error("CRITICAL ERROR: Final response fails memory verification");
-      // Last-resort fix - add explicit memory reference
+    // BACKUP CHECK: Use 5ResponseMemory as a verification system
+    const fiveMemory = getFiveResponseMemory();
+    const hasFiveResponseMemory = fiveMemory.length > 0;
+    
+    if (!primaryMemoryCheck) {
+      console.error("CRITICAL ERROR: Final response fails primary memory verification");
+      
+      // Last-resort fix - add explicit memory reference using either system
+      // First try 5ResponseMemory as it's our redundant system
+      if (hasFiveResponseMemory) {
+        const lastPatientMsg = getLastPatientMessage();
+        if (lastPatientMsg) {
+          return `I remember you mentioned ${lastPatientMsg.substring(0, 20)}... ${enhancedResponse}`;
+        }
+      }
+      
+      // Fallback to primary memory system
       const memory = getContextualMemory(userInput);
       return `I remember you mentioned ${memory.dominantTopics[0] || 'your concerns'} earlier. ${enhancedResponse}`;
     }
@@ -79,8 +99,9 @@ export const processResponseThroughMasterRules = (
   } catch (error) {
     console.error('Error in processing response through master rules:', error);
     
-    // UNCONDITIONAL RULE: Even on error, record to memory
+    // UNCONDITIONAL RULE: Even on error, record to ALL memory systems
     try {
+      // Primary memory system
       enforceMemoryRule(userInput, response);
       
       // CRITICAL: Use 5ResponseMemory as backup even in error case
@@ -90,20 +111,22 @@ export const processResponseThroughMasterRules = (
       console.error('Failed to enforce memory rule during error recovery:', memoryError);
     }
     
-    // Add memory reference even in error case
+    // Double-redundant error recovery using both memory systems
     try {
-      // Try to get memory from primary system first
-      const memory = getContextualMemory(userInput);
-      
-      // If primary memory failed, try 5ResponseMemory as fallback
-      if (!memory.dominantTopics || memory.dominantTopics.length === 0) {
-        const lastPatientMessage = getLastPatientMessage();
-        if (lastPatientMessage) {
-          return `I remember what you said about "${lastPatientMessage.substring(0, 20)}..." ${response}`;
-        }
+      // Try to get memory from 5ResponseMemory system first (our most robust backup)
+      const lastPatientMessage = getLastPatientMessage();
+      if (lastPatientMessage) {
+        return `I remember what you said about "${lastPatientMessage.substring(0, 20)}..." ${response}`;
       }
       
-      return `I remember what you've shared about ${memory.dominantTopics[0] || 'your situation'}. ${response}`;
+      // Fallback to primary memory system
+      const memory = getContextualMemory(userInput);
+      if (memory.dominantTopics && memory.dominantTopics.length > 0) {
+        return `I remember what you've shared about ${memory.dominantTopics[0]}. ${response}`;
+      }
+      
+      // Ultimate fallback if both systems fail to provide context
+      return `I remember what you've told me. ${response}`;
     } catch (finalError) {
       console.error('Critical failure in error recovery:', finalError);
       // Return original response with basic memory reference if all else fails
