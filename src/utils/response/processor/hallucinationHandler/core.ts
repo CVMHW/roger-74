@@ -21,7 +21,7 @@ export const handlePotentialHallucinations = (
 } => {
   try {
     // First check for dangerous repetition patterns like "I hear you're dealing with I hear you're dealing with"
-    // and other common issues
+    // and other common issues that must be fixed immediately
     const repetitionPatterns = [
       {
         pattern: /(I hear (you'?re|you are) dealing with) I hear (you'?re|you are) dealing with/i,
@@ -32,6 +32,14 @@ export const handlePotentialHallucinations = (
         replacement: '$1'
       },
       {
+        pattern: /you may have indicated Just a/i,
+        replacement: 'with a'
+      },
+      {
+        pattern: /you may have indicated Just/i,
+        replacement: 'with'
+      },
+      {
         pattern: /(I remember (you|your|we)) I remember (you|your|we)/i,
         replacement: '$1'
       },
@@ -40,12 +48,13 @@ export const handlePotentialHallucinations = (
         replacement: '$1'
       },
       {
-        pattern: /you may have indicated (Just|just) a/i,
-        replacement: 'with'
-      },
-      {
         pattern: /(I hear you're feeling) (I hear you're feeling)/i,
         replacement: '$1'
+      },
+      // New patterns to catch from recent issues
+      {
+        pattern: /dealing with you may have indicated/i,
+        replacement: 'dealing with'
       }
     ];
     

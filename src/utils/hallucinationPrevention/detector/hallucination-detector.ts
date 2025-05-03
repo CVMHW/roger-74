@@ -34,7 +34,9 @@ export const detectHallucinations = (
     /I hear (you'?re|you are) dealing with you may have indicated/i,
     /I remember (you|your|we) I remember (you|your|we)/i,
     /you (mentioned|said|told me) you (mentioned|said|told me)/i,
-    /(I hear|It sounds like) you('re| are) (dealing with|feeling) (I hear|It sounds like) you('re| are)/i
+    /(I hear|It sounds like) you('re| are) (dealing with|feeling) (I hear|It sounds like) you('re| are)/i,
+    /you may have indicated Just a/i,
+    /dealing with you may have indicated/i
   ];
   
   for (const pattern of repetitionPatterns) {

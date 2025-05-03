@@ -44,6 +44,20 @@ export const detectRepeatedPhrases = (responseText: string): boolean => {
     }
   }
   
+  // Check for specific dangerous repetition patterns
+  const dangerousPatterns = [
+    /I hear (you'?re|you are) dealing with I hear/i,
+    /you may have indicated Just/i,
+    /dealing with you may have indicated/i,
+    /I hear (you'?re|you are) dealing with you may have indicated/i
+  ];
+  
+  for (const pattern of dangerousPatterns) {
+    if (pattern.test(responseText)) {
+      return true;
+    }
+  }
+  
   // Check for repeated memory reference phrases
   const memoryPhrases = ["I remember", "you mentioned", "you told me", "you said", "we discussed"];
   let memoryPhraseCount = 0;
