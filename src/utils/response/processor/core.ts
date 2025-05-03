@@ -15,6 +15,9 @@ import { determineConversationStage, applyConversationStageProcessing } from './
 import { getHallucinationOptions } from './hallucinationConfig';
 import { recordToMemorySystems } from './memorySystemHandler';
 import { hasSharedThatPattern } from './hallucinationHandler/specialCases';
+import { fixDangerousRepetitionPatterns } from './hallucinationHandler/patternFixer';
+import { isSeverityEqual } from './emergencyPathDetection/severityUtils'; 
+import { SeverityLevel } from './emergencyPathDetection/types';
 
 /**
  * Process response through master rules system - core implementation
@@ -29,39 +32,20 @@ export const processResponseCore = (
   try {
     console.log("MASTER RULES: Beginning response processing");
     
-    // NEW: First immediately check for the problematic "It seems like you shared that" pattern
-    // This pattern is causing significant issues in Roger's responses
-    if (hasSharedThatPattern(response)) {
-      console.log("CRITICAL: Detected 'It seems like you shared that' pattern - replacing immediately");
-      // Extract the content that was "shared"
-      const match = response.match(/It seems like you shared that ([^.]+)\./i);
-      
-      if (match && match[1]) {
-        const supposedShared = match[1].toLowerCase();
-        const actualUserInput = userInput.toLowerCase();
-        
-        // Check if what was supposedly shared is actually in the user input
-        if (actualUserInput.includes(supposedShared)) {
-          // It's accurate, just rephrase it
-          response = response.replace(
-            /It seems like you shared that ([^.]+)\./i,
-            `I understand you're talking about $1.`
-          );
-        } else {
-          // It's not accurate, use a generic acknowledgment
-          response = response.replace(
-            /It seems like you shared that ([^.]+)\./i,
-            "Thanks for sharing your experience."
-          );
-        }
-      }
+    // CRITICAL SAFETY OVERRIDE: First immediately check for the problematic patterns
+    // This is a first-line safety check that runs before ANY other processing
+    const { fixedResponse, hasRepetitionIssue } = fixDangerousRepetitionPatterns(response, userInput);
+    
+    if (hasRepetitionIssue) {
+      console.log("CRITICAL: Dangerous repetition pattern detected and fixed in first-pass");
+      // Replace the response with the fixed version for all further processing
+      response = fixedResponse;
     }
     
     // Verify all systems are operational
     verifySystemsOperational();
     
-    // Get previous responses for pattern detection (empty for now)
-    // In a real implementation, this would come from conversation history
+    // Get previous responses for pattern detection
     const previousResponses: string[] = 
       conversationHistory.filter(msg => 
         !msg.startsWith("I'm") && 
@@ -73,9 +57,10 @@ export const processResponseCore = (
     const emergencyPathResult = detectEmergencyPath(response, userInput, conversationHistory, previousResponses);
     
     // If we detect a severe emergency pattern (like repeated phrases), intervene immediately
-    if (emergencyPathResult.requiresImmediateIntervention) {
+    if (emergencyPathResult.requiresImmediateIntervention || 
+        isSeverityEqual(emergencyPathResult.severity, SeverityLevel.SEVERE)) {
       console.log("CRITICAL: Early emergency path detection triggered immediate intervention");
-      return applyEmergencyIntervention(response, emergencyPathResult, userInput);
+      response = applyEmergencyIntervention(response, emergencyPathResult, userInput);
     }
     
     // Process through attention system
@@ -138,6 +123,39 @@ export const processResponseCore = (
       );
       
       return finalResponse;
+    }
+    
+    // LAST-RESORT SAFETY CHECK for the problematic "It seems like you shared that" pattern
+    // If it somehow survived all our processing, catch it here as a final backstop
+    if (hasSharedThatPattern(hallucinationCheckedResponse)) {
+      console.log("CRITICAL FINAL BACKSTOP: 'It seems like you shared that' pattern detected");
+      
+      // Use our emergency intervention as a last resort
+      const emergencyResult = {
+        isEmergencyPath: true,
+        severity: SeverityLevel.SEVERE,
+        flags: [{
+          type: 'critical_shared_that_pattern',
+          description: 'Critical "It seems like you shared that" pattern survived all processing',
+          severity: SeverityLevel.SEVERE
+        }],
+        requiresImmediateIntervention: true
+      };
+      
+      const safeResponse = applyEmergencyIntervention(
+        hallucinationCheckedResponse, 
+        emergencyResult,
+        userInput
+      );
+      
+      // Record final response to all memory systems
+      recordToMemorySystems(
+        safeResponse, 
+        attentionResults.emotionalContext,
+        attentionResults.dominantTopics
+      );
+      
+      return safeResponse;
     }
     
     // Record final response to all memory systems

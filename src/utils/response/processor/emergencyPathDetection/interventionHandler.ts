@@ -5,6 +5,7 @@
  */
 
 import { EmergencyPathResult, SeverityLevel } from './types';
+import { isSeverityEqual, isSeverityAtLeast } from './severityUtils';
 import { fixRepeatedContent, hasSharedThatPattern } from '../hallucinationHandler/specialCases';
 
 /**
@@ -19,7 +20,7 @@ export const applyEmergencyIntervention = (
   let correctedResponse = fixRepeatedContent(responseText);
   
   // If the severity is SEVERE, we need to start fresh with a completely new response pattern
-  if (emergencyPathResult.severity === SeverityLevel.SEVERE) {
+  if (isSeverityEqual(emergencyPathResult.severity, SeverityLevel.SEVERE)) {
     // Extract any key information from the user input
     const keyTerms = extractKeyTerms(userInput);
     
@@ -28,7 +29,7 @@ export const applyEmergencyIntervention = (
   }
   
   // For HIGH severity, we should replace the response structure but keep the essential content
-  if (emergencyPathResult.severity === SeverityLevel.HIGH) {
+  if (isSeverityEqual(emergencyPathResult.severity, SeverityLevel.HIGH)) {
     // Check if this has the problematic "shared that" pattern
     if (hasSharedThatPattern(correctedResponse)) {
       correctedResponse = replaceSharedThatPattern(correctedResponse, userInput);
@@ -39,7 +40,7 @@ export const applyEmergencyIntervention = (
   }
   
   // For MEDIUM severity, make targeted fixes to the specific issues
-  if (emergencyPathResult.severity === SeverityLevel.MEDIUM) {
+  if (isSeverityEqual(emergencyPathResult.severity, SeverityLevel.MEDIUM)) {
     // Check for each flag type and apply specific fixes
     emergencyPathResult.flags.forEach(flag => {
       if (flag.type === 'false_continuity') {
@@ -91,6 +92,11 @@ const extractKeyTerms = (userInput: string): string[] => {
     potentialTopics.push('family');
   }
   
+  // Bar/dating scenarios
+  if (/bar|drink|spill|girl|cute|date/i.test(userInput)) {
+    potentialTopics.push('social embarrassment');
+  }
+  
   return [...foundEmotions, ...potentialTopics];
 };
 
@@ -98,6 +104,15 @@ const extractKeyTerms = (userInput: string): string[] => {
  * Generate a completely fresh response that avoids problematic patterns
  */
 const generateFreshResponse = (keyTerms: string[], userInput: string): string => {
+  const normalizedInput = userInput.toLowerCase();
+  
+  // Social embarrassment at bar/with date scenario (highest priority match)
+  if (normalizedInput.includes("spill") && 
+      (normalizedInput.includes("girl") || normalizedInput.includes("bar") || 
+       normalizedInput.includes("date") || normalizedInput.includes("cute"))) {
+    return "Social situations like that can definitely be uncomfortable. Those moments of embarrassment tend to stick with us more than they do with others. How are you feeling about it now?";
+  }
+  
   // If we identified emotions, acknowledge them
   if (keyTerms.includes('embarrassed') || keyTerms.includes('nervous')) {
     return "That sounds like an uncomfortable situation. Social moments like that can make us feel self-conscious. How did you feel afterwards?";
@@ -105,6 +120,12 @@ const generateFreshResponse = (keyTerms: string[], userInput: string): string =>
   
   if (keyTerms.some(term => ['social situation', 'date', 'girl', 'bar'].some(keyword => term.includes(keyword) || userInput.toLowerCase().includes(keyword)))) {
     return "Social situations can sometimes create awkward moments that stick with us. What's on your mind about how it went?";
+  }
+  
+  // Better follow-up if user mentions could have done better
+  if (normalizedInput.includes("could have") || normalizedInput.includes("better") ||
+      normalizedInput.includes("should have")) {
+    return "It's common to replay social interactions and think about what we could have done differently. What do you wish you had done in that moment?";
   }
   
   // Default engagement response
@@ -120,13 +141,23 @@ const replaceSharedThatPattern = (responseText: string, userInput: string): stri
   
   if (match && match[1]) {
     const sharedContent = match[1];
+    const normalizedInput = userInput.toLowerCase();
+    
+    // Social scenario - priority matching
+    if (normalizedInput.includes("spill") && 
+        (normalizedInput.includes("girl") || normalizedInput.includes("bar"))) {
+      return responseText.replace(
+        /It seems like you shared that ([^.]+)\./i,
+        "I understand - social situations like that can be uncomfortable."
+      );
+    }
     
     // Check if this content is actually in the user input
-    if (userInput.toLowerCase().includes(sharedContent.toLowerCase())) {
+    if (normalizedInput.includes(sharedContent.toLowerCase())) {
       // It's actually accurate, just rephrase it
       return responseText.replace(
         /It seems like you shared that ([^.]+)\./i,
-        `I understand you mentioned ${sharedContent}.`
+        `I understand you're talking about ${sharedContent}.`
       );
     } else {
       // It's not accurate, use a more general acknowledgment

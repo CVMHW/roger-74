@@ -1,268 +1,183 @@
 
 /**
- * Emergency Path Detector
+ * Emergency Path Detection System
  * 
- * Detects high-risk conversation patterns that may lead to hallucinations
+ * Detects conversations that are at risk of entering problematic loops
+ * or showing signs of AI confusion/hallucination
  */
 
-import { SeverityLevel, EmergencyPathResult, EmergencyPathFlags, EmergencyPathFlag } from './types';
-import { UNCONDITIONAL_MEMORY_RULE } from '../../../masterRules/core/coreRules';
-import { detectPatternedResponses } from './patternDetector';
-
-// Critical patterns that indicate severe hallucination risk
-const CRITICAL_PATTERNS = [
-  {
-    pattern: /I hear (you'?re|you are) dealing with I hear (you'?re|you are) dealing with/i,
-    type: 'dangerous_repetition',
-    description: 'Dangerous repetition of "I hear you\'re dealing with"',
-    severity: SeverityLevel.SEVERE
-  },
-  {
-    pattern: /you may have indicated Just a/i,
-    type: 'incoherent_phrase',
-    description: 'Incoherent phrase "you may have indicated Just a"',
-    severity: SeverityLevel.SEVERE
-  },
-  {
-    pattern: /(I hear|It sounds like) you('re| are) (dealing with|feeling) (I hear|It sounds like) you('re| are)/i,
-    type: 'repetitive_acknowledgment',
-    description: 'Repetitive acknowledgment pattern',
-    severity: SeverityLevel.SEVERE
-  },
-  {
-    pattern: /I hear you're dealing with you may have indicated/i,
-    type: 'conflated_phrases',
-    description: 'Conflated phrases indicating processing error',
-    severity: SeverityLevel.SEVERE
-  },
-  {
-    pattern: /It seems like you shared that ([^.]{5,50})\. (I hear|It sounds like) you/i,
-    type: 'repetitive_shared_pattern',
-    description: 'Repetitive "It seems like you shared that" pattern',
-    severity: SeverityLevel.SEVERE
-  }
-];
-
-// High-risk patterns that suggest hallucination risk
-const HIGH_RISK_PATTERNS = [
-  {
-    pattern: /I remember (you|your|we) I remember (you|your|we)/i,
-    type: 'memory_repetition',
-    description: 'Repetitive memory reference',
-    severity: SeverityLevel.HIGH
-  },
-  {
-    pattern: /you (mentioned|said|told me) you (mentioned|said|told me)/i,
-    type: 'attribution_repetition',
-    description: 'Repetitive attribution to user',
-    severity: SeverityLevel.HIGH
-  },
-  {
-    pattern: /you may have indicated/i,
-    type: 'uncertain_attribution',
-    description: 'Uncertain attribution to user',
-    severity: SeverityLevel.HIGH
-  },
-  {
-    pattern: /dealing with you may have indicated/i,
-    type: 'phrase_conflation',
-    description: 'Phrase conflation',
-    severity: SeverityLevel.HIGH
-  },
-  {
-    pattern: /It seems like you shared that/i,
-    type: 'shared_that_pattern',
-    description: 'Use of problematic "It seems like you shared that" pattern',
-    severity: SeverityLevel.HIGH
-  }
-];
-
-// Medium-risk patterns that should be monitored
-const MEDIUM_RISK_PATTERNS = [
-  {
-    pattern: /we've been focusing on health|dealing with health|focusing on health/i,
-    type: 'false_continuity',
-    description: 'False continuity claim about health discussions',
-    severity: SeverityLevel.MEDIUM
-  },
-  {
-    pattern: /as we discussed earlier|as I mentioned earlier|we talked about this before/i,
-    type: 'false_history',
-    description: 'False reference to previous conversation',
-    severity: SeverityLevel.MEDIUM
-  }
-];
+import { EmergencyPathResult, EmergencyPathFlag, SeverityLevel } from './types';
+import { isSeverityEqual, isSeverityAtLeast, getHigherSeverity } from './severityUtils';
 
 /**
- * Utility function to safely compare severity levels
- * This resolves the TypeScript comparison issues with enums
- */
-const isSeverityEqual = (actual: SeverityLevel, expected: SeverityLevel): boolean => {
-  return actual === expected;
-};
-
-/**
- * Utility function to check if severity is at least at a certain level
- * This resolves the TypeScript comparison issues with enums
- */
-const isSeverityAtLeast = (actual: SeverityLevel, minimum: SeverityLevel): boolean => {
-  const levels = [SeverityLevel.LOW, SeverityLevel.MEDIUM, SeverityLevel.HIGH, SeverityLevel.SEVERE];
-  const actualIndex = levels.indexOf(actual);
-  const minimumIndex = levels.indexOf(minimum);
-  return actualIndex >= minimumIndex;
-};
-
-/**
- * Detects if the conversation is entering an emergency path
- * based on response patterns and context
+ * Primary detector for emergency conversation paths
+ * 
+ * @param responseText Current response being generated
+ * @param userInput User's most recent message
+ * @param conversationHistory Full history of the conversation
+ * @param previousResponses Previous AI responses for pattern matching
+ * @returns Analysis result with flags and severity
  */
 export const detectEmergencyPath = (
   responseText: string,
   userInput: string,
-  conversationHistory: string[],
+  conversationHistory: string[] = [],
   previousResponses: string[] = []
 ): EmergencyPathResult => {
-  console.log("EMERGENCY PATH: Analyzing for high-risk patterns");
+  // Initialize result object
+  const result: EmergencyPathResult = {
+    isEmergencyPath: false,
+    severity: SeverityLevel.LOW,
+    flags: [],
+    requiresImmediateIntervention: false
+  };
   
-  const flags: EmergencyPathFlag[] = [];
-  let highestSeverity = SeverityLevel.LOW;
-  
-  // Check for critical patterns first - these require immediate intervention
-  for (const { pattern, type, description, severity } of CRITICAL_PATTERNS) {
-    if (pattern.test(responseText)) {
-      flags.push({ type, description, severity, pattern: pattern.toString() });
-      highestSeverity = SeverityLevel.SEVERE;
-    }
-  }
-  
-  // If any critical patterns were found, return immediately
-  if (isSeverityEqual(highestSeverity, SeverityLevel.SEVERE)) {
-    return {
-      isEmergencyPath: true,
-      severity: SeverityLevel.SEVERE,
-      flags,
-      recommendedAction: 'reset_conversation',
-      requiresImmediateIntervention: true
-    };
-  }
-  
-  // Check for high-risk patterns
-  for (const { pattern, type, description, severity } of HIGH_RISK_PATTERNS) {
-    if (pattern.test(responseText)) {
-      flags.push({ type, description, severity, pattern: pattern.toString() });
-      if (isSeverityEqual(severity, SeverityLevel.HIGH) && !isSeverityEqual(highestSeverity, SeverityLevel.SEVERE)) {
-        highestSeverity = SeverityLevel.HIGH;
+  // Check for the highly problematic "It seems like you shared that" pattern
+  const sharedThatPattern = /It seems like you shared that/i;
+  if (sharedThatPattern.test(responseText)) {
+    const sharedContentMatch = responseText.match(/It seems like you shared that ([^.]+)\./i);
+    
+    // This pattern is always problematic, but especially if what was "shared" isn't in the input
+    if (sharedContentMatch && sharedContentMatch[1]) {
+      const supposedlyShared = sharedContentMatch[1].toLowerCase();
+      const userInputLower = userInput.toLowerCase();
+      
+      // If what was supposedly shared isn't actually in the user input, this is severe
+      if (!userInputLower.includes(supposedlyShared)) {
+        result.flags.push({
+          type: 'false_sharing_statement',
+          description: `Response claims user shared "${supposedlyShared}" but this isn't in their message`,
+          severity: SeverityLevel.SEVERE
+        });
+      } else {
+        // Even if accurate, this phrasing is problematic
+        result.flags.push({
+          type: 'awkward_sharing_statement',
+          description: 'Using awkward "It seems like you shared that" phrasing',
+          severity: SeverityLevel.HIGH
+        });
       }
     }
   }
   
-  // Check for medium-risk patterns
-  for (const { pattern, type, description, severity } of MEDIUM_RISK_PATTERNS) {
-    if (pattern.test(responseText)) {
-      flags.push({ type, description, severity, pattern: pattern.toString() });
-      if (isSeverityEqual(severity, SeverityLevel.MEDIUM) && 
-          !isSeverityAtLeast(highestSeverity, SeverityLevel.HIGH)) {
-        highestSeverity = SeverityLevel.MEDIUM;
-      }
+  // Check for repetitions of "I hear you're feeling" in the same message
+  const hearFeelingMatches = responseText.match(/I hear you('re| are) feeling/gi);
+  if (hearFeelingMatches && hearFeelingMatches.length > 1) {
+    result.flags.push({
+      type: 'repeated_acknowledgment',
+      description: 'Multiple "I hear you\'re feeling" phrases in one response',
+      severity: SeverityLevel.HIGH
+    });
+  }
+  
+  // Check for exact response repetition
+  if (previousResponses.length > 0) {
+    const exactMatchCount = previousResponses.filter(prev => 
+      responseText === prev
+    ).length;
+    
+    if (exactMatchCount > 0) {
+      result.flags.push({
+        type: 'exact_response_repetition',
+        description: 'Exactly repeating a previous response',
+        severity: SeverityLevel.SEVERE 
+      });
     }
   }
   
-  // NEW: Detect patterned responses over time (Roger's conversation style)
-  const patternFlags = detectPatternedResponses(responseText, previousResponses);
-  flags.push(...patternFlags);
+  // Check for pattern repetition in previous responses (using "shared that" pattern)
+  const sharedThatInPrevious = previousResponses.filter(prev => 
+    sharedThatPattern.test(prev)
+  ).length;
   
-  // Update severity based on pattern flags
-  for (const flag of patternFlags) {
-    if (isSeverityEqual(flag.severity, SeverityLevel.SEVERE) && 
-        !isSeverityEqual(highestSeverity, SeverityLevel.SEVERE)) {
-      highestSeverity = SeverityLevel.SEVERE;
-    } else if (isSeverityEqual(flag.severity, SeverityLevel.HIGH) && 
-               !isSeverityAtLeast(highestSeverity, SeverityLevel.HIGH)) {
-      highestSeverity = SeverityLevel.HIGH;
-    } else if (isSeverityEqual(flag.severity, SeverityLevel.MEDIUM) && 
-               !isSeverityAtLeast(highestSeverity, SeverityLevel.MEDIUM)) {
-      highestSeverity = SeverityLevel.MEDIUM;
-    }
+  if (sharedThatPattern.test(responseText) && sharedThatInPrevious > 0) {
+    result.flags.push({
+      type: 'pattern_repetition',
+      description: 'Repeating "It seems like you shared that" pattern across multiple responses',
+      severity: SeverityLevel.SEVERE
+    });
   }
   
-  // Special check for nonsensical content in early conversation
-  if (conversationHistory.length <= 3) {
-    // Check for mentions of previous discussions in new conversations
-    if (/we've been|we discussed|as I mentioned|you told me|you said|you mentioned|I remember|earlier you said|previously/i.test(responseText)) {
-      flags.push({
-        type: 'false_continuity_early',
-        description: 'False reference to previous conversation in early exchange',
+  // Check for inconsistency (contradicting earlier responses)
+  if (previousResponses.length >= 2 && responseText.includes("feeling")) {
+    const currentFeeling = extractFeeling(responseText);
+    const previousFeeling = extractFeeling(previousResponses[0]);
+    
+    if (currentFeeling && previousFeeling && 
+        currentFeeling !== previousFeeling && 
+        !userInput.toLowerCase().includes(currentFeeling)) {
+      result.flags.push({
+        type: 'feeling_inconsistency',
+        description: `Changed feeling from "${previousFeeling}" to "${currentFeeling}" without user mentioning it`,
         severity: SeverityLevel.HIGH
       });
-      if (!isSeverityEqual(highestSeverity, SeverityLevel.SEVERE)) {
-        highestSeverity = SeverityLevel.HIGH;
-      }
     }
   }
   
-  // Check for sentences that don't parse grammatically
-  const sentences = responseText.split(/[.!?]+\s/).filter(s => s.trim().length > 0);
-  for (const sentence of sentences) {
-    if (/\b[A-Z][a-z]+ [a-z]+ [a-z]+ [A-Z][a-z]+\b/.test(sentence)) {
-      flags.push({
-        type: 'grammatical_error',
-        description: 'Sentence with unusual capitalization pattern',
-        severity: SeverityLevel.MEDIUM
-      });
-      if (!isSeverityAtLeast(highestSeverity, SeverityLevel.HIGH)) {
-        highestSeverity = SeverityLevel.MEDIUM;
-      }
+  // Analyze all flags and determine overall severity
+  if (result.flags.length > 0) {
+    result.isEmergencyPath = true;
+    
+    // Start with lowest severity
+    let highestSeverity = SeverityLevel.LOW;
+    
+    // Find highest severity flag
+    for (const flag of result.flags) {
+      highestSeverity = getHigherSeverity(highestSeverity, flag.severity);
     }
+    
+    // Increase severity if multiple flags
+    if (result.flags.length >= 3) {
+      highestSeverity = getHigherSeverity(highestSeverity, SeverityLevel.HIGH);
+    }
+    
+    // Special case: combined "shared that" + repetition is always SEVERE
+    if (result.flags.some(f => f.type.includes('sharing_statement')) && 
+        result.flags.some(f => f.type.includes('repetition'))) {
+      highestSeverity = SeverityLevel.SEVERE;
+    }
+    
+    result.severity = highestSeverity;
+    
+    // Determine if immediate intervention is required
+    result.requiresImmediateIntervention = 
+      isSeverityEqual(highestSeverity, SeverityLevel.SEVERE) || 
+      (isSeverityEqual(highestSeverity, SeverityLevel.HIGH) && result.flags.length >= 2);
   }
   
-  // Determine if this is an emergency path and what action to take
-  const isEmergencyPath = isSeverityAtLeast(highestSeverity, SeverityLevel.HIGH);
-  
-  let recommendedAction: 'continue' | 'minor_intervention' | 'major_intervention' | 'reset_conversation' = 'continue';
-  
-  if (isSeverityEqual(highestSeverity, SeverityLevel.SEVERE)) {
-    recommendedAction = 'reset_conversation';
-  } else if (isSeverityEqual(highestSeverity, SeverityLevel.HIGH)) {
-    recommendedAction = 'major_intervention';
-  } else if (isSeverityEqual(highestSeverity, SeverityLevel.MEDIUM)) {
-    recommendedAction = 'minor_intervention';
-  }
-  
-  const requiresImmediateIntervention = 
-    isSeverityEqual(highestSeverity, SeverityLevel.SEVERE) || 
-    (isSeverityEqual(highestSeverity, SeverityLevel.HIGH) && flags.length >= 2);
-  
-  return {
-    isEmergencyPath,
-    severity: highestSeverity,
-    flags,
-    recommendedAction,
-    requiresImmediateIntervention
-  };
+  return result;
 };
 
 /**
- * Organizes all detected flags into categories
+ * Helper function to extract feeling from response
  */
-export const categorizeFlags = (flags: EmergencyPathFlag[]): EmergencyPathFlags => {
-  return {
-    repetitionPatterns: flags.filter(flag => 
-      flag.type.includes('repetition') || 
-      flag.type.includes('repeated')),
-    memoryInconsistencies: flags.filter(flag => 
-      flag.type.includes('memory') || 
-      flag.type.includes('false_continuity') || 
-      flag.type.includes('history')),
-    contextBreaks: flags.filter(flag => 
-      flag.type.includes('context') || 
-      flag.type.includes('continuity')),
-    nonsensePhrases: flags.filter(flag => 
-      flag.type.includes('phrase') || 
-      flag.type.includes('incoherent') || 
-      flag.type.includes('nonsense')),
-    malformedResponses: flags.filter(flag => 
-      flag.type.includes('grammatical') || 
-      flag.type.includes('structure') || 
-      flag.type.includes('malformed'))
+function extractFeeling(text: string): string | null {
+  const match = text.match(/feeling ([a-z]+)/i);
+  return match ? match[1].toLowerCase() : null;
+}
+
+/**
+ * Categorize flags into groups for better handling
+ */
+export const categorizeFlags = (flags: EmergencyPathFlag[]): Record<string, EmergencyPathFlag[]> => {
+  const categories: Record<string, EmergencyPathFlag[]> = {
+    repetition: [],
+    inconsistency: [],
+    phrasing: [],
+    other: []
   };
+  
+  for (const flag of flags) {
+    if (flag.type.includes('repetition') || flag.type.includes('repeated')) {
+      categories.repetition.push(flag);
+    } else if (flag.type.includes('inconsistency')) {
+      categories.inconsistency.push(flag);
+    } else if (flag.type.includes('statement') || flag.type.includes('phrasing')) {
+      categories.phrasing.push(flag);
+    } else {
+      categories.other.push(flag);
+    }
+  }
+  
+  return categories;
 };

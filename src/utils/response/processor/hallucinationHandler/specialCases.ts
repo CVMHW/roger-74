@@ -105,11 +105,74 @@ export const hasInvalidMentionReference = (responseText: string, conversationHis
 };
 
 /**
+ * Replace specific patterns with more natural alternatives
+ */
+const replacePatternWithAlternative = (text: string, userInput: string): string => {
+  // Normalized user input for context
+  const normalizedInput = userInput.toLowerCase();
+  
+  // Get appropriate acknowledgment based on user input content
+  let acknowledgment = "";
+  if (normalizedInput.includes("embarrass") || normalizedInput.includes("awkward") || 
+      normalizedInput.includes("nervous")) {
+    acknowledgment = "That sounds like an awkward situation. ";
+  } else if (normalizedInput.includes("spill") && 
+             (normalizedInput.includes("girl") || normalizedInput.includes("date"))) {
+    acknowledgment = "Social situations like that can be uncomfortable. ";
+  } else if (normalizedInput.includes("could have") || normalizedInput.includes("better")) {
+    acknowledgment = "I understand you're reflecting on how you handled the situation. ";
+  } else {
+    acknowledgment = "I understand. ";
+  }
+  
+  return acknowledgment;
+};
+
+/**
  * Fixes repeated content in a response
  */
 export const fixRepeatedContent = (responseText: string): string => {
-  // First fix the critical patterns
+  // First, let's completely replace the "It seems like you shared that" pattern
   let fixedResponse = responseText;
+  
+  // Completely replace the "It seems like you shared that" pattern with better alternatives
+  if (hasSharedThatPattern(fixedResponse)) {
+    // First extract what was supposedly shared
+    const sharedMatch = fixedResponse.match(/It seems like you shared that ([^.]+)\./i);
+    let replacementText = "";
+    
+    if (sharedMatch && sharedMatch[1]) {
+      // Construct a more conversational alternative
+      const sharedContent = sharedMatch[1].trim();
+      
+      // Create varied replacements based on content
+      if (sharedContent.includes("feeling")) {
+        // If it's about feelings, acknowledge the feeling directly
+        const feelingMatch = sharedContent.match(/feeling ([a-z]+)/i);
+        if (feelingMatch && feelingMatch[1]) {
+          const feeling = feelingMatch[1].toLowerCase();
+          replacementText = `I can understand why you might feel ${feeling}. `;
+        } else {
+          replacementText = `I hear what you're feeling. `;
+        }
+      } else if (sharedContent.includes("today") || sharedContent.includes("tough day")) {
+        // If it's about their day, acknowledge directly
+        replacementText = `That does sound like a challenging situation. `;
+      } else {
+        // General acknowledgment
+        replacementText = `I appreciate you sharing that with me. `;
+      }
+    } else {
+      // Default replacement if we can't extract what was shared
+      replacementText = "Thanks for sharing that. ";
+    }
+    
+    // Replace the entire pattern
+    fixedResponse = fixedResponse.replace(
+      /It seems like you shared that [^.]+\./i,
+      replacementText
+    );
+  }
   
   // Fix repetitive "I hear you're dealing with" pattern
   fixedResponse = fixedResponse.replace(
@@ -121,18 +184,6 @@ export const fixRepeatedContent = (responseText: string): string => {
   fixedResponse = fixedResponse.replace(
     /I hear (you'?re|you are) dealing with you may have indicated/i,
     "I hear you're dealing with"
-  );
-  
-  // Fix "It seems like you shared that X. I hear you're" pattern
-  fixedResponse = fixedResponse.replace(
-    /It seems like you shared that ([^.]{5,50})\. (I hear|It sounds like) you/i,
-    "I hear you"
-  );
-  
-  // Fix the problematic "It seems like you shared that" pattern completely
-  fixedResponse = fixedResponse.replace(
-    /It seems like you shared that ([^.]+)\./i,
-    "I understand you're talking about $1."
   );
   
   // Remove all instances of "you may have indicated"
