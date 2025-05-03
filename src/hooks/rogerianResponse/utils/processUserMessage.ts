@@ -96,18 +96,8 @@ export const processUserMessage = async (
       return emotionalResponse;
     }
     
-    // Process standard messages
-    const messageProcessorProps: ProcessMessageProps = {
-      userInput,
-      detectConcerns,
-      generateResponse,
-      baseProcessUserMessage,
-      conversationHistory,
-      clientPreferences,
-      updateStage
-    };
-    
-    // Fixed: Call the messageProcessor/processor.ts function with the expected parameters
+    // Fix: Check if processMessage accepts a props object or individual arguments
+    // Looking at the error, we need to pass individual arguments
     const response = await processMessage(
       userInput,
       detectConcerns,

@@ -16,18 +16,14 @@ import { processGeneralMessage } from '../processors/generalMessageProcessor';
  * Processes user messages and generates appropriate responses
  */
 export const processUserMessage = async (
-  props: ProcessMessageProps
+  userInput: string,
+  detectConcerns: (userInput: string) => ConcernType,
+  generateResponse: (userInput: string, concernType: ConcernType) => string,
+  baseProcessUserMessage: any,
+  conversationHistory: string[],
+  clientPreferences: any,
+  updateStage: () => void
 ): Promise<MessageType> => {
-  const {
-    userInput,
-    detectConcerns,
-    generateResponse,
-    baseProcessUserMessage,
-    conversationHistory,
-    clientPreferences,
-    updateStage
-  } = props;
-  
   try {
     // CRITICAL - Check if user just shared something but Roger is about to ask "what's going on"
     const isContentfulFirstMessage = userInput.length > 15 && conversationHistory.length <= 1;
