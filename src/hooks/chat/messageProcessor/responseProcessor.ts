@@ -4,6 +4,7 @@ import { ConcernType } from '../../../utils/reflection/reflectionTypes';
 import { isLocationDataNeeded } from '../../../utils/messageUtils';
 import { processResponseThroughMasterRules } from '../../../utils/response/responseProcessor';
 import { ProcessResponseParams } from './types';
+import { MessageType } from '../../../components/Message';
 
 /**
  * Handles the core logic for processing user input and generating responses
@@ -139,3 +140,4 @@ const handleErrorResponse = (
 
 // Import containsCriticalKeywords 
 import { containsCriticalKeywords } from './detectionUtils';
+
