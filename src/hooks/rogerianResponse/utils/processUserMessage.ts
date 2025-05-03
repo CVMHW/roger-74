@@ -1,4 +1,3 @@
-
 import { MessageType } from '../../../components/Message';
 import { createMessage } from '../../../utils/messageUtils';
 import { handleEmotionalPatterns } from '../emotionalResponseHandlers';
