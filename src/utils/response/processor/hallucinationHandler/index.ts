@@ -6,6 +6,17 @@
  * processing pipeline with enhanced detection capabilities.
  */
 
-// Re-export the core functionality
+// Export the main functionality
 export { handlePotentialHallucinations } from './core';
+
+// Export specialized handlers
+export { fixDangerousRepetitionPatterns } from './patternFixer';
+export { handleMemoryHallucinations } from './memoryHandler';
+export { determinePreventionOptions } from './preventionOptions';
+export { handleHealthHallucination } from './specialCases';
+
+// Re-export from submodules
+export * from './utils';
+
+// Export from previous implementations
 export { applyEarlyConversationRAG } from './earlyConversation';
