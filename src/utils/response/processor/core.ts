@@ -20,7 +20,7 @@ import {
 /**
  * Process a response through the core rules system
  */
-export const processResponseCore = (
+export const processCore = (
   response: string,
   userInput: string,
   messageCount: number,
@@ -85,3 +85,6 @@ export const processResponseCore = (
     }
   }
 };
+
+// Export processed response utility for compatibility
+export const processResponseCore = processCore;

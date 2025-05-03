@@ -1,16 +1,35 @@
 
 /**
- * Response Processor
+ * Response Processor - Master Integration
  * 
- * Processes responses through the MasterRules system before final delivery
- * UNCONDITIONAL: Ensures memory usage in all responses
+ * Unified system that integrates all memory and hallucination prevention systems
+ * for optimized, brief patient interactions (30s-5min)
  * 
- * This file is a re-export from the modular response processor system.
- * It maintains backward compatibility while allowing for a more
- * maintainable code structure.
+ * This is the main entry point for all response processing functionality,
+ * ensuring consistent application of memory rules and hallucination prevention.
  */
 
+// Export the unified response processing system
 export { 
+  processCompleteResponse as processResponseThroughMasterRules,
   processResponseThroughMasterRules,
   enhanceResponseWithMemory
 } from './processor';
+
+// Re-export integrated hallucination prevention
+export { preventHallucinations } from '../memory/hallucination/preventionV2';
+
+// Re-export memory utilities for direct access
+export { 
+  addMemory, 
+  searchMemory,
+  resetMemory,
+  getMemoryStatus,
+  processResponse 
+} from '../memory/memoryController';
+
+// Re-export legacy systems for backward compatibility
+export { 
+  getFiveResponseMemory, 
+  addToFiveResponseMemory 
+} from '../memory/fiveResponseMemory';

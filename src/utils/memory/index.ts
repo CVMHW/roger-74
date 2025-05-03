@@ -27,6 +27,12 @@ export {
   updateMemoryConfig
 } from './memoryController';
 
+// Export the master integrated system
+export { 
+  MasterMemorySystem, 
+  masterMemory 
+} from './masterMemory';
+
 // Re-export config
 export { DEFAULT_MEMORY_CONFIG } from './config';
 

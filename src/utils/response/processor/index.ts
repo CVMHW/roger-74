@@ -70,6 +70,9 @@ export const processCompleteResponse = (
   }
 };
 
+// Export for backward compatibility
+export const processResponseThroughMasterRules = processCompleteResponse;
+
 // Re-export important components for direct access
 export { recordToMemorySystems } from './memorySystemHandler';
 export { handleMemoryHallucinations } from './hallucinationHandler';

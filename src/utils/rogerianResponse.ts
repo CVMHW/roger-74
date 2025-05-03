@@ -1,21 +1,26 @@
 
 /**
- * Enhanced Rogerian Response Hook with:
- * 1. Conversation detection and memory reset
- * 2. Advanced hallucination prevention system
- * 3. Token-level verification
- * 4. Optimized for brief patient interactions (30s-5min)
+ * Enhanced Rogerian Response with Unified Memory System
  * 
- * Ensures memory accuracy and factual consistency in responses
+ * Comprehensive integration of memory and hallucination prevention systems 
+ * optimized for brief patient interactions (30s-5min)
  */
 
-// Original content import
-import originalUseRogerianResponse from './rogerianResponse/index';
+// Import from our integrated memory system
+import { 
+  resetMemory, 
+  isNewConversation, 
+  processResponse,
+  getConversationMessageCount
+} from './memory';
 
-// Import memory reset functions
-import { resetMemory, isNewConversation, processResponse } from './memory';
-import { resetFiveResponseMemory, isNewConversationFiveResponse } from './memory/fiveResponseMemory';
-import { detectNewConversation, resetConversationSession } from './memory/newConversationDetector';
+// Import our enhanced response processor
+import { processResponseThroughMasterRules } from './response/responseProcessor';
+
+// Import original hook implementation
+import originalUseRogerianResponse from './hooks/rogerianResponse';
+
+// Import early conversation handling
 import { isEarlyConversation } from './memory/systems/earlyConversationHandler';
 
 /**
@@ -30,30 +35,25 @@ const useRogerianResponse = () => {
     try {
       console.log("ENHANCED ROGERIAN HOOK: Processing user message");
       
-      // First, check if this is likely a new conversation using all available methods
+      // First, check if this is likely a new conversation
       const isNewConvo = isNewConversation(userInput);
-      const isNewFiveResponseConvo = isNewConversationFiveResponse();
-      const isNewDetectedConvo = detectNewConversation(userInput);
       
-      // If any system detects a new conversation, reset all memory systems
-      if (isNewConvo || isNewFiveResponseConvo || isNewDetectedConvo) {
+      // If new conversation detected, reset memory systems
+      if (isNewConvo) {
         console.log("NEW CONVERSATION DETECTED: Resetting all memory systems");
         resetMemory();
-        resetFiveResponseMemory();
-        resetConversationSession();
       }
       
-      // Now process the message with the original logic
+      // Process the message with the original logic
       const response = await originalHook.processUserMessage(userInput);
       
       // Check if we're in early conversation stage
       const earlyStage = isEarlyConversation();
       
       // Extract minimal conversation history for context
-      // This is a simple approximation, ideally you'd pass the actual history
       let conversationHistory: string[] = [userInput];
       
-      // Apply enhanced response processing for brief interactions
+      // Apply enhanced response processing with integrated memory system
       const enhancedText = processResponse(
         response.text,
         userInput,
