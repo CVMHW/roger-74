@@ -2,11 +2,11 @@
 import { MessageType } from '../../../components/Message';
 import { createMessage } from '../../../utils/messageUtils';
 import { handleEmotionalPatterns } from '../emotionalResponseHandlers';
-import { processMessage } from '../messageProcessor';
+import { processUserMessage as processMessage } from '../messageProcessor';
 import { recordToMemorySystems, recordErrorToMemorySystems } from './memoryHandler';
 import { enhanceResponse } from './responseEnhancer';
 import { detectPatterns } from './patternDetection';
-import { handleFeedbackLoop } from '../../response/feedbackLoopHandler';
+import { useFeedbackLoopHandler } from '../../response/feedbackLoopHandler';
 import { checkAllRules } from '../../../utils/rulesEnforcement/rulesEnforcer';
 
 /**
@@ -65,7 +65,9 @@ export const processUserMessage = async (
     }
     
     // Check if the user is indicating Roger isn't listening or is stuck in a loop
+    const { handleFeedbackLoop } = useFeedbackLoopHandler();
     const feedbackLoopResponse = handleFeedbackLoop(userInput, conversationHistory);
+    
     if (feedbackLoopResponse) {
       // Update conversation stage
       updateStage();
