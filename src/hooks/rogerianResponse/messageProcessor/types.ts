@@ -29,4 +29,3 @@ export type ProcessorPipeline = {
   conversationHistory: string[];
   updateStage: () => void;
 };
-

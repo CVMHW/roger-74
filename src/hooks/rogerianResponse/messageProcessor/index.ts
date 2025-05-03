@@ -9,4 +9,3 @@ export * from './types';
 
 // Re-export utility functions for backward compatibility
 export * from './topicExtractor';
-

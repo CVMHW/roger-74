@@ -15,15 +15,19 @@ import { processGeneralMessage } from '../processors/generalMessageProcessor';
 /**
  * Processes user messages and generates appropriate responses
  */
-export const processUserMessage = async ({
-  userInput,
-  detectConcerns,
-  generateResponse,
-  baseProcessUserMessage,
-  conversationHistory,
-  clientPreferences,
-  updateStage
-}: ProcessMessageProps): Promise<MessageType> => {
+export const processUserMessage = async (
+  props: ProcessMessageProps
+): Promise<MessageType> => {
+  const {
+    userInput,
+    detectConcerns,
+    generateResponse,
+    baseProcessUserMessage,
+    conversationHistory,
+    clientPreferences,
+    updateStage
+  } = props;
+  
   try {
     // CRITICAL - Check if user just shared something but Roger is about to ask "what's going on"
     const isContentfulFirstMessage = userInput.length > 15 && conversationHistory.length <= 1;
@@ -149,4 +153,3 @@ export const processUserMessage = async ({
     ));
   }
 };
-
