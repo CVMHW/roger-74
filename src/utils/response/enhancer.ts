@@ -47,6 +47,22 @@ export const enhanceResponse = (
       /what\?|all|that's all|just happened|it was just|how does.*reflect|are you insinuating|not that deep|too much|simple|regular|come on|get real/i.test(msg)
     );
     
+    // SPECIAL HANDLING: For social/everyday situations, immediately use casual response style
+    // This is HIGHEST PRIORITY to prevent philosophical responses in casual contexts
+    if (isEverydaySituation || isSmallTalkContext) {
+      const casualResponse = createCasualResponse(userInput, response);
+      
+      // Record to memory systems
+      recordToMemorySystems(
+        casualResponse,
+        undefined,
+        undefined,
+        0.8 // High importance for Roger's responses
+      );
+      
+      return casualResponse;
+    }
+    
     // Apply master rules through the integrated processor
     const masterProcessed = processResponseThroughMasterRules(
       response,
@@ -64,21 +80,6 @@ export const enhanceResponse = (
       if (personalityInsight && !responseWithPersonality.includes(personalityInsight)) {
         responseWithPersonality += personalityInsight;
       }
-    }
-    
-    // For everyday situations, override all processing with conversational responses
-    if (isEverydaySituation || isSmallTalkContext) {
-      const casualResponse = createCasualResponse(userInput, responseWithPersonality);
-      
-      // Record to memory systems
-      recordToMemorySystems(
-        casualResponse,
-        undefined,
-        undefined,
-        0.8 // High importance for Roger's responses
-      );
-      
-      return casualResponse;
     }
     
     // For other situations, check for potential hallucinations
@@ -105,6 +106,7 @@ export const enhanceResponse = (
 
 /**
  * Create casual conversational response for everyday situations
+ * Roger's casual personality as a peer support specialist from Cleveland
  */
 const createCasualResponse = (userInput: string, existingResponse: string): string => {
   // Check if existing response is already appropriate for casual situation
@@ -112,7 +114,7 @@ const createCasualResponse = (userInput: string, existingResponse: string): stri
     return existingResponse;
   }
   
-  // Create appropriate casual responses based on context
+  // Create appropriate casual responses based on context - as Roger would speak
   if (/trip(ped)?|fall|fell|stumble/i.test(userInput)) {
     if (/class|teacher|student|presentation/i.test(userInput)) {
       return "That sounds pretty embarrassing. Most people have had moments like that in front of others. How did the class react?";
@@ -128,8 +130,17 @@ const createCasualResponse = (userInput: string, existingResponse: string): stri
     return "Embarrassing moments like that can feel much bigger to us than they do to others. How are you feeling about it now?";
   }
   
-  // Default response for other casual situations
-  return "That sounds difficult. Would you like to tell me more about what happened?";
+  if (/girl|guy|cute|dating/i.test(userInput)) {
+    return "Dating situations can be tricky to navigate. What do you think you'll do next time you're in a similar situation?";
+  }
+  
+  // Cleveland/Ohio specific response - Roger is from Cleveland
+  if (/cleveland|ohio|midwest|cavs|browns|guardians/i.test(userInput)) {
+    return "Being from Cleveland myself, I totally get what you're saying. What part of the situation has been most challenging for you?";
+  }
+  
+  // Default response for other casual situations - in Roger's voice
+  return "I understand. Social situations like that can be tough. Would you like to tell me more about what happened next?";
 };
 
 /**

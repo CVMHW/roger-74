@@ -24,11 +24,11 @@ export const handlePotentialHallucinations = (
 } => {
   try {
     // Check if this is an everyday social situation
-    const isEverydaySituation = /trip(ped)?|spill(ed)?|embarrass(ing|ed)|awkward|class|teacher|student|bar|drink|party|date/i.test(userInput);
+    const isEverydaySituation = /trip(ped)?|spill(ed)?|embarrass(ing|ed)|awkward|class|teacher|student|bar|drink|party|date|girl|guy|cute|dating/i.test(userInput);
     
     // For everyday situations, apply conversational enhancements instead of hallucination checks
     if (isEverydaySituation) {
-      console.log("EVERYDAY SITUATION: Applying conversational enhancements");
+      console.log("EVERYDAY SITUATION: Applying Roger's conversational style");
       
       const enhancedResponse = makeMoreConversational(response, userInput);
       
@@ -86,6 +86,7 @@ export const handlePotentialHallucinations = (
 
 /**
  * Make response more conversational for everyday situations
+ * Using Roger's conversational style as a peer support specialist
  */
 const makeMoreConversational = (response: string, userInput: string): string => {
   // First, check if the response is already simple and conversational
@@ -95,7 +96,7 @@ const makeMoreConversational = (response: string, userInput: string): string => 
   
   // Check what happened in the user's message
   if (/trip(ped)?/i.test(userInput)) {
-    return "That sounds pretty embarrassing. Most people have had moments like that in front of others. How did the class react?";
+    return "That sounds pretty embarrassing. Most people have had moments like that in front of others. How did you handle it afterward?";
   }
   
   if (/spill(ed)?/i.test(userInput)) {
@@ -108,6 +109,15 @@ const makeMoreConversational = (response: string, userInput: string): string => 
   
   if (/class/i.test(userInput)) {
     return "Embarrassing moments in class can feel magnified. Those moments usually pass much more quickly than they feel. How did you handle it?";
+  }
+  
+  if (/girl|guy|cute|dating/i.test(userInput)) {
+    return "Dating situations can be tricky. I've definitely had my share of awkward moments too. What do you think you might do differently next time?";
+  }
+  
+  // Cleveland/Ohio specific response - reflecting Roger's background
+  if (/cleveland|ohio|midwest|cavs|browns|guardians/i.test(userInput)) {
+    return "Being from Cleveland myself, I totally understand what you're describing. What part of this has been most challenging for you?";
   }
   
   // Default conversational response for social situations

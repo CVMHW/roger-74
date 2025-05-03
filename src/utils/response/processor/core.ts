@@ -32,7 +32,36 @@ export const processCore = (
   try {
     console.log("CORE PROCESSING: Applying response processing pipeline");
     
-    // FIRST: Select the appropriate approach based on context
+    // CRITICAL PRIORITY CHECK: First check if this is a social/everyday situation
+    // This is the HIGHEST priority check to ensure casual responses stay casual
+    const isEverydaySituation = /trip(ped)?|spill(ed)?|embarrass(ing|ed)?|awkward|class|teacher|student|bar|drink|fall|fell|stumble|social|party|date|girl|guy|cute|dating/i.test(userInput);
+    
+    // For everyday situations, immediately provide a casual response and skip all other processing
+    if (isEverydaySituation) {
+      console.log("EVERYDAY SITUATION DETECTED: Providing casual conversational response");
+      
+      // Simple conversational responses for common social situations
+      if (/spill(ed)?/i.test(userInput)) {
+        return correctGrammar("Spilling something can definitely feel awkward in the moment. What happened next?");
+      }
+      
+      if (/trip(ped)?|fall|fell|stumble/i.test(userInput)) {
+        return correctGrammar("Those moments can feel so awkward! Everyone has those embarrassing moments. What happened next?");
+      }
+      
+      if (/embarrass(ing|ed)?|awkward/i.test(userInput)) {
+        return correctGrammar("Embarrassing moments like that can feel much bigger to us than they do to others. How are you feeling about it now?");
+      }
+      
+      if (/girl|guy|cute|dating/i.test(userInput)) {
+        return correctGrammar("Dating situations can be tricky. What do you think you might do differently next time?");
+      }
+      
+      // If no specific pattern matched, just make sure the response stays casual
+      return correctGrammar("I understand. That sounds challenging. Would you like to tell me more about what happened?");
+    }
+    
+    // SECOND: Select the appropriate approach based on context
     // This determines how heavily to apply different aspects of Roger's training
     const initialApproach = selectResponseApproach(userInput, conversationHistory);
     const approach = adjustApproachForConversationFlow(initialApproach, conversationHistory, messageCount);
@@ -48,9 +77,7 @@ export const processCore = (
       conversationHistory
     });
     
-    // CRITICAL: Check for social situations, embarrassment, or everyday issues
-    // These patterns indicate cases where logotherapy should NOT be applied
-    const isEverydaySituation = /trip(ped)?|spill(ed)?|embarrass(ing|ed)?|awkward|class|teacher|student|bar|drink|fall|fell|stumble|social|party/i.test(userInput);
+    // Check for resistance to deeper meaning from conversation history
     const resistanceToDeeperMeaning = conversationHistory.some(msg => 
       /what\?|all|that's all|just happened|it was just|how does.*reflect|are you insinuating|not that deep|too much|simple|regular|come on|get real/i.test(msg)
     );
@@ -93,14 +120,14 @@ export const processCore = (
     
     // Add personality variation based on the selected approach
     // For everyday social situations, use maximum spontaneity and conversational tone
-    if (isEverydaySituation || isSmallTalkContext) {
-      console.log("EVERYDAY SITUATION: Using maximum spontaneity and conversational tone");
+    if (isSmallTalkContext) {
+      console.log("SMALL TALK CONTEXT: Using high spontaneity and conversational tone");
       processedResponse = addResponseVariety(
         processedResponse,
         userInput,
         messageCount,
-        95,  // Near-maximum spontaneity for social situations
-        90   // Very high creativity for social situations
+        85,  // High spontaneity for small talk
+        80   // High creativity for small talk
       );
     } else {
       processedResponse = addResponseVariety(

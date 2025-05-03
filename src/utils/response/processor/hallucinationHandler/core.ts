@@ -229,7 +229,9 @@ export const fixDangerousRepetitionPatterns = (response: string): string => {
   
   // Identify problematic repeating phrases
   const repeatedPhrases = Object.entries(phraseCount)
-    .filter(([phrase, count]) => count > 1)
+    .filter(([phrase, count]) => {
+      return (count as number) > 1; // Fixed TypeScript error with type assertion
+    })
     .map(([phrase]) => phrase);
   
   // If no problematic repetition, return original
