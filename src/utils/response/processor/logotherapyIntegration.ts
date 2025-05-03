@@ -91,10 +91,13 @@ const determineLogotherapyPathway = (
   // Check recent conversation history for relevant themes
   const recentMemory = getFiveResponseMemory();
   
-  // Type safety: Filter for valid MessageEntry objects with a sender property
-  const validMessageEntries = recentMemory.filter(
-    (msg): msg is MessageEntry => 'sender' in msg && typeof msg.sender === 'string' && 'content' in msg
-  );
+  // Type safety: Create a proper type guard function that checks necessary props
+  const isMessageEntry = (msg: any): msg is MessageEntry => {
+    return 'sender' in msg && typeof msg.sender === 'string' && 'content' in msg;
+  };
+  
+  // Apply the type guard to filter valid entries
+  const validMessageEntries = recentMemory.filter(isMessageEntry);
   
   // Extract patient messages
   const recentPatientMessages = validMessageEntries

@@ -1,4 +1,3 @@
-
 /**
  * Logotherapy Integration Module
  * 
@@ -65,10 +64,13 @@ const leverageMemorySystems = (userInput: string): string[] => {
     // Check FiveResponseMemory for recent context
     const fiveResponseMemory = getFiveResponseMemory();
     if (fiveResponseMemory.length > 0) {
-      // Type safety: Filter entries that have the structure we need for MessageEntry
-      const validMessageEntries = fiveResponseMemory.filter(
-        (msg): msg is MessageEntry => 'sender' in msg && typeof msg.sender === 'string' && 'content' in msg
-      );
+      // Type safety: Create a proper type guard function that checks necessary props
+      const isMessageEntry = (msg: any): msg is MessageEntry => {
+        return 'sender' in msg && typeof msg.sender === 'string' && 'content' in msg;
+      };
+      
+      // Apply the type guard to filter valid entries
+      const validMessageEntries = fiveResponseMemory.filter(isMessageEntry);
       
       // Extract relevant patient statements from 5ResponseMemory
       const patientStatements = validMessageEntries
