@@ -13,7 +13,7 @@ export { handlePotentialHallucinations } from './core';
 export { fixDangerousRepetitionPatterns } from './patternFixer';
 export { handleMemoryHallucinations } from './memoryHandler';
 export { determinePreventionOptions } from './preventionOptions';
-export { handleHealthHallucination } from './specialCases';
+export { handleHealthHallucination, hasRepeatedContent, fixRepeatedContent } from './specialCases';
 
 // Re-export from submodules
 export * from './utils';
