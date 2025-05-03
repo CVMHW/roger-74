@@ -1,5 +1,5 @@
 
-import { processResponseThroughMasterRules } from '../../../utils/response/responseProcessor';
+import { processResponseThroughMasterRules } from '../../../utils/response/processor';
 import { applyMemoryRules } from '../../../utils/rulesEnforcement/memoryEnforcer';
 import { processThroughChatLogReview } from '../../../utils/response/chatLogReviewer';
 
