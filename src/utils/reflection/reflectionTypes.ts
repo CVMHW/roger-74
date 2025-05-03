@@ -60,22 +60,24 @@ export interface TraumaResponseAnalysis {
   triggerWords?: string[];
   topics?: string[];
   dominant4F?: {
-    type: string;
+    type: "freeze" | "fawn" | "fight" | "flight";
     intensity: string;
   };
   secondary4F?: {
-    type: string;
+    type: "freeze" | "fawn" | "fight" | "flight";
     intensity: string;
   };
   angerLevel?: string;
   hybrid?: boolean;
 }
 
-// Add the ContextAwareReflection interface
+// Update the ContextAwareReflection interface with trigger and response properties
 export interface ContextAwareReflection {
   context: string;
   reflection: string;
   examples: string[];
+  trigger: string[];
+  response: string[];
 }
 
 // Add the ChildEmotionCategory type
@@ -84,7 +86,7 @@ export type ChildEmotionCategory =
   | "excited" | "silly" | "calm" | "hungry" | "tired"
   | "worried" | "mad";
 
-// Add the ChildWheelEmotionData interface
+// Update the ChildWheelEmotionData interface to include required properties
 export interface ChildWheelEmotionData {
   category: ChildEmotionCategory;
   emotions: string[];
@@ -95,15 +97,25 @@ export interface ChildWheelEmotionData {
   relatedFeelings?: string[];
 }
 
-// Add the ReflectionPhrases interface
+// Update the ReflectionPhrases interface to match usage
 export interface ReflectionPhrases {
   opening: string[];
-  feelings: string[];
-  needs: string[];
-  values: string[];
-  thoughts: string[];
-  experiences: string[];
+  feelings?: string[];
+  needs?: string[];
+  values?: string[];
+  thoughts?: string[];
+  experiences?: string[];
   closing: string[];
+  sad?: string[];
+  angry?: string[];
+  anxious?: string[];
+  happy?: string[];
+  confused?: string[];
+  relieved?: string[];
+  embarrassed?: string[];
+  overwhelmed?: string[];
+  lonely?: string[];
+  hopeful?: string[];
 }
 
 // Add the ReflectionPrinciple interface

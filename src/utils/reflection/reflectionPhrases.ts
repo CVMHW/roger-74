@@ -1,4 +1,3 @@
-
 /**
  * Phrases to use for different feeling categories
  */
@@ -7,7 +6,6 @@ import { ReflectionPhrases } from './reflectionTypes';
 
 export const reflectionPhrases: ReflectionPhrases = {
   opening: [],
-  middle: [],
   closing: [],
   sad: [
     "I hear a sense of sadness in what you're sharing.",

@@ -67,7 +67,9 @@ export const generateEarlyConversationResponse = (
 };
 
 // Export the handleEarlyConversation function to fix the import issue
-export const handleEarlyConversation = generateEarlyConversationResponse;
+export const handleEarlyConversation = (userInput: string, messageCount: number): string => {
+  return generateEarlyConversationResponse(userInput, messageCount);
+};
 
 export default {
   generateEarlyConversationResponse

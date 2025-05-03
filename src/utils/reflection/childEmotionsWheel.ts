@@ -129,8 +129,10 @@ export const findEmotionInChildWheel = (emotionName: string): ChildWheelEmotionD
     // Check if it's the section name
     if (section.name === normalizedName) {
       return {
-        detectedFeeling: normalizedName,
         category: section.name,
+        detectedFeeling: normalizedName,
+        emotions: section.emotions.map(e => e.name),
+        descriptions: section.emotions.map(e => e.description || ''),
         relatedFeelings: section.emotions.map(e => e.name),
         color: section.color
       };
@@ -139,9 +141,12 @@ export const findEmotionInChildWheel = (emotionName: string): ChildWheelEmotionD
     // Check emotions within the section
     for (const emotion of section.emotions) {
       if (emotion.name === normalizedName || emotion.synonyms.includes(normalizedName)) {
+        const sectionEmotions = section.emotions.map(e => e.name);
         return {
-          detectedFeeling: emotion.name,
           category: section.name,
+          detectedFeeling: emotion.name,
+          emotions: sectionEmotions,
+          descriptions: section.emotions.map(e => e.description || ''),
           relatedFeelings: section.emotions
             .filter(e => e.name !== emotion.name)
             .map(e => e.name),
