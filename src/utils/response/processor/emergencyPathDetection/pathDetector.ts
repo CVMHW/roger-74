@@ -1,4 +1,3 @@
-
 /**
  * Emergency Path Detector
  * 
@@ -81,6 +80,24 @@ const MEDIUM_RISK_PATTERNS = [
 ];
 
 /**
+ * Utility function to safely compare severity levels
+ * This resolves the TypeScript comparison issues
+ */
+const isSeverityEqual = (actual: SeverityLevel, expected: SeverityLevel): boolean => {
+  return actual === expected;
+};
+
+/**
+ * Utility function to check if severity is at least at a certain level
+ */
+const isSeverityAtLeast = (actual: SeverityLevel, minimum: SeverityLevel): boolean => {
+  const levels = [SeverityLevel.LOW, SeverityLevel.MEDIUM, SeverityLevel.HIGH, SeverityLevel.SEVERE];
+  const actualIndex = levels.indexOf(actual);
+  const minimumIndex = levels.indexOf(minimum);
+  return actualIndex >= minimumIndex;
+};
+
+/**
  * Detects if the conversation is entering an emergency path
  * based on response patterns and context
  */
@@ -104,7 +121,7 @@ export const detectEmergencyPath = (
   }
   
   // If any critical patterns were found, return immediately
-  if (highestSeverity === SeverityLevel.SEVERE) {
+  if (isSeverityEqual(highestSeverity, SeverityLevel.SEVERE)) {
     return {
       isEmergencyPath: true,
       severity: SeverityLevel.SEVERE,
@@ -118,7 +135,7 @@ export const detectEmergencyPath = (
   for (const { pattern, type, description, severity } of HIGH_RISK_PATTERNS) {
     if (pattern.test(responseText)) {
       flags.push({ type, description, severity, pattern: pattern.toString() });
-      if (severity === SeverityLevel.HIGH && highestSeverity !== SeverityLevel.SEVERE) {
+      if (isSeverityEqual(severity, SeverityLevel.HIGH) && !isSeverityEqual(highestSeverity, SeverityLevel.SEVERE)) {
         highestSeverity = SeverityLevel.HIGH;
       }
     }
@@ -128,9 +145,8 @@ export const detectEmergencyPath = (
   for (const { pattern, type, description, severity } of MEDIUM_RISK_PATTERNS) {
     if (pattern.test(responseText)) {
       flags.push({ type, description, severity, pattern: pattern.toString() });
-      if (severity === SeverityLevel.MEDIUM && 
-          highestSeverity !== SeverityLevel.SEVERE && 
-          highestSeverity !== SeverityLevel.HIGH) {
+      if (isSeverityEqual(severity, SeverityLevel.MEDIUM) && 
+          !isSeverityAtLeast(highestSeverity, SeverityLevel.HIGH)) {
         highestSeverity = SeverityLevel.MEDIUM;
       }
     }
@@ -145,7 +161,7 @@ export const detectEmergencyPath = (
         description: 'False reference to previous conversation in early exchange',
         severity: SeverityLevel.HIGH
       });
-      if (highestSeverity !== SeverityLevel.SEVERE) {
+      if (!isSeverityEqual(highestSeverity, SeverityLevel.SEVERE)) {
         highestSeverity = SeverityLevel.HIGH;
       }
     }
@@ -160,28 +176,29 @@ export const detectEmergencyPath = (
         description: 'Sentence with unusual capitalization pattern',
         severity: SeverityLevel.MEDIUM
       });
-      if (highestSeverity !== SeverityLevel.SEVERE && highestSeverity !== SeverityLevel.HIGH) {
+      if (!isSeverityAtLeast(highestSeverity, SeverityLevel.HIGH)) {
         highestSeverity = SeverityLevel.MEDIUM;
       }
     }
   }
   
   // Determine if this is an emergency path and what action to take
-  const isEmergencyPath = highestSeverity === SeverityLevel.HIGH || highestSeverity === SeverityLevel.SEVERE;
+  const isEmergencyPath = isSeverityEqual(highestSeverity, SeverityLevel.HIGH) || 
+                           isSeverityEqual(highestSeverity, SeverityLevel.SEVERE);
   
   let recommendedAction: 'continue' | 'minor_intervention' | 'major_intervention' | 'reset_conversation' = 'continue';
   
-  if (highestSeverity === SeverityLevel.SEVERE) {
+  if (isSeverityEqual(highestSeverity, SeverityLevel.SEVERE)) {
     recommendedAction = 'reset_conversation';
-  } else if (highestSeverity === SeverityLevel.HIGH) {
+  } else if (isSeverityEqual(highestSeverity, SeverityLevel.HIGH)) {
     recommendedAction = 'major_intervention';
-  } else if (highestSeverity === SeverityLevel.MEDIUM) {
+  } else if (isSeverityEqual(highestSeverity, SeverityLevel.MEDIUM)) {
     recommendedAction = 'minor_intervention';
   }
   
   const requiresImmediateIntervention = 
-    highestSeverity === SeverityLevel.SEVERE || 
-    (highestSeverity === SeverityLevel.HIGH && flags.length >= 2);
+    isSeverityEqual(highestSeverity, SeverityLevel.SEVERE) || 
+    (isSeverityEqual(highestSeverity, SeverityLevel.HIGH) && flags.length >= 2);
   
   return {
     isEmergencyPath,
@@ -217,4 +234,3 @@ export const categorizeFlags = (flags: EmergencyPathFlag[]): EmergencyPathFlags 
       flag.type.includes('malformed'))
   };
 };
-
