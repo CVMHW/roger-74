@@ -18,7 +18,7 @@ import {
 import { processResponseThroughMasterRules } from './response/responseProcessor';
 
 // Import original hook implementation
-import originalUseRogerianResponse from './hooks/rogerianResponse';
+import originalUseRogerianResponse from '../hooks/rogerianResponse/index';
 
 // Import early conversation handling
 import { isEarlyConversation } from './memory/systems/earlyConversationHandler';

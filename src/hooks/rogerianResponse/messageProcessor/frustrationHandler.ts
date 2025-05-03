@@ -1,14 +1,10 @@
 
-import { MessageType } from '../../../components/Message';
-import { 
-  detectEverydayFrustration, 
-  generateEverydayFrustrationResponse,
-  detectSmallTalkCategory,
-  generateSmallTalkResponse
-} from '../../../utils/conversation/theSmallStuff';
-import { processResponseThroughMasterRules } from '../../../utils/response/responseProcessor';
+import { MessageType } from "../../../components/Message";
+import { extractUserFrustrations } from "../../../utils/conversation/theSmallStuff/everydayFrustrations";
+import { detectSmallTalk } from "../../../utils/conversation/smallTalk/detectors";
+import { generateSmallTalkResponse } from "../../../utils/conversation/smallTalk/responseGenerators";
 
-interface ProcessFrustrationProps {
+interface FrustrationParams {
   userInput: string;
   baseProcessUserMessage: any;
   conversationHistory: string[];
@@ -16,56 +12,59 @@ interface ProcessFrustrationProps {
 }
 
 /**
- * Process everyday frustrations and small talk
+ * Process potential frustrations or small talk in user messages
  */
 export const processFrustrationAndSmallTalk = async ({
   userInput,
   baseProcessUserMessage,
   conversationHistory,
-  updateStage
-}: ProcessFrustrationProps): Promise<MessageType | null> => {
-  // Check for everyday frustrations first (non-clinical concerns)
-  const frustrationInfo = detectEverydayFrustration(userInput);
-  if (frustrationInfo.isFrustration) {
-    const frustrationResponse = generateEverydayFrustrationResponse(userInput, frustrationInfo);
+  updateStage,
+}: FrustrationParams): Promise<MessageType | null> => {
+  // First check for everyday frustrations
+  const userFrustrations = extractUserFrustrations(userInput);
+  
+  // Check if we have detected frustrations
+  if (userFrustrations && userFrustrations.detected) {
+    console.log("Everyday frustration detected:", userFrustrations.category);
     
-    // Process through master rules for additional validation
-    const processedResponse = processResponseThroughMasterRules(
-      frustrationResponse,
-      userInput,
-      conversationHistory.length,
-      conversationHistory
-    );
-    
-    // Update conversation stage
+    // Move conversation forward
     updateStage();
     
-    // Process with frustration response
+    // Generate a response using the frustration information
+    const generateFrustrationResponse = () => {
+      return userFrustrations.response || "That sounds frustrating. Could you tell me more about how this has been affecting you?";
+    };
+    
+    // Process using the base message processor but with our custom response
     return baseProcessUserMessage(
       userInput,
-      () => processedResponse,
+      generateFrustrationResponse,
       () => null
     );
   }
   
-  // Check for small talk in early conversation
-  const messageCount = conversationHistory.length;
-  if (messageCount <= 5) {
-    const smallTalkInfo = detectSmallTalkCategory(userInput);
-    if (smallTalkInfo.isSmallTalk) {
-      const smallTalkResponse = generateSmallTalkResponse(userInput, smallTalkInfo.category, messageCount);
-      
-      // Update conversation stage
-      updateStage();
-      
-      // Process with small talk response
-      return baseProcessUserMessage(
-        userInput,
-        () => smallTalkResponse,
-        () => null
-      );
-    }
+  // Next check for small talk
+  const smallTalkResult = detectSmallTalk(userInput, conversationHistory);
+  
+  if (smallTalkResult.isSmallTalk) {
+    console.log("Small talk detected:", smallTalkResult.category);
+    
+    // Move conversation forward
+    updateStage();
+    
+    // Generate a response based on small talk category
+    const generateSmallTalkResponseFn = () => {
+      return generateSmallTalkResponse(smallTalkResult.category, userInput, conversationHistory);
+    };
+    
+    // Process using the base message processor but with our custom response
+    return baseProcessUserMessage(
+      userInput,
+      generateSmallTalkResponseFn,
+      () => null
+    );
   }
   
+  // Return null if no frustration or small talk detected
   return null;
 };

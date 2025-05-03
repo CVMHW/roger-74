@@ -1,139 +1,111 @@
 
 /**
- * Memory enhancement utilities for response processing
+ * Memory Enhancement
+ * 
+ * Enhances responses with memory awareness and context
  */
-
-import { getContextualMemory } from '../../nlpProcessor';
-import { addToFiveResponseMemory, getLastPatientMessage, getFiveResponseMemory } from '../../memory/fiveResponseMemory';
-import { addToMemoryBank, retrieveRelevantMemories } from '../../memory/memoryBank';
-import { processWithMultiHeadAttention } from '../../memory/multiHeadAttention';
-import { AttentionResult, MemoryEnhancementParams } from './types';
 
 /**
- * Enhance response using the advanced MemoryBank system
+ * Enhance a response with memory awareness
  */
-export const enhanceWithMemoryBank = (
-  response: string,
-  userInput: string,
-  relevantMemories: any[],
-  conversationHistory: string[] = []
-): string => {
+export const enhanceResponseWithMemory = ({
+  response,
+  userInput,
+  conversationHistory = []
+}: {
+  response: string;
+  userInput: string;
+  conversationHistory?: string[];
+}): string => {
   try {
-    console.log("MEMORYBANK: Enhancing response with memory bank data");
+    // Basic checks for early conversation issues
+    const isEarlyConversation = conversationHistory.length < 3;
     
-    // Check if response already references memory adequately
-    if (verifyMemoryUtilization(userInput, response, conversationHistory)) {
-      return response;
+    if (isEarlyConversation) {
+      // For early conversation, remove any claims about past discussions
+      return removeEarlyConversationMemoryReferences(response);
     }
     
-    // If we have relevant memories, use them to enhance the response
-    if (relevantMemories.length > 0) {
-      const memory = relevantMemories[0];
-      
-      // Don't repeat the exact same memory reference if it's already in the response
-      if (!response.includes(memory.content.substring(0, 15))) {
-        const memoryPhrase = `I remember you mentioned ${memory.content.substring(0, 30)}... `;
-        return memoryPhrase + response;
-      }
+    // Check for memory references that might be inaccurate
+    if (hasMemoryReference(response)) {
+      // Add hedging language for memory references
+      return addHedgingForMemoryReferences(response);
     }
     
+    // No issues detected, return original
     return response;
+    
   } catch (error) {
-    console.error('Error enhancing response with MemoryBank:', error);
+    console.error("Error enhancing response with memory:", error);
     return response;
   }
 };
 
 /**
- * Verify if memory is being utilized in the response
- * Imported from the original masterRules implementation
+ * Check if response contains memory references
  */
-export const verifyMemoryUtilization = (
-  userInput: string, 
-  response: string, 
-  conversationHistory: string[] = []
-): boolean => {
-  // Implementation preserved from original masterRules
-  // This is a stub - the actual implementation would come from the imported file
-  // Since we don't have access to the original implementation,
-  // we're maintaining the function signature for compatibility
+const hasMemoryReference = (response: string): boolean => {
+  const memoryPhrases = [
+    /you (mentioned|said|told me)/i,
+    /earlier you/i,
+    /previously you/i,
+    /you've been telling me/i,
+    /we (discussed|talked about)/i,
+    /I remember/i,
+    /as you (said|mentioned|noted)/i
+  ];
   
-  // Check for memory-like phrases in the response
-  return response.includes("I remember") || 
-         response.includes("you mentioned") ||
-         response.includes("you said") ||
-         response.includes("you told me") ||
-         response.includes("you shared") ||
-         response.includes("earlier you") ||
-         response.includes("previously you");
+  return memoryPhrases.some(phrase => phrase.test(response));
 };
 
 /**
- * Process attention results and update memory systems
+ * Remove memory references from early conversation responses
  */
-export const processAttentionResults = (
-  userInput: string,
-  attentionResults: AttentionResult
-): void => {
-  // CRITICAL: Record to MemoryBank system - most advanced memory system
-  addToMemoryBank(
-    userInput, 
-    'patient', 
-    attentionResults.emotionalContext,
-    attentionResults.dominantTopics,
-    0.8 // High importance for user inputs
-  );
+const removeEarlyConversationMemoryReferences = (response: string): string => {
+  let modified = response;
   
-  // CRITICAL: Record to 5ResponseMemory system - redundant protection
-  addToFiveResponseMemory('patient', userInput);
+  // Replace memory claims with present-focused language
+  modified = modified
+    .replace(/you (mentioned|said|told me) that/gi, "it sounds like")
+    .replace(/earlier you (mentioned|said|indicated)/gi, "you just shared")
+    .replace(/as you mentioned/gi, "from what you're saying")
+    .replace(/we (discussed|talked about)/gi, "regarding")
+    .replace(/I remember you saying/gi, "I understand")
+    .replace(/from our previous conversation/gi, "from what you've shared");
+  
+  // If we've made changes, ensure the response flows naturally
+  if (modified !== response) {
+    // Clean up any awkward transitions that might have been created
+    modified = modified
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  
+  return modified;
 };
 
 /**
- * Apply memory enhancement to a response
+ * Add hedging language for memory references
  */
-export const enhanceResponseWithMemory = (
-  params: MemoryEnhancementParams
-): string => {
-  const { response, userInput, conversationHistory = [] } = params;
-  
-  try {
-    console.log("APPLYING MEMORY ENHANCEMENT");
-    
-    // CRITICAL: Process through multi-head attention
-    const attentionResults = processWithMultiHeadAttention(userInput, conversationHistory);
-    
-    // CRITICAL: Always record to all memory systems for redundancy
-    addToMemoryBank(userInput, 'patient', attentionResults.emotionalContext, attentionResults.dominantTopics);
-    addToFiveResponseMemory('patient', userInput);
-    
-    // Check if response already references memory
-    if (verifyMemoryUtilization(userInput, response, conversationHistory)) {
-      // Still record the response to all memory systems
-      addToMemoryBank(response, 'roger', attentionResults.emotionalContext, attentionResults.dominantTopics);
-      addToFiveResponseMemory('roger', response);
-      return response;
-    }
-    
-    // Apply full memory rules
-    const { applyMemoryRules } = require('../../rulesEnforcement/memoryEnforcer');
-    const enhancedResponse = applyMemoryRules(response, userInput, conversationHistory);
-    
-    // CRITICAL: Record enhanced response to all memory systems
-    addToMemoryBank(enhancedResponse, 'roger', attentionResults.emotionalContext, attentionResults.dominantTopics);
-    addToFiveResponseMemory('roger', enhancedResponse);
-    
-    return enhancedResponse;
-  } catch (error) {
-    console.error('Error enhancing response with memory:', error);
-    
-    // CRITICAL: Even in error case, ensure memory recording
-    try {
-      addToFiveResponseMemory('roger', response);
-      addToMemoryBank(response, 'roger');
-    } catch (memoryError) {
-      console.error('Critical failure in memory systems:', memoryError);
-    }
-    
+const addHedgingForMemoryReferences = (response: string): string => {
+  // If the response already starts with hedging language, return as-is
+  if (/^(It seems|From what I understand|If I'm understanding correctly|It sounds like)/i.test(response)) {
     return response;
   }
+  
+  // Add hedging prefix based on response content
+  if (response.includes("you mentioned") || response.includes("you said")) {
+    return "From what I understand, " + response;
+  }
+  
+  if (response.includes("we discussed") || response.includes("we talked about")) {
+    return "Based on our conversation, " + response;
+  }
+  
+  if (response.includes("I remember")) {
+    return "It sounds like " + response.replace(/I remember/i, "you've shared");
+  }
+  
+  // For other memory references, add general hedging
+  return "It seems that " + response;
 };

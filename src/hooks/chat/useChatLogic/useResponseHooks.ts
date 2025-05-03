@@ -1,6 +1,8 @@
+
 import { useState, useCallback } from 'react';
 import { MessageType } from '../../../components/Message';
-import { enhanceResponse, processUserMessageMemory, checkForResponseRepetition, getRepetitionRecoveryResponse } from '../../../utils/response/enhancer';
+import { enhanceResponse } from '../../../utils/response/enhancer';
+import { processUserMessageMemory, checkForResponseRepetition, getRepetitionRecoveryResponse } from '../../../utils/response/enhancer';
 import { isLocationDataNeeded } from '../../../utils/messageUtils';
 import { containsCriticalKeywords } from '../messageProcessor/detectionUtils';
 import { handleErrorResponse } from './useErrorHandling';

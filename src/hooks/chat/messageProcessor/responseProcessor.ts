@@ -48,7 +48,6 @@ export const processResponse = async ({
           const responseWithContextCheck = processResponseThroughMasterRules(
             rogerResponse.text,
             userInput,
-            conversationHistory.length,
             conversationHistory
           );
           
@@ -140,4 +139,3 @@ const handleErrorResponse = (
 
 // Import containsCriticalKeywords 
 import { containsCriticalKeywords } from './detectionUtils';
-

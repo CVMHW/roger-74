@@ -12,7 +12,6 @@
 // Export the unified response processing system
 export { 
   processCompleteResponse as processResponseThroughMasterRules,
-  processResponseThroughMasterRules,
   enhanceResponseWithMemory
 } from './processor';
 

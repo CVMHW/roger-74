@@ -133,7 +133,6 @@ export const processUserMessage = async (
       text: processResponseThroughMasterRules(
         generalResponse.text, 
         userInput, 
-        messageCount,
         conversationHistory
       )
     };
