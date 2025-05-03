@@ -356,11 +356,50 @@ export const generateSpontaneousPerspective = (
     return anxietyPerspectives[Math.floor(Math.random() * anxietyPerspectives.length)];
   }
   
-  if (lowerImage
+  if (lowerInput.includes('embarrass') || 
+      lowerInput.includes('awkward') || 
+      lowerInput.includes('spill')) {
+    
+    const embarrassmentPerspectives = [
+      "Those embarrassing moments can feel so huge to us, but others often barely remember them.",
+      "It's interesting how we tend to replay our embarrassing moments while rarely remembering others'.",
+      "I've noticed that my own embarrassing moments that felt catastrophic at the time seem much smaller with time.",
+      "The things that embarrass us often reveal what we value or what matters to us."
+    ];
+    
+    return embarrassmentPerspectives[Math.floor(Math.random() * embarrassmentPerspectives.length)];
+  }
+  
+  // Default perspectives based on personality mode
+  switch (mode) {
+    case 'curious':
+      return "I wonder what this situation might look like from a different angle or perspective.";
+    case 'empathetic':
+      return "These kinds of experiences often bring up complex feelings that take time to process.";
+    case 'reflective':
+      return "Sometimes these moments reveal something deeper about our values or what matters to us.";
+    case 'direct':
+      return "It's often helpful to name exactly what's bothering us about situations like these.";
+    case 'analytical':
+      return "There are usually multiple factors at play in these kinds of interactions.";
+    case 'warm':
+      return "It takes courage to share these kinds of experiences and feelings.";
+    case 'thoughtful':
+      return "These moments often connect to broader patterns or themes in our lives.";
+    case 'conversational':
+      return "Life throws these curveballs at all of us sometimes.";
+    case 'gentle':
+      return "It's important to be kind to ourselves when we're processing these kinds of experiences.";
+    case 'grounded':
+      return "Focusing on what we can control often helps in situations like these.";
+    default:
+      return "Our reactions to these situations often tell us something important about ourselves.";
+  }
+};
 
 // Import necessary components and utilities
 import { createMessage } from '../../utils/messageUtils';
-import { detectConversationPatterns } from '../utils/response/patternDetection';
+import { detectConversationPatterns } from '../patternDetection';
 
 /**
  * Generate a response with enhanced spontaneity and personality variation
