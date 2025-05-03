@@ -15,7 +15,7 @@ export const generateReflectionResponse = (
   const contextReflection = generateContextAwareReflection(userInput);
   
   if (contextReflection) {
-    // Apply grammar correction before returning
+    // Apply enhanced grammar correction before returning
     return correctGrammar(contextReflection);
   }
   
@@ -23,3 +23,4 @@ export const generateReflectionResponse = (
   // This will allow the calling code to fall back to other response types
   return null;
 };
+

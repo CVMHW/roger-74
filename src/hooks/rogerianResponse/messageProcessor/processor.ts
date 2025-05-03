@@ -61,6 +61,8 @@ export const processUserMessage = async (
     });
     
     if (frustrationOrSmallTalkResponse) {
+      // Apply grammar correction to the response text
+      frustrationOrSmallTalkResponse.text = correctGrammar(frustrationOrSmallTalkResponse.text);
       return frustrationOrSmallTalkResponse;
     }
     
@@ -80,6 +82,8 @@ export const processUserMessage = async (
     );
     
     if (safetyResponse) {
+      // Apply grammar correction to the response text
+      safetyResponse.text = correctGrammar(safetyResponse.text);
       return safetyResponse;
     }
     
@@ -93,6 +97,8 @@ export const processUserMessage = async (
     );
     
     if (specialCaseResponse) {
+      // Apply grammar correction to the response text
+      specialCaseResponse.text = correctGrammar(specialCaseResponse.text);
       return specialCaseResponse;
     }
     
@@ -104,6 +110,8 @@ export const processUserMessage = async (
     );
     
     if (petIllnessResponse) {
+      // Apply grammar correction to the response text
+      petIllnessResponse.text = correctGrammar(petIllnessResponse.text);
       return petIllnessResponse;
     }
     
@@ -118,6 +126,8 @@ export const processUserMessage = async (
     );
     
     if (mentalHealthResponse) {
+      // Apply grammar correction to the response text
+      mentalHealthResponse.text = correctGrammar(mentalHealthResponse.text);
       return mentalHealthResponse;
     }
     
@@ -132,13 +142,18 @@ export const processUserMessage = async (
     
     // 6. Process the response through master rules with conversation history
     const messageCount = conversationHistory.length;
+    let processedText = processResponseThroughMasterRules(
+      generalResponse.text, 
+      userInput, 
+      conversationHistory
+    );
+    
+    // Apply grammar correction to the final processed response
+    processedText = correctGrammar(processedText);
+    
     const processedResponse = {
       ...generalResponse,
-      text: processResponseThroughMasterRules(
-        generalResponse.text, 
-        userInput, 
-        conversationHistory
-      )
+      text: processedText
     };
     
     return processedResponse;
@@ -151,3 +166,4 @@ export const processUserMessage = async (
     ));
   }
 };
+
