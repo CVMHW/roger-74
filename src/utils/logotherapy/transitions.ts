@@ -1,81 +1,100 @@
 
 /**
- * Logotherapy transitions based on personality modes
+ * Logotherapy Transitions
+ * 
+ * Transition phrases to help introduce logotherapy principles 
+ * in a subtle, conversational manner
  */
 
-import { PersonalityMode } from './types';
+import { PersonalityMode } from '../response/personalityVariation';
 
 /**
- * Get appropriate transitions for blending logotherapy insights
+ * Transitions for different personality modes
+ * Maps each personality mode to appropriate transition phrases
  */
-export const getLogotherapyTransitions = (personalityMode: PersonalityMode): string[] => {
-  const commonTransitions = [
-    "Looking at this through the lens of meaning and purpose,",
-    "Considering how this relates to what gives your life meaning,",
-    "Thinking about the deeper purpose behind this,",
-    "From a meaning-centered perspective,",
-    "When we consider the importance of meaning in our lives,"
+export const transitionsForMode: Record<PersonalityMode, string[]> = {
+  curious: [
+    "I'm wondering about",
+    "I'm curious about how",
+    "It makes me wonder if"
+  ],
+  empathetic: [
+    "I can really hear that",
+    "That must be so difficult when",
+    "It makes sense you'd feel that way about"
+  ],
+  reflective: [
+    "When I reflect on what you're saying",
+    "Looking at this from another angle",
+    "Taking a step back to consider"
+  ],
+  direct: [
+    "Let's look at",
+    "Consider how",
+    "What if we explore"
+  ],
+  analytical: [
+    "Analyzing this situation",
+    "Looking at the patterns here",
+    "Breaking this down"
+  ],
+  warm: [
+    "I feel that",
+    "This reminds me of",
+    "There's something meaningful about"
+  ],
+  thoughtful: [
+    "I've been thinking about",
+    "Contemplating what you've shared",
+    "Something to consider might be"
+  ],
+  conversational: [
+    "You know, I was just thinking",
+    "It's interesting how",
+    "It strikes me that"
+  ],
+  gentle: [
+    "Perhaps we could gently explore",
+    "Maybe there's a subtle connection to",
+    "There might be a soft insight here about"
+  ],
+  grounded: [
+    "Bringing this back to the present moment",
+    "Looking at the concrete situation",
+    "Focusing on what's happening right now"
+  ],
+  existential: [
+    "Considering the deeper meaning",
+    "Looking at the existential aspect",
+    "From a broader perspective"
+  ],
+  'meaning-focused': [
+    "Thinking about what gives meaning here",
+    "Considering the values at play",
+    "Looking at what matters most in this situation"
+  ],
+  'warm-social': [
+    "In everyday situations like this",
+    "These social moments often",
+    "When we're with others like that"
+  ]
+};
+
+/**
+ * Get a random transition phrase for the given personality mode
+ */
+export const getRandomTransition = (mode: PersonalityMode): string => {
+  const transitions = transitionsForMode[mode] || transitionsForMode.conversational;
+  return transitions[Math.floor(Math.random() * transitions.length)];
+};
+
+/**
+ * Get a meaning-focused transition regardless of personality mode
+ */
+export const getMeaningFocusedTransition = (): string => {
+  const meaningTransitions = [
+    ...transitionsForMode.existential,
+    ...transitionsForMode['meaning-focused']
   ];
-  
-  // Get mode-specific transitions
-  const modeTransitions: Record<PersonalityMode, string[]> = {
-    'curious': [
-      "I wonder how this connects to your search for meaning?",
-      "What if we explored how this relates to your deeper purpose?"
-    ],
-    'empathetic': [
-      "I sense this might connect to your deeper search for meaning.",
-      "These feelings often relate to our need for purpose and meaning."
-    ],
-    'reflective': [
-      "Reflecting on how this relates to your life's meaning,",
-      "Taking a step back to see how this connects to your values and purpose,"
-    ],
-    'direct': [
-      "This directly connects to your search for meaning by",
-      "Looking at the purpose behind this situation,"
-    ],
-    'analytical': [
-      "Analyzing how this connects to meaning and purpose,",
-      "When we break down how this relates to your values,"
-    ],
-    'warm': [
-      "I appreciate how this journey relates to your search for meaning.",
-      "It's meaningful to see how this connects to your deeper purpose."
-    ],
-    'thoughtful': [
-      "I've been thinking about how this relates to your life's meaning.",
-      "This reminds me of how we all search for purpose in our experiences."
-    ],
-    'conversational': [
-      "You know, this really connects to finding meaning in your situation.",
-      "So, this actually ties into your deeper purpose in an interesting way."
-    ],
-    'gentle': [
-      "Perhaps we might consider how this relates to your search for meaning.",
-      "Maybe there's a connection here to your deeper values and purpose."
-    ],
-    'grounded': [
-      "Based on what you've shared, this clearly connects to your values and purpose.",
-      "From a practical perspective, this relates to finding meaning by"
-    ],
-    'existential': [
-      "This existential situation invites us to consider your deeper purpose.",
-      "The meaning dimension of this experience suggests"
-    ],
-    'meaning-focused': [
-      "Through the lens of meaning and purpose,",
-      "Considering the deeper values at play here,"
-    ]
-  };
-  
-  // Combine common with mode-specific transitions
-  const allTransitions = [...commonTransitions];
-  
-  // Add mode-specific transitions if available
-  if (modeTransitions[personalityMode]) {
-    allTransitions.push(...modeTransitions[personalityMode]);
-  }
-  
-  return allTransitions;
+  return meaningTransitions[Math.floor(Math.random() * meaningTransitions.length)];
 };

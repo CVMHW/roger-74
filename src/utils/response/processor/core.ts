@@ -46,10 +46,16 @@ export const processCore = (
       conversationHistory
     });
     
+    // IMPORTANT: For everyday social situations, skip or minimal logotherapy
+    const isEverydaySituation = /trip(ped)?|spill(ed)?|embarrass(ing|ed)|awkward|class|teacher|student|bar|drink/i.test(userInput);
+    
     // Apply logotherapy integration ONLY if the approach strength warrants it
-    // This is key - don't apply logotherapy to everyday situations
-    if (approach.logotherapyStrength > 0.3) {
+    // AND it's not an everyday social situation
+    if (approach.logotherapyStrength > 0.3 && !isEverydaySituation) {
       processedResponse = handleLogotherapyIntegration(processedResponse, userInput, conversationHistory);
+    } else if (isEverydaySituation && approach.logotherapyStrength > 0.1) {
+      // For everyday situations, use only very light meaning-focused language if at all
+      console.log("EVERYDAY SITUATION: Minimizing logotherapy integration");
     }
     
     // Apply all response rules
@@ -64,13 +70,24 @@ export const processCore = (
     const patternResult = detectConversationPatterns(processedResponse, conversationHistory);
     
     // Add personality variation based on the selected approach
-    processedResponse = addResponseVariety(
-      processedResponse,
-      userInput,
-      messageCount,
-      approach.spontaneityLevel,  // Dynamic spontaneity level
-      approach.creativityLevel    // Dynamic creativity level
-    );
+    // For everyday social situations, boost spontaneity and creativity
+    if (isEverydaySituation) {
+      processedResponse = addResponseVariety(
+        processedResponse,
+        userInput,
+        messageCount,
+        Math.min(90, approach.spontaneityLevel + 15),  // Boost spontaneity for social situations
+        Math.min(85, approach.creativityLevel + 15)    // Boost creativity for social situations
+      );
+    } else {
+      processedResponse = addResponseVariety(
+        processedResponse,
+        userInput,
+        messageCount,
+        approach.spontaneityLevel,  // Dynamic spontaneity level
+        approach.creativityLevel    // Dynamic creativity level
+      );
+    }
     
     // Apply grammar correction with user input for length adjustment
     return correctGrammar(processedResponse, userInput);

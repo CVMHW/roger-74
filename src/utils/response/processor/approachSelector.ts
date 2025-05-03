@@ -44,12 +44,12 @@ export const selectResponseApproach = (
     };
   }
   
-  // Detect everyday frustrations and embarrassments - prioritize this for social stories
-  if (/spill(ed)?|embarrass(ed|ing)?|awkward|screw(ed)? up|mistake|mess(ed)? up/i.test(input)) {
+  // IMPROVED: Better detection for everyday embarrassments and social situations
+  if (/spill(ed)?|trip(ped)?|embarrass(ed|ing)?|awkward|screw(ed)? up|mistake|mess(ed)? up|class|teacher|student|presentation/i.test(input)) {
     return {
-      logotherapyStrength: 0.1, // Very low meaning focus for everyday issues
-      spontaneityLevel: 80,     // Higher spontaneity
-      creativityLevel: 70,      // Higher creativity
+      logotherapyStrength: 0.05, // VERY low meaning focus for everyday issues
+      spontaneityLevel: 85,      // Much higher spontaneity
+      creativityLevel: 80,       // Higher creativity
       type: 'everydayFrustration'
     };
   }
@@ -136,6 +136,16 @@ export const selectResponseApproach = (
         type: 'rogerian'
       };
     }
+    
+    // Handle embarrassment specifically
+    if (['embarrassed', 'awkward', 'uncomfortable'].includes(primaryEmotion)) {
+      return {
+        logotherapyStrength: 0.05, // Very low meaning focus
+        spontaneityLevel: 85,      // Very high spontaneity
+        creativityLevel: 80,       // High creativity 
+        type: 'everydayFrustration'
+      };
+    }
   }
   
   // Default balanced approach
@@ -174,15 +184,21 @@ export const adjustApproachForConversationFlow = (
     adjustedApproach.spontaneityLevel = Math.min(80, adjustedApproach.spontaneityLevel + 15);
   }
   
-  // Detect resistance to existential approaches
+  // IMPROVED: Detect resistance to existential/meaning approaches
   const hasExistentialResistance = conversationHistory.some(msg => 
-    /just a (simple|regular)|come on|i('m| am) just|get real|not that deep|too much/i.test(msg)
+    /just a (simple|regular)|come on|i('m| am) just|get real|not that deep|too much|what\?|all that happened|how does.*reflect on|are you insinuating/i.test(msg)
   );
   
   if (hasExistentialResistance) {
     // Dramatically reduce existential/meaning focus
-    adjustedApproach.logotherapyStrength = Math.min(adjustedApproach.logotherapyStrength, 0.1);
-    adjustedApproach.spontaneityLevel = Math.min(85, adjustedApproach.spontaneityLevel + 20);
+    console.log("DETECTED RESISTANCE TO EXISTENTIAL APPROACH: Reducing logotherapy strength");
+    adjustedApproach.logotherapyStrength = 0.01; // Almost eliminate meaning/logotherapy content
+    adjustedApproach.spontaneityLevel = Math.min(90, adjustedApproach.spontaneityLevel + 20);
+    
+    // If user seems frustrated with meaning-based responses, force to everydayFrustration type
+    if (approach.type === 'existential' || approach.type === 'rogerian') {
+      adjustedApproach.type = 'everydayFrustration';
+    }
   }
   
   return adjustedApproach;
