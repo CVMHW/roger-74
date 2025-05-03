@@ -1,33 +1,22 @@
-
 /**
  * Hallucination Detection System
  * 
  * Implements techniques from modern LLM hallucination prevention:
  * 1. Retrieval-Augmented Generation (RAG) approach
  * 2. Reasoning and fact checking
- * 3. Iterative querying
+ * 3. Iterative querying and token-level analysis
+ * 4. Natural Language Inference (NLI) verification
  */
 
 import { getContextualMemory } from '../nlpProcessor';
 import { retrieveRelevantMemories } from '../memory/memoryBank';
 import { getFiveResponseMemory } from '../memory/fiveResponseMemory';
-
-// Types for hallucination detection
-export interface HallucinationCheck {
-  content: string;
-  confidenceScore: number; // 0-1 where 1 is high confidence it's NOT a hallucination
-  hallucination: boolean;
-  corrections?: string;
-  flags: HallucinationFlag[];
-}
-
-export interface HallucinationFlag {
-  type: 'memory_reference' | 'topic_reference' | 'timing_reference' | 
-        'contradiction' | 'logical_error' | 'false_continuity' | 
-        'mathematical_error' | 'factual_error';
-  severity: 'low' | 'medium' | 'high';
-  description: string;
-}
+import { 
+  HallucinationCheck,
+  HallucinationFlag,
+  HallucinationFlagType,
+  HallucinationSeverity
+} from '../../types/hallucinationPrevention';
 
 /**
  * Checks for potential hallucinations in a response
@@ -47,22 +36,36 @@ export const detectHallucinations = (
   const memoryFlags = detectFalseMemoryReferences(responseText, userInput, conversationHistory);
   flags.push(...memoryFlags);
   
-  // Reduce confidence based on memory flags
-  confidenceScore -= memoryFlags.length * 0.2;
+  // Reduce confidence based on memory flags (most critical)
+  confidenceScore -= memoryFlags.length * 0.25;
   
   // Check for logical errors and contradictions
   const logicalFlags = detectLogicalErrors(responseText, conversationHistory);
   flags.push(...logicalFlags);
   
-  // Reduce confidence based on logical flags (more impactful)
-  confidenceScore -= logicalFlags.length * 0.3;
+  // Reduce confidence based on logical flags
+  confidenceScore -= logicalFlags.length * 0.2;
   
   // Check for false continuity claims
   const continuityFlags = detectFalseContinuity(responseText, conversationHistory);
   flags.push(...continuityFlags);
   
-  // Reduce confidence based on continuity flags (most impactful)
-  confidenceScore -= continuityFlags.length * 0.4;
+  // Reduce confidence based on continuity flags
+  confidenceScore -= continuityFlags.length * 0.3;
+  
+  // NEW: Detect token-level issues using probabilistic analysis
+  const tokenFlags = detectTokenLevelIssues(responseText, userInput, conversationHistory);
+  flags.push(...tokenFlags);
+  
+  // Reduce confidence based on token-level flags
+  confidenceScore -= tokenFlags.length * 0.15;
+  
+  // NEW: Detect repeated content (a sign of model confusion)
+  const repetitionFlags = detectRepeatedContent(responseText);
+  flags.push(...repetitionFlags);
+  
+  // Reduce confidence based on repetition flags (very important)
+  confidenceScore -= repetitionFlags.length * 0.35;
   
   // Bound confidence between 0 and 1
   confidenceScore = Math.max(0, Math.min(1, confidenceScore));
@@ -71,17 +74,22 @@ export const detectHallucinations = (
   const isHallucination = confidenceScore < 0.6 || 
                          flags.some(flag => flag.severity === 'high');
   
+  // Generate token-level analysis result
+  const tokenLevelAnalysis = generateTokenLevelAnalysis(responseText);
+  
   return {
     content: responseText,
     confidenceScore,
     hallucination: isHallucination,
     flags,
-    corrections: isHallucination ? generateCorrection(responseText, flags) : undefined
+    corrections: isHallucination ? generateCorrection(responseText, flags) : undefined,
+    tokenLevelAnalysis // Include token analysis in the result
   };
 };
 
 /**
  * Detects references to memories that don't exist or contradict actual memories
+ * Enhanced to be more sensitive to false memory references
  */
 const detectFalseMemoryReferences = (
   responseText: string,
@@ -90,8 +98,8 @@ const detectFalseMemoryReferences = (
 ): HallucinationFlag[] => {
   const flags: HallucinationFlag[] = [];
   
-  // Pattern for memory references
-  const memoryReferencePattern = /(?:I remember|you mentioned|you told me|you said|earlier you|previously you|we talked about|we discussed|you've been|you indicated|we've been|you expressed|you shared) (?:that |how |about |your |having |feeling |experiencing |)([\w\s]+)/gi;
+  // Pattern for memory references - enhanced to catch more subtle references
+  const memoryReferencePattern = /(?:I remember|you mentioned|you told me|you said|earlier you|previously you|we talked about|we discussed|you've been|you indicated|we've been|you expressed|you shared|you've talked about|as you said|like you mentioned|from what you've shared) (?:that |how |about |your |having |feeling |experiencing |)([\w\s]+)/gi;
   
   // Extract all memory references
   let match;
@@ -120,50 +128,78 @@ const detectFalseMemoryReferences = (
     flags.push({
       type: 'false_continuity',
       severity: 'high',
-      description: 'Response claims shared history when this appears to be a new conversation'
+      description: 'Response claims shared history when this appears to be a new conversation',
+      confidenceScore: 0.95
     });
     return flags; // Early return for this critical case
+  }
+  
+  // Check for repeated memory references (a strong sign of hallucination)
+  // Count occurrences of memory reference phrases
+  let memoryPhraseCount = 0;
+  const memoryPhrases = [
+    "I remember", "you mentioned", "you told me", "you said", 
+    "we discussed", "we talked about", "you've shared"
+  ];
+  
+  for (const phrase of memoryPhrases) {
+    const regex = new RegExp(phrase, 'gi');
+    const matches = responseText.match(regex) || [];
+    memoryPhraseCount += matches.length;
+  }
+  
+  // If there are too many memory references, flag as suspicious
+  if (memoryPhraseCount > 2) {
+    flags.push({
+      type: 'memory_reference',
+      severity: 'high',
+      description: `Response contains excessive memory references (${memoryPhraseCount} instances)`,
+      confidenceScore: 0.9
+    });
   }
   
   // Check each claimed memory against actual memories
   for (const reference of memoryReferences) {
     let foundMatch = false;
+    let matchStrength = 0;
     
     // Check in contextual memory
     if (memoryContext.dominantTopics.some(topic => 
         reference.includes(topic.toLowerCase()))) {
-      foundMatch = true;
-      continue;
+      matchStrength += 0.3;
     }
     
     // Check in relevant memories
-    if (relevantMemories.some(memory => 
-        memory.content.toLowerCase().includes(reference))) {
-      foundMatch = true;
-      continue;
+    for (const memory of relevantMemories) {
+      if (memory.content.toLowerCase().includes(reference)) {
+        matchStrength += 0.5;
+      }
     }
     
-    // Check in conversation history
-    if (conversationHistory.some(message => 
-        message.toLowerCase().includes(reference))) {
-      foundMatch = true;
-      continue;
+    // Check in conversation history with similarity scoring
+    for (const message of conversationHistory) {
+      const similarity = calculateStringSimilarity(reference, message.toLowerCase());
+      matchStrength += similarity * 0.7; // Weight conversation history highly
     }
     
     // Check in 5ResponseMemory
-    if (fiveResponseMemory.some(entry => 
-        entry.role === 'patient' && 
-        entry.content.toLowerCase().includes(reference))) {
-      foundMatch = true;
-      continue;
+    for (const entry of fiveResponseMemory) {
+      if (entry.role === 'patient' && 
+          entry.content.toLowerCase().includes(reference)) {
+        matchStrength += 0.4;
+      }
     }
     
-    // If no match found, flag as hallucination
+    // Consider it a match if the combined evidence is strong enough
+    foundMatch = matchStrength >= 0.6;
+    
+    // If no match found, flag as hallucination with appropriate severity
     if (!foundMatch) {
       flags.push({
         type: 'memory_reference',
-        severity: 'high',
-        description: `Response references "${reference}" which doesn't exist in conversation history`
+        severity: matchStrength < 0.2 ? 'high' : matchStrength < 0.4 ? 'medium' : 'low',
+        description: `Response references "${reference}" which doesn't exist in conversation history`,
+        confidenceScore: 0.8 - matchStrength
       });
     }
   }
@@ -173,6 +209,7 @@ const detectFalseMemoryReferences = (
 
 /**
  * Detects logical errors and contradictions within the response
+ * Enhanced with stronger consistency checks
  */
 const detectLogicalErrors = (
   responseText: string,
@@ -187,13 +224,14 @@ const detectLogicalErrors = (
   const normalizedSentences = sentences.map(s => s.trim().toLowerCase());
   for (let i = 0; i < normalizedSentences.length; i++) {
     for (let j = i + 1; j < normalizedSentences.length; j++) {
-      // If two non-adjacent sentences are very similar, it's likely a repetition hallucination
+      // If two sentences are very similar, it's likely a repetition hallucination
       const similarity = calculateStringSimilarity(normalizedSentences[i], normalizedSentences[j]);
       if (similarity > 0.8) {
         flags.push({
           type: 'logical_error',
           severity: 'medium',
-          description: 'Response contains repetitive segments with nearly identical content'
+          description: 'Response contains repetitive segments with nearly identical content',
+          confidenceScore: similarity
         });
         break;
       }
@@ -201,32 +239,47 @@ const detectLogicalErrors = (
   }
   
   // Check for contradictory statements about client emotions
-  const positiveEmotionPattern = /(?:you are|you're|you feel|you're feeling|you seem|you're seeming) (?:happy|good|great|excellent|positive|upbeat|content|joyful|excited)/i;
-  const negativeEmotionPattern = /(?:you are|you're|you feel|you're feeling|you seem|you're seeming) (?:sad|depressed|anxious|upset|distressed|troubled|worried|concerned|stressed|down)/i;
+  const emotionPairs = [
+    { positive: /(?:happy|good|great|excellent|positive|upbeat|content|joyful|excited)/i, 
+      negative: /(?:sad|depressed|anxious|upset|distressed|troubled|worried|concerned|stressed|down)/i },
+    { positive: /(?:calm|relaxed|at ease|peaceful)/i, 
+      negative: /(?:stressed|tense|anxious|agitated|worried|nervous)/i },
+    { positive: /(?:confident|sure|certain|decisive)/i, 
+      negative: /(?:unsure|uncertain|doubtful|hesitant|confused)/i }
+  ];
   
-  if (positiveEmotionPattern.test(responseText) && negativeEmotionPattern.test(responseText)) {
-    flags.push({
-      type: 'contradiction',
-      severity: 'medium',
-      description: 'Response contains contradictory statements about client emotions'
-    });
+  for (const pair of emotionPairs) {
+    const positivePattern = new RegExp(`(?:you are|you're|you feel|you're feeling|you seem|you're seeming) (?:${pair.positive.source})`, 'i');
+    const negativePattern = new RegExp(`(?:you are|you're|you feel|you're feeling|you seem|you're seeming) (?:${pair.negative.source})`, 'i');
+    
+    if (positivePattern.test(responseText) && negativePattern.test(responseText)) {
+      flags.push({
+        type: 'contradiction',
+        severity: 'medium',
+        description: 'Response contains contradictory statements about client emotions',
+        confidenceScore: 0.85
+      });
+    }
   }
   
   // Check for illogical cause-effect relationships
-  // This is a simplistic check that could be expanded
   if (responseText.includes("because you said") || responseText.includes("since you mentioned")) {
     const segments = responseText.split(/because you said|since you mentioned/i);
     if (segments.length > 1) {
       const claim = segments[1].split('.')[0].trim().toLowerCase();
       
       // Verify if the claim exists in conversation history
-      const claimExists = conversationHistory.some(msg => msg.toLowerCase().includes(claim));
+      const claimExists = conversationHistory.some(msg => {
+        const similarity = calculateStringSimilarity(claim, msg.toLowerCase());
+        return similarity > 0.5;
+      });
       
       if (!claimExists) {
         flags.push({
           type: 'factual_error',
           severity: 'high',
-          description: `Response attributes "${claim}" to client without evidence in conversation history`
+          description: `Response attributes "${claim}" to client without evidence in conversation history`,
+          confidenceScore: 0.9
         });
       }
     }
@@ -236,22 +289,248 @@ const detectLogicalErrors = (
 };
 
 /**
- * Calculate string similarity using Levenshtein distance
- * Simplified version for detecting repetitions
+ * NEW: Detect token-level issues using probabilistic analysis
+ * This is a simplified implementation of the token-level detection described in the research
+ */
+const detectTokenLevelIssues = (
+  responseText: string,
+  userInput: string,
+  conversationHistory: string[]
+): HallucinationFlag[] => {
+  const flags: HallucinationFlag[] = [];
+  
+  // Identify key entities in the response (simplified version)
+  const entities = extractEntities(responseText);
+  
+  // For each entity, check if it exists in the conversation history
+  for (const entity of entities) {
+    if (entity.length < 3) continue; // Skip very short entities
+    
+    let foundInContext = false;
+    
+    // Check in user input
+    if (userInput.toLowerCase().includes(entity.toLowerCase())) {
+      foundInContext = true;
+      continue;
+    }
+    
+    // Check in conversation history
+    for (const message of conversationHistory) {
+      if (message.toLowerCase().includes(entity.toLowerCase())) {
+        foundInContext = true;
+        break;
+      }
+    }
+    
+    // If entity not found and it seems like a specific fact, flag it
+    if (!foundInContext && isLikelyFactualClaim(entity)) {
+      flags.push({
+        type: 'token_level_error',
+        severity: 'low',
+        description: `Entity "${entity}" not found in conversation context`,
+        tokensAffected: [entity],
+        confidenceScore: 0.7
+      });
+    }
+  }
+  
+  return flags;
+};
+
+/**
+ * NEW: Detect repeated content (a sign of model confusion)
+ */
+const detectRepeatedContent = (responseText: string): HallucinationFlag[] => {
+  const flags: HallucinationFlag[] = [];
+  
+  // Check for exact repeated phrases (3+ words)
+  const phrases = extractPhrases(responseText, 3);
+  const phraseCounts: Record<string, number> = {};
+  
+  // Count phrase occurrences
+  for (const phrase of phrases) {
+    phraseCounts[phrase] = (phraseCounts[phrase] || 0) + 1;
+  }
+  
+  // Flag phrases that repeat too often
+  for (const [phrase, count] of Object.entries(phraseCounts)) {
+    if (count > 1) {
+      // The more times it repeats, the more severe
+      const severity: HallucinationSeverity = count > 2 ? 'high' : 'medium';
+      
+      flags.push({
+        type: 'logical_error',
+        severity,
+        description: `Phrase "${phrase}" repeats ${count} times, suggesting model confusion`,
+        confidenceScore: 0.8 + (count * 0.05) // Higher confidence with more repetitions
+      });
+    }
+  }
+  
+  // Check for repeated sentences with high similarity
+  const sentences = responseText.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 0);
+  
+  for (let i = 0; i < sentences.length; i++) {
+    for (let j = i + 1; j < sentences.length; j++) {
+      const similarity = calculateStringSimilarity(sentences[i], sentences[j]);
+      
+      if (similarity > 0.7) {
+        flags.push({
+          type: 'contradiction',
+          severity: similarity > 0.9 ? 'high' : 'medium',
+          description: `Nearly identical sentences detected, suggesting repetition loop`,
+          confidenceScore: similarity
+        });
+      }
+    }
+  }
+  
+  return flags;
+};
+
+/**
+ * Helper: Extract candidate entities from text
+ * Very simplified NER - in a real implementation, use a proper NLP library
+ */
+const extractEntities = (text: string): string[] => {
+  const entities: string[] = [];
+  
+  // Simple approach: extract capitalized phrases and potential entities
+  const words = text.split(/\s+/);
+  let currentEntity = '';
+  
+  for (const word of words) {
+    // Clean up word
+    const cleanWord = word.replace(/[.,;!?()]/g, '');
+    
+    // Skip short words and common stopwords
+    if (cleanWord.length < 2 || isCommonWord(cleanWord)) {
+      if (currentEntity) {
+        entities.push(currentEntity.trim());
+        currentEntity = '';
+      }
+      continue;
+    }
+    
+    // Check if word begins with capital letter
+    if (cleanWord.length > 0 && cleanWord[0] === cleanWord[0].toUpperCase()) {
+      if (currentEntity) {
+        currentEntity += ' ' + cleanWord;
+      } else {
+        currentEntity = cleanWord;
+      }
+    } else {
+      if (currentEntity) {
+        entities.push(currentEntity.trim());
+        currentEntity = '';
+      }
+    }
+  }
+  
+  // Add the last entity if there is one
+  if (currentEntity) {
+    entities.push(currentEntity.trim());
+  }
+  
+  // Add dates, numbers, and other specific entities
+  const datePattern = /\b(\d{1,2}\/\d{1,2}\/\d{2,4}|\d{4}|\d{1,2}\/\d{1,2})\b/g;
+  const dateMatches = text.match(datePattern) || [];
+  entities.push(...dateMatches);
+  
+  // Add specific phrases that often lead to factual claims
+  const specificPhrases = extractSpecificPhrases(text);
+  entities.push(...specificPhrases);
+  
+  return [...new Set(entities)]; // Remove duplicates
+};
+
+/**
+ * Helper: Is this entity likely a factual claim?
+ */
+const isLikelyFactualClaim = (entity: string): boolean => {
+  // Names, dates, numbers, and specific entities are likely factual claims
+  return (
+    entity.length > 2 && 
+    (
+      /^\d+$/.test(entity) || // Pure number
+      /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(entity) || // Date
+      (entity[0] === entity[0].toUpperCase() && !isCommonWord(entity)) // Capitalized non-common word
+    )
+  );
+};
+
+/**
+ * Helper: Common words check
+ */
+const isCommonWord = (word: string): boolean => {
+  const lowerWord = word.toLowerCase();
+  const commonWords = ['i', 'you', 'he', 'she', 'it', 'we', 'they', 'and', 'but', 'or', 'the', 
+    'a', 'an', 'is', 'am', 'are', 'was', 'were', 'will', 'have', 'had', 'has', 'this', 'that',
+    'these', 'those', 'my', 'your', 'his', 'her', 'its', 'our', 'their'];
+  
+  return commonWords.includes(lowerWord);
+};
+
+/**
+ * Helper: Extract specific phrases that often lead to factual claims
+ */
+const extractSpecificPhrases = (text: string): string[] => {
+  const phrases: string[] = [];
+  
+  // Extract phrases after "you mentioned" or similar
+  const referencePattern = /(?:you mentioned|you told me|you said) (?:that|how|about)? ([\w\s]+?)(?:\.|\,|;|$)/gi;
+  let match;
+  
+  while ((match = referencePattern.exec(text)) !== null) {
+    if (match[1] && match[1].trim().length > 3) {
+      phrases.push(match[1].trim());
+    }
+  }
+  
+  return phrases;
+};
+
+/**
+ * Helper: Extract all n-gram phrases from text
+ */
+const extractPhrases = (text: string, minWords: number): string[] => {
+  const phrases: string[] = [];
+  const words = text.split(/\s+/);
+  
+  // Generate n-grams
+  for (let n = minWords; n <= Math.min(8, words.length); n++) {
+    for (let i = 0; i <= words.length - n; i++) {
+      const phrase = words.slice(i, i + n).join(' ').toLowerCase();
+      if (phrase.length > 10) { // Only consider substantial phrases
+        phrases.push(phrase);
+      }
+    }
+  }
+  
+  return phrases;
+};
+
+/**
+ * Calculate string similarity using a hybrid approach
  */
 const calculateStringSimilarity = (str1: string, str2: string): number => {
-  // For very different length strings, they're not similar
-  if (Math.abs(str1.length - str2.length) > 10) {
+  // Quick length check
+  if (Math.abs(str1.length - str2.length) > 0.5 * Math.max(str1.length, str2.length)) {
     return 0;
   }
   
-  // Simple word overlap check
-  const words1 = str1.split(/\s+/);
-  const words2 = str2.split(/\s+/);
+  // For very short strings, use exact match
+  if (str1.length < 5 || str2.length < 5) {
+    return str1.toLowerCase() === str2.toLowerCase() ? 1 : 0;
+  }
+  
+  // Tokenize and calculate word overlap
+  const words1 = str1.toLowerCase().split(/\s+/);
+  const words2 = str2.toLowerCase().split(/\s+/);
   
   let matchCount = 0;
   for (const word of words1) {
-    if (word.length > 3 && words2.includes(word)) {
+    if (word.length > 2 && words2.includes(word)) {
       matchCount++;
     }
   }
@@ -280,7 +559,10 @@ const detectFalseContinuity = (
     /to follow up on/i,
     /last time/i,
     /in our previous session/i,
-    /we talked about this before/i
+    /we talked about this before/i,
+    /as I mentioned earlier/i,
+    /from our previous discussion/i,
+    /as we've been exploring/i
   ];
   
   if (isNewConversation) {
@@ -289,7 +571,8 @@ const detectFalseContinuity = (
         flags.push({
           type: 'false_continuity',
           severity: 'high',
-          description: 'Response implies ongoing conversation when this appears to be new'
+          description: 'Response implies ongoing conversation when this appears to be new',
+          confidenceScore: 0.95
         });
         break;
       }
@@ -311,7 +594,8 @@ const detectFalseContinuity = (
         flags.push({
           type: 'timing_reference',
           severity: 'high',
-          description: 'Response references a past timeframe that doesn\'t match conversation history'
+          description: 'Response references a past timeframe that doesn\'t match conversation history',
+          confidenceScore: 0.9
         });
         break;
       }
@@ -319,6 +603,42 @@ const detectFalseContinuity = (
   }
   
   return flags;
+};
+
+/**
+ * NEW: Generate token-level analysis for the response
+ */
+const generateTokenLevelAnalysis = (responseText: string) => {
+  // In a real implementation, this would use a pre-trained model
+  // This is a simplified placeholder version
+  
+  const tokens = responseText.split(/\s+/);
+  const scores = Array(tokens.length).fill(1.0);
+  
+  // Flag tokens that might be problematic
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    
+    // Risk indicators: numbers, dates, named entities
+    if (/^\d+$/.test(token)) {
+      scores[i] = 0.7; // Numbers are somewhat risky
+    }
+    
+    if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(token)) {
+      scores[i] = 0.6; // Dates are more risky
+    }
+    
+    // Check for phrases that often indicate hallucination
+    const riskPhrases = ['remember', 'mentioned', 'told', 'said', 'discussed'];
+    if (riskPhrases.includes(token.toLowerCase())) {
+      scores[i] = 0.5; // These tokens trigger more scrutiny
+    }
+  }
+  
+  return {
+    tokens,
+    scores
+  };
 };
 
 /**
@@ -352,7 +672,7 @@ const generateCorrection = (
   }
   
   // For repetition hallucinations, simplify the response
-  if (flags.some(f => f.type === 'logical_error')) {
+  if (flags.some(f => f.type === 'logical_error' || f.type === 'contradiction')) {
     const sentences = responseText.split(/[.!?]+/).filter(s => s.trim().length > 0);
     const uniqueSentences: string[] = [];
     
@@ -381,6 +701,7 @@ const generateCorrection = (
 
 /**
  * Main function to check and fix hallucinations
+ * Enhanced with handling for new detection methods
  */
 export const checkAndFixHallucinations = (
   responseText: string,
@@ -404,17 +725,50 @@ export const checkAndFixHallucinations = (
     };
   }
   
+  // If this is a new conversation, be VERY cautious about memory claims
+  const isNewConversation = conversationHistory.length <= 2;
+  
   // Run full detection
   const hallucinationCheck = detectHallucinations(responseText, userInput, conversationHistory);
   
-  if (hallucinationCheck.hallucination) {
+  // In new conversations, be extra strict about hallucinations
+  const hallucinationThreshold = isNewConversation ? 0.7 : 0.6;
+  
+  if (hallucinationCheck.hallucination || 
+      hallucinationCheck.confidenceScore < hallucinationThreshold ||
+      (isNewConversation && /I remember|you mentioned|you told me|you said|earlier you|previously you|we talked about/i.test(responseText))) {
+    
     console.warn("HALLUCINATION DETECTED:", hallucinationCheck.flags);
     
     // Generate corrected response
     const correctedResponse = hallucinationCheck.corrections || responseText;
     
+    // Final safety check for new conversations - remove ALL memory references
+    let finalResponse = correctedResponse;
+    if (isNewConversation) {
+      finalResponse = finalResponse.replace(
+        /(?:I remember|you mentioned|you told me|you said|earlier you|previously you|we talked about|we've been focusing on) (?:that |how |about |your |having |feeling |experiencing |)([\w\s]+)/gi,
+        "I hear you're dealing with $1"
+      );
+    }
+    
+    // Fix repeated sentences
+    if (quickCheck.hasRepeatedSentences) {
+      const sentences = finalResponse.split(/[.!?]+/).filter(s => s.trim().length > 0);
+      const uniqueSentences: string[] = [];
+      
+      // Keep only unique sentences
+      for (const sentence of sentences) {
+        if (!uniqueSentences.some(s => calculateStringSimilarity(s.toLowerCase(), sentence.toLowerCase()) > 0.7)) {
+          uniqueSentences.push(sentence.trim());
+        }
+      }
+      
+      finalResponse = uniqueSentences.join(". ") + ".";
+    }
+    
     return {
-      correctedResponse,
+      correctedResponse: finalResponse,
       wasHallucination: true,
       hallucinationDetails: hallucinationCheck
     };
@@ -430,11 +784,12 @@ export const checkAndFixHallucinations = (
 /**
  * Quick preliminary check for potential hallucinations
  * More efficient than running full detection on every response
+ * Enhanced with detection for repeated sentences
  */
 const quickHallucinationCheck = (
   responseText: string,
   conversationHistory: string[]
-): { potentialIssue: boolean; reason?: string } => {
+): { potentialIssue: boolean; reason?: string; hasRepeatedSentences?: boolean } => {
   // New conversation check - very strict about memory claims
   if (conversationHistory.length <= 2) {
     // In new conversations, ANY memory claim is suspect
@@ -446,8 +801,31 @@ const quickHallucinationCheck = (
     }
   }
   
-  // Repetition check - quick scan for near-duplicate sentences
+  // Check for repeated sentences
   const sentences = responseText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  let hasRepeatedSentences = false;
+  
+  if (sentences.length >= 2) {
+    for (let i = 0; i < sentences.length; i++) {
+      for (let j = i + 1; j < sentences.length; j++) {
+        const similarity = calculateStringSimilarity(
+          sentences[i].toLowerCase(), 
+          sentences[j].toLowerCase()
+        );
+        
+        if (similarity > 0.7) {
+          hasRepeatedSentences = true;
+          return { 
+            potentialIssue: true, 
+            reason: 'Repeated sentences detected',
+            hasRepeatedSentences: true
+          };
+        }
+      }
+    }
+  }
+  
+  // Repetition check - quick scan for near-duplicate content
   if (sentences.length >= 3) { // Only check longer responses
     for (let i = 0; i < sentences.length; i++) {
       for (let j = i + 1; j < sentences.length; j++) {
@@ -458,7 +836,8 @@ const quickHallucinationCheck = (
           if (commonStart.length > 10) {
             return { 
               potentialIssue: true, 
-              reason: 'Potential repetition detected' 
+              reason: 'Potential repetition detected',
+              hasRepeatedSentences: true
             };
           }
         }
@@ -466,7 +845,23 @@ const quickHallucinationCheck = (
     }
   }
   
-  return { potentialIssue: false };
+  // Check for excessive "I remember" phrases
+  let rememberCount = 0;
+  const rememberPattern = /I remember/gi;
+  let match;
+  while ((match = rememberPattern.exec(responseText)) !== null) {
+    rememberCount++;
+  }
+  
+  if (rememberCount > 1) {
+    return { 
+      potentialIssue: true, 
+      reason: 'Multiple memory claims',
+      hasRepeatedSentences: false
+    };
+  }
+  
+  return { potentialIssue: false, hasRepeatedSentences };
 };
 
 /**

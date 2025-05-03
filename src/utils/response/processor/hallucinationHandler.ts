@@ -3,11 +3,12 @@
  * Hallucination Handler
  * 
  * Integrates the hallucination prevention system into Roger's 
- * response processing pipeline.
+ * response processing pipeline with enhanced detection capabilities.
  */
 
 import { preventHallucinations, HallucinationProcessResult } from '../../hallucinationPrevention';
 import { getConversationMessageCount } from '../../memory/newConversationDetector';
+import { HallucinationPreventionOptions } from '../../../types/hallucinationPrevention';
 
 /**
  * Apply hallucination prevention to a response
@@ -22,7 +23,7 @@ export const handlePotentialHallucinations = (
 } => {
   try {
     // Track if we have a potential memory reference
-    const containsMemoryReference = /I remember|you mentioned|you told me|you said|earlier you|previously you|we talked about|we discussed/i.test(responseText);
+    const containsMemoryReference = /I remember|you mentioned|you told me|you said|earlier you|previously you|we talked about|we discussed|we've been|you shared|as I recall/i.test(responseText);
     
     // Get conversation message count
     const messageCount = getConversationMessageCount();
@@ -32,11 +33,33 @@ export const handlePotentialHallucinations = (
     if (isNewConversation && containsMemoryReference) {
       console.log("CRITICAL: Memory references in new conversation detected, applying strict prevention");
       
-      // Apply enhanced detection with high sensitivity
+      // Apply enhanced detection with high sensitivity and all methods enabled
       const hallucinationResult = preventHallucinations(responseText, userInput, conversationHistory, {
-        detectionSensitivity: 0.9,
+        detectionSensitivity: 0.95,
         enableReasoning: true,
-        enableRAG: false // Don't enhance with RAG in this case
+        enableRAG: false, // Don't enhance with RAG in this case
+        enableTokenLevelDetection: true,
+        enableNLIVerification: true,
+        tokenThreshold: 0.8
+      });
+      
+      return {
+        processedResponse: hallucinationResult.processedResponse,
+        hallucinationData: hallucinationResult
+      };
+    }
+    
+    // For responses with potential repetition, apply special prevention focused on repetition
+    if (containsRepeatedPhrases(responseText)) {
+      console.log("REPETITION DETECTED: Applying specialized repetition correction");
+      
+      // Use options focused on repetition detection
+      const hallucinationResult = preventHallucinations(responseText, userInput, conversationHistory, {
+        detectionSensitivity: 0.8,
+        enableReasoning: false,
+        enableRAG: false,
+        enableTokenLevelDetection: false,
+        enableReranking: true
       });
       
       return {
@@ -48,7 +71,16 @@ export const handlePotentialHallucinations = (
     // For regular conversations, apply standard prevention
     // but only if response contains memory references
     if (containsMemoryReference) {
-      const hallucinationResult = preventHallucinations(responseText, userInput, conversationHistory);
+      const options: HallucinationPreventionOptions = {
+        enableReasoning: true,
+        enableRAG: true,
+        enableDetection: true,
+        detectionSensitivity: 0.65,
+        reasoningThreshold: 0.7,
+        enableTokenLevelDetection: true
+      };
+      
+      const hallucinationResult = preventHallucinations(responseText, userInput, conversationHistory, options);
       
       return {
         processedResponse: hallucinationResult.processedResponse,
@@ -62,7 +94,8 @@ export const handlePotentialHallucinations = (
       enableReasoning: false,
       enableRAG: false,
       enableDetection: true,
-      detectionSensitivity: 0.4
+      detectionSensitivity: 0.4,
+      enableTokenLevelDetection: false
     });
     
     if (basicCheck.wasRevised) {
@@ -90,6 +123,82 @@ export const handlePotentialHallucinations = (
 };
 
 /**
+ * Detect if a response contains repeated phrases
+ */
+const containsRepeatedPhrases = (responseText: string): boolean => {
+  // Check for exact phrase repetition
+  const sentences = responseText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  
+  if (sentences.length < 2) return false;
+  
+  // Check for similar consecutive sentences
+  for (let i = 0; i < sentences.length - 1; i++) {
+    const currentSentence = sentences[i].trim().toLowerCase();
+    const nextSentence = sentences[i + 1].trim().toLowerCase();
+    
+    // Compare sentences for similarity
+    const similarity = calculateSimilarity(currentSentence, nextSentence);
+    if (similarity > 0.7) {
+      return true;
+    }
+  }
+  
+  // Check for common phrases that repeat
+  const phrases: Record<string, number> = {};
+  const words = responseText.toLowerCase().split(/\s+/);
+  
+  // Check for 3-gram, 4-gram, 5-gram repetitions
+  for (const n of [3, 4, 5]) {
+    if (words.length < n) continue;
+    
+    for (let i = 0; i <= words.length - n; i++) {
+      const phrase = words.slice(i, i + n).join(' ');
+      phrases[phrase] = (phrases[phrase] || 0) + 1;
+      
+      if (phrases[phrase] > 1 && phrase.length > 10) {
+        return true;
+      }
+    }
+  }
+  
+  // Check for repeated memory reference phrases
+  const memoryPhrases = ["I remember", "you mentioned", "you told me", "you said", "we discussed"];
+  let memoryPhraseCount = 0;
+  
+  for (const phrase of memoryPhrases) {
+    const regex = new RegExp(phrase, 'gi');
+    const matches = responseText.match(regex) || [];
+    memoryPhraseCount += matches.length;
+  }
+  
+  return memoryPhraseCount > 2;
+};
+
+/**
+ * Calculate similarity between two text strings
+ */
+const calculateSimilarity = (str1: string, str2: string): number => {
+  // Check length first
+  if (Math.abs(str1.length - str2.length) > 10) {
+    return 0;
+  }
+  
+  // Simple word overlap for basic similarity
+  const words1 = str1.split(/\s+/);
+  const words2 = str2.split(/\s+/);
+  
+  // Count matching words
+  let matches = 0;
+  for (const word of words1) {
+    if (word.length > 3 && words2.includes(word)) {
+      matches++;
+    }
+  }
+  
+  return matches / Math.max(words1.length, words2.length);
+};
+
+/**
  * Apply enhanced RAG for early conversations
  * Creates better memory references even without existing memories
  */
@@ -114,6 +223,12 @@ export const applyEarlyConversationRAG = (
     // For first-time topics, acknowledge them
     const primaryTopic = topics[0];
     
+    // Check if response already has an acknowledgment structure
+    if (responseText.startsWith("I hear") || responseText.startsWith("I understand") || 
+        responseText.startsWith("I notice") || responseText.startsWith("I see")) {
+      return responseText;
+    }
+    
     // Add acknowledgment at beginning if suitable
     const responseLines = responseText.split('. ');
     
@@ -133,7 +248,7 @@ export const applyEarlyConversationRAG = (
 
 /**
  * Extract key topics from user input
- * Basic NLP extraction for primary concerns
+ * Enhanced with additional pattern matching
  */
 const extractTopicsFromInput = (userInput: string): string[] => {
   const topics: string[] = [];
@@ -143,6 +258,8 @@ const extractTopicsFromInput = (userInput: string): string[] => {
     { pattern: /(?:worried|anxious|anxiety) about ([\w\s]+)/i, type: 'anxiety' },
     { pattern: /(?:sad|depressed|down) about ([\w\s]+)/i, type: 'mood' },
     { pattern: /(?:problem|issue|trouble) with ([\w\s]+)/i, type: 'problem' },
+    { pattern: /(?:upset|concerned|frustrated) (?:with|about) ([\w\s]+)/i, type: 'concern' },
+    { pattern: /(?:happy|excited|thrilled) about ([\w\s]+)/i, type: 'positive' },
     { pattern: /my ([\w]+) (?:is|has|have|seems)/i, type: 'subject' }
   ];
   
@@ -154,20 +271,41 @@ const extractTopicsFromInput = (userInput: string): string[] => {
     }
   }
   
-  // If no matches, try to extract nouns as topics
+  // If no matches, try to extract important nouns or phrases
   if (topics.length === 0) {
-    // Simple noun extraction - could be enhanced with proper NLP
+    // Attempt to identify key objects or subjects in the input
+    // This is a simplified approach - ideally would use proper NLP
     const words = userInput.split(/\s+/);
+    const importantPhrases = [];
     
-    for (const word of words) {
-      // Basic heuristic: capitalize words may be nouns
-      if (word.length > 3 && 
-          word[0] === word[0].toUpperCase() && 
-          !['I', 'My', 'The', 'A', 'An', 'This', 'That'].includes(word)) {
-        topics.push(word);
+    // Group potential noun phrases (simplified version)
+    for (let i = 0; i < words.length; i++) {
+      // Skip very short words and common words
+      if (words[i].length <= 3 || isCommonWord(words[i])) continue;
+      
+      // Check for noun phrases (e.g., "cute girl", "rough day")
+      if (i < words.length - 1 && !isCommonWord(words[i+1])) {
+        importantPhrases.push(`${words[i]} ${words[i+1]}`);
+      } else {
+        importantPhrases.push(words[i]);
       }
     }
+    
+    // Add the most likely important phrases
+    topics.push(...importantPhrases.slice(0, 2));
   }
   
   return topics;
+};
+
+/**
+ * Helper: Check if word is a common function word to filter out
+ */
+const isCommonWord = (word: string): boolean => {
+  const commonWords = ["the", "a", "an", "in", "on", "at", "for", "to", "with", "by", "and", "or", "but",
+    "is", "are", "was", "were", "be", "been", "have", "has", "had", "do", "does", "did", 
+    "will", "would", "can", "could", "may", "might", "must", "should", "i", "you", "he", "she", "it",
+    "we", "they", "me", "him", "her", "us", "them"];
+  
+  return commonWords.includes(word.toLowerCase());
 };

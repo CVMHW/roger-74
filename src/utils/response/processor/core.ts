@@ -55,9 +55,12 @@ export const processResponseCore = (
     // Get accurate message count from conversation detector
     const actualMessageCount = getConversationMessageCount();
     
+    // CRITICAL: Check for early conversation - be extra careful with memory references
+    const isEarlyConversation = actualMessageCount <= 2;
+    
     // For early conversations (first 1-2 messages), apply special RAG
     let processedResponse = memoryBankEnhancedResponse;
-    if (actualMessageCount <= 2) {
+    if (isEarlyConversation) {
       processedResponse = applyEarlyConversationRAG(
         processedResponse, 
         userInput
@@ -65,6 +68,23 @@ export const processResponseCore = (
     }
     
     // NEW: Apply comprehensive hallucination prevention system
+    // Using stronger hallucination prevention for early conversations
+    const hallucinationOptions = isEarlyConversation ? 
+      {
+        detectionSensitivity: 0.9,    // Higher sensitivity for new conversations
+        enableReasoning: true,
+        enableRAG: false,             // Don't enhance with RAG in early conversations
+        enableTokenLevelDetection: true,
+        enableReranking: true         // Use re-ranking for early conversations
+      } : 
+      {
+        detectionSensitivity: 0.7,
+        enableReasoning: true,
+        enableRAG: true,
+        enableTokenLevelDetection: false,
+        enableReranking: false
+      };
+    
     const { processedResponse: hallucinationCheckedResponse } = handlePotentialHallucinations(
       processedResponse,
       userInput,

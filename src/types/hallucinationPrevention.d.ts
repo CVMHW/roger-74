@@ -12,7 +12,9 @@ export type HallucinationFlagType =
   | 'logical_error'      // Logical inconsistency 
   | 'false_continuity'   // False implication of ongoing conversation
   | 'mathematical_error' // Error in calculations
-  | 'factual_error';     // General factual error
+  | 'factual_error'      // General factual error
+  | 'token_level_error'  // Detected at token level
+  | 'nli_contradiction'; // Natural Language Inference detected contradiction
 
 // Severity levels for flagged issues
 export type HallucinationSeverity = 'low' | 'medium' | 'high';
@@ -22,6 +24,8 @@ export interface HallucinationFlag {
   type: HallucinationFlagType;
   severity: HallucinationSeverity;
   description: string;
+  tokensAffected?: string[];  // New: Specific tokens flagged
+  confidenceScore?: number;   // New: Detection confidence
 }
 
 // Full hallucination check result
@@ -31,6 +35,10 @@ export interface HallucinationCheck {
   hallucination: boolean;
   corrections?: string;
   flags: HallucinationFlag[];
+  tokenLevelAnalysis?: {  // New: Token-level analysis results
+    tokens: string[];
+    scores: number[];
+  };
 }
 
 // Result from hallucination prevention system
@@ -43,6 +51,13 @@ export interface HallucinationProcessResult {
   processingTime: number;
   confidence: number;
   issueDetails?: string[];
+  // New fields for enhanced tracking and debugging
+  tokenScores?: Record<string, number>; 
+  entailmentScore?: number;
+  rerankedOptions?: {
+    text: string;
+    score: number;
+  }[];
 }
 
 // Configuration options for hallucination prevention
@@ -53,4 +68,11 @@ export interface HallucinationPreventionOptions {
   additionalContext?: string[];
   reasoningThreshold: number;
   detectionSensitivity: number;
+  // New options
+  enableTokenLevelDetection?: boolean;
+  enableNLIVerification?: boolean;
+  enableReranking?: boolean;
+  generateMultipleResponses?: number; // Number of responses to generate for reranking
+  tokenThreshold?: number;            // Threshold for token-level detection
+  entailmentThreshold?: number;       // Threshold for NLI entailment
 }

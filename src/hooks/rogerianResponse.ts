@@ -2,7 +2,8 @@
 /**
  * Enhanced Rogerian Response Hook with:
  * 1. Conversation detection and memory reset
- * 2. Hallucination prevention system
+ * 2. Advanced hallucination prevention system
+ * 3. Token-level verification
  * 
  * Ensures memory accuracy and factual consistency in responses
  */
@@ -15,12 +16,13 @@ import { resetMemoryForNewConversation, isNewConversation } from '../utils/nlpPr
 import { resetFiveResponseMemory, isNewConversationFiveResponse } from '../utils/memory/fiveResponseMemory';
 import { detectNewConversation, resetConversationSession } from '../utils/memory/newConversationDetector';
 
-// New: Import hallucination prevention system
+// Import hallucination prevention system with enhanced features
 import { preventHallucinations } from '../utils/hallucinationPrevention';
+import { HallucinationPreventionOptions } from '../types/hallucinationPrevention';
 
 /**
- * Enhanced Rogerian Response Hook with conversation detection and memory reset
- * Ensures memory won't incorrectly reference past conversations
+ * Enhanced Rogerian Response Hook with conversation detection, memory reset,
+ * and comprehensive hallucination prevention
  */
 const useRogerianResponse = () => {
   // Get the original hook implementation
@@ -47,28 +49,56 @@ const useRogerianResponse = () => {
       // Now process the message with the original logic
       const response = await originalHook.processUserMessage(userInput);
       
-      // Verify the response for hallucinations if this isn't the first message
-      if (!isNewConvo && !isNewFiveResponseConvo && !isNewDetectedConvo &&
-          response.text.includes("you mentioned") || response.text.includes("I remember")) {
-        
-        console.log("CHECKING RESPONSE FOR HALLUCINATIONS");
-        
-        // Get conversation history for context
-        // This is a simple approximation, ideally you'd pass the actual history
-        const conversationHistory: string[] = [userInput];
-        
-        // Apply hallucination prevention
-        const hallucinationResult = preventHallucinations(
-          response.text, 
-          userInput, 
-          conversationHistory
-        );
-        
-        // If hallucination prevention modified the response, use the corrected version
-        if (hallucinationResult.wasRevised) {
-          console.log("HALLUCINATION CORRECTED: Using revised response");
-          return { ...response, text: hallucinationResult.processedResponse };
-        }
+      // Get settings based on conversation stage
+      const conversationHistoryLength = 5; // History to check for hallucinations
+      
+      // Extract minimal conversation history for context
+      // This is a simple approximation, ideally you'd pass the actual history
+      let conversationHistory: string[] = [userInput];
+      
+      // Apply hallucination prevention with appropriate configuration
+      const preventionOptions: HallucinationPreventionOptions = {
+        enableReasoning: true,
+        enableRAG: true,
+        enableDetection: true,
+        reasoningThreshold: 0.7,
+        detectionSensitivity: 0.7,
+        enableTokenLevelDetection: true,
+        tokenThreshold: 0.6,
+        enableReranking: false
+      };
+      
+      // Detect common hallucination triggers in the response
+      const containsMemoryReference = /I remember|you mentioned|you told me|you said|earlier you|previously you|we talked about/i.test(response.text);
+      const containsEarlyReference = /last time|previous session|we've been|we discussed|as I mentioned earlier/i.test(response.text);
+      
+      // Adjust options for high-risk responses
+      if (containsMemoryReference) {
+        console.log("MEMORY REFERENCE DETECTED: Using enhanced verification");
+        preventionOptions.detectionSensitivity = 0.85;
+        preventionOptions.enableReranking = true;
+      }
+      
+      // Extra precautions for early conversation references
+      if (containsEarlyReference && conversationHistory.length < 3) {
+        console.log("CRITICAL: Early conversation with continuity claims");
+        preventionOptions.detectionSensitivity = 0.95;
+        preventionOptions.enableTokenLevelDetection = true;
+        preventionOptions.enableNLIVerification = true;
+      }
+      
+      // Apply hallucination prevention
+      const hallucinationResult = preventHallucinations(
+        response.text, 
+        userInput, 
+        conversationHistory,
+        preventionOptions
+      );
+      
+      // If hallucination prevention modified the response, use the corrected version
+      if (hallucinationResult.wasRevised) {
+        console.log("HALLUCINATION CORRECTED: Using revised response");
+        return { ...response, text: hallucinationResult.processedResponse };
       }
       
       return response;
