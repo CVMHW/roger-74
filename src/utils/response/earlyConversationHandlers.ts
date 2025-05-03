@@ -1,11 +1,14 @@
+
 import { isIntroduction, generateIntroductionResponse, isSmallTalk, isPersonalSharing, generatePersonalSharingResponse } from '../../utils/masterRules';
 import { generateReflectionResponse } from '../reflection';
 import { 
-  generateSmallTalkResponse,
+  generateSmallTalkResponse
+} from '../conversation/smallTalk';
+import { 
   isLikelyChild,
   isLikelyNewcomer 
-} from '../conversation/smallTalk';
-import type { ConversationStage } from '../../hooks/response/conversationStageManager';
+} from '../conversation/smallTalk/patientDetectors';
+import type { ConversationStage } from '../reflection/reflectionTypes';
 import { detectDevelopmentalStage } from '../reflection/reflectionStrategies';
 import { shouldUseConversationStarter, generateConversationStarterResponse } from '../reflection/ageAppropriateConversation';
 import { getRogerPerspectivePhrase } from './personalityHelpers';
@@ -16,7 +19,16 @@ import {
   generateCulturalConnectionPrompt,
   incorporateRogerPersonality,
   generateConnectionStatement,
-  generateTransitionToEric
+  generateTransitionToEric,
+  isLikelyTeen,
+  isLikelyMale,
+  isLikelyBlueCollar,
+  mightPreferSimpleLanguage,
+  getAppropriateConversationStyle,
+  identifyImmediateConcern,
+  generateImmediateConcernResponse,
+  shouldUseWaitingRoomEngagement,
+  generateWaitingRoomEngagement
 } from '../conversation/index';
 
 /**

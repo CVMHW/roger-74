@@ -35,6 +35,18 @@ export type ConcernType =
   | 'general'
   | 'subclinical'
   | 'waiting-room'
+  | 'medical'
+  | 'mental-health'
+  | 'eating-disorder'
+  | 'substance-use'
+  | 'tentative-harm'
+  | 'mild-gambling'
+  | 'ptsd'
+  | 'ptsd-mild'
+  | 'trauma-response'
+  | 'pet-illness'
+  | 'weather-related'
+  | 'cultural-adjustment'
   | null;
 
 // Developmental stages for age-appropriate responses  
@@ -66,11 +78,25 @@ export interface PatientMemory {
   timestamp: number;
 }
 
+// Add TraumaResponseAnalysis type which was missing
+export interface TraumaResponseAnalysis {
+  dominant4F: {
+    type: 'fight' | 'flight' | 'freeze' | 'fawn';
+    intensity: 'mild' | 'moderate' | 'severe' | 'extreme';
+  };
+  secondary4F?: {
+    type: 'fight' | 'flight' | 'freeze' | 'fawn';
+    intensity: 'mild' | 'moderate' | 'severe' | 'extreme';
+  };
+  angerLevel: 'calm' | 'irritated' | 'angry' | 'enraged';
+}
+
 // Export all types
 export {
   FeelingCategory,
   ConcernType,
   DevelopmentalStage,
   ConversationStage,
-  PatientMemory
+  PatientMemory,
+  TraumaResponseAnalysis
 };
