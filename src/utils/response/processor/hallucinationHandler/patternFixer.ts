@@ -1,100 +1,76 @@
-
 /**
- * Pattern fixing functionality
- * 
- * Addresses dangerous repetition patterns and common problematic phrases
+ * Pattern Fixer - Detects and fixes dangerous repetition patterns in responses
  */
 
+import { hasRepeatedContent } from './specialCases';
+
 /**
- * Fix dangerous repetition patterns in responses
+ * Detect and fix dangerous repetition patterns in responses
+ * Particularly focused on the "I hear you're dealing with" repetition patterns
  */
 export const fixDangerousRepetitionPatterns = (responseText: string): {
   fixedResponse: string;
   hasRepetitionIssue: boolean;
 } => {
-  const repetitionPatterns = [
-    {
-      pattern: /(I hear (you'?re|you are) dealing with) I hear (you'?re|you are) dealing with/i,
-      replacement: '$1'
-    },
-    {
-      pattern: /(I hear (you'?re|you are) dealing with) you may have indicated/i,
-      replacement: '$1'
-    },
-    {
-      pattern: /you may have indicated Just a/i,
-      replacement: 'with a'
-    },
-    {
-      pattern: /you may have indicated Just/i,
-      replacement: 'with'
-    },
-    {
-      pattern: /you may have indicated/i, // Added to catch all instances
-      replacement: 'about'
-    },
-    {
-      pattern: /(I remember (you|your|we)) I remember (you|your|we)/i,
-      replacement: '$1'
-    },
-    {
-      pattern: /(you (mentioned|said|told me)) you (mentioned|said|told me)/i,
-      replacement: '$1'
-    },
-    {
-      pattern: /(I hear you're feeling) (I hear you're feeling)/i,
-      replacement: '$1'
-    },
-    // New patterns to catch from recent issues
-    {
-      pattern: /dealing with you may have indicated/i,
-      replacement: 'dealing with'
-    },
-    {
-      pattern: /I hear (you'?re|you are) dealing with.*?I hear/i,
-      replacement: 'I hear'
-    },
-    // Add patterns to remove diagnoses/labels related content
-    {
-      pattern: /I understand that (labels|diagnoses) (can|may) sometimes feel uncomfortable/i,
-      replacement: "I'm here to listen and support you"
-    },
-    {
-      pattern: /It's completely okay to see your experiences in your own way/i,
-      replacement: "Would you like to tell me more about how you're feeling?"
-    },
-    {
-      pattern: /labels or diagnoses/i,
-      replacement: "these situations"
-    }
-  ];
-  
+  // Default response
   let fixedResponse = responseText;
   let hasRepetitionIssue = false;
   
-  // Apply repetition fixes
-  for (const { pattern, replacement } of repetitionPatterns) {
-    if (pattern.test(fixedResponse)) {
-      console.warn("REPETITION DETECTED: Fixing repeated phrases");
-      fixedResponse = fixedResponse.replace(pattern, replacement);
+  // CRITICAL: First specifically check for repetition patterns like "I hear you're dealing with I hear you're dealing with"
+  const repetitionPatterns = [
+    /I hear (you'?re|you are) dealing with I hear (you'?re|you are) dealing with/i,
+    /I hear (you'?re|you are) dealing with you may have indicated/i,
+    /I remember (you|your|we) I remember (you|your|we)/i,
+    /you (mentioned|said|told me) you (mentioned|said|told me)/i,
+    /(I hear|It sounds like) you('re| are) (dealing with|feeling) (I hear|It sounds like) you('re| are)/i,
+    /you may have indicated Just a/i,
+    /dealing with you may have indicated/i,
+    /I hear you're dealing with you mentioned/i
+  ];
+  
+  // Check each pattern and apply fix if found
+  for (const pattern of repetitionPatterns) {
+    if (pattern.test(responseText)) {
+      console.log(`CRITICAL: Found dangerous repetition pattern: ${pattern}`);
+      
       hasRepetitionIssue = true;
+      
+      // Special handling for "you may have indicated" pattern which is particularly problematic
+      if (/you may have indicated/i.test(responseText)) {
+        fixedResponse = "I'm listening. Could you tell me more about what you're experiencing?";
+      } 
+      // "I hear you're dealing with" repetition fix
+      else if (/I hear (you'?re|you are) dealing with I hear (you'?re|you are) dealing with/i.test(responseText)) {
+        fixedResponse = responseText.replace(
+          /I hear (you'?re|you are) dealing with I hear (you'?re|you are) dealing with/i, 
+          "I hear you're dealing with"
+        );
+      }
+      // General repetition fix - just take the first part of the response
+      else {
+        // Split the response at the repetition point and keep only the first part
+        // This is a safety mechanism to avoid completely broken responses
+        const firstSentence = responseText.split('.')[0];
+        if (firstSentence && firstSentence.length > 20) {
+          fixedResponse = firstSentence + ". Could you tell me more about that?";
+        } else {
+          fixedResponse = "I'd like to understand your situation better. Could you share more about what you're experiencing?";
+        }
+      }
+      
+      break;
     }
   }
   
-  // Secondary fix for the "you may have indicated Just" issue that might be missed
-  if (/you may have indicated/i.test(fixedResponse)) {
-    console.warn("REPETITION DETECTED: Fixing 'you may have indicated' phrase");
-    fixedResponse = fixedResponse.replace(/you may have indicated/gi, "about");
+  // Handle case of just a raw "you mentioned" without context
+  if (/^I hear you're dealing with you mentioned/i.test(responseText)) {
+    fixedResponse = "I'd like to understand what you're experiencing. Could you share more about your situation?";
     hasRepetitionIssue = true;
   }
   
-  // Check for diagnoses or labels mentions that shouldn't be there
-  if (/diagnoses|labels|diagnostic|uncomfortable way/i.test(fixedResponse)) {
-    console.warn("CONTENT ERROR: Removing inappropriate diagnoses or labels references");
-    fixedResponse = fixedResponse.replace(
-      /I understand that (labels|diagnoses) can sometimes feel uncomfortable\. It's completely okay to see your experiences in your own way\./gi, 
-      "I'm listening to what you're sharing."
-    );
+  // Check for the exact pattern that's occurring in the example
+  if (responseText.includes("I hear you're dealing with I hear you're dealing with")) {
+    fixedResponse = "I'm here to listen. What's been going on for you recently?";
     hasRepetitionIssue = true;
   }
   

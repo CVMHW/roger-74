@@ -1,6 +1,6 @@
 
 /**
- * Core hallucination handling functionality - Refactored for maintainability
+ * Core hallucination handling functionality
  */
 
 import { preventHallucinations } from '../../../hallucinationPrevention';
@@ -23,11 +23,21 @@ export const handlePotentialHallucinations = (
   hallucinationData: HallucinationProcessResult | null;
 } => {
   try {
-    // First apply pattern fixes to address dangerous repetition patterns
+    // First check for basic syntactic issues in the response
+    if (!responseText || responseText.trim().length === 0) {
+      return {
+        processedResponse: "I'm here to listen. What's been going on for you?",
+        hallucinationData: null
+      };
+    }
+    
+    // HIGHEST PRIORITY: Check for dangerous repetition patterns that need immediate fixing
+    // Example: "I hear you're dealing with I hear you're dealing with"
     const { fixedResponse, hasRepetitionIssue } = fixDangerousRepetitionPatterns(responseText);
     
     // If we fixed repetition, return immediately
     if (hasRepetitionIssue) {
+      console.log("CRITICAL: Fixed dangerous repetition pattern");
       return {
         processedResponse: fixedResponse,
         hallucinationData: {
@@ -43,7 +53,7 @@ export const handlePotentialHallucinations = (
       };
     }
     
-    // Use the repetition handler to fix any other repeated content
+    // SECOND PRIORITY: Use the repetition handler to fix any other repeated content
     if (hasRepeatedContent(responseText)) {
       const correctedText = fixRepeatedContent(responseText);
       console.log("REPETITION FIXED: Using repetition handler");
@@ -63,7 +73,7 @@ export const handlePotentialHallucinations = (
       };
     }
     
-    // Check for specific health hallucination
+    // THIRD PRIORITY: Check for specific health hallucination
     const healthHallucinationResult = handleHealthHallucination(responseText, conversationHistory);
     if (healthHallucinationResult.isHealthHallucination) {
       return {
@@ -81,19 +91,22 @@ export const handlePotentialHallucinations = (
       };
     }
     
-    // Handle memory reference hallucinations
+    // FOURTH PRIORITY: Handle memory reference hallucinations
     const memoryResult = handleMemoryHallucinations(responseText, conversationHistory);
     
     // For new conversations with memory references, always apply strict prevention
     if (memoryResult.requiresStrictPrevention) {
       console.log("CRITICAL: Memory references in new conversation detected, applying strict prevention");
       
+      // Use very strict settings to ensure no false references
       const hallucinationResult = preventHallucinations(responseText, userInput, conversationHistory, {
         detectionSensitivity: 0.95,
         enableReasoning: true,
         enableRAG: false,
         enableTokenLevelDetection: true,
         enableNLIVerification: true,
+        enableDetection: true,
+        reasoningThreshold: 0.7,
         tokenThreshold: 0.8
       });
       
@@ -103,7 +116,7 @@ export const handlePotentialHallucinations = (
       };
     }
     
-    // Determine prevention options based on response content and conversation context
+    // FINAL CHECK: Determine prevention options based on response content and conversation context
     const { preventionOptions, requiresPrevention } = determinePreventionOptions(
       responseText, 
       conversationHistory
@@ -126,7 +139,7 @@ export const handlePotentialHallucinations = (
       }
     }
     
-    // No hallucination issues detected
+    // No hallucination issues detected, return original response
     return {
       processedResponse: responseText,
       hallucinationData: null
@@ -135,9 +148,9 @@ export const handlePotentialHallucinations = (
   } catch (error) {
     console.error("Error in handlePotentialHallucinations:", error);
     
-    // In case of error, return the original response
+    // In case of error, return a safe fallback response
     return {
-      processedResponse: responseText,
+      processedResponse: "I'd like to hear more about what you're experiencing. Could you tell me more?",
       hallucinationData: null
     };
   }

@@ -28,9 +28,22 @@ export const handleMemoryHallucinations = (
   
   const containsFalseContinuity = falseContinuityPattern.test(responseText);
   
+  // Check for "you may have indicated" which is often a sign of confusion
+  const containsMayHaveIndicated = /you may have indicated/i.test(responseText);
+  
+  // Check for multiple "I hear" statements which suggest repetition
+  const multipleIHear = (responseText.match(/I hear/gi) || []).length > 1;
+  
   // Determine if strict prevention is required
-  const requiresStrictPrevention = (isNewConversation && containsMemoryReference) || 
-                                   (containsFalseContinuity && isNewConversation);
+  const requiresStrictPrevention = 
+      // Memory references in new conversations are always concerning
+      (isNewConversation && containsMemoryReference) || 
+      // False continuity claims in new conversations
+      (containsFalseContinuity && isNewConversation) ||
+      // "you may have indicated" is a strong sign of hallucination
+      containsMayHaveIndicated ||
+      // Multiple "I hear" statements suggest repetition
+      multipleIHear;
   
   return {
     requiresStrictPrevention
