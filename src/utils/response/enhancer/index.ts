@@ -1,4 +1,3 @@
-
 /**
  * Unified Response Enhancement Pipeline
  * 
@@ -11,6 +10,42 @@ import { applyMemoryRules } from '../../rulesEnforcement/memoryEnforcer';
 import { processThroughChatLogReview } from '../chatLogReviewer';
 import { enhanceResponseWithContext } from '../../conversation/contextAware';
 import { addToFiveResponseMemory } from '../../memory/fiveResponseMemory';
+import { detectNewConversation, resetConversationSession } from '../../memory/newConversationDetector';
+
+// Prevent repeated memory references
+const memoryReferenceRegex = /I remember (you|we|your|our) [^.!?]+(\.|\!|\?)/gi;
+
+/**
+ * Sanitize response to remove duplicate or excessive memory references
+ */
+const removeDuplicateMemoryReferences = (responseText: string): string => {
+  // Extract all memory references
+  const memoryReferences = responseText.match(memoryReferenceRegex) || [];
+  
+  // If we have multiple memory references, keep only the first one
+  if (memoryReferences.length > 1) {
+    let cleanedResponse = responseText;
+    
+    // Remove all but the first memory reference
+    for (let i = 1; i < memoryReferences.length; i++) {
+      cleanedResponse = cleanedResponse.replace(memoryReferences[i], '');
+    }
+    
+    // Clean up any double spaces created by removals
+    return cleanedResponse.replace(/\s{2,}/g, ' ').trim();
+  }
+  
+  return responseText;
+};
+
+/**
+ * Check if memory reference is appropriate 
+ * Don't use memory references in first few messages of a conversation
+ */
+const shouldUseMemoryReferences = (messageCount: number): boolean => {
+  // Only use memory references after at least 3 exchanges
+  return messageCount >= 3;
+};
 
 /**
  * Primary response enhancement pipeline
@@ -24,6 +59,19 @@ export const enhanceResponse = (
   conversationHistory: string[]
 ): string => {
   try {
+    // Check if this is a new conversation
+    if (detectNewConversation(userInput)) {
+      // Reset memory systems for new conversations
+      resetConversationSession();
+      console.log("NEW CONVERSATION DETECTED: Memory references will be suppressed");
+      
+      // For new conversations, remove any memory references
+      return responseText.replace(memoryReferenceRegex, '').trim();
+    }
+    
+    // For first few messages in a conversation, don't use memory references
+    const useMemory = shouldUseMemoryReferences(messageCount);
+    
     // Step 1: Apply context awareness (time of day, work stress, etc)
     let enhancedText = enhanceResponseWithContext(
       responseText,
@@ -31,20 +79,24 @@ export const enhanceResponse = (
       conversationHistory
     );
     
-    // Step 2: Apply master rules to ensure memory utilization
-    enhancedText = processResponseThroughMasterRules(
-      enhancedText,
-      userInput,
-      messageCount,
-      conversationHistory
-    );
+    // Step 2: Apply master rules to ensure memory utilization (only if appropriate)
+    if (useMemory) {
+      enhancedText = processResponseThroughMasterRules(
+        enhancedText,
+        userInput,
+        messageCount,
+        conversationHistory
+      );
+    }
     
-    // Step 3: Force memory enhancement according to memory rules
-    enhancedText = applyMemoryRules(
-      enhancedText,
-      userInput,
-      conversationHistory
-    );
+    // Step 3: Force memory enhancement according to memory rules (only if appropriate)
+    if (useMemory) {
+      enhancedText = applyMemoryRules(
+        enhancedText,
+        userInput,
+        conversationHistory
+      );
+    }
     
     // Step 4: Apply tertiary safeguard - comprehensive chat log review
     enhancedText = processThroughChatLogReview(
@@ -53,7 +105,10 @@ export const enhanceResponse = (
       conversationHistory
     );
     
-    // Step 5: Record the final response to memory systems
+    // Step 5: Remove duplicate memory references
+    enhancedText = removeDuplicateMemoryReferences(enhancedText);
+    
+    // Step 6: Record the final response to memory systems
     addToFiveResponseMemory('roger', enhancedText);
     
     return enhancedText;

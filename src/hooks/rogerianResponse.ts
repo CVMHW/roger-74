@@ -5,6 +5,7 @@ import originalUseRogerianResponse from './rogerianResponse/index';
 // Import memory reset functions
 import { resetMemoryForNewConversation, isNewConversation } from '../utils/nlpProcessor';
 import { resetFiveResponseMemory, isNewConversationFiveResponse } from '../utils/memory/fiveResponseMemory';
+import { detectNewConversation, resetConversationSession } from '../utils/memory/newConversationDetector';
 
 /**
  * Enhanced Rogerian Response Hook with conversation detection and memory reset
@@ -19,15 +20,17 @@ const useRogerianResponse = () => {
     try {
       console.log("ENHANCED ROGERIAN HOOK: Processing user message");
       
-      // First, check if this is likely a new conversation
+      // First, check if this is likely a new conversation using all available methods
       const isNewConvo = isNewConversation(userInput);
       const isNewFiveResponseConvo = isNewConversationFiveResponse();
+      const isNewDetectedConvo = detectNewConversation(userInput);
       
-      // If either system detects a new conversation, reset both memory systems
-      if (isNewConvo || isNewFiveResponseConvo) {
-        console.log("NEW CONVERSATION DETECTED: Resetting memory systems");
+      // If any system detects a new conversation, reset all memory systems
+      if (isNewConvo || isNewFiveResponseConvo || isNewDetectedConvo) {
+        console.log("NEW CONVERSATION DETECTED: Resetting all memory systems");
         resetMemoryForNewConversation();
         resetFiveResponseMemory();
+        resetConversationSession();
       }
       
       // Now process the message with the original logic

@@ -583,7 +583,7 @@ export const isNewConversation = (userInput: string): boolean => {
 };
 
 /**
- * Add new function to reset memory for new conversations
+ * Reset memory for new conversations
  */
 export const resetMemoryForNewConversation = (): void => {
   try {
@@ -623,6 +623,14 @@ export const resetMemoryForNewConversation = (): void => {
       console.log("MEMORY SYSTEM: Cleared sessionStorage memory");
     } catch (sessionError) {
       console.error('Error clearing sessionStorage memory:', sessionError);
+    }
+    
+    // Also reset the conversation detector
+    try {
+      const { resetConversationSession } = require('./memory/newConversationDetector');
+      resetConversationSession();
+    } catch (error) {
+      console.error('Error resetting conversation session:', error);
     }
     
   } catch (error) {
