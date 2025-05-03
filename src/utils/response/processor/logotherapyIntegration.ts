@@ -1,3 +1,4 @@
+
 /**
  * Logotherapy Integration for Response Processor
  * 
@@ -92,7 +93,7 @@ const determineLogotherapyPathway = (
   
   // Type safety: Filter for valid MessageEntry objects with a sender property
   const validMessageEntries = recentMemory.filter(
-    (msg): msg is MessageEntry => 'sender' in msg && typeof msg.sender === 'string'
+    (msg): msg is MessageEntry => 'sender' in msg && typeof msg.sender === 'string' && 'content' in msg
   );
   
   // Extract patient messages

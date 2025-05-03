@@ -11,7 +11,7 @@ import { applyResponseRules } from './ruleProcessing';
 import { enhanceResponseWithMemory } from './memoryEnhancement';
 import { verifyMemoryUtilization } from './memoryEnhancement';
 import { handleLogotherapyIntegration } from './logotherapyIntegration';
-import { detectPatterns } from '../patternDetection'; // Fixed import path
+import { detectConversationPatterns } from '../patternDetection'; // Fixed import to use the correct function name
 import { 
   addResponseVariety,
   generateSpontaneousResponse
@@ -48,7 +48,7 @@ export const processResponseCore = (
     );
     
     // Check for repetitive patterns
-    const patternResult = detectPatterns(ruleProcessedResponse, conversationHistory);
+    const patternResult = detectConversationPatterns(ruleProcessedResponse, conversationHistory);
     
     // If repetition detected, force higher spontaneity
     if (patternResult.isRepetitive || patternResult.repetitionScore > 0.5) {

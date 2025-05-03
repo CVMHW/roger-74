@@ -1,3 +1,4 @@
+
 /**
  * Logotherapy Integration Module
  * 
@@ -64,10 +65,9 @@ const leverageMemorySystems = (userInput: string): string[] => {
     // Check FiveResponseMemory for recent context
     const fiveResponseMemory = getFiveResponseMemory();
     if (fiveResponseMemory.length > 0) {
-      // Type safety: We need to check if these entries have a sender property
-      // before treating them as MessageEntry objects
+      // Type safety: Filter entries that have the structure we need for MessageEntry
       const validMessageEntries = fiveResponseMemory.filter(
-        (msg): msg is MessageEntry => 'sender' in msg && typeof msg.sender === 'string'
+        (msg): msg is MessageEntry => 'sender' in msg && typeof msg.sender === 'string' && 'content' in msg
       );
       
       // Extract relevant patient statements from 5ResponseMemory
