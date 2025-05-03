@@ -26,7 +26,12 @@ import {
   recordToMemory
 } from '../../utils/reflection/feelingDetection';
 import { initializeNLPModel } from '../../utils/nlpProcessor';
-import { enforceMemoryRule } from '../../utils/masterRules/unconditionalRuleProtections';
+import { 
+  enforceMemoryRule, 
+  verifyMemoryUtilization, 
+  forceMemoryEnhancement 
+} from '../../utils/masterRules/unconditionalRuleProtections';
+import { processResponseThroughMasterRules } from '../../utils/response/responseProcessor';
 
 // Initialize the NLP model when the module loads
 initializeNLPModel().catch(error => console.error('Failed to initialize NLP model:', error));
@@ -111,6 +116,8 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
   // Enhanced process user message with NLP capabilities and UNCONDITIONAL memory utilization
   const processUserMessage = useCallback(async (userInput: string): Promise<MessageType> => {
     try {
+      console.log("Current conversation history:", conversationHistory);
+      
       // UNCONDITIONAL RULE: Always update conversation history
       updateConversationHistory(userInput);
       
@@ -120,23 +127,20 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
         const feelingResult = await detectEnhancedFeelings(userInput);
         
         // Log enhanced understanding
-        console.log("Enhanced NLP analysis:", {
-          feelings: feelingResult.allFeelings,
-          primaryFeeling: feelingResult.primaryFeeling,
-          topics: feelingResult.topics,
-          severity: feelingResult.severity,
-        });
+        console.log("Detected feelings:", feelingResult);
         
         // UNCONDITIONAL RULE: Access memory for context
+        const persistentFeelings = getPersistentFeelings();
+        console.log("Persistent feelings:", persistentFeelings);
+        
+        const dominantTopics = getDominantTopics();
+        console.log("Dominant topics:", dominantTopics);
+        
+        // UNCONDITIONAL RULE: Always use memory
         const memory = getContextualMemory(userInput);
         
-        // Check for consistent emotional patterns - using UNCONDITIONAL memory rule
-        const persistentFeelings = getPersistentFeelings();
-        const dominantTopics = getDominantTopics();
-        
         // If we detect consistent emotions or topics, create more targeted responses
-        if ((persistentFeelings.length > 0 || dominantTopics.length > 0) && 
-            messageCount > 2 && messageCount < 10) {
+        if ((persistentFeelings.length > 0 || dominantTopics.length > 0)) {
           
           // Create enhanced context-aware response
           let enhancedResponse = "";
@@ -226,10 +230,29 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
         updateStage
       );
       
-      // UNCONDITIONAL RULE: Record final response to memory
-      recordToMemory(userInput, response.text);
+      // UNCONDITIONAL MEMORY RULE: Process response through master rules
+      let finalResponseText = response.text;
       
-      return response;
+      // Always process through master rules to ensure memory utilization
+      finalResponseText = processResponseThroughMasterRules(
+        finalResponseText,
+        userInput,
+        messageCount,
+        conversationHistory
+      );
+      
+      // Final check - if we still don't have memory utilization, force it
+      if (!verifyMemoryUtilization(userInput, finalResponseText, conversationHistory)) {
+        finalResponseText = forceMemoryEnhancement(finalResponseText);
+      }
+      
+      // UNCONDITIONAL RULE: Record final response to memory
+      recordToMemory(userInput, finalResponseText);
+      
+      // Return the memory-enhanced response
+      const finalResponse = createMessage(finalResponseText, 'roger');
+      return finalResponse;
+      
     } catch (error) {
       console.error("Error in processUserMessage:", error);
       
@@ -242,7 +265,7 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
       
       // Return a fallback response if an error occurs
       return Promise.resolve(createMessage(
-        "I'm sorry, I'm having trouble responding right now. Could you try again?", 
+        "I remember what you've shared with me. Could you tell me more about what's been happening?", 
         'roger'
       ));
     }

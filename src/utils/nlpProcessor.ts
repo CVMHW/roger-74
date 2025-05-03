@@ -1,4 +1,3 @@
-
 import { toast } from '../components/ui/sonner';
 
 // Define model configuration
@@ -72,6 +71,9 @@ export const recordToMemory = (
   topics?: string[],
   problems?: string[]
 ): void => {
+  // Log memory recording
+  console.log("UNCONDITIONAL MEMORY RULE: Recording to memory system");
+  
   // Always record patient statements (UNCONDITIONAL)
   if (patientStatement) {
     MEMORY_STORAGE.patientStatements.push(patientStatement);
@@ -96,6 +98,17 @@ export const recordToMemory = (
     emotions.forEach(emotion => {
       MEMORY_STORAGE.detectedEmotions[emotion] = (MEMORY_STORAGE.detectedEmotions[emotion] || 0) + 1;
     });
+  } else {
+    // Auto-detect emotions if not provided
+    try {
+      const detectedEmotion = detectEmotionFallback(patientStatement);
+      if (detectedEmotion !== 'neutral') {
+        MEMORY_STORAGE.detectedEmotions[detectedEmotion] = 
+          (MEMORY_STORAGE.detectedEmotions[detectedEmotion] || 0) + 1;
+      }
+    } catch (error) {
+      console.error('Error auto-detecting emotions for memory:', error);
+    }
   }
   
   // Record topics with frequency count
@@ -103,25 +116,54 @@ export const recordToMemory = (
     topics.forEach(topic => {
       MEMORY_STORAGE.detectedTopics[topic] = (MEMORY_STORAGE.detectedTopics[topic] || 0) + 1;
     });
+  } else {
+    // Auto-extract topics if not provided
+    try {
+      const extractedTopics = extractKeyTopics(patientStatement);
+      if (extractedTopics.length > 0) {
+        extractedTopics.forEach(topic => {
+          MEMORY_STORAGE.detectedTopics[topic] = (MEMORY_STORAGE.detectedTopics[topic] || 0) + 1;
+        });
+      }
+    } catch (error) {
+      console.error('Error auto-extracting topics for memory:', error);
+    }
   }
   
   // Record detected problems
   if (problems && problems.length > 0) {
     MEMORY_STORAGE.detectedProblems = [...new Set([...MEMORY_STORAGE.detectedProblems, ...problems])];
+  } else {
+    // Auto-detect problems if not provided
+    try {
+      const detectedProblems = detectProblems(patientStatement);
+      if (detectedProblems.length > 0) {
+        MEMORY_STORAGE.detectedProblems = [...new Set([...MEMORY_STORAGE.detectedProblems, ...detectedProblems])];
+      }
+    } catch (error) {
+      console.error('Error auto-detecting problems for memory:', error);
+    }
   }
   
   // Update last interaction timestamp
   MEMORY_STORAGE.lastUpdated = Date.now();
   
   // Create period summaries for long-term memory
-  if (MEMORY_STORAGE.patientStatements.length % 10 === 0) {
+  if (MEMORY_STORAGE.patientStatements.length % 5 === 0 || MEMORY_STORAGE.patientStatements.length === 1) {
     try {
-      const recentStatements = MEMORY_STORAGE.patientStatements.slice(-10);
+      const recentStatements = MEMORY_STORAGE.patientStatements.slice(-5);
       const summary = createConversationSummary(recentStatements);
       MEMORY_STORAGE.conversationSummary.push(summary);
     } catch (error) {
       console.error('Error creating conversation summary:', error);
     }
+  }
+  
+  // Backup to localStorage for persistence between sessions
+  try {
+    localStorage.setItem('rogerMemoryStorage', JSON.stringify(MEMORY_STORAGE));
+  } catch (error) {
+    console.error('Error backing up memory to localStorage:', error);
   }
 };
 
@@ -161,6 +203,23 @@ export const getContextualMemory = (currentInput: string): {
   detectedProblems: string[];
   summary: string;
 } => {
+  console.log("UNCONDITIONAL MEMORY RULE: Retrieving contextual memory");
+  
+  // Try to load from localStorage first if memory storage is empty
+  if (MEMORY_STORAGE.patientStatements.length === 0) {
+    try {
+      const savedMemory = localStorage.getItem('rogerMemoryStorage');
+      if (savedMemory) {
+        const parsedMemory = JSON.parse(savedMemory);
+        // Merge with current memory
+        Object.assign(MEMORY_STORAGE, parsedMemory);
+        console.log("Restored memory from localStorage");
+      }
+    } catch (error) {
+      console.error('Error loading memory from localStorage:', error);
+    }
+  }
+  
   // Find most relevant previous statements using basic keyword matching
   const keywords = currentInput.toLowerCase().split(/\W+/).filter(word => 
     word.length > 3 && !['this', 'that', 'with', 'would', 'could', 'have', 'been'].includes(word)
@@ -187,10 +246,18 @@ export const getContextualMemory = (currentInput: string): {
     ? MEMORY_STORAGE.conversationSummary.join(' ') 
     : "No conversation summary available yet.";
   
+  // If we don't have relevant statements but have patient statements, use the most recent ones
+  const finalRelevantStatements = relevantStatements.length > 0 
+    ? relevantStatements 
+    : MEMORY_STORAGE.patientStatements.slice(-3);
+  
+  // If we have current input but no patient statements yet, add it
+  if (currentInput && MEMORY_STORAGE.patientStatements.length === 0) {
+    MEMORY_STORAGE.patientStatements.push(currentInput);
+  }
+  
   return {
-    relevantStatements: relevantStatements.length > 0 
-      ? relevantStatements 
-      : MEMORY_STORAGE.patientStatements.slice(-3),
+    relevantStatements: finalRelevantStatements,
     dominantEmotion,
     dominantTopics,
     detectedProblems: MEMORY_STORAGE.detectedProblems,

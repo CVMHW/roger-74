@@ -37,26 +37,25 @@ export const processResponseThroughMasterRules = (
     );
     
     // UNCONDITIONAL RULE: Verify memory utilization in response
-    if (messageCount > 3 && !verifyMemoryUtilization(userInput, ruleConformingResponse, conversationHistory)) {
-      // If response doesn't use memory, enhance it with memory context
+    if (messageCount > 0) {  // Changed from > 3 to > 0 to ALWAYS use memory
+      // Get memory context
       const memory = getContextualMemory(userInput);
       
-      // Create memory-enhanced response
-      let enhancedResponse = ruleConformingResponse;
+      // Check if response already uses memory
+      const usesMemory = verifyMemoryUtilization(userInput, ruleConformingResponse, conversationHistory);
       
-      // Check if we should add memory context prefix
-      if (!ruleConformingResponse.toLowerCase().includes("remember") && 
-          !ruleConformingResponse.toLowerCase().includes("mentioned") &&
-          !ruleConformingResponse.toLowerCase().includes("earlier") &&
-          !ruleConformingResponse.toLowerCase().includes("previously")) {
+      // If response doesn't use memory, enhance it with memory context
+      if (!usesMemory) {
+        // Create memory-enhanced response
+        let enhancedResponse = ruleConformingResponse;
         
         // Add memory context using rotation of different phrasings
         const memoryPhrases = [
-          `I remember you mentioned ${memory.dominantTopics[0] || 'this'} earlier. `,
-          `As we've been discussing about ${memory.dominantTopics[0] || 'these concerns'}, `,
-          `Given what you've shared about ${memory.dominantTopics[0] || 'your situation'}, `,
-          `Considering your earlier comments about ${memory.dominantTopics[0] || 'this topic'}, `,
-          `Based on what you've told me about ${memory.dominantTopics[0] || 'your experiences'}, `
+          `I remember you mentioned ${memory.dominantTopics[0] || 'what you\'ve been going through'} earlier. `,
+          `As we've been discussing about ${memory.dominantTopics[0] || 'your situation'}, `,
+          `Given what you've shared about ${memory.dominantTopics[0] || 'your concerns'}, `,
+          `Considering what you told me about ${memory.dominantTopics[0] || 'your experiences'}, `,
+          `Based on our conversation about ${memory.dominantTopics[0] || 'what you\'ve shared'}, `
         ];
         
         // Select phrase based on message count to rotate through them
@@ -64,15 +63,15 @@ export const processResponseThroughMasterRules = (
         
         // Add the memory phrase to response
         enhancedResponse = selectedPhrase + enhancedResponse;
+        
+        // Then enhance with rapport building elements
+        return enhanceResponseWithRapport(
+          enhancedResponse, 
+          userInput, 
+          messageCount,
+          conversationHistory
+        );
       }
-      
-      // Then enhance with rapport building elements
-      return enhanceResponseWithRapport(
-        enhancedResponse, 
-        userInput, 
-        messageCount,
-        conversationHistory
-      );
     }
     
     // Then enhance with rapport building elements
@@ -110,22 +109,26 @@ export const enhanceResponseWithMemory = (
   try {
     const memory = getContextualMemory(userInput);
     
-    // If no memory or very short conversation, return original response
-    if (conversationHistory.length < 3 || !memory.dominantTopics.length) {
-      return response;
-    }
+    // Even for short conversations, use memory (changed from < 3 to always use)
     
     // Check if response already references memory
     if (response.toLowerCase().includes("remember") || 
         response.toLowerCase().includes("mentioned") || 
         response.toLowerCase().includes("earlier") ||
-        response.toLowerCase().includes("previously")) {
+        response.toLowerCase().includes("previously") ||
+        response.toLowerCase().includes("you've shared")) {
       return response;
     }
     
-    // Add memory context
-    const memoryPhrase = `I remember you mentioned ${memory.dominantTopics[0] || 'this'} earlier. `;
-    return memoryPhrase + response;
+    // Add memory context - UNCONDITIONAL!
+    const memoryPhrases = [
+      `I remember you mentioned ${memory.dominantTopics[0] || 'what you\'ve been going through'}. `,
+      `Based on what you've told me about ${memory.dominantTopics[0] || 'your situation'}, `,
+      `Considering our conversation about ${memory.dominantTopics[0] || 'your concerns'}, `
+    ];
+    
+    const randomPhrase = memoryPhrases[Math.floor(Math.random() * memoryPhrases.length)];
+    return randomPhrase + response;
   } catch (error) {
     console.error('Error enhancing response with memory:', error);
     return response;
