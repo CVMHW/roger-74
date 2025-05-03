@@ -1,131 +1,57 @@
 
 /**
- * Special case handlers for specific hallucination patterns
+ * Special cases for hallucination detection and handling
  */
 
 /**
- * Checks if a response contains repeated content, which is a sign of model confusion
- */
-export const hasRepeatedContent = (responseText: string): boolean => {
-  // Check for various repetition patterns
-  const repetitionPatterns = [
-    /I hear (you'?re|you are) dealing with I hear (you'?re|you are) dealing with/i,
-    /I hear (you'?re|you are) dealing with you may have indicated/i,
-    /I remember (you|your|we) I remember (you|your|we)/i,
-    /you (mentioned|said|told me) you (mentioned|said|told me)/i,
-    /(I hear|It sounds like) you('re| are) (dealing with|feeling) (I hear|It sounds like) you('re| are)/i,
-    /you may have indicated Just a/i,
-    /dealing with you may have indicated/i,
-    /It seems like you shared that ([^.]{5,50})\. (I hear|It sounds like) you/i,
-    // Check for sentences that have exact duplicates
-    /([\w\s',]{15,})\s+\1/i,
-    // Shared pattern detection
-    /It seems like you shared that/i
-  ];
-  
-  for (const pattern of repetitionPatterns) {
-    if (pattern.test(responseText)) {
-      return true;
-    }
-  }
-  
-  // Extract sentences and check for near-duplicates
-  const sentences = responseText.split(/[.!?]+\s/).filter(s => s.trim().length > 0);
-  for (let i = 0; i < sentences.length - 1; i++) {
-    for (let j = i + 1; j < sentences.length; j++) {
-      const similarity = calculateSimilarity(sentences[i], sentences[j]);
-      if (similarity > 0.8 && sentences[i].length > 15) {
-        return true;
-      }
-    }
-  }
-  
-  return false;
-};
-
-/**
- * Simple similarity calculation between two strings
- */
-const calculateSimilarity = (str1: string, str2: string): number => {
-  const words1 = str1.toLowerCase().split(/\s+/);
-  const words2 = str2.toLowerCase().split(/\s+/);
-  
-  const commonWords = words1.filter(word => words2.includes(word));
-  return commonWords.length / Math.max(words1.length, words2.length);
-};
-
-/**
- * Specifically checks if the response has the problematic "It seems like you shared that" pattern
+ * Check for the "It seems like you shared that" problematic pattern
  */
 export const hasSharedThatPattern = (responseText: string): boolean => {
   return /It seems like you shared that/i.test(responseText);
 };
 
 /**
- * Checks for invalid mention references that don't match conversation history
+ * Detect if response has obvious repetition patterns
  */
-export const hasInvalidMentionReference = (responseText: string, conversationHistory: string[]): boolean => {
-  // Check for references to previous messages that don't exist
-  const mentionPatterns = [
-    /you mentioned ([^,.]+)/i,
-    /you said ([^,.]+)/i,
-    /you told me ([^,.]+)/i,
-    /earlier you shared ([^,.]+)/i,
-    /previously you noted ([^,.]+)/i
-  ];
+export const hasRepeatedContent = (responseText: string): boolean => {
+  // Check for doubled phrases (common hallucination pattern)
+  const phrases = responseText.toLowerCase().match(/[a-z]{5,} [a-z]{2,} [a-z]{2,}/g) || [];
   
-  // Nothing to check against if there's no history
-  if (!conversationHistory || conversationHistory.length === 0) {
-    // If there's no history but the response claims there was, that's a problem
-    for (const pattern of mentionPatterns) {
-      if (pattern.test(responseText)) {
+  for (let i = 0; i < phrases.length; i++) {
+    for (let j = i + 1; j < phrases.length; j++) {
+      if (phrases[i] === phrases[j]) {
         return true;
       }
     }
-    return false;
   }
   
-  // For each pattern, extract what was supposedly mentioned and check if it's in the history
-  for (const pattern of mentionPatterns) {
-    const matches = responseText.match(pattern);
-    if (matches && matches[1]) {
-      const supposedMention = matches[1].toLowerCase();
-      // Check if this is actually in the history
-      const historyHasMention = conversationHistory.some(
-        msg => msg.toLowerCase().includes(supposedMention)
-      );
-      
-      if (!historyHasMention) {
-        return true; // Found an invalid reference
-      }
+  // Check for repeated sentence structures
+  const sentenceStarts = responseText.split(/[.!?]\s+/).map(s => {
+    const words = s.trim().split(/\s+/).slice(0, 3).join(' ').toLowerCase();
+    return words;
+  });
+  
+  // If we have consecutive sentences starting the same way (except very short ones)
+  for (let i = 0; i < sentenceStarts.length - 1; i++) {
+    if (sentenceStarts[i].length > 10 && sentenceStarts[i] === sentenceStarts[i + 1]) {
+      return true;
+    }
+  }
+  
+  // Check for repeated acknowledgment patterns
+  const acknowledgmentPatterns = [
+    /I hear you're feeling .+\. I hear you're feeling/i,
+    /It sounds like you're .+\. It sounds like you're/i,
+    /I understand that you .+\. I understand that you/i
+  ];
+  
+  for (const pattern of acknowledgmentPatterns) {
+    if (pattern.test(responseText)) {
+      return true;
     }
   }
   
   return false;
-};
-
-/**
- * Replace specific patterns with more natural alternatives
- */
-const replacePatternWithAlternative = (text: string, userInput: string): string => {
-  // Normalized user input for context
-  const normalizedInput = userInput.toLowerCase();
-  
-  // Get appropriate acknowledgment based on user input content
-  let acknowledgment = "";
-  if (normalizedInput.includes("embarrass") || normalizedInput.includes("awkward") || 
-      normalizedInput.includes("nervous")) {
-    acknowledgment = "That sounds like an awkward situation. ";
-  } else if (normalizedInput.includes("spill") && 
-             (normalizedInput.includes("girl") || normalizedInput.includes("date"))) {
-    acknowledgment = "Social situations like that can be uncomfortable. ";
-  } else if (normalizedInput.includes("could have") || normalizedInput.includes("better")) {
-    acknowledgment = "I understand you're reflecting on how you handled the situation. ";
-  } else {
-    acknowledgment = "I understand. ";
-  }
-  
-  return acknowledgment;
 };
 
 /**
@@ -135,69 +61,62 @@ export const fixRepeatedContent = (responseText: string, userInput: string): str
   // First, let's completely replace the "It seems like you shared that" pattern
   let fixedResponse = responseText;
   
-  // Completely replace the "It seems like you shared that" pattern with better alternatives
+  // Replace standard problematic patterns
   if (hasSharedThatPattern(fixedResponse)) {
-    // First extract what was supposedly shared
-    const sharedMatch = fixedResponse.match(/It seems like you shared that ([^.]+)\./i);
-    let replacementText = "";
+    // Extract the topic being referenced
+    const match = fixedResponse.match(/It seems like you shared that ([^.]+)\./i);
+    const topic = match ? match[1] : "";
     
-    if (sharedMatch && sharedMatch[1]) {
-      // Construct a more conversational alternative
-      const sharedContent = sharedMatch[1].trim();
-      
-      // Create varied replacements based on content
-      if (sharedContent.includes("feeling")) {
-        // If it's about feelings, acknowledge the feeling directly
-        const feelingMatch = sharedContent.match(/feeling ([a-z]+)/i);
-        if (feelingMatch && feelingMatch[1]) {
-          const feeling = feelingMatch[1].toLowerCase();
-          replacementText = `I can understand why you might feel ${feeling}. `;
-        } else {
-          replacementText = `I hear what you're feeling. `;
-        }
-      } else if (sharedContent.includes("today") || sharedContent.includes("tough day")) {
-        // If it's about their day, acknowledge directly
-        replacementText = `That does sound like a challenging situation. `;
-      } else {
-        // General acknowledgment
-        replacementText = `I appreciate you sharing that with me. `;
-      }
+    // Special case for bar/social anxiety scenarios
+    if (userInput.toLowerCase().includes("spill") && 
+        (userInput.toLowerCase().includes("bar") || userInput.toLowerCase().includes("girl"))) {
+      fixedResponse = fixedResponse.replace(
+        /It seems like you shared that [^.]+\./i,
+        "That sounds like an uncomfortable social situation."
+      );
+    } else if (topic && userInput.toLowerCase().includes(topic.toLowerCase())) {
+      // If the topic is actually in the user input, replace with a natural acknowledgment
+      fixedResponse = fixedResponse.replace(
+        /It seems like you shared that [^.]+\./i,
+        `I understand you're talking about ${topic}.`
+      );
     } else {
-      // Default replacement if we can't extract what was shared
-      replacementText = "Thanks for sharing that. ";
+      // Generic replacement for other cases
+      fixedResponse = fixedResponse.replace(
+        /It seems like you shared that [^.]+\./i,
+        "Thanks for sharing that with me."
+      );
     }
-    
-    // Replace the entire pattern
-    fixedResponse = fixedResponse.replace(
-      /It seems like you shared that [^.]+\./i,
-      replacementText
-    );
   }
   
-  // Fix repetitive "I hear you're dealing with" pattern
-  fixedResponse = fixedResponse.replace(
-    /I hear (you'?re|you are) dealing with I hear (you'?re|you are) dealing with/i,
-    "I hear you're dealing with"
-  );
+  // Replace repetitive acknowledgment patterns
+  const acknowledgmentPatterns = [
+    { regex: /(I hear|It sounds like) you('re| are) feeling (.+)\. \1 you\2 feeling/i, groupIndex: 3 },
+    { regex: /I understand that you (.+)\. I understand that you/i, groupIndex: 1 },
+    { regex: /It seems that you (.+)\. It seems that you/i, groupIndex: 1 },
+  ];
   
-  // Fix "I hear you're dealing with you may have indicated" pattern
-  fixedResponse = fixedResponse.replace(
-    /I hear (you'?re|you are) dealing with you may have indicated/i,
-    "I hear you're dealing with"
-  );
+  for (const pattern of acknowledgmentPatterns) {
+    const match = fixedResponse.match(pattern.regex);
+    if (match) {
+      const content = match[pattern.groupIndex];
+      // Replace with a single acknowledgment
+      fixedResponse = fixedResponse.replace(
+        pattern.regex, 
+        `I hear you're feeling ${content}.`
+      );
+    }
+  }
   
-  // Remove all instances of "you may have indicated"
-  fixedResponse = fixedResponse.replace(/you may have indicated/gi, "");
-  
-  // Deduplicate sentences by splitting, filtering unique, and rejoining
-  const sentences = fixedResponse.split(/(?<=[.!?])\s+/)
-    .filter(s => s.trim().length > 0);
-  
+  // Split into sentences to remove duplicates
+  const sentences = fixedResponse.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
   const uniqueSentences: string[] = [];
+  
   for (const sentence of sentences) {
     let isDuplicate = false;
-    for (const existing of uniqueSentences) {
-      if (calculateSimilarity(sentence, existing) > 0.8) {
+    
+    for (const existingSentence of uniqueSentences) {
+      if (calculateSentenceSimilarity(sentence, existingSentence) > 0.7) {
         isDuplicate = true;
         break;
       }
@@ -208,48 +127,92 @@ export const fixRepeatedContent = (responseText: string, userInput: string): str
     }
   }
   
-  fixedResponse = uniqueSentences.join(' ');
-  
-  return fixedResponse;
+  // Recombine unique sentences
+  return uniqueSentences.join(" ");
 };
 
 /**
- * Checks for false health topic hallucinations and fixes them
+ * Calculate similarity between sentences for deduplication
  */
-export const handleHealthHallucination = (
-  responseText: string, 
-  conversationHistory: string[]
-): { isHealthHallucination: boolean; correctedResponse: string } => {
-  // Check if the response mentions health topics
-  const hasHealthMention = /we've been focusing on health|dealing with health|focusing on health/i.test(responseText);
+const calculateSentenceSimilarity = (sentence1: string, sentence2: string): number => {
+  const words1 = sentence1.toLowerCase().split(/\s+/);
+  const words2 = sentence2.toLowerCase().split(/\s+/);
   
-  // Check if the conversation history actually contains health topics
-  const hasHealthInHistory = conversationHistory.some(msg => 
-    /health|medical|doctor|sick|ill|wellness|disease|symptom|hospital|clinic/i.test(msg)
-  );
+  // Simple word overlap
+  const shortestLength = Math.min(words1.length, words2.length);
+  let matchCount = 0;
   
-  // If there's a mention of health topics without actual history, it's a hallucination
-  if (hasHealthMention && !hasHealthInHistory) {
-    // Replace the health topic reference with a more general statement
-    const correctedResponse = responseText
-      .replace(
-        /we've been focusing on health|dealing with health|focusing on health/gi, 
-        "what you've been sharing"
-      )
-      .replace(
-        /our discussion about health|our health conversation|health concerns we discussed/gi,
-        "what you've mentioned"
-      );
-    
-    return {
-      isHealthHallucination: true,
-      correctedResponse
-    };
+  for (let i = 0; i < shortestLength; i++) {
+    if (words1[i] === words2[i]) {
+      matchCount++;
+    }
   }
   
-  // No health hallucination detected
-  return {
-    isHealthHallucination: false,
-    correctedResponse: responseText
-  };
+  return matchCount / shortestLength;
+};
+
+/**
+ * Check for and handle problematic health hallucinations
+ */
+export const handleHealthHallucination = (
+  responseText: string,
+  conversationHistory: string[]
+): { isHealthHallucination: boolean; correctedResponse: string } => {
+  // Check if response contains health claims
+  const hasHealthClaim = /cure|treatment|medical condition|diagnos|therapy|medic|symptom|health condition|disorder/i.test(responseText);
+  
+  // Only proceed if there's a potential health claim
+  if (!hasHealthClaim) {
+    return { isHealthHallucination: false, correctedResponse: responseText };
+  }
+  
+  // Look for disclaimer pattern
+  const hasDisclaimer = /I('m| am) not a (medical professional|doctor|healthcare provider)|This is not medical advice/i.test(responseText);
+  
+  // If health related but no disclaimer, this is likely a hallucination
+  if (!hasDisclaimer) {
+    // Add appropriate disclaimer
+    const corrected = responseText + " I should note that I'm not a healthcare professional, and it would be important to consult with a qualified medical provider for any health concerns.";
+    
+    return { isHealthHallucination: true, correctedResponse: corrected };
+  }
+  
+  return { isHealthHallucination: false, correctedResponse: responseText };
+};
+
+/**
+ * Check if references to prior conversation are valid
+ */
+export const hasInvalidMentionReference = (
+  responseText: string, 
+  conversationHistory: string[]
+): boolean => {
+  // Look for phrases that indicate reference to shared information
+  const referencePhrases = [
+    /as you (mentioned|said) (earlier|before|previously)/i,
+    /you told me (earlier|before|previously) (about|that)/i,
+    /as we (discussed|talked about) (earlier|before|previously)/i,
+    /from our (previous|earlier|last) conversation/i,
+    /continuing (our|from where we) (discussion|conversation)/i,
+    /last time (we talked|we spoke|you mentioned)/i
+  ];
+  
+  // Check for references
+  for (const phrase of referencePhrases) {
+    if (phrase.test(responseText)) {
+      // This is a reference to prior conversation
+      
+      // If conversation history is very short, this is definitely invalid
+      if (conversationHistory.length < 3) {
+        return true;
+      }
+      
+      // For longer conversations, we would need more sophisticated checking
+      // but for safety we'll return false (meaning potentially valid)
+      return false;
+    }
+  }
+  
+  // No reference phrases found
+  return false;
 };

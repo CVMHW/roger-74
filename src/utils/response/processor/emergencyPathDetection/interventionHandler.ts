@@ -1,3 +1,4 @@
+
 /**
  * Emergency Path Intervention Handler
  * 
@@ -17,7 +18,7 @@ export const applyEmergencyIntervention = (
   userInput: string
 ): string => {
   // First, fix any repetition issues which are the most critical
-  let correctedResponse = fixRepeatedContent(responseText);
+  let correctedResponse = fixRepeatedContent(responseText, userInput);
   
   // If the severity is SEVERE, we need to start fresh with a completely new response pattern
   if (isSeverityEqual(emergencyPathResult.severity, SeverityLevel.SEVERE)) {

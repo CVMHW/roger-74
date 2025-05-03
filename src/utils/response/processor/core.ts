@@ -18,6 +18,7 @@ import { hasSharedThatPattern } from './hallucinationHandler/specialCases';
 import { fixDangerousRepetitionPatterns } from './hallucinationHandler/patternFixer';
 import { isSeverityEqual } from './emergencyPathDetection/severityUtils'; 
 import { SeverityLevel } from './emergencyPathDetection/types';
+import { addResponseVariety, generateSpontaneousResponse } from '../personalityVariation';
 
 /**
  * Process response through master rules system - core implementation
@@ -97,9 +98,39 @@ export const processResponseCore = (
       conversationHistory
     );
     
+    // Check if we're in a loop of similar responses
+    const inSimilarResponseLoop = previousResponses.length >= 2 && 
+      previousResponses.slice(0, 2).some(prev => 
+        prev.includes("I notice I may have been repeating myself") || 
+        prev.includes("I'd like to focus specifically on what you've shared")
+      );
+    
+    // If we detect a loop of similar responses, use the spontaneous response generator
+    // to create a completely fresh response that breaks the pattern
+    if (inSimilarResponseLoop) {
+      console.log("PATTERN INTERRUPT: Detecting loop of similar responses, generating spontaneous response");
+      const spontaneousResponse = generateSpontaneousResponse(userInput, previousResponses);
+      
+      // Record final spontaneous response to all memory systems
+      recordToMemorySystems(
+        spontaneousResponse, 
+        attentionResults.emotionalContext,
+        attentionResults.dominantTopics
+      );
+      
+      return spontaneousResponse;
+    }
+    
+    // VITAL NEW STEP: Apply personality variation system to make responses more natural and varied
+    let enhancedPersonalityResponse = addResponseVariety(
+      hallucinationCheckedResponse,
+      userInput,
+      messageCount
+    );
+    
     // Final check for potential emergency path in the processed response
     const finalEmergencyPathResult = detectEmergencyPath(
-      hallucinationCheckedResponse, 
+      enhancedPersonalityResponse, 
       userInput, 
       conversationHistory,
       previousResponses
@@ -110,7 +141,7 @@ export const processResponseCore = (
     if (finalEmergencyPathResult.isEmergencyPath) {
       console.log("CRITICAL: Emergency path detected in final response, applying final intervention");
       const finalResponse = applyEmergencyIntervention(
-        hallucinationCheckedResponse,
+        enhancedPersonalityResponse,
         finalEmergencyPathResult,
         userInput
       );
@@ -127,7 +158,7 @@ export const processResponseCore = (
     
     // LAST-RESORT SAFETY CHECK for the problematic "It seems like you shared that" pattern
     // If it somehow survived all our processing, catch it here as a final backstop
-    if (hasSharedThatPattern(hallucinationCheckedResponse)) {
+    if (hasSharedThatPattern(enhancedPersonalityResponse)) {
       console.log("CRITICAL FINAL BACKSTOP: 'It seems like you shared that' pattern detected");
       
       // Use our emergency intervention as a last resort
@@ -143,7 +174,7 @@ export const processResponseCore = (
       };
       
       const safeResponse = applyEmergencyIntervention(
-        hallucinationCheckedResponse, 
+        enhancedPersonalityResponse, 
         emergencyResult,
         userInput
       );
@@ -160,12 +191,12 @@ export const processResponseCore = (
     
     // Record final response to all memory systems
     recordToMemorySystems(
-      hallucinationCheckedResponse, 
+      enhancedPersonalityResponse, 
       attentionResults.emotionalContext,
       attentionResults.dominantTopics
     );
     
-    return hallucinationCheckedResponse;
+    return enhancedPersonalityResponse;
   } catch (error) {
     if (error instanceof Error) {
       return handleResponseProcessingError(error, userInput, response);
