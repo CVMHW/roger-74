@@ -4,15 +4,15 @@
  * Contains the main processing logic without peripheral concerns
  */
 
-import { checkAllRules } from '../../rulesEnforcement/rulesEnforcer';
-import { processWithMultiHeadAttention } from '../../memory/multiHeadAttention';
-import { addToFiveResponseMemory, verifyFiveResponseMemorySystem } from '../../memory/fiveResponseMemory';
-import { addToMemoryBank } from '../../memory/memoryBank';
 import { applyResponseRules } from './ruleProcessing';
 import { handleResponseProcessingError } from './errorHandling';
-import { enhanceWithMemoryBank, processAttentionResults } from './memoryEnhancement';
-import { handlePotentialHallucinations, applyEarlyConversationRAG } from './hallucinationHandler';
-import { getConversationMessageCount } from '../../memory/newConversationDetector';
+import { enhanceWithMemoryBank } from './memoryEnhancement';
+import { handlePotentialHallucinations } from './hallucinationHandler';
+import { verifySystemsOperational } from './validation';
+import { processInputWithAttention } from './attentionProcessor';
+import { determineConversationStage, applyConversationStageProcessing } from './conversationStageHandler';
+import { getHallucinationOptions } from './hallucinationConfig';
+import { recordToMemorySystems } from './memorySystemHandler';
 
 /**
  * Process response through master rules system - core implementation
@@ -26,20 +26,11 @@ export const processResponseCore = (
   try {
     console.log("MASTER RULES: Beginning response processing");
     
-    // CRITICAL: First verify that all memory systems are operational
-    const fiveResponseMemoryOperational = verifyFiveResponseMemorySystem();
-    if (!fiveResponseMemoryOperational) {
-      console.error("CRITICAL: 5ResponseMemory system failure detected");
-    }
+    // Verify all systems are operational
+    verifySystemsOperational();
     
-    // MANDATORY: Check all system rules first
-    checkAllRules();
-    
-    // CRITICAL: Process input through multi-head attention system
-    const attentionResults = processWithMultiHeadAttention(userInput, conversationHistory);
-    
-    // Process attention results and update memory systems
-    processAttentionResults(userInput, attentionResults);
+    // Process through attention system
+    const attentionResults = processInputWithAttention(userInput, conversationHistory);
     
     // Apply all response rules
     const reviewedResponse = applyResponseRules(response, userInput, messageCount, conversationHistory);
@@ -52,54 +43,32 @@ export const processResponseCore = (
       conversationHistory
     );
     
-    // Get accurate message count from conversation detector
-    const actualMessageCount = getConversationMessageCount();
+    // Get conversation stage information
+    const { isEarlyConversation } = determineConversationStage();
     
-    // CRITICAL: Check for early conversation - be extra careful with memory references
-    const isEarlyConversation = actualMessageCount <= 2;
+    // Apply stage-specific processing
+    let processedResponse = applyConversationStageProcessing(
+      memoryBankEnhancedResponse,
+      userInput,
+      isEarlyConversation
+    );
     
-    // For early conversations (first 1-2 messages), apply special RAG
-    let processedResponse = memoryBankEnhancedResponse;
-    if (isEarlyConversation) {
-      processedResponse = applyEarlyConversationRAG(
-        processedResponse, 
-        userInput
-      );
-    }
+    // Get appropriate hallucination prevention options
+    const hallucinationOptions = getHallucinationOptions(isEarlyConversation);
     
-    // NEW: Apply comprehensive hallucination prevention system
-    // Using stronger hallucination prevention for early conversations
-    const hallucinationOptions = isEarlyConversation ? 
-      {
-        detectionSensitivity: 0.9,    // Higher sensitivity for new conversations
-        enableReasoning: true,
-        enableRAG: false,             // Don't enhance with RAG in early conversations
-        enableTokenLevelDetection: true,
-        enableReranking: true         // Use re-ranking for early conversations
-      } : 
-      {
-        detectionSensitivity: 0.7,
-        enableReasoning: true,
-        enableRAG: true,
-        enableTokenLevelDetection: false,
-        enableReranking: false
-      };
-    
+    // Apply comprehensive hallucination prevention system
     const { processedResponse: hallucinationCheckedResponse } = handlePotentialHallucinations(
       processedResponse,
       userInput,
       conversationHistory
     );
     
-    // CRITICAL: Record final response to all memory systems
-    addToMemoryBank(
+    // Record final response to all memory systems
+    recordToMemorySystems(
       hallucinationCheckedResponse, 
-      'roger', 
       attentionResults.emotionalContext,
-      attentionResults.dominantTopics,
-      0.7 // Good importance for roger responses
+      attentionResults.dominantTopics
     );
-    addToFiveResponseMemory('roger', hallucinationCheckedResponse);
     
     return hallucinationCheckedResponse;
   } catch (error) {
