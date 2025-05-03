@@ -2,45 +2,33 @@
 /**
  * Stressor Types
  * 
- * Defines the types and categories of stressors that Roger can recognize
+ * Type definitions for the stressor system
  */
 
-// Main stressor categories
+// Age ranges
+export type AgeRange = 'child' | 'early-teen' | 'mid-teen' | 'late-teen' | 'young-adult' | 'adult' | 'all';
+
+// Stressor categories
 export type StressorCategory = 
-  | 'academic'
-  | 'social'
-  | 'family'
-  | 'health'
-  | 'safety'
-  | 'personal'
-  | 'future'
-  | 'environmental'
-  | 'other';
+  'academic' | 
+  'social' | 
+  'family' | 
+  'health' | 
+  'safety' | 
+  'environmental' | 
+  'financial' | 
+  'work' | 
+  'relationship' | 
+  'societal' |
+  'other';
 
-// Age ranges for stressors
-export type AgeRange = 
-  | 'child' // 9-12
-  | 'early-teen' // 13-14
-  | 'mid-teen' // 15-16
-  | 'late-teen' // 17-18
-  | 'young-adult' // 19-24
-  | 'adult' // 25+
-  | 'all'; // All ages
+// Severity levels
+export type SeverityLevel = 'mild' | 'moderate' | 'severe';
 
-// Stressor severity levels
-export type SeverityLevel = 
-  | 'mild'
-  | 'moderate'
-  | 'severe';
+// Frequency levels
+export type FrequencyLevel = 'rare' | 'occasional' | 'common' | 'very-common';
 
-// Stressor frequency levels
-export type FrequencyLevel =
-  | 'rare'
-  | 'occasional'
-  | 'common'
-  | 'very-common';
-
-// Stressor data structure
+// Stressor interface
 export interface Stressor {
   id: string;
   name: string;
@@ -50,16 +38,15 @@ export interface Stressor {
   severity: SeverityLevel;
   frequency: FrequencyLevel;
   keywords: string[];
-  relatedStressors?: string[]; // IDs of related stressors
-  factSheet?: string; // Brief facts about this stressor
-  commonResponses?: string[]; // How patients might express this stressor
+  relatedStressors?: string[];
+  factSheet?: string;
+  commonResponses: string[];
 }
 
-// Detected stressor in user message
+// Detected stressor interface
 export interface DetectedStressor {
   stressor: Stressor;
-  confidence: number; // 0-1 scale of detection confidence
-  keywords: string[]; // Matched keywords
-  intensity?: SeverityLevel; // Detected intensity in this instance
+  confidence: number;
+  intensity: SeverityLevel;
+  keywords?: string[];
 }
-

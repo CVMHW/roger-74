@@ -1,3 +1,4 @@
+
 /**
  * Cleveland Data
  * 
@@ -208,19 +209,19 @@ let clevelandDataStore: ClevelandKnowledgeBase = {
   smallTalkTopics: [
     {
       topic: 'weather',
-      prompt: 'The lake effect weather in Cleveland can change so quickly - one minute it's sunny, the next it's snowing. How have you been handling our unpredictable weather lately?'
+      prompt: "The lake effect weather in Cleveland can change so quickly - one minute it's sunny, the next it's snowing. How have you been handling our unpredictable weather lately?"
     },
     {
       topic: 'food',
-      prompt: 'I was just at the West Side Market this weekend picking up some pierogies. Do you have any favorite local food spots around Cleveland?'
+      prompt: "I was just at the West Side Market this weekend picking up some pierogies. Do you have any favorite local food spots around Cleveland?"
     },
     {
       topic: 'sports',
-      prompt: 'The energy at Progressive Field during Guardians games is something special, especially when they're on a winning streak. Have you been following any of our Cleveland teams lately?'
+      prompt: "The energy at Progressive Field during Guardians games is something special, especially when they're on a winning streak. Have you been following any of our Cleveland teams lately?"
     },
     {
       topic: 'neighborhoods',
-      prompt: 'I love how each Cleveland neighborhood has its own unique character. Ohio City has all the breweries, Tremont has great restaurants... Do you have a favorite area to spend time in?'
+      prompt: "I love how each Cleveland neighborhood has its own unique character. Ohio City has all the breweries, Tremont has great restaurants... Do you have a favorite area to spend time in?"
     }
   ],
   lastUpdated: Date.now()
@@ -262,7 +263,7 @@ export const getClevelandData = (): ClevelandKnowledgeBase => {
 /**
  * Get recent sports updates for a specific team
  */
-export const getRecentSportsUpdates = (team?: 'cavs' | 'browns' | 'guardians'): string[] => {
+export const getRecentSportsUpdates = (team?: string): string[] => {
   const updates = clevelandDataStore.sportsUpdates;
   
   // If team is specified, filter by team

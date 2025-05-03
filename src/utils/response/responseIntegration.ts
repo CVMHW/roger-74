@@ -22,7 +22,7 @@ export const integrateResponseEnhancements = (
     enhanceStressors?: boolean;
     enhanceWithMemory?: boolean;
   } = {}
-): string {
+) => {
   let enhancedResponse = baseResponse;
   
   try {
