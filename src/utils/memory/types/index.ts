@@ -68,5 +68,12 @@ export interface MemorySystemStatus {
   itemCount: number;
   lastUpdated: number;
   lastBackupTimestamp?: number;
-  backupStatus?: 'success' | 'failed' | 'pending';
+  backupStatus?: 'success' | 'failed';
+  // Additional optional fields for specific memory subsystems
+  recordCount?: number;
+  lastBackup?: number;
+  topicsCount?: number;
+  emotionsCount?: number;
+  significantEventsCount?: number;
 }
+

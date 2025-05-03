@@ -249,8 +249,12 @@ export const getMemoryStatus = (): Record<string, MemorySystemStatus> => {
     longTerm: LongTermMemory.getLongTermMemoryStatus(),
     backup: BackupMemory.getBackupStatus(),
     patientProfile: {
-      ...PatientProfileMemory.getPatientProfileStatus(),
-      active: true
+      active: true,
+      itemCount: PatientProfileMemory.getPatientProfileStatus().significantEventsCount,
+      lastUpdated: PatientProfileMemory.getPatientProfileStatus().lastUpdated,
+      topicsCount: PatientProfileMemory.getPatientProfileStatus().topicsCount,
+      emotionsCount: PatientProfileMemory.getPatientProfileStatus().emotionsCount,
+      significantEventsCount: PatientProfileMemory.getPatientProfileStatus().significantEventsCount
     }
   };
 };

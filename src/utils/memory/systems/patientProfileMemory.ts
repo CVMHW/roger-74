@@ -172,6 +172,7 @@ export const initializePatientProfile = (): boolean => {
 export const getPatientProfileStatus = () => {
   return {
     active: true,
+    itemCount: patientProfileStore.significantEvents.length,
     topicsCount: Object.keys(patientProfileStore.dominantTopics).length,
     emotionsCount: Object.keys(patientProfileStore.emotionalPatterns).length,
     significantEventsCount: patientProfileStore.significantEvents.length,

@@ -1,3 +1,4 @@
+
 /**
  * Backup Memory System
  * 
@@ -27,7 +28,7 @@ export const createBackup = (
     systemId,
     backupLocation: 'localStorage',
     itemCount: items.length,
-    status: 'pending'
+    status: 'failed' // Initialize as failed, update to success if it works
   };
   
   try {
@@ -161,10 +162,10 @@ export const initializeBackupRecords = (): boolean => {
 export const getBackupStatus = () => {
   return {
     active: true,
+    itemCount: backupRecords.length,
+    lastUpdated: backupRecords.length > 0 ? backupRecords[0].timestamp : Date.now(),
     recordCount: backupRecords.length,
-    lastBackup: backupRecords.length > 0 
-      ? backupRecords[0].timestamp 
-      : undefined
+    lastBackup: backupRecords.length > 0 ? backupRecords[0].timestamp : undefined
   };
 };
 
