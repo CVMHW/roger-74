@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 import { MessageType } from '../../../components/Message';
 import { createMessage } from '../../../utils/messageUtils';
 import { checkForCrisisContent } from './useCrisisDetector';
-import { processUserMessageMemory } from '../../../utils/response/enhancer';
+import { recordToMemory } from '../../../utils/nlpProcessor';
 
 /**
  * Hook for handling message sending and processing
@@ -35,7 +35,7 @@ export const useMessageHandling = (
 
     try {
       // Record user message to memory system immediately
-      processUserMessageMemory(userInput);
+      recordToMemory(userInput, '');
       
       // Add user message
       const newUserMessage = createMessage(userInput, 'user');
@@ -55,6 +55,8 @@ export const useMessageHandling = (
         context = "Roger is carefully considering your message...";
       } else if (/pet|dog|cat|animal|died|passed away/i.test(userInput)) {
         context = "Roger is reflecting on what you shared...";
+      } else if (/meaning|purpose|point|empty|why/i.test(userInput)) {
+        context = "Roger is considering the meaning dimensions of your message...";
       }
       setProcessingContext(context);
       
@@ -96,6 +98,11 @@ export const useMessageHandling = (
       if (userInputLower.includes("pet") || userInputLower.includes("died") || userInputLower.includes("passed away")) {
         errorResponse = createMessage(
           "I'm truly sorry about your loss. Losing a pet can be devastating. Would you like to tell me more about them?",
+          'roger'
+        );
+      } else if (userInputLower.includes("meaning") || userInputLower.includes("purpose") || userInputLower.includes("empty")) {
+        errorResponse = createMessage(
+          "I appreciate you sharing these thoughts about meaning and purpose. Finding what gives our lives meaning is perhaps our most fundamental human need. Could you tell me more about what you're experiencing?",
           'roger'
         );
       } else {

@@ -17,7 +17,9 @@ export type PersonalityMode =
   'thoughtful' | 
   'conversational' |
   'gentle' |
-  'grounded';
+  'grounded' |
+  'existential' |  // Added for logotherapy integration
+  'meaning-focused'; // Added for logotherapy integration
 
 /**
  * Returns a random personality mode to vary response styles
@@ -26,7 +28,7 @@ export const getRandomPersonality = (): PersonalityMode => {
   const personalities: PersonalityMode[] = [
     'curious', 'empathetic', 'reflective', 'direct', 
     'analytical', 'warm', 'thoughtful', 'conversational',
-    'gentle', 'grounded'
+    'gentle', 'grounded', 'existential', 'meaning-focused'
   ];
   
   return personalities[Math.floor(Math.random() * personalities.length)];
@@ -119,6 +121,22 @@ export const getSentenceStarters = (mode: PersonalityMode): string[] => {
         "Looking at the facts",
         "Considering your situation"
       ];
+    case 'existential':
+      return [
+        "When we search for meaning in this situation", 
+        "Looking at the deeper purpose behind", 
+        "Considering what this experience means to you", 
+        "Exploring the values that guide you through this",
+        "When we look at what truly matters here"
+      ];
+    case 'meaning-focused':
+      return [
+        "What might be meaningful about", 
+        "If we consider the purpose behind", 
+        "When you think about what gives your life meaning", 
+        "Looking at how this connects to your values",
+        "Considering how this situation relates to your life purpose"
+      ];
     default:
       return [
         "I'm thinking", 
@@ -192,6 +210,16 @@ export const getTransitionPhrases = (mode: PersonalityMode): string[] => {
       "Another relevant point", 
       "Also relevant is", 
       "We should also consider the fact that"
+    ],
+    'existential': [
+      "Another dimension to consider is how this relates to your values", 
+      "We might also explore what meaning you find in this experience", 
+      "Another perspective is how this connects to your broader life purpose"
+    ],
+    'meaning-focused': [
+      "Another way to find meaning here might be", 
+      "We could also consider how this connects to what you value most", 
+      "Another aspect worth exploring is how this aligns with your purpose"
     ]
   };
   
@@ -263,6 +291,16 @@ export const getClosingPhrases = (mode: PersonalityMode): string[] => {
       "Based on what you've shared, what would be most helpful to focus on?",
       "Given everything you've mentioned, what's your priority here?",
       "What specific aspect of this situation would you like support with?"
+    ],
+    'existential': [
+      "What meaning do you find in this experience, despite any difficulty?",
+      "How does this situation connect to what you value most in life?",
+      "How might this challenge be inviting you to discover something meaningful?"
+    ],
+    'meaning-focused': [
+      "What might this reveal about what truly matters to you?",
+      "How might this experience be part of your larger life purpose?",
+      "How does this connect to the meaning you're seeking in your life?"
     ]
   };
   
@@ -323,6 +361,14 @@ export const getPersonalTouches = (mode: PersonalityMode): string[] => {
     'grounded': [
       "From my experience, focusing on what we can control in these situations helps.",
       "I've found that these moments, while uncomfortable, are rarely as significant as they feel at the time."
+    ],
+    'existential': [
+      "I've also pondered how experiences like these connect to my larger purpose.",
+      "In my own journey, I've found that even difficult moments can reveal something meaningful."
+    ],
+    'meaning-focused': [
+      "I've found in my own life that these moments often reveal what matters most to us.",
+      "I've noticed how these types of experiences can become turning points in our search for meaning."
     ]
   };
   
@@ -370,6 +416,24 @@ export const generateSpontaneousPerspective = (
     return embarrassmentPerspectives[Math.floor(Math.random() * embarrassmentPerspectives.length)];
   }
   
+  // Check for meaning and purpose topics (logotherapy integration)
+  if (lowerInput.includes('meaning') || 
+      lowerInput.includes('purpose') || 
+      lowerInput.includes('why am i here') ||
+      lowerInput.includes('point of life') ||
+      lowerInput.includes('what matters')) {
+    
+    const meaningPerspectives = [
+      "The search for meaning is perhaps the most fundamental human motivation - even more than pleasure or power.",
+      "Viktor Frankl observed that those who found meaning, even in suffering, were more resilient in life's challenges.",
+      "Sometimes the meaning we seek is found in what we give to the world, what we experience, or how we face unavoidable suffering.",
+      "Finding our unique purpose often involves connecting to something larger than ourselves.",
+      "The 'existential vacuum' - that feeling of emptiness - often points us toward our need for authentic meaning."
+    ];
+    
+    return meaningPerspectives[Math.floor(Math.random() * meaningPerspectives.length)];
+  }
+  
   // Default perspectives based on personality mode
   switch (mode) {
     case 'curious':
@@ -392,14 +456,14 @@ export const generateSpontaneousPerspective = (
       return "It's important to be kind to ourselves when we're processing these kinds of experiences.";
     case 'grounded':
       return "Focusing on what we can control often helps in situations like these.";
+    case 'existential':
+      return "These moments often invite us to reflect on what truly matters in our lives and what gives us meaning.";
+    case 'meaning-focused':
+      return "Even challenging experiences can reveal something meaningful about our values and what we care about most.";
     default:
       return "Our reactions to these situations often tell us something important about ourselves.";
   }
 };
-
-// Import necessary components and utilities
-import { createMessage } from '../../utils/messageUtils';
-import { detectConversationPatterns } from '../patternDetection';
 
 /**
  * Generate a response with enhanced spontaneity and personality variation
@@ -524,6 +588,25 @@ const generateTopicSpecificResponse = (
     return workResponses[Math.floor(Math.random() * workResponses.length)];
   }
   
+  // Detect meaning and purpose topics (logotherapy integration)
+  if (lowerInput.includes('meaning') || 
+      lowerInput.includes('purpose') || 
+      lowerInput.includes('empty') ||
+      lowerInput.includes('pointless') ||
+      lowerInput.includes('what matters')) {
+    
+    const meaningResponses = [
+      "finding what gives our lives meaning can be an ongoing journey rather than a single destination",
+      "connecting to something larger than ourselves often provides a sense of purpose and meaning",
+      "meaning can be found in what we create, what we experience, or even how we face unavoidable challenges",
+      "those feelings of emptiness sometimes point us toward our deeper need for authentic meaning",
+      "discovering what truly matters to you personally is at the heart of finding your unique purpose",
+      "even in difficult circumstances, the possibility for meaning and purpose remains"
+    ];
+    
+    return meaningResponses[Math.floor(Math.random() * meaningResponses.length)];
+  }
+  
   // Default creative responses for general topics
   const defaultResponses = [
     "what you're describing sounds like it has multiple layers to it",
@@ -590,6 +673,17 @@ export const generateSpontaneousResponse = (
         ];
         return regretAlternatives[Math.floor(Math.random() * regretAlternatives.length)];
       }
+      
+      // Logotherapy-based alternatives for meaning/purpose
+      if (topics.includes('meaning') || topics.includes('purpose')) {
+        const meaningAlternatives = [
+          "Viktor Frankl suggested that our primary motivation in life is the will to meaning, not pleasure or power. What gives your life its deepest sense of meaning right now?",
+          "Even in difficult circumstances, we retain the freedom to choose our attitude. How might this challenge be inviting you to discover something meaningful?",
+          "Sometimes when we face an 'existential vacuum' - that feeling of emptiness - it's pointing us toward our need for authentic purpose. What activities make you lose track of time because they feel so meaningful?",
+          "Meaning can be found in three ways: through what we create, what we experience, or how we face unavoidable suffering. Which of these pathways to meaning resonates most with you right now?"
+        ];
+        return meaningAlternatives[Math.floor(Math.random() * meaningAlternatives.length)];
+      }
     }
   }
   
@@ -629,6 +723,19 @@ const detectTopics = (userInput: string): string[] => {
     topics.push('health');
   }
   
+  // Logotherapy-related topics
+  if (/meaning|purpose|point|empty|value|matter|why am i here/i.test(input)) {
+    topics.push('meaning');
+  }
+  
+  if (/choice|decision|freedom|responsibility|attitude/i.test(input)) {
+    topics.push('purpose');
+  }
+  
+  if (/suffering|challenge|difficulty|struggle|overcome/i.test(input)) {
+    topics.push('suffering');
+  }
+  
   return topics;
 };
 
@@ -647,3 +754,6 @@ const hasCommonPhrases = (text1: string, text2: string): boolean => {
   
   return false;
 };
+
+// Import necessary components and utilities
+import { detectConversationPatterns } from '../patternDetection';
