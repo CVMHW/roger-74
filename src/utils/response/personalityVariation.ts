@@ -128,7 +128,7 @@ const selectAppropriatePersonality = (userInput: string): PersonalityMode => {
   }
   
   // Default to balanced personality - NOT RANDOM
-  return 'balanced';
+  return 'balanced' as PersonalityMode;
 };
 
 /**

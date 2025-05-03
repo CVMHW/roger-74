@@ -1,7 +1,8 @@
+
 /**
- * Hallucination Prevention - Core System
+ * Core hallucination handler
  * 
- * Detects and corrects hallucinations in Roger's responses
+ * Processes responses to prevent hallucinations
  */
 
 import { isSmallTalk, isIntroduction } from '../../../masterRules';
