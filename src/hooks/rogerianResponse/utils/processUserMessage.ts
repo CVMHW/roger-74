@@ -95,8 +95,8 @@ export const processUserMessage = async (
       return emotionalResponse;
     }
     
-    // Pass all required arguments to the processMessage function as object
-    const response = await processMessage({
+    // Create a props object for the processor function
+    const processorProps = {
       userInput,
       detectConcernsFn: detectConcerns,
       generateResponseFn: generateResponse,
@@ -104,7 +104,10 @@ export const processUserMessage = async (
       conversationHistory,
       clientPreferences,
       updateStageFn: updateStage
-    });
+    };
+    
+    // Pass the properly structured props object to the processor
+    const response = await processMessage(processorProps);
     
     // Enhance the response with memory rules, master rules, and chat log review
     const finalResponseText = enhanceResponse(
