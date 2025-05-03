@@ -1,6 +1,6 @@
 
 /**
- * Types for emergency path detection system
+ * Emergency path detection types
  */
 
 export enum SeverityLevel {
@@ -14,10 +14,7 @@ export interface EmergencyPathFlag {
   type: string;
   description: string;
   severity: SeverityLevel;
-}
-
-export interface EmergencyPathFlags {
-  [key: string]: EmergencyPathFlag;
+  requiresImmediateIntervention: boolean;
 }
 
 export interface EmergencyPathResult {
@@ -25,4 +22,13 @@ export interface EmergencyPathResult {
   severity: SeverityLevel;
   flags: EmergencyPathFlag[];
   requiresImmediateIntervention: boolean;
+  suggestedAction?: string;
+}
+
+export enum EmergencyType {
+  CRISIS = 'crisis',
+  HARM = 'harm',
+  SUICIDAL = 'suicidal',
+  DANGEROUS = 'dangerous',
+  MODERATE = 'moderate'
 }

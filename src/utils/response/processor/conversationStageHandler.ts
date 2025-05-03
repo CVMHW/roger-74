@@ -6,7 +6,7 @@
  */
 
 import { getConversationMessageCount } from '../../memory/newConversationDetector';
-import { applyEarlyConversationRAG } from './hallucinationHandler';
+import { applyEarlyConversationRAG } from './hallucinationHandler/earlyConversation';
 
 /**
  * Determine the current conversation stage

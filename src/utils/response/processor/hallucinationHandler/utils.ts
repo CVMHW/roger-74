@@ -1,70 +1,90 @@
 
 /**
- * Hallucination Handler Utilities
- * 
- * Common utility functions for hallucination detection and prevention
+ * Utility functions for hallucination handler
  */
 
 /**
- * Detect common memory reference patterns that might indicate hallucinations
+ * Calculate similarity between two text fragments
  */
-export const detectMemoryReferencePatterns = (text: string): boolean => {
-  // Common patterns that might indicate false memory references
-  const patterns = [
-    /you (mentioned|said|told me) (earlier|before|previously)/i,
-    /as we discussed (earlier|before|previously)/i,
-    /in our (previous|last|earlier) (conversation|session|discussion)/i,
-    /continuing (from|with) where we left off/i,
-    /when we last spoke/i,
-    /as I (said|mentioned|noted) (earlier|before|previously)/i
-  ];
+export const calculateSimilarity = (text1: string, text2: string): number => {
+  // Simple word overlap similarity calculation
+  const words1 = new Set(text1.toLowerCase().split(/\s+/));
+  const words2 = new Set(text2.toLowerCase().split(/\s+/));
   
-  return patterns.some(pattern => pattern.test(text));
-};
-
-/**
- * Determine if this is likely a continuous conversation
- */
-export const isContinuousConversation = (
-  conversationHistory: string[]
-): boolean => {
-  // Simple method - just check if we have enough history
-  return conversationHistory && conversationHistory.length > 3;
-};
-
-/**
- * Add hedging language to potentially hallucinated content
- */
-export const addHedging = (text: string): string => {
-  // Only add hedging if not already present
-  if (/^(It seems|From what I understand|If I'm understanding correctly|Based on|It sounds like)/i.test(text)) {
-    return text;
-  }
-  
-  return "From what I understand, " + text;
-};
-
-/**
- * Calculate string similarity between two texts
- * Uses Jaccard similarity coefficient for simple comparison
- */
-export const calculateSimilarity = (str1: string, str2: string): number => {
-  // Convert to lowercase and split into words
-  const words1 = new Set(str1.toLowerCase().split(/\s+/).filter(word => word.length > 2));
-  const words2 = new Set(str2.toLowerCase().split(/\s+/).filter(word => word.length > 2));
-  
-  // Find intersection
-  const intersection = [...words1].filter(word => words2.has(word)).length;
+  // Find the intersection
+  const intersection = [...words1].filter(word => words2.has(word));
   
   // Calculate Jaccard similarity
-  const union = words1.size + words2.size - intersection;
+  const similarity = intersection.length / (words1.size + words2.size - intersection.length);
   
-  return union === 0 ? 0 : intersection / union;
+  return similarity;
 };
 
 /**
- * Check if text matches the "you shared that" pattern
+ * Extract key topics from text
  */
-export const hasSharedThatPattern = (text: string): boolean => {
-  return /you (shared|mentioned|said|told me) that/i.test(text);
+export const extractKeyTopics = (text: string): string[] => {
+  // Simple implementation - split by spaces and punctuation
+  const words = text.toLowerCase().split(/[\s,.!?;:()[\]{}'"]+/);
+  
+  // Filter out common stop words
+  const stopWords = new Set([
+    'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 
+    'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 
+    'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 
+    'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 
+    'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 
+    'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 
+    'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 
+    'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 
+    'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 
+    'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 
+    'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 
+    'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 
+    'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very'
+  ]);
+  
+  // Get phrases (individual words for now, but could be n-grams)
+  const topics = words
+    .filter(word => word.length > 3 && !stopWords.has(word))
+    .slice(0, 10); // Limit to 10 key topics
+    
+  return topics;
+};
+
+/**
+ * Check for abrupt topic changes
+ */
+export const detectTopicChange = (
+  userInput: string,
+  responseText: string
+): boolean => {
+  // Extract topics from both texts
+  const userTopics = extractKeyTopics(userInput);
+  const responseTopics = extractKeyTopics(responseText);
+  
+  // Check for overlap
+  const overlap = userTopics.filter(topic => 
+    responseTopics.some(rTopic => rTopic.includes(topic) || topic.includes(rTopic))
+  );
+  
+  // If no topics match at all, that might indicate a topic change
+  return overlap.length === 0 && userTopics.length > 0 && responseTopics.length > 0;
+};
+
+/**
+ * Check if text contains specific memory claim patterns
+ */
+export const containsMemoryClaims = (text: string): boolean => {
+  const memoryPatterns = [
+    /you (mentioned|said|told me|indicated)/i,
+    /earlier you/i,
+    /previously you/i,
+    /you've been/i,
+    /we (discussed|talked about)/i,
+    /I remember/i,
+    /as you mentioned/i
+  ];
+  
+  return memoryPatterns.some(pattern => pattern.test(text));
 };

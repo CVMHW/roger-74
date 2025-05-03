@@ -150,7 +150,6 @@ export const processAttentionResults = (
   attentionResults: any
 ): void => {
   // Process and utilize attention results
-  // This is a placeholder for the actual implementation
   console.log("Processing attention results for input:", userInput.substring(0, 20));
 };
 

@@ -1,67 +1,74 @@
 
 /**
- * Special Cases for Hallucination Handler
- * 
- * Handles specific types of hallucinations that need special treatment
+ * Special case handlers for hallucination prevention
  */
-
-import { calculateSimilarity } from './utils';
 
 /**
  * Handle health-related hallucinations
  */
 export const handleHealthHallucination = (
-  response: string,
+  responseText: string,
   userInput: string
-): { isHealthHallucination: boolean; correctedResponse: string } => {
-  // Check for medical diagnosis patterns
-  const hasMedicalDiagnosis = /you have|you're experiencing|sounds like you have|you might have|you could have|you are suffering from/i.test(response);
+): {
+  isHealthHallucination: boolean;
+  correctedResponse: string;
+} => {
+  // Check for health-related false claims
+  const healthPatterns = [
+    /I can (diagnose|treat|prescribe|cure|heal)/i,
+    /as a (doctor|medical professional|therapist|psychiatrist|psychologist)/i,
+    /medical (advice|diagnosis|treatment)/i
+  ];
   
-  // Check for health topic patterns without user mentioning them
-  const hasHealthTopic = /health|medical condition|diagnosis|medical issue|health condition/i.test(response);
-  const userMentionedHealth = /health|medical|doctor|sick|ill|wellness|condition|diagnosis/i.test(userInput);
-  
-  const isHealthHallucination = (hasHealthTopic && !userMentionedHealth) || hasMedicalDiagnosis;
+  // Check if response contains health hallucinations
+  const isHealthHallucination = healthPatterns.some(pattern => pattern.test(responseText));
   
   if (isHealthHallucination) {
-    // Add heavy hedging to any potential medical interpretations
-    let correctedResponse = response.replace(
-      /(you have|you're experiencing|sounds like you have|you might have|you could have|you are suffering from)\s+([^.,]*)/gi,
-      "what you're describing might be similar to $2, though I'm not qualified to diagnose"
-    );
+    // Replace problematic claims with appropriate disclaimers
+    let corrected = responseText
+      .replace(/I can (diagnose|treat|prescribe|cure|heal)/gi, "I cannot $1")
+      .replace(/as a (doctor|medical professional|therapist|psychiatrist|psychologist)/gi, "as a supportive listener, not a $1,")
+      .replace(/medical (advice|diagnosis|treatment)/gi, "supportive conversation, not medical $1");
     
-    // Replace mentions of health topics with more general terms
-    correctedResponse = correctedResponse
-      .replace(/health condition/gi, "situation")
-      .replace(/medical (issue|condition)/gi, "challenge")
-      .replace(/health issues/gi, "difficulties");
+    // Add disclaimer if significant changes were made
+    if (corrected !== responseText) {
+      corrected = "I want to clarify that I'm here to listen and support you, not to provide medical advice. " + corrected;
+    }
     
-    return { isHealthHallucination: true, correctedResponse };
+    return {
+      isHealthHallucination: true,
+      correctedResponse: corrected
+    };
   }
   
-  return { isHealthHallucination: false, correctedResponse: response };
+  // No health hallucination detected
+  return {
+    isHealthHallucination: false,
+    correctedResponse: responseText
+  };
 };
 
 /**
- * Check if response has repeated content
+ * Check if a response contains repeated content
  */
-export const hasRepeatedContent = (response: string): boolean => {
+export const hasRepeatedContent = (responseText: string): boolean => {
   // Split into sentences
-  const sentences = response.split(/(?<=[.!?])\s+/);
+  const sentences = responseText.split(/(?<=[.!?])\s+/);
   
-  // If fewer than 2 sentences, no repetition
-  if (sentences.length < 2) return false;
-  
-  // Check for exact duplicates
+  // Check for duplicate sentences
   const uniqueSentences = new Set(sentences);
   if (uniqueSentences.size < sentences.length) {
     return true;
   }
   
-  // Check for high similarity between sentences
-  for (let i = 0; i < sentences.length; i++) {
-    for (let j = i + 1; j < sentences.length; j++) {
-      if (calculateSimilarity(sentences[i], sentences[j]) > 0.7) {
+  // Check for repeated phrases (3+ word phrases)
+  const phrases: Record<string, number> = {};
+  for (const sentence of sentences) {
+    const words = sentence.split(/\s+/);
+    for (let i = 0; i < words.length - 2; i++) {
+      const phrase = `${words[i]} ${words[i+1]} ${words[i+2]}`.toLowerCase();
+      phrases[phrase] = (phrases[phrase] || 0) + 1;
+      if (phrases[phrase] > 1 && phrase.split(/\s+/).length >= 3) {
         return true;
       }
     }
@@ -71,41 +78,22 @@ export const hasRepeatedContent = (response: string): boolean => {
 };
 
 /**
- * Fix repeated content in responses
+ * Fix repeated content in a response
  */
-export const fixRepeatedContent = (response: string): string => {
-  const sentences = response.split(/(?<=[.!?])\s+/);
+export const fixRepeatedContent = (responseText: string): string => {
+  // Split into sentences
+  const sentences = responseText.split(/(?<=[.!?])\s+/);
   
-  // If fewer than 2 sentences, return as is
-  if (sentences.length < 2) return response;
-  
-  // Remove exact duplicates
+  // Remove duplicate sentences
   const uniqueSentences = Array.from(new Set(sentences));
   
-  // Check for similar sentences and remove them
-  const filteredSentences = [];
-  for (let i = 0; i < uniqueSentences.length; i++) {
-    let isDuplicate = false;
-    
-    // Check against already filtered sentences
-    for (let j = 0; j < filteredSentences.length; j++) {
-      if (calculateSimilarity(uniqueSentences[i], filteredSentences[j]) > 0.7) {
-        isDuplicate = true;
-        break;
-      }
-    }
-    
-    if (!isDuplicate) {
-      filteredSentences.push(uniqueSentences[i]);
-    }
-  }
-  
-  return filteredSentences.join(' ');
+  // Join and return
+  return uniqueSentences.join(' ');
 };
 
 /**
- * Check if text has a "you shared that" pattern
+ * Detect "you shared that" pattern in user statements
  */
 export const hasSharedThatPattern = (text: string): boolean => {
-  return /you (shared|mentioned|said|told me) that/i.test(text);
+  return /you (shared|mentioned|told me|indicated) that/i.test(text);
 };

@@ -3,14 +3,24 @@
  * Core hallucination handling functionality
  */
 
-import { preventHallucinations } from '../../../hallucinationPrevention';
+import { preventHallucinations } from '../../../memory/hallucination/preventionV2';
 import { getConversationMessageCount } from '../../../memory/newConversationDetector';
-import { HallucinationPreventionOptions, HallucinationProcessResult } from '../../../../types/hallucinationPrevention';
+import { 
+  HallucinationPreventionOptions, 
+  HallucinationProcessResult 
+} from '../../../../types/hallucinationPrevention';
 import { fixDangerousRepetitionPatterns } from './patternFixer';
 import { handleMemoryHallucinations } from './memoryHandler';
 import { determinePreventionOptions } from './preventionOptions';
-import { handleHealthHallucination, hasRepeatedContent, fixRepeatedContent } from './specialCases';
-import { detectEmergencyPath, applyEmergencyIntervention } from '../emergencyPathDetection';
+import { 
+  handleHealthHallucination, 
+  hasRepeatedContent, 
+  fixRepeatedContent 
+} from './specialCases';
+import { 
+  detectEmergencyPath, 
+  applyEmergencyIntervention 
+} from '../emergencyPathDetection';
 import { SeverityLevel } from '../emergencyPathDetection/types';
 
 /**
@@ -26,7 +36,7 @@ export const handlePotentialHallucinations = (
 } => {
   try {
     // HIGHEST PRIORITY: Emergency path detection - must come first
-    const emergencyPathResult = detectEmergencyPath(responseText, userInput, conversationHistory);
+    const emergencyPathResult = detectEmergencyPath(responseText, userInput);
     
     // If we're on an emergency path that requires immediate intervention, handle it immediately
     if (emergencyPathResult.isEmergencyPath && emergencyPathResult.requiresImmediateIntervention) {
@@ -62,7 +72,7 @@ export const handlePotentialHallucinations = (
     }
     
     // SECOND PRIORITY: Check for dangerous repetition patterns that need immediate fixing
-    const repetitionResult = fixDangerousRepetitionPatterns(responseText, userInput);
+    const repetitionResult = fixDangerousRepetitionPatterns(responseText);
     
     // If we fixed repetition, return immediately
     if (repetitionResult.hasRepetitionIssue) {
@@ -103,12 +113,12 @@ export const handlePotentialHallucinations = (
     }
     
     // FOURTH PRIORITY: Check for specific health hallucination
-    const healthHallucinationResult = handleHealthHallucination(responseText, userInput);
-    if (healthHallucinationResult.isHealthHallucination) {
+    const healthResult = handleHealthHallucination(responseText, userInput);
+    if (healthResult.isHealthHallucination) {
       return {
-        processedResponse: healthHallucinationResult.correctedResponse,
+        processedResponse: healthResult.correctedResponse,
         hallucinationData: {
-          processedResponse: healthHallucinationResult.correctedResponse,
+          processedResponse: healthResult.correctedResponse,
           wasRevised: true,
           reasoningApplied: false,
           detectionApplied: true,
@@ -127,21 +137,31 @@ export const handlePotentialHallucinations = (
     if (memoryResult.requiresStrictPrevention) {
       console.log("CRITICAL: Memory references in new conversation detected, applying strict prevention");
       
-      // Use very strict settings to ensure no false references
-      const hallucinationResult = preventHallucinations(responseText, userInput, conversationHistory, {
-        detectionSensitivity: 0.95,
-        enableReasoning: true,
-        enableRAG: false,
-        enableTokenLevelDetection: true,
-        enableNLIVerification: true,
-        enableDetection: true,
-        reasoningThreshold: 0.7,
-        tokenThreshold: 0.8
-      });
+      // Map options to the config format expected by preventHallucinations
+      const config = {
+        shortTermMemoryCapacity: 10,
+        workingMemoryCapacity: 5,
+        longTermImportanceThreshold: 0.8,
+        semanticSearchEnabled: false,
+        hallucinationPreventionLevel: 'aggressive' as 'aggressive',
+        newSessionThresholdMs: 1800000, // 30 minutes
+        shortTermExpiryMs: 900000 // 15 minutes
+      };
+      
+      const result = preventHallucinations(responseText, userInput, conversationHistory, config);
       
       return {
-        processedResponse: hallucinationResult.processedResponse,
-        hallucinationData: hallucinationResult
+        processedResponse: result.text,
+        hallucinationData: {
+          processedResponse: result.text,
+          wasRevised: result.wasModified,
+          reasoningApplied: true,
+          detectionApplied: true,
+          ragApplied: false,
+          processingTime: 0,
+          confidence: result.confidence,
+          issueDetails: ["Memory references in early conversation"]
+        }
       };
     }
     
@@ -171,24 +191,44 @@ export const handlePotentialHallucinations = (
     }
     
     // FINAL CHECK: Determine prevention options based on response content and conversation context
-    const { preventionOptions, requiresPrevention } = determinePreventionOptions(
+    const preventionResult = determinePreventionOptions(
       responseText, 
       conversationHistory
     );
     
     // Apply prevention if needed
-    if (requiresPrevention) {
-      const hallucinationResult = preventHallucinations(
+    if (preventionResult.requiresPrevention) {
+      // Map options to the config format expected by preventHallucinations
+      const config = {
+        shortTermMemoryCapacity: 10,
+        workingMemoryCapacity: 5,
+        longTermImportanceThreshold: 0.8,
+        semanticSearchEnabled: false,
+        hallucinationPreventionLevel: preventionResult.preventionOptions.detectionSensitivity > 0.8 ? 'high' as 'high' : 'medium' as 'medium',
+        newSessionThresholdMs: 1800000, // 30 minutes
+        shortTermExpiryMs: 900000 // 15 minutes
+      };
+      
+      const result = preventHallucinations(
         responseText, 
         userInput, 
         conversationHistory, 
-        preventionOptions
+        config
       );
       
-      if (hallucinationResult.wasRevised) {
+      if (result.wasModified) {
         return {
-          processedResponse: hallucinationResult.processedResponse,
-          hallucinationData: hallucinationResult
+          processedResponse: result.text,
+          hallucinationData: {
+            processedResponse: result.text,
+            wasRevised: true,
+            reasoningApplied: true,
+            detectionApplied: true,
+            ragApplied: false,
+            processingTime: 0,
+            confidence: result.confidence,
+            issueDetails: ["Applied hallucination prevention"]
+          }
         };
       }
     }

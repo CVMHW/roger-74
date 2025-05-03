@@ -1,4 +1,3 @@
-
 /**
  * Hallucination Prevention System V2
  * 
@@ -53,10 +52,31 @@ export const preventHallucinations = (
     console.log(`HALLUCINATION PREVENTION: Hallucination detected - ${hallucinationCheck.reason}`);
     
     // Apply correction based on hallucination prevention level
+    let preventionLevel: 'low' | 'medium' | 'high' | 'aggressive';
+    
+    // Map the config values to the expected values
+    switch(config.hallucinationPreventionLevel) {
+      case 'aggressive':
+        preventionLevel = 'aggressive';
+        break;
+      case 'high':
+        preventionLevel = 'high';
+        break;
+      case 'medium':
+        preventionLevel = 'medium';
+        break;
+      case 'low':
+        preventionLevel = 'low';
+        break;
+      default:
+        // Default to medium for any other values
+        preventionLevel = 'medium';
+    }
+    
     const correctedResponse = applyHallucinationFix(
       responseText, 
       hallucinationCheck, 
-      config.hallucinationPreventionLevel
+      preventionLevel
     );
     
     return {
