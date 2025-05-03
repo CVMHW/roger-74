@@ -1,5 +1,4 @@
 
-
 /**
  * Emergency path detection types
  */
@@ -33,3 +32,6 @@ export enum EmergencyType {
   DANGEROUS = 'dangerous',
   MODERATE = 'moderate'
 }
+
+// Adding a type alias for backward compatibility
+export type EmergencyPathFlags = EmergencyPathFlag[];

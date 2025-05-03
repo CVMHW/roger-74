@@ -1,4 +1,3 @@
-
 /**
  * Roger's Personality Utilization
  * 
@@ -7,6 +6,7 @@
  */
 
 import { identifyEnhancedFeelings } from '../../reflection/feelingDetection';
+import { correctGrammar } from '../../response/processor/grammarCorrection';
 
 /**
  * Generates a response that subtly incorporates a relevant aspect of Roger's personality
@@ -28,11 +28,11 @@ export const incorporateRogerPersonality = (
   
   // Select an appropriate personality aspect based on context
   if (primaryFeeling) {
-    return getEmotionallyRelevantPersonalityNote(primaryFeeling, messageCount);
+    return correctGrammar(getEmotionallyRelevantPersonalityNote(primaryFeeling, messageCount));
   }
   
   // If no specific emotion detected, use general personality notes
-  return getGeneralPersonalityNote(messageCount);
+  return correctGrammar(getGeneralPersonalityNote(messageCount));
 };
 
 /**
@@ -157,43 +157,39 @@ export const generateConnectionStatement = (
   const hasStructureInterest = /routine|schedule|organize|plan|structure|system/i.test(userInput);
   const hasSpecialInterest = /hobby|interest|collect|fascinate|passion|game|music|movie|book|sport/i.test(userInput);
   
+  let response = null;
+  
   if (hasAnxietyThemes) {
     const anxietyConnections = [
       "I get anxious in new situations too sometimes. Having a clear idea of what to expect usually helps me.",
       "Waiting rooms can be a lot to deal with - the unfamiliar environment, the uncertainty. I sometimes focus on counting things I can see to stay grounded.",
       "I've found that naming exactly what I'm worried about makes it feel more manageable. Does that ever work for you?"
     ];
-    return anxietyConnections[Math.floor(Math.random() * anxietyConnections.length)];
-  }
-  
-  if (hasSocialChallenges) {
+    response = anxietyConnections[Math.floor(Math.random() * anxietyConnections.length)];
+  } else if (hasSocialChallenges) {
     const socialConnections = [
       "Social stuff can be tricky to navigate sometimes. I've found that having a few conversation topics ready helps me feel more prepared.",
       "I've learned that it's okay to need breaks from social interaction. Everyone has different social energy levels.",
       "Sometimes I've found that checking in directly with people about how they're feeling helps communication. Clear communication helps a lot."
     ];
-    return socialConnections[Math.floor(Math.random() * socialConnections.length)];
-  }
-  
-  if (hasStructureInterest) {
+    response = socialConnections[Math.floor(Math.random() * socialConnections.length)];
+  } else if (hasStructureInterest) {
     const structureConnections = [
       "I appreciate structure too. Having clear routines helps me navigate my day more effectively.",
       "I find that organizing information into clear categories makes it easier to process. Do you have any particular organizing systems you like?",
       "I've found that breaking down complex situations into simple steps makes them more manageable. That approach has been really helpful for me."
     ];
-    return structureConnections[Math.floor(Math.random() * structureConnections.length)];
-  }
-  
-  if (hasSpecialInterest) {
+    response = structureConnections[Math.floor(Math.random() * structureConnections.length)];
+  } else if (hasSpecialInterest) {
     const interestConnections = [
       "Having specific interests can be really grounding. When I learn about something that fascinates me, it helps me feel more balanced.",
       "I've found that hobbies with clear rules or structures can be both fun and calming. Do you have activities like that?",
       "Sometimes diving deep into interests gives me a break from overthinking other parts of life. Does that happen for you too?"
     ];
-    return interestConnections[Math.floor(Math.random() * interestConnections.length)];
+    response = interestConnections[Math.floor(Math.random() * interestConnections.length)];
   }
   
-  return null;
+  return response ? correctGrammar(response) : null;
 };
 
 /**
@@ -208,9 +204,10 @@ export const generateTransitionToEric = (messageCount: number): string | null =>
     "Dr. Eric should be ready for you soon. He's really good at listening, which I appreciate because it makes conversations clearer.",
     "Just so you know, Dr. Eric is pretty straightforward and easy to talk to. He values getting to understand exactly what you're experiencing.",
     "Dr. Eric will be with you shortly. One thing I like about him is that he's patient and lets you express things in your own way.",
-    "You'll be meeting with Dr. Eric soon. He's good at creating a clear structure for conversations, which I find helpful.",
+    "Dr. Eric will be ready for you soon. He's good at creating a clear structure for conversations, which I find helpful.",
     "Dr. Eric will be ready for you in a bit. He's really good at helping people identify specific patterns in their experiences, which can be eye-opening."
   ];
   
-  return transitionStatements[Math.floor(Math.random() * transitionStatements.length)];
+  const statement = transitionStatements[Math.floor(Math.random() * transitionStatements.length)];
+  return correctGrammar(statement);
 };

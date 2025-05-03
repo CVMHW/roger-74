@@ -10,6 +10,7 @@ import { processSpecialCases } from '../processors/specialCaseProcessor';
 import { processPetIllnessConcerns } from '../processors/petIllnessProcessor';
 import { processMentalHealthConcerns } from '../processors/mentalHealthProcessor';
 import { processGeneralMessage } from '../processors/generalMessageProcessor';
+import { correctGrammar } from '../../../utils/response/processor/grammarCorrection';
 
 /**
  * Processes user messages and generates appropriate responses
@@ -37,7 +38,10 @@ export const processUserMessage = async (
       
       if (topics.length > 0) {
         // Create a custom response acknowledging what they've shared
-        const customResponse = `I hear that you're dealing with ${topics.join(" and ")}. That sounds ${getAppropriateAdjective(topics)}. Could you tell me more about how this has been affecting you?`;
+        let customResponse = `I hear that you're dealing with ${topics.join(" and ")}. That sounds ${getAppropriateAdjective(topics)}. Could you tell me more about how this has been affecting you?`;
+        
+        // Apply grammar correction
+        customResponse = correctGrammar(customResponse);
         
         // Use the baseProcessUserMessage with our custom response
         return baseProcessUserMessage(
@@ -142,7 +146,7 @@ export const processUserMessage = async (
     console.error("Error in processUserMessage:", error);
     // Return a fallback response if an error occurs - even in error, provide a supportive response
     return Promise.resolve(createMessage(
-      "I hear what you're sharing. What would be most helpful to focus on right now?", 
+      correctGrammar("I hear what you're sharing. What would be most helpful to focus on right now?"), 
       'roger'
     ));
   }

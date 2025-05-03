@@ -14,6 +14,7 @@ import { enhanceResponseWithMemory } from './memoryEnhancement';
 import { recordToMemorySystems } from './memorySystemHandler';
 import { handleLogotherapyIntegration } from './logotherapy/integrationHandler';
 import { handlePotentialHallucinations } from './hallucinationHandler';
+import { correctGrammar } from './grammarCorrection';
 
 /**
  * Process a response through all enhancement systems
@@ -52,6 +53,9 @@ export const processCompleteResponse = (
     // 5. Apply hallucination prevention as final safety
     processedResponse = processResponse(processedResponse, userInput, conversationHistory);
     
+    // 6. NEW: Apply grammar correction to ensure consistent writing style
+    processedResponse = correctGrammar(processedResponse);
+    
     // Record final response to memory systems
     recordToMemorySystems(processedResponse, undefined, undefined, 0.8);
     
@@ -63,7 +67,8 @@ export const processCompleteResponse = (
     // Fallback: Ensure we at least apply basic rules in case of error
     try {
       const simpleProcessed = applyUnconditionalRules(responseText, userInput, 0);
-      return simpleProcessed;
+      // Still apply grammar correction even in fallback mode
+      return correctGrammar(simpleProcessed);
     } catch (nestedError) {
       console.error("RESPONSE PROCESSOR: Critical failure in fallback processing", nestedError);
       return responseText;

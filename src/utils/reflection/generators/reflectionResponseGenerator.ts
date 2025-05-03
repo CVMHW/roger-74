@@ -1,6 +1,7 @@
 
 import type { ConversationStage } from '../core/types';
 import { generateContextAwareReflection } from './contextAwareGenerator';
+import { correctGrammar } from '../../response/processor/grammarCorrection';
 
 /**
  * Generate a reflection response based on user input and conversation context
@@ -14,7 +15,8 @@ export const generateReflectionResponse = (
   const contextReflection = generateContextAwareReflection(userInput);
   
   if (contextReflection) {
-    return contextReflection;
+    // Apply grammar correction before returning
+    return correctGrammar(contextReflection);
   }
   
   // If no context-specific reflection was generated, return null
