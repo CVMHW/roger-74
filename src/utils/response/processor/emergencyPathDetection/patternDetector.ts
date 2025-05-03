@@ -35,13 +35,15 @@ export const detectPatternedResponses = (
       flags.push({
         type: 'repetitive_shared_pattern',
         description: 'Repetitive use of "It seems like you shared that" pattern',
-        severity: sharedThatCount > 1 ? SeverityLevel.SEVERE : SeverityLevel.HIGH
+        severity: sharedThatCount > 1 ? SeverityLevel.SEVERE : SeverityLevel.HIGH,
+        requiresImmediateIntervention: sharedThatCount > 1
       });
     } else {
       flags.push({
         type: 'rigid_shared_pattern',
         description: 'Use of formulaic "It seems like you shared that" pattern',
-        severity: SeverityLevel.MEDIUM
+        severity: SeverityLevel.MEDIUM,
+        requiresImmediateIntervention: false
       });
     }
   }
@@ -56,7 +58,8 @@ export const detectPatternedResponses = (
       flags.push({
         type: 'repetitive_acknowledgment',
         description: 'Overuse of "I hear you\'re feeling" acknowledgment pattern',
-        severity: hearFeelingCount > 2 ? SeverityLevel.HIGH : SeverityLevel.MEDIUM
+        severity: hearFeelingCount > 2 ? SeverityLevel.HIGH : SeverityLevel.MEDIUM,
+        requiresImmediateIntervention: hearFeelingCount > 2
       });
     }
   }
@@ -71,7 +74,8 @@ export const detectPatternedResponses = (
       flags.push({
         type: 'repetitive_question',
         description: 'Repeated use of identical closing question',
-        severity: formulaicQuestionCount > 1 ? SeverityLevel.HIGH : SeverityLevel.MEDIUM
+        severity: formulaicQuestionCount > 1 ? SeverityLevel.HIGH : SeverityLevel.MEDIUM,
+        requiresImmediateIntervention: formulaicQuestionCount > 1
       });
     }
   }

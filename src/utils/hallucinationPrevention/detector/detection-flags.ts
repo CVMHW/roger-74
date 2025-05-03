@@ -1,4 +1,3 @@
-
 /**
  * Detection of different types of hallucination flags
  */
@@ -6,9 +5,11 @@
 import { getContextualMemory } from '../../nlpProcessor';
 import { retrieveRelevantMemories } from '../../memory/memoryBank';
 import { getFiveResponseMemory } from '../../memory/fiveResponseMemory';
-import { HallucinationFlag, HallucinationFlagType, HallucinationSeverity } from '../../../types/hallucinationPrevention';
 import { calculateStringSimilarity } from './similarity-utils';
 import { extractPhrases, extractEntities, isLikelyFactualClaim } from './entity-extraction';
+
+// Import the types from their correct location
+import { HallucinationFlag } from '../../../types/hallucinationPrevention';
 
 /**
  * Detects references to memories that don't exist or contradict actual memories
@@ -87,7 +88,7 @@ export const detectFalseMemoryReferences = (
     let matchStrength = 0;
     
     // Check in contextual memory
-    if (memoryContext.dominantTopics.some(topic => 
+    if (memoryContext.dominantTopics?.some(topic => 
         reference.includes(topic.toLowerCase()))) {
       matchStrength += 0.3;
     }

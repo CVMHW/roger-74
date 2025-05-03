@@ -19,7 +19,8 @@ export const getHallucinationOptions = (isEarlyConversation: boolean): Hallucina
       enableTokenLevelDetection: true,
       enableReranking: true,        // Use re-ranking for early conversations
       reasoningThreshold: 0.7,      // Required threshold for reasoning
-      enableDetection: true         // Added the required enableDetection property
+      enableDetection: true,        // Required enableDetection property
+      tokenThreshold: 0.7           // Added required tokenThreshold property
     };
   } 
   
@@ -31,6 +32,7 @@ export const getHallucinationOptions = (isEarlyConversation: boolean): Hallucina
     enableTokenLevelDetection: false,
     enableReranking: false,
     reasoningThreshold: 0.7,
-    enableDetection: true         // Added the required enableDetection property
+    enableDetection: true,         // Required enableDetection property
+    tokenThreshold: 0.6            // Added required tokenThreshold property
   };
 };

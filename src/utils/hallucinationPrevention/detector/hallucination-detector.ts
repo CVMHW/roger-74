@@ -130,12 +130,12 @@ export const detectHallucinations = (
   // Generate token-level analysis result
   const tokenLevelAnalysis = generateTokenLevelAnalysis(responseText);
   
+  // Create the result object with the correct properties
   return {
-    content: responseText,
-    confidenceScore,
-    hallucination: isHallucination,
+    isHallucination,
+    confidence: confidenceScore,
     flags,
     corrections: isHallucination ? generateCorrection(responseText, flags) : undefined,
-    tokenLevelAnalysis // Include token analysis in the result
+    tokenLevelAnalysis
   };
 };

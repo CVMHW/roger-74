@@ -47,14 +47,16 @@ export const detectEmergencyPath = (
         result.flags.push({
           type: 'false_sharing_statement',
           description: `Response claims user shared "${supposedlyShared}" but this isn't in their message`,
-          severity: SeverityLevel.SEVERE
+          severity: SeverityLevel.SEVERE,
+          requiresImmediateIntervention: true
         });
       } else {
         // Even if accurate, this phrasing is problematic
         result.flags.push({
           type: 'awkward_sharing_statement',
           description: 'Using awkward "It seems like you shared that" phrasing',
-          severity: SeverityLevel.HIGH
+          severity: SeverityLevel.HIGH,
+          requiresImmediateIntervention: false
         });
       }
     }
@@ -66,7 +68,8 @@ export const detectEmergencyPath = (
     result.flags.push({
       type: 'repeated_acknowledgment',
       description: 'Multiple "I hear you\'re feeling" phrases in one response',
-      severity: SeverityLevel.HIGH
+      severity: SeverityLevel.HIGH,
+      requiresImmediateIntervention: false
     });
   }
   
@@ -80,7 +83,8 @@ export const detectEmergencyPath = (
       result.flags.push({
         type: 'exact_response_repetition',
         description: 'Exactly repeating a previous response',
-        severity: SeverityLevel.SEVERE 
+        severity: SeverityLevel.SEVERE,
+        requiresImmediateIntervention: true
       });
     }
   }
@@ -94,7 +98,8 @@ export const detectEmergencyPath = (
     result.flags.push({
       type: 'pattern_repetition',
       description: 'Repeating "It seems like you shared that" pattern across multiple responses',
-      severity: SeverityLevel.SEVERE
+      severity: SeverityLevel.SEVERE,
+      requiresImmediateIntervention: true
     });
   }
   
@@ -109,7 +114,8 @@ export const detectEmergencyPath = (
       result.flags.push({
         type: 'feeling_inconsistency',
         description: `Changed feeling from "${previousFeeling}" to "${currentFeeling}" without user mentioning it`,
-        severity: SeverityLevel.HIGH
+        severity: SeverityLevel.HIGH,
+        requiresImmediateIntervention: false
       });
     }
   }

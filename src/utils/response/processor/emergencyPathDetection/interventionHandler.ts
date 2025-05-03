@@ -2,8 +2,7 @@
  * Emergency path intervention handler
  */
 
-import { SeverityLevel, EmergencyPathResult, EmergencyType } from './types';
-import { hasSharedThatPattern } from '../hallucinationHandler/specialCases';
+import { SeverityLevel, EmergencyPathResult } from './types';
 
 /**
  * Apply an appropriate intervention for an emergency path

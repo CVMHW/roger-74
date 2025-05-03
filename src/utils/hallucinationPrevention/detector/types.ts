@@ -4,8 +4,7 @@
  */
 
 import { 
-  HallucinationCheck,
-  HallucinationFlag
+  HallucinationCheck
 } from '../../../types/hallucinationPrevention';
 
 /**
@@ -18,4 +17,4 @@ export interface QuickCheckResult {
 }
 
 // Need to use "export type" when re-exporting types with isolatedModules enabled
-export type { HallucinationCheck, HallucinationFlag };
+export type { HallucinationCheck };

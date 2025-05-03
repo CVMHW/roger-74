@@ -1,4 +1,5 @@
 
+
 /**
  * Emergency path detection types
  */
@@ -14,7 +15,7 @@ export interface EmergencyPathFlag {
   type: string;
   description: string;
   severity: SeverityLevel;
-  requiresImmediateIntervention: boolean;
+  requiresImmediateIntervention?: boolean;
 }
 
 export interface EmergencyPathResult {

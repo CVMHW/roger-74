@@ -71,9 +71,9 @@ export const checkAndFixHallucinations = (
       correctedResponse: fixedResponse,
       wasHallucination: true,
       hallucinationDetails: {
-        content: responseText,
-        confidenceScore: 0.3,
-        hallucination: true,
+        isHallucination: true,
+        confidence: 0.3,
+        reason: 'Repeated phrases in response indicating model confusion',
         flags: [{
           type: 'repetition',
           severity: 'high',
@@ -106,9 +106,9 @@ export const checkAndFixHallucinations = (
       correctedResponse,
       wasHallucination: true,
       hallucinationDetails: {
-        content: responseText,
-        confidenceScore: 0.2,
-        hallucination: true,
+        isHallucination: true,
+        confidence: 0.2,
+        reason: 'False continuity claim in new conversation',
         flags: [{
           type: 'false_continuity',
           severity: 'high',
@@ -124,8 +124,8 @@ export const checkAndFixHallucinations = (
   // In new conversations, be extra strict about hallucinations
   const hallucinationThreshold = isNewConversation ? 0.7 : 0.6;
   
-  if (hallucinationCheck.hallucination || 
-      hallucinationCheck.confidenceScore < hallucinationThreshold ||
+  if (hallucinationCheck.isHallucination || 
+      hallucinationCheck.confidence < hallucinationThreshold ||
       (isNewConversation && /I remember|you mentioned|you told me|you said|earlier you|previously you|we talked about/i.test(responseText))) {
     
     console.warn("HALLUCINATION DETECTED:", hallucinationCheck.flags);

@@ -1,4 +1,3 @@
-
 /**
  * Core hallucination handling functionality
  */
@@ -9,19 +8,142 @@ import {
   HallucinationPreventionOptions, 
   HallucinationProcessResult 
 } from '../../../../types/hallucinationPrevention';
-import { fixDangerousRepetitionPatterns } from './patternFixer';
-import { handleMemoryHallucinations } from './memoryHandler';
 import { determinePreventionOptions } from './preventionOptions';
-import { 
-  handleHealthHallucination, 
-  hasRepeatedContent, 
-  fixRepeatedContent 
-} from './specialCases';
 import { 
   detectEmergencyPath, 
   applyEmergencyIntervention 
 } from '../emergencyPathDetection';
 import { SeverityLevel } from '../emergencyPathDetection/types';
+
+// Import necessary types and utilities
+import { MemorySystemConfig } from '../../../memory/types';
+
+// Define patternFixer function since we're using it
+export const fixDangerousRepetitionPatterns = (
+  responseText: string
+): { fixedResponse: string; hasRepetitionIssue: boolean } => {
+  // Check for common repetition patterns
+  const repetitionPatterns = [
+    {
+      pattern: /(I hear (you'?re|you are) dealing with) I hear (you'?re|you are) dealing with/i,
+      replacement: '$1'
+    },
+    {
+      pattern: /(I remember (you|your|we)) I remember (you|your|we)/i,
+      replacement: '$1'
+    },
+    {
+      pattern: /(you (mentioned|said|told me)) you (mentioned|said|told me)/i,
+      replacement: '$1'
+    }
+  ];
+  
+  let fixedResponse = responseText;
+  let hasRepetitionIssue = false;
+  
+  // Apply repetition fixes
+  for (const { pattern, replacement } of repetitionPatterns) {
+    if (pattern.test(fixedResponse)) {
+      fixedResponse = fixedResponse.replace(pattern, replacement);
+      hasRepetitionIssue = true;
+    }
+  }
+  
+  return { fixedResponse, hasRepetitionIssue };
+};
+
+// Define functions we're using
+export const hasRepeatedContent = (text: string): boolean => {
+  // Simple check for repeated content
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  for (let i = 0; i < sentences.length; i++) {
+    for (let j = i + 1; j < sentences.length; j++) {
+      if (sentences[i] && sentences[j] && sentences[i].trim() === sentences[j].trim()) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+export const fixRepeatedContent = (text: string): string => {
+  // Split into sentences and keep only unique ones
+  const sentences = text.split(/(?<=[.!?])\s+/);
+  const uniqueSentences = Array.from(new Set(sentences));
+  return uniqueSentences.join(' ');
+};
+
+export const handleHealthHallucination = (
+  responseText: string,
+  userInput: string
+): { isHealthHallucination: boolean; correctedResponse: string } => {
+  // Check for health topic hallucination
+  const hasHealthTopic = /we've been focusing on health|dealing with health|focusing on health/i.test(responseText);
+  const userMentionedHealth = /health|medical|doctor|sick|ill|wellness/i.test(userInput);
+  
+  if (hasHealthTopic && !userMentionedHealth) {
+    const correctedResponse = responseText
+      .replace(/we've been focusing on health/gi, "from what you've shared")
+      .replace(/dealing with health/gi, "dealing with this situation")
+      .replace(/focusing on health/gi, "focusing on this");
+      
+    return {
+      isHealthHallucination: true,
+      correctedResponse
+    };
+  }
+  
+  return {
+    isHealthHallucination: false,
+    correctedResponse: responseText
+  };
+};
+
+// Define handleMemoryHallucinations function since we're using it
+export const handleMemoryHallucinations = (
+  response: string,
+  conversationHistory: string[] = []
+): { requiresStrictPrevention: boolean; processedResponse: string } => {
+  // Check if this is early in conversation
+  const isEarlyConversation = conversationHistory.length < 3;
+  
+  // For early conversations, be extra cautious about memory claims
+  if (isEarlyConversation && hasMemoryReference(response)) {
+    return {
+      requiresStrictPrevention: true,
+      processedResponse: fixFalseMemoryReferences(response)
+    };
+  }
+  
+  // For established conversations, just do basic checks
+  if (hasMemoryReference(response)) {
+    // Add hedging language for memory claims
+    return {
+      requiresStrictPrevention: false,
+      processedResponse: "From what I understand, " + response
+    };
+  }
+  
+  return {
+    requiresStrictPrevention: false,
+    processedResponse: response
+  };
+};
+
+// Define helper functions for memory handling
+const hasMemoryReference = (text: string): boolean => {
+  return /you (mentioned|said|told me|indicated)|earlier you|previously you|we (discussed|talked about)|I remember|as you (mentioned|said|noted)|we've been/i.test(text);
+};
+
+export const fixFalseMemoryReferences = (response: string): string => {
+  return response
+    .replace(/you (mentioned|said|told me) that/gi, "it sounds like")
+    .replace(/earlier you (mentioned|said|indicated)/gi, "you just shared")
+    .replace(/as you mentioned/gi, "from what you're saying")
+    .replace(/we (discussed|talked about)/gi, "regarding")
+    .replace(/I remember you saying/gi, "I understand")
+    .replace(/from our previous conversation/gi, "from what you've shared");
+};
 
 /**
  * Apply hallucination prevention to a response with emergency path detection
@@ -29,7 +151,7 @@ import { SeverityLevel } from '../emergencyPathDetection/types';
 export const handlePotentialHallucinations = (
   responseText: string,
   userInput: string,
-  conversationHistory: string[]
+  conversationHistory: string[] = []
 ): {
   processedResponse: string;
   hallucinationData: HallucinationProcessResult | null;
@@ -138,12 +260,12 @@ export const handlePotentialHallucinations = (
       console.log("CRITICAL: Memory references in new conversation detected, applying strict prevention");
       
       // Map options to the config format expected by preventHallucinations
-      const config = {
+      const config: MemorySystemConfig = {
         shortTermMemoryCapacity: 10,
         workingMemoryCapacity: 5,
         longTermImportanceThreshold: 0.8,
         semanticSearchEnabled: false,
-        hallucinationPreventionLevel: 'aggressive' as 'aggressive',
+        hallucinationPreventionLevel: 'aggressive',
         newSessionThresholdMs: 1800000, // 30 minutes
         shortTermExpiryMs: 900000 // 15 minutes
       };
@@ -199,12 +321,12 @@ export const handlePotentialHallucinations = (
     // Apply prevention if needed
     if (preventionResult.requiresPrevention) {
       // Map options to the config format expected by preventHallucinations
-      const config = {
+      const config: MemorySystemConfig = {
         shortTermMemoryCapacity: 10,
         workingMemoryCapacity: 5,
         longTermImportanceThreshold: 0.8,
         semanticSearchEnabled: false,
-        hallucinationPreventionLevel: preventionResult.preventionOptions.detectionSensitivity > 0.8 ? 'high' as 'high' : 'medium' as 'medium',
+        hallucinationPreventionLevel: preventionResult.preventionOptions.detectionSensitivity > 0.8 ? 'high' : 'medium',
         newSessionThresholdMs: 1800000, // 30 minutes
         shortTermExpiryMs: 900000 // 15 minutes
       };

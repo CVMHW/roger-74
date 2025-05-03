@@ -1,3 +1,4 @@
+
 /**
  * Main hallucination prevention processor
  */
@@ -49,7 +50,7 @@ export const preventHallucinations = (
       console.log("HALLUCINATION PREVENTION: Running RAG enhancement");
       const retrievalResult = retrieveAugmentation(userInput, conversationHistory);
       
-      if (retrievalResult.retrievedContent.length > 0) {
+      if (retrievalResult.retrievedContent && retrievalResult.retrievedContent.length > 0) {
         const augmentedResponse = augmentResponseWithRetrieval(
           responseText, 
           retrievalResult
@@ -77,17 +78,19 @@ export const preventHallucinations = (
       result.reasoningApplied = true;
       
       // If reasoning found issues, update the response
-      if (!reasoningResult.isLogicallySound) {
+      if (reasoningResult && !reasoningResult.isLogicallySound) {
         result.processedResponse = reasoningResult.verifiedResponse;
         result.wasRevised = true;
         result.confidence *= 0.8;
         
         // Track problematic reasoning steps
-        const problematicSteps = reasoningResult.reasoningSteps
-          .filter(step => step.confidence < mergedOptions.reasoningThreshold);
-        
-        for (const step of problematicSteps) {
-          issueDetails.push(`Reasoning issue: "${step.claim}" (confidence: ${step.confidence})`);
+        if (reasoningResult.reasoningSteps) {
+          const problematicSteps = reasoningResult.reasoningSteps
+            .filter(step => step.confidence < mergedOptions.reasoningThreshold);
+          
+          for (const step of problematicSteps) {
+            issueDetails.push(`Reasoning issue: "${step.claim}" (confidence: ${step.confidence})`);
+          }
         }
       }
     }
@@ -108,7 +111,7 @@ export const preventHallucinations = (
       if (detectionResult.wasHallucination) {
         result.processedResponse = detectionResult.correctedResponse;
         result.wasRevised = true;
-        result.confidence *= detectionResult.hallucinationDetails?.confidenceScore || 0.5;
+        result.confidence *= detectionResult.hallucinationDetails?.confidence || 0.5;
         
         // Track detected hallucinations
         if (detectionResult.hallucinationDetails?.flags) {

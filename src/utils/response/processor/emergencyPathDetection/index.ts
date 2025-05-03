@@ -7,7 +7,7 @@
  */
 
 // Re-export the types
-export type { EmergencyPathFlags, EmergencyPathResult, EmergencyPathFlag, SeverityLevel } from './types';
+export type { EmergencyPathResult, EmergencyPathFlag, SeverityLevel } from './types';
 
 // Export public API
 export { detectEmergencyPath, categorizeFlags } from './pathDetector';

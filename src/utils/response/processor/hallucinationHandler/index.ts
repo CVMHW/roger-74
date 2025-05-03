@@ -10,24 +10,25 @@
 export { handlePotentialHallucinations } from './core';
 
 // Export specialized handlers
-export { fixDangerousRepetitionPatterns } from './patternFixer';
-export { handleMemoryHallucinations } from './memoryHandler';
+export { fixDangerousRepetitionPatterns } from './core';
+export { handleMemoryHallucinations } from './core';
 export { determinePreventionOptions } from './preventionOptions';
 
 // Export special cases handlers
 export { 
   handleHealthHallucination, 
   hasRepeatedContent, 
-  fixRepeatedContent,
-  hasSharedThatPattern 
-} from './specialCases';
+  fixRepeatedContent
+} from './core';
 
 // Re-export from submodules
 export * from './utils';
 
 // Export the early conversation functionality
-export { fixFalseMemoryReferences } from './memoryHandler';
-export { applyEarlyConversationRAG } from './earlyConversation';
+export { fixFalseMemoryReferences } from './core';
+
+// Export missing function for conversation stage handler
+export { applyEarlyConversationRAG } from '../../earlyConversation';
 
 // Export the emergency path detection system
 export * from '../emergencyPathDetection';

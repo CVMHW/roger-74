@@ -4,87 +4,93 @@
  */
 
 /**
- * Calculate similarity between two text fragments
+ * Calculate similarity between two strings
+ * Used to detect repetition and similar content
  */
-export const calculateSimilarity = (text1: string, text2: string): number => {
-  // Simple word overlap similarity calculation
-  const words1 = new Set(text1.toLowerCase().split(/\s+/));
-  const words2 = new Set(text2.toLowerCase().split(/\s+/));
+export const calculateSimilarity = (str1: string, str2: string): number => {
+  // Normalize strings
+  const s1 = str1.toLowerCase().trim();
+  const s2 = str2.toLowerCase().trim();
   
-  // Find the intersection
-  const intersection = [...words1].filter(word => words2.has(word));
+  // If either string is empty, similarity is 0
+  if (!s1 || !s2) return 0;
   
-  // Calculate Jaccard similarity
-  const similarity = intersection.length / (words1.size + words2.size - intersection.length);
+  // If strings are identical, similarity is 1
+  if (s1 === s2) return 1;
   
-  return similarity;
+  // Calculate Levenshtein distance
+  const distance = levenshteinDistance(s1, s2);
+  const maxLength = Math.max(s1.length, s2.length);
+  
+  // Convert distance to similarity score (0-1)
+  return 1 - distance / maxLength;
 };
 
 /**
- * Extract key topics from text
+ * Calculate Levenshtein distance between two strings
  */
-export const extractKeyTopics = (text: string): string[] => {
-  // Simple implementation - split by spaces and punctuation
-  const words = text.toLowerCase().split(/[\s,.!?;:()[\]{}'"]+/);
+function levenshteinDistance(str1: string, str2: string): number {
+  const matrix: number[][] = [];
   
-  // Filter out common stop words
-  const stopWords = new Set([
-    'i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 
-    'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 
-    'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 
-    'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 
-    'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 
-    'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 
-    'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 
-    'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 
-    'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 
-    'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 
-    'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 
-    'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 
-    'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very'
+  // Initialize matrix
+  for (let i = 0; i <= str1.length; i++) {
+    matrix[i] = [i];
+  }
+  
+  for (let j = 0; j <= str2.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  // Fill the matrix
+  for (let i = 1; i <= str1.length; i++) {
+    for (let j = 1; j <= str2.length; j++) {
+      const cost = str1[i - 1] === str2[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,      // deletion
+        matrix[i][j - 1] + 1,      // insertion
+        matrix[i - 1][j - 1] + cost // substitution
+      );
+    }
+  }
+  
+  return matrix[str1.length][str2.length];
+}
+
+/**
+ * Check if text has significant repetition
+ */
+export const hasSignificantRepetition = (text: string): boolean => {
+  // Split into sentences
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  
+  // Check for identical or very similar sentences
+  for (let i = 0; i < sentences.length; i++) {
+    for (let j = i + 1; j < sentences.length; j++) {
+      const similarity = calculateSimilarity(sentences[i], sentences[j]);
+      if (similarity > 0.8) {
+        return true;
+      }
+    }
+  }
+  
+  return false;
+};
+
+/**
+ * Extract simple keywords from text
+ */
+export const extractKeywords = (text: string): string[] => {
+  // This is a simplified approach
+  const stopwords = new Set([
+    'a', 'an', 'the', 'and', 'but', 'or', 'for', 'nor', 'on', 'at', 'to', 'by',
+    'i', 'me', 'my', 'mine', 'myself', 'you', 'your', 'yours', 'yourself',
+    'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being',
+    'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'should', 'could',
+    'this', 'that', 'these', 'those', 'with', 'from'
   ]);
   
-  // Get phrases (individual words for now, but could be n-grams)
-  const topics = words
-    .filter(word => word.length > 3 && !stopWords.has(word))
-    .slice(0, 10); // Limit to 10 key topics
-    
-  return topics;
-};
-
-/**
- * Check for abrupt topic changes
- */
-export const detectTopicChange = (
-  userInput: string,
-  responseText: string
-): boolean => {
-  // Extract topics from both texts
-  const userTopics = extractKeyTopics(userInput);
-  const responseTopics = extractKeyTopics(responseText);
-  
-  // Check for overlap
-  const overlap = userTopics.filter(topic => 
-    responseTopics.some(rTopic => rTopic.includes(topic) || topic.includes(rTopic))
-  );
-  
-  // If no topics match at all, that might indicate a topic change
-  return overlap.length === 0 && userTopics.length > 0 && responseTopics.length > 0;
-};
-
-/**
- * Check if text contains specific memory claim patterns
- */
-export const containsMemoryClaims = (text: string): boolean => {
-  const memoryPatterns = [
-    /you (mentioned|said|told me|indicated)/i,
-    /earlier you/i,
-    /previously you/i,
-    /you've been/i,
-    /we (discussed|talked about)/i,
-    /I remember/i,
-    /as you mentioned/i
-  ];
-  
-  return memoryPatterns.some(pattern => pattern.test(text));
+  return text.toLowerCase()
+    .replace(/[^\w\s]/g, '')
+    .split(/\s+/)
+    .filter(word => !stopwords.has(word) && word.length > 3);
 };
