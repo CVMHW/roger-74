@@ -14,6 +14,7 @@ export type HallucinationFlagType =
   | 'mathematical_error' // Error in calculations
   | 'factual_error'      // General factual error
   | 'token_level_error'  // Detected at token level
+  | 'repetition'         // Detected repetition in response
   | 'nli_contradiction'; // Natural Language Inference detected contradiction
 
 // Severity levels for flagged issues

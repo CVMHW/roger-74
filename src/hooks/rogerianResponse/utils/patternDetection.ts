@@ -24,7 +24,7 @@ export const detectPatterns = async (userInput: string): Promise<{
     
     // Extract topics from the current message
     const currentTopics = feelingResult.topics || [];
-    const currentFeelings = feelingResult.feelings || []; // Fixed property name
+    const currentFeelings = feelingResult.allFeelings || []; // Changed from feelings to allFeelings
     
     // For initial messages, create a response based on current input only
     if (currentTopics.length > 0 || currentFeelings.length > 0) {
