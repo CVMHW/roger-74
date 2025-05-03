@@ -95,7 +95,7 @@ export const processUserMessage = async (
       return emotionalResponse;
     }
     
-    // Pass all required arguments to the processMessage function
+    // Pass all required arguments to the processMessage function as object
     const response = await processMessage({
       userInput,
       detectConcernsFn: detectConcerns,

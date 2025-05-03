@@ -49,7 +49,10 @@ export const detectRepeatedPhrases = (responseText: string): boolean => {
     /I hear (you'?re|you are) dealing with I hear/i,
     /you may have indicated Just/i,
     /dealing with you may have indicated/i,
-    /I hear (you'?re|you are) dealing with you may have indicated/i
+    /I hear (you'?re|you are) dealing with you may have indicated/i,
+    // Additional patterns for the specific issue
+    /I hear.*you('re| are) dealing with.*you may have indicated/i,
+    /you may have indicated/i  // Catch all instances of this problematic phrase
   ];
   
   for (const pattern of dangerousPatterns) {

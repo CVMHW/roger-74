@@ -40,6 +40,10 @@ export const handlePotentialHallucinations = (
         replacement: 'with'
       },
       {
+        pattern: /you may have indicated/i, // Added to catch all instances
+        replacement: 'about'
+      },
+      {
         pattern: /(I remember (you|your|we)) I remember (you|your|we)/i,
         replacement: '$1'
       },
@@ -55,6 +59,10 @@ export const handlePotentialHallucinations = (
       {
         pattern: /dealing with you may have indicated/i,
         replacement: 'dealing with'
+      },
+      {
+        pattern: /I hear (you'?re|you are) dealing with.*?I hear/i,
+        replacement: 'I hear'
       }
     ];
     
@@ -68,6 +76,13 @@ export const handlePotentialHallucinations = (
         fixedResponse = fixedResponse.replace(pattern, replacement);
         hasRepetitionIssue = true;
       }
+    }
+    
+    // Secondary fix for the "you may have indicated Just" issue that might be missed
+    if (/you may have indicated/i.test(fixedResponse)) {
+      console.warn("REPETITION DETECTED: Fixing 'you may have indicated' phrase");
+      fixedResponse = fixedResponse.replace(/you may have indicated/gi, "about");
+      hasRepetitionIssue = true;
     }
     
     // If we fixed repetition, return immediately
