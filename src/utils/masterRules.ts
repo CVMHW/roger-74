@@ -447,14 +447,14 @@ export const generatePersonalSharingResponse = (message: string): string => {
 };
 
 // Add these imports at the appropriate location in the file
-import {
-  isWaitingRoomRelated,
-  generateWaitingRoomResponse,
-  shouldUseSmallTalk
+import { 
+  isWaitingRoomRelated, 
+  generateWaitingRoomResponse, 
+  shouldUseSmallTalk 
 } from './conversation/smallTalk';
 
 export {
-  isWaitingRoomRelated,
-  generateWaitingRoomResponse,
+  isWaitingRoomRelated, 
+  generateWaitingRoomResponse, 
   shouldUseSmallTalk
 };

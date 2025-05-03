@@ -1,3 +1,4 @@
+
 // Add this line at the top of the file if it doesn't exist
 const MEMORY_STORAGE = { data: [] };
 
@@ -11,7 +12,7 @@ const MEMORY_STORAGE = { data: [] };
 
 import { getContextualMemory } from '../nlpProcessor';
 import { retrieveRelevantMemories } from '../memory/memoryBank';
-import { enhanceResponseWithMemory } from '../response/responseIntegration';
+import { enhanceResponseWithRapport } from '../response/responseIntegration';
 
 /**
  * Enforce memory utilization in responses
@@ -54,7 +55,7 @@ export const applyMemoryRules = (
     }
     
     // UNCONDITIONAL RULE: Enhance response with memory integration
-    const enhancedResponse = enhanceResponseWithMemory(responseText, userInput);
+    const enhancedResponse = enhanceResponseWithRapport(responseText, userInput, 0, conversationHistory);
     return enhancedResponse;
     
   } catch (error) {
@@ -63,6 +64,20 @@ export const applyMemoryRules = (
   }
 };
 
+// Add a helper function to manipulate the memory storage
+export const addToMemoryStorage = (item: any) => {
+  if (MEMORY_STORAGE && MEMORY_STORAGE.data) {
+    MEMORY_STORAGE.data.push(item);
+  }
+};
+
+// Add a helper function to retrieve from memory storage
+export const getFromMemoryStorage = () => {
+  return MEMORY_STORAGE && MEMORY_STORAGE.data ? MEMORY_STORAGE.data : [];
+};
+
 export default {
-  applyMemoryRules
+  applyMemoryRules,
+  addToMemoryStorage,
+  getFromMemoryStorage
 };

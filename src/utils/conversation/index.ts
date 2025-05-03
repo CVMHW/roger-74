@@ -5,6 +5,7 @@
  * Central export point for all conversation-related utilities
  */
 
+// Direct exports from main modules
 export * from './clientCenteredApproach';
 export * from './collaborativeResponseGenerator';
 export * from './collaborativeSupportPrinciples';
@@ -12,7 +13,7 @@ export * from './contextAware';
 export * from './cvmhwInfo';
 export * from './cvmhwResponseGenerator';
 
-// Import and re-export from theSmallStuff
+// Import from theSmallStuff module
 import {
   detectCommunicationStyle,
   detectDemographicPatterns,
@@ -24,7 +25,7 @@ import {
   generateSmallTalkTransition
 } from './theSmallStuff';
 
-// Re-export theSmallStuff functions explicitly to avoid name conflicts
+// Re-export theSmallStuff functions
 export {
   detectCommunicationStyle,
   detectDemographicPatterns,
@@ -36,51 +37,10 @@ export {
   generateSmallTalkTransition
 };
 
-// Import and export smallTalk functions correctly
-import {
-  isLikelyChild,
-  isLikelyNewcomer,
-  detectSocialOverstimulation,
-  smallTalkTopics,
-  conversationStarters,
-  turnTakingPrompts
-} from './smallTalk';
+// Import from smallTalk module and re-export directly
+export * from './smallTalk';
 
-export {
-  isLikelyChild,
-  isLikelyNewcomer,
-  detectSocialOverstimulation,
-  smallTalkTopics,
-  conversationStarters,
-  turnTakingPrompts
-};
-
-// Export specific functions from earlyEngagement
-import {
-  isLikelyTeen,
-  isLikelyMale,
-  isLikelyBlueCollar,
-  mightPreferSimpleLanguage,
-  getAppropriateConversationStyle,
-  shouldUseWaitingRoomEngagement,
-  identifyImmediateConcern,
-  generateImmediateConcernResponse,
-  generateWaitingRoomEngagement
-} from './smallTalk';
-
-export {
-  isLikelyTeen,
-  isLikelyMale,
-  isLikelyBlueCollar,
-  mightPreferSimpleLanguage,
-  getAppropriateConversationStyle,
-  shouldUseWaitingRoomEngagement,
-  identifyImmediateConcern,
-  generateImmediateConcernResponse,
-  generateWaitingRoomEngagement
-};
-
-// Export culturalConnector functions explicitly from their source file
+// Import and export culturalConnector functions
 import { 
   generateCulturalConnectionPrompt,
   incorporateRogerPersonality,
@@ -95,5 +55,5 @@ export {
   generateTransitionToEric 
 };
 
-// Export everything else from smallTalkUtils directly
+// Export smallTalkUtils directly
 export * from './smallTalkUtils';
