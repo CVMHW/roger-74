@@ -3,7 +3,6 @@ import { ConcernType } from '../../../utils/reflection/reflectionTypes';
 import { MessageType } from '../../../components/Message';
 import { createMessage } from '../../../utils/messageUtils';
 import { processResponseThroughMasterRules } from '../../../utils/response/responseProcessor';
-import { ProcessMessageProps } from './types';
 import { extractKeyTopics, getAppropriateAdjective } from './topicExtractor';
 import { processFrustrationAndSmallTalk } from './frustrationHandler';
 import { processSafetyConcerns } from '../processors/safetyProcessor';

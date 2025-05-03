@@ -1,47 +1,30 @@
 
 import { MessageType } from '../../../components/Message';
-import { createMessage } from '../../../utils/messageUtils';
-import type { ProcessMessageProps } from './types';
+import { processUserMessage as processMessage } from './processor';
+import { ConcernType } from '../../../utils/reflection/reflectionTypes';
 
 /**
  * Process user message with proper detection and response generation
+ * 
+ * This is the main entry point for processing user messages.
  */
 export const processUserMessage = async (
   userInput: string,
-  detectConcernsFn: (input: string) => any,
-  generateResponseFn: (input: string, concernType: any) => string,
+  detectConcerns: (userInput: string) => ConcernType,
+  generateResponse: (userInput: string, concernType: ConcernType) => string,
   baseProcessUserMessage: any,
   conversationHistory: string[],
   clientPreferences: any,
-  updateStageFn: () => void
+  updateStage: () => void
 ): Promise<MessageType> => {
-  try {
-    // Detect any concerns in the user input
-    const concernType = detectConcernsFn(userInput);
-
-    // Generate an appropriate response based on the concern type
-    const responseText = generateResponseFn(userInput, concernType);
-
-    // Process the message using the base functionality
-    const processedMessage = await baseProcessUserMessage(
-      userInput,
-      (input: string) => generateResponseFn(input, concernType),
-      () => concernType
-    );
-
-    // Update conversation stage if needed
-    if (updateStageFn) {
-      updateStageFn();
-    }
-
-    return processedMessage;
-  } catch (error) {
-    console.error('Error processing message:', error);
-    
-    // Return a fallback message
-    return createMessage(
-      "I'm here to listen. Could you share more about what's been happening?",
-      'roger'
-    );
-  }
+  // Pass all arguments individually to the processor
+  return processMessage(
+    userInput,
+    detectConcerns,
+    generateResponse,
+    baseProcessUserMessage,
+    conversationHistory,
+    clientPreferences,
+    updateStage
+  );
 };

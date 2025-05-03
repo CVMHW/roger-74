@@ -46,4 +46,3 @@ export const getAppropriateAdjective = (topics: string[]): string => {
   
   return "important to address";
 };
-

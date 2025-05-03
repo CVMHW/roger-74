@@ -7,8 +7,8 @@ import { ConcernType } from '../../../utils/reflection/reflectionTypes';
  */
 export interface ProcessMessageProps {
   userInput: string;
-  detectConcernsFn: (input: string) => ConcernType;
-  generateResponseFn: (input: string, concernType: ConcernType) => string;
+  detectConcerns: (userInput: string) => ConcernType;
+  generateResponse: (userInput: string, concernType: ConcernType) => string;
   baseProcessUserMessage: (
     input: string, 
     responseFn: (input: string) => string, 
@@ -17,5 +17,5 @@ export interface ProcessMessageProps {
   ) => Promise<MessageType>;
   conversationHistory: string[];
   clientPreferences: any;
-  updateStageFn: () => void;
+  updateStage: () => void;
 }

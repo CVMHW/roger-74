@@ -69,11 +69,24 @@ export const detectRepeatedPhrases = (responseText: string): boolean => {
     /I understand.*I understand.*I understand/i,
     /seems like you.*seems like you/i,
     // Add checks for diagnosis/label-related phrases that shouldn't appear
+    /diagnoses|diagnostic|labels|uncomfortable.*labels/i,
+    /see your experiences/i,
+    // Extra patterns to catch repetition issues
+    /I hear that you're.*I hear that you're/i,
+    /I'm here to.*I'm here to/i,
+    /you('re| are) feeling.*you('re| are) feeling/i,
+    /it sounds.*it sounds/i,
+    /what you('re| are) going through.*what you('re| are) going through/i,
+    // Strict check for the most common problematic phrases
+    /I hear that.*I hear that/i,
+    /I understand that.*I understand that/i,
+    /It sounds like.*It sounds like/i,
+    // Diagnosis-related phrases (standalone checks)
     /diagnoses/i,
     /diagnostic/i,
     /labels/i,
-    /uncomfortable.*labels/i,
-    /see your experiences/i
+    /uncomfortable way/i,
+    /completely okay to see your experiences/i
   ];
   
   for (const pattern of dangerousPatterns) {

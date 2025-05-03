@@ -95,8 +95,7 @@ export const processUserMessage = async (
       return emotionalResponse;
     }
     
-    // CRITICAL FIX: Pass the 7 INDIVIDUAL parameters that processMessage expects
-    // NOT as an object but as separate arguments in the correct order
+    // Call processMessage with individual arguments, not as an object
     const response = await processMessage(
       userInput,
       detectConcerns,

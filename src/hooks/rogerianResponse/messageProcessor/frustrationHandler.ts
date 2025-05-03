@@ -1,25 +1,19 @@
 
 import { MessageType } from '../../../components/Message';
-import { createMessage } from '../../../utils/messageUtils';
-import { processResponseThroughMasterRules } from '../../../utils/response/responseProcessor';
 import { 
   detectEverydayFrustration, 
   generateEverydayFrustrationResponse,
   detectSmallTalkCategory,
   generateSmallTalkResponse
 } from '../../../utils/conversation/theSmallStuff';
+import { processResponseThroughMasterRules } from '../../../utils/response/responseProcessor';
 
-type FrustrationHandlerProps = {
+interface ProcessFrustrationProps {
   userInput: string;
-  baseProcessUserMessage: (
-    userInput: string, 
-    responseFn: (input: string) => string, 
-    concernFn: () => null, 
-    multiplier?: number
-  ) => Promise<MessageType>;
+  baseProcessUserMessage: any;
   conversationHistory: string[];
   updateStage: () => void;
-};
+}
 
 /**
  * Process everyday frustrations and small talk
@@ -29,18 +23,17 @@ export const processFrustrationAndSmallTalk = async ({
   baseProcessUserMessage,
   conversationHistory,
   updateStage
-}: FrustrationHandlerProps): Promise<MessageType | null> => {
+}: ProcessFrustrationProps): Promise<MessageType | null> => {
   // Check for everyday frustrations first (non-clinical concerns)
   const frustrationInfo = detectEverydayFrustration(userInput);
   if (frustrationInfo.isFrustration) {
     const frustrationResponse = generateEverydayFrustrationResponse(userInput, frustrationInfo);
     
     // Process through master rules for additional validation
-    const messageCount = conversationHistory.length;
     const processedResponse = processResponseThroughMasterRules(
       frustrationResponse,
       userInput,
-      messageCount,
+      conversationHistory.length,
       conversationHistory
     );
     
@@ -76,4 +69,3 @@ export const processFrustrationAndSmallTalk = async ({
   
   return null;
 };
-
