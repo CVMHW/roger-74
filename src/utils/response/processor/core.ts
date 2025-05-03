@@ -17,6 +17,7 @@ import {
 } from '../personalityVariation';
 import { correctGrammar } from './grammarCorrection';
 import { selectResponseApproach, adjustApproachForConversationFlow } from './approachSelector';
+import { getRogerPerspectivePhrase } from '../personalityHelpers';
 
 /**
  * Process a response through the core rules system
@@ -48,10 +49,18 @@ export const processCore = (
     
     // CRITICAL: Check for social situations, embarrassment, or everyday issues
     // These patterns indicate cases where logotherapy should NOT be applied
-    const isEverydaySituation = /trip(ped)?|spill(ed)?|embarrass(ing|ed)?|awkward|class|teacher|student|bar|drink/i.test(userInput);
+    const isEverydaySituation = /trip(ped)?|spill(ed)?|embarrass(ing|ed)?|awkward|class|teacher|student|bar|drink|fall|fell|stumble|social|party/i.test(userInput);
     const resistanceToDeeperMeaning = conversationHistory.some(msg => 
-      /what\? all|that's all|just happened|it was just|how does.*reflect|are you insinuating/i.test(msg)
+      /what\?|all|that's all|just happened|it was just|how does.*reflect|are you insinuating|not that deep|too much|simple|regular|come on|get real/i.test(msg)
     );
+    
+    // Add Roger's personality perspective to appropriate responses - but NOT for everyday situations
+    if (!isEverydaySituation && !resistanceToDeeperMeaning && Math.random() < 0.3) {
+      const personalityPhrase = getRogerPerspectivePhrase(userInput, messageCount);
+      if (personalityPhrase && !processedResponse.includes(personalityPhrase)) {
+        processedResponse += personalityPhrase;
+      }
+    }
     
     // Apply logotherapy integration ONLY if appropriate - now much more restrictive
     if (approach.logotherapyStrength > 0.4 && !isEverydaySituation && !resistanceToDeeperMeaning) {

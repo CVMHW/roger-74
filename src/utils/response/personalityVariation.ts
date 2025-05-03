@@ -74,7 +74,7 @@ export const addResponseVariety = (
     
     // IMPORTANT: Only add meaning perspective for appropriate situations
     // Check if this is a casual/everyday situation
-    const isCasualSituation = /spill(ed)?|embarrass|awkward|party|bar|drink|mess up/i.test(userInput.toLowerCase());
+    const isCasualSituation = /spill(ed)?|embarrass|awkward|party|bar|drink|mess up|trip(ped)?|fall|fell|stumble|class|teacher|student|presentation/i.test(userInput.toLowerCase());
     
     if (!isCasualSituation && messageCount > 3) {
       // Only apply meaning perspective to deeper conversations after initial exchange
@@ -97,7 +97,7 @@ const selectAppropriatePersonality = (userInput: string): PersonalityMode => {
   const input = userInput.toLowerCase();
   
   // For casual/social situations, use warm-social personality
-  if (/spill(ed)?|embarrass|awkward|party|bar|drink|girl|guy|cute|dating/i.test(input)) {
+  if (/spill(ed)?|embarrass|awkward|party|bar|drink|girl|guy|cute|dating|trip(ped)?|fall|fell|stumble|class|teacher|student|presentation/i.test(input)) {
     return 'warm-social';
   }
   
@@ -139,7 +139,7 @@ export const createPersonalityResponse = (
     );
     
     // For casual situations, skip meaning enhancements
-    const isCasualSituation = /spill(ed)?|embarrass|awkward|party|bar|drink|mess up/i.test(userInput.toLowerCase());
+    const isCasualSituation = /spill(ed)?|embarrass|awkward|party|bar|drink|mess up|trip(ped)?|fall|fell|stumble|class|teacher|student|presentation/i.test(userInput.toLowerCase());
     
     if (!isCasualSituation) {
       // Only apply meaning perspective to deeper conversations

@@ -46,7 +46,7 @@ export const selectResponseApproach = (
   
   // CRITICAL: Better detection for everyday embarrassments and social situations
   // This is now a top priority check to ensure these situations NEVER get logotherapy treatment
-  if (/spill(ed)?|trip(ped)?|embarrass(ed|ing)?|awkward|screw(ed)? up|mistake|mess(ed)? up|class|teacher|student|presentation/i.test(input)) {
+  if (/spill(ed)?|trip(ped)?|embarrass(ed|ing)?|awkward|screw(ed)? up|mistake|mess(ed)? up|class|teacher|student|presentation|fall|fell|stumble/i.test(input)) {
     return {
       logotherapyStrength: 0, // NO meaning focus for everyday issues - zeroed out completely
       spontaneityLevel: 90,   // Very high spontaneity for natural conversation
@@ -96,7 +96,7 @@ export const selectResponseApproach = (
   }
   
   // Look for casual social interactions that may not fit other categories
-  if (/bar|drink|party|date|dating|girl|guy|cute|talk to/i.test(input)) {
+  if (/bar|drink|party|date|dating|girl|guy|cute|talk to|social|nightclub|restaurant|pub|cafe/i.test(input)) {
     return {
       logotherapyStrength: 0,   // NO meaning focus for social situations
       spontaneityLevel: 90,     // Very high spontaneity

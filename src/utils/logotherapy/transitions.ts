@@ -90,7 +90,9 @@ export const transitionsForMode: Record<PersonalityMode, string[]> = {
   'warm-social': [
     "In everyday situations like this",
     "These social moments often",
-    "When we're with others like that"
+    "When we're with others like that",
+    "Social situations can be",
+    "I've noticed in similar situations"
   ]
 };
 
