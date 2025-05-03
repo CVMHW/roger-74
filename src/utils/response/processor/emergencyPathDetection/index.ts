@@ -6,8 +6,9 @@
  * and triggers immediate intervention with increased response spontaneity.
  */
 
-// Export public API
-export { detectEmergencyPath } from './pathDetector';
-export { applyEmergencyIntervention } from './interventionHandler';
-export type { EmergencyPathFlags, EmergencyPathResult } from './types';
+// Re-export the types
+export type { EmergencyPathFlags, EmergencyPathResult, EmergencyPathFlag, SeverityLevel } from './types';
 
+// Export public API
+export { detectEmergencyPath, categorizeFlags } from './pathDetector';
+export { applyEmergencyIntervention } from './interventionHandler';

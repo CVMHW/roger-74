@@ -1,3 +1,4 @@
+
 /**
  * Emergency Path Detector
  * 
@@ -31,6 +32,12 @@ const CRITICAL_PATTERNS = [
     pattern: /I hear you're dealing with you may have indicated/i,
     type: 'conflated_phrases',
     description: 'Conflated phrases indicating processing error',
+    severity: SeverityLevel.SEVERE
+  },
+  {
+    pattern: /It seems like you shared that ([^.]{5,50})\. (I hear|It sounds like) you/i,
+    type: 'repetitive_shared_pattern',
+    description: 'Repetitive "It seems like you shared that" pattern',
     severity: SeverityLevel.SEVERE
   }
 ];

@@ -1,8 +1,9 @@
 
 /**
- * Types for the Emergency Path Detection System
+ * Types for emergency path detection system
  */
 
+// Severity levels for emergency paths
 export enum SeverityLevel {
   LOW = 'low',
   MEDIUM = 'medium',
@@ -10,14 +11,15 @@ export enum SeverityLevel {
   SEVERE = 'severe'
 }
 
+// Structure for an emergency path detection flag
 export interface EmergencyPathFlag {
   type: string;
   description: string;
   severity: SeverityLevel;
   pattern?: string;
-  location?: string;
 }
 
+// Organized flags by category
 export interface EmergencyPathFlags {
   repetitionPatterns: EmergencyPathFlag[];
   memoryInconsistencies: EmergencyPathFlag[];
@@ -26,6 +28,7 @@ export interface EmergencyPathFlags {
   malformedResponses: EmergencyPathFlag[];
 }
 
+// Result from emergency path detection
 export interface EmergencyPathResult {
   isEmergencyPath: boolean;
   severity: SeverityLevel;
@@ -33,4 +36,3 @@ export interface EmergencyPathResult {
   recommendedAction: 'continue' | 'minor_intervention' | 'major_intervention' | 'reset_conversation';
   requiresImmediateIntervention: boolean;
 }
-
