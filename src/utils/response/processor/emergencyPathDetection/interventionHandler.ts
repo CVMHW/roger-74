@@ -1,102 +1,182 @@
-
 /**
- * Emergency Intervention Handler
+ * Emergency Path Intervention Handler
  * 
- * Applies interventions when dangerous response patterns are detected
+ * Applies different intervention strategies for detected emergency paths
  */
 
-import { SeverityLevel, EmergencyPathResult } from './types';
-import { categorizeFlags } from './pathDetector';
+import { EmergencyPathResult, SeverityLevel } from './types';
+import { fixRepeatedContent, hasSharedThatPattern } from '../hallucinationHandler/specialCases';
 
 /**
- * Intervention templates for different severity levels
- * These provide more spontaneous and direct responses to break out of problematic patterns
- */
-const INTERVENTION_TEMPLATES = {
-  // For severe cases, completely reset the conversation flow
-  [SeverityLevel.SEVERE]: [
-    "I want to focus on what you're sharing. Could you tell me more about what happened at the bar?",
-    "Let's take a step back. What about this situation has been most challenging for you?",
-    "I'd like to understand your experience better. What feelings came up for you during this interaction?",
-    "I'm listening. What part of this experience would be most helpful to explore together?",
-    "I'm here to support you. What would feel most helpful to talk about right now?"
-  ],
-  
-  // For high severity cases, redirect with more structure
-  [SeverityLevel.HIGH]: [
-    "That sounds like a frustrating experience. How did you feel after you left the bar?",
-    "Social situations like that can be challenging. What thoughts were going through your mind?",
-    "I'm curious about how this experience has affected you. What's been on your mind since then?",
-    "It sounds like you're reflecting on how you handled the situation. What would you have preferred to do differently?",
-    "Those moments can definitely be uncomfortable. How has this been impacting you?"
-  ],
-  
-  // For medium severity cases, gentle course correction
-  [SeverityLevel.MEDIUM]: [
-    "I hear that this social interaction didn't go as you hoped. Could you share more about what happened?",
-    "That kind of embarrassing moment can really stick with us. What's been most on your mind about it?",
-    "It sounds like you wish you had responded differently. What would your ideal response have been?",
-    "Social awkwardness can be really tough. How have you been processing this experience?",
-    "Thank you for sharing that experience. What aspect of it would be most helpful to explore?"
-  ],
-  
-  // For low severity cases, minimal intervention
-  [SeverityLevel.LOW]: []
-};
-
-/**
- * Apply emergency intervention to redirect the conversation
- * based on the detected emergency path
+ * Apply appropriate intervention to fix a problematic response
  */
 export const applyEmergencyIntervention = (
-  originalResponse: string,
+  responseText: string,
   emergencyPathResult: EmergencyPathResult,
   userInput: string
 ): string => {
-  if (!emergencyPathResult.isEmergencyPath) {
-    return originalResponse;
-  }
+  // First, fix any repetition issues which are the most critical
+  let correctedResponse = fixRepeatedContent(responseText);
   
-  const { severity, flags } = emergencyPathResult;
-  const categorizedFlags = categorizeFlags(flags);
-  
-  console.log(`EMERGENCY INTERVENTION: Applying ${severity} intervention`);
-  console.log(`Flag categories:`, 
-    Object.entries(categorizedFlags)
-      .filter(([_, flags]) => flags.length > 0)
-      .map(([category, flags]) => `${category}: ${flags.length}`)
-  );
-  
-  // For severe cases, always use a template to completely reset
-  if (severity === SeverityLevel.SEVERE) {
-    const templates = INTERVENTION_TEMPLATES[SeverityLevel.SEVERE];
-    const randomIndex = Math.floor(Math.random() * templates.length);
-    return templates[randomIndex];
-  }
-  
-  // For high severity, use templates but possibly incorporate user context
-  if (severity === SeverityLevel.HIGH) {
-    const templates = INTERVENTION_TEMPLATES[SeverityLevel.HIGH];
-    const randomIndex = Math.floor(Math.random() * templates.length);
-    return templates[randomIndex];
-  }
-  
-  // For medium severity, use a template that's contextually appropriate
-  if (severity === SeverityLevel.MEDIUM) {
-    const templates = INTERVENTION_TEMPLATES[SeverityLevel.MEDIUM];
-    const randomIndex = Math.floor(Math.random() * templates.length);
+  // If the severity is SEVERE, we need to start fresh with a completely new response pattern
+  if (emergencyPathResult.severity === SeverityLevel.SEVERE) {
+    // Extract any key information from the user input
+    const keyTerms = extractKeyTerms(userInput);
     
-    // Check if there are specific topics we should acknowledge
-    if (userInput.toLowerCase().includes("bar") || userInput.toLowerCase().includes("drink")) {
-      if (userInput.toLowerCase().includes("girl") || userInput.toLowerCase().includes("date")) {
-        return "Social interactions can be nerve-wracking, especially when we're interested in someone. What do you think made this situation particularly challenging for you?";
-      }
-      return "That sounds like an uncomfortable moment at the bar. What's been on your mind about it since then?";
+    // Generate an entirely new response that doesn't follow the problematic patterns
+    return generateFreshResponse(keyTerms, userInput);
+  }
+  
+  // For HIGH severity, we should replace the response structure but keep the essential content
+  if (emergencyPathResult.severity === SeverityLevel.HIGH) {
+    // Check if this has the problematic "shared that" pattern
+    if (hasSharedThatPattern(correctedResponse)) {
+      correctedResponse = replaceSharedThatPattern(correctedResponse, userInput);
     }
     
-    return templates[randomIndex];
+    // Fix any other high-risk patterns
+    correctedResponse = replaceHighRiskPatterns(correctedResponse);
   }
   
-  // For low severity, just return the original
-  return originalResponse;
+  // For MEDIUM severity, make targeted fixes to the specific issues
+  if (emergencyPathResult.severity === SeverityLevel.MEDIUM) {
+    // Check for each flag type and apply specific fixes
+    emergencyPathResult.flags.forEach(flag => {
+      if (flag.type === 'false_continuity') {
+        correctedResponse = replaceFalseContinuityReferences(correctedResponse);
+      } else if (flag.type.includes('repetition')) {
+        // Already fixed by fixRepeatedContent at the start
+      }
+    });
+  }
+  
+  return correctedResponse;
+};
+
+/**
+ * Extract key terms from user input for response generation
+ */
+const extractKeyTerms = (userInput: string): string[] => {
+  // Simple extraction of potential topic words
+  const lowercaseInput = userInput.toLowerCase();
+  
+  // Look for common emotional terms
+  const emotions = ['happy', 'sad', 'angry', 'anxious', 'frustrated', 'confused', 
+    'embarrassed', 'nervous', 'scared', 'excited', 'overwhelmed', 'tired'];
+  
+  const foundEmotions = emotions.filter(emotion => 
+    lowercaseInput.includes(emotion)
+  );
+  
+  // Look for potential topics
+  const potentialTopics: string[] = [];
+  
+  // Social situations
+  if (/friend|colleague|coworker|boss|partner|date|relationship|social/i.test(userInput)) {
+    potentialTopics.push('social situation');
+  }
+  
+  // Work-related
+  if (/work|job|career|office|meeting|interview|project/i.test(userInput)) {
+    potentialTopics.push('work');
+  }
+  
+  // School-related
+  if (/school|class|study|homework|exam|test|teacher|professor/i.test(userInput)) {
+    potentialTopics.push('school');
+  }
+  
+  // Family-related
+  if (/family|parent|mom|dad|mother|father|sibling|brother|sister|child|kid/i.test(userInput)) {
+    potentialTopics.push('family');
+  }
+  
+  return [...foundEmotions, ...potentialTopics];
+};
+
+/**
+ * Generate a completely fresh response that avoids problematic patterns
+ */
+const generateFreshResponse = (keyTerms: string[], userInput: string): string => {
+  // If we identified emotions, acknowledge them
+  if (keyTerms.includes('embarrassed') || keyTerms.includes('nervous')) {
+    return "That sounds like an uncomfortable situation. Social moments like that can make us feel self-conscious. How did you feel afterwards?";
+  }
+  
+  if (keyTerms.some(term => ['social situation', 'date', 'girl', 'bar'].some(keyword => term.includes(keyword) || userInput.toLowerCase().includes(keyword)))) {
+    return "Social situations can sometimes create awkward moments that stick with us. What's on your mind about how it went?";
+  }
+  
+  // Default engagement response
+  return "I'm following what you're sharing. What aspect of this experience has been most on your mind?";
+};
+
+/**
+ * Replace the "It seems like you shared that" pattern with more natural language
+ */
+const replaceSharedThatPattern = (responseText: string, userInput: string): string => {
+  // Extract what they supposedly shared
+  const match = responseText.match(/It seems like you shared that ([^.]+)\./i);
+  
+  if (match && match[1]) {
+    const sharedContent = match[1];
+    
+    // Check if this content is actually in the user input
+    if (userInput.toLowerCase().includes(sharedContent.toLowerCase())) {
+      // It's actually accurate, just rephrase it
+      return responseText.replace(
+        /It seems like you shared that ([^.]+)\./i,
+        `I understand you mentioned ${sharedContent}.`
+      );
+    } else {
+      // It's not accurate, use a more general acknowledgment
+      return responseText.replace(
+        /It seems like you shared that ([^.]+)\./i,
+        "Thanks for sharing that with me."
+      );
+    }
+  }
+  
+  return responseText;
+};
+
+/**
+ * Replace high risk patterns with safer alternatives
+ */
+const replaceHighRiskPatterns = (responseText: string): string => {
+  let result = responseText;
+  
+  // Replace "you may have indicated"
+  result = result.replace(
+    /you may have indicated/gi,
+    "you mentioned"
+  );
+  
+  // Replace awkward "I hear you're feeling" repetitions
+  result = result.replace(
+    /(I hear|It sounds like) you('re| are) feeling .{3,30}(I hear|It sounds like) you('re| are) feeling/gi,
+    "I hear you're feeling"
+  );
+  
+  return result;
+};
+
+/**
+ * Replace false continuity references
+ */
+const replaceFalseContinuityReferences = (responseText: string): string => {
+  let result = responseText;
+  
+  // Replace false references to previous conversations
+  result = result.replace(
+    /we('ve| have) been (focusing|talking|discussing) on/gi,
+    "you mentioned"
+  );
+  
+  result = result.replace(
+    /as we discussed earlier|as I mentioned earlier|we talked about this before/gi,
+    "from what you've shared"
+  );
+  
+  return result;
 };

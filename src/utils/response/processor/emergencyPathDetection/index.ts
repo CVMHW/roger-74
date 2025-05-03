@@ -12,3 +12,6 @@ export type { EmergencyPathFlags, EmergencyPathResult, EmergencyPathFlag, Severi
 // Export public API
 export { detectEmergencyPath, categorizeFlags } from './pathDetector';
 export { applyEmergencyIntervention } from './interventionHandler';
+
+// New pattern detection exports
+export { detectPatternedResponses } from './patternDetector';

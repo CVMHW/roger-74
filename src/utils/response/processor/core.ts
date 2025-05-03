@@ -8,12 +8,13 @@ import { applyResponseRules } from './ruleProcessing';
 import { handleResponseProcessingError } from './errorHandling';
 import { enhanceWithMemoryBank } from './memoryEnhancement';
 import { handlePotentialHallucinations } from './hallucinationHandler';
-import { detectEmergencyPath, applyEmergencyIntervention } from './emergencyPathDetection';
+import { detectEmergencyPath, applyEmergencyIntervention, detectPatternedResponses } from './emergencyPathDetection';
 import { verifySystemsOperational } from './validation';
 import { processInputWithAttention } from './attentionProcessor';
 import { determineConversationStage, applyConversationStageProcessing } from './conversationStageHandler';
 import { getHallucinationOptions } from './hallucinationConfig';
 import { recordToMemorySystems } from './memorySystemHandler';
+import { hasSharedThatPattern } from './hallucinationHandler/specialCases';
 
 /**
  * Process response through master rules system - core implementation
@@ -28,12 +29,48 @@ export const processResponseCore = (
   try {
     console.log("MASTER RULES: Beginning response processing");
     
+    // NEW: First immediately check for the problematic "It seems like you shared that" pattern
+    // This pattern is causing significant issues in Roger's responses
+    if (hasSharedThatPattern(response)) {
+      console.log("CRITICAL: Detected 'It seems like you shared that' pattern - replacing immediately");
+      // Extract the content that was "shared"
+      const match = response.match(/It seems like you shared that ([^.]+)\./i);
+      
+      if (match && match[1]) {
+        const supposedShared = match[1].toLowerCase();
+        const actualUserInput = userInput.toLowerCase();
+        
+        // Check if what was supposedly shared is actually in the user input
+        if (actualUserInput.includes(supposedShared)) {
+          // It's accurate, just rephrase it
+          response = response.replace(
+            /It seems like you shared that ([^.]+)\./i,
+            `I understand you're talking about $1.`
+          );
+        } else {
+          // It's not accurate, use a generic acknowledgment
+          response = response.replace(
+            /It seems like you shared that ([^.]+)\./i,
+            "Thanks for sharing your experience."
+          );
+        }
+      }
+    }
+    
     // Verify all systems are operational
     verifySystemsOperational();
     
+    // Get previous responses for pattern detection (empty for now)
+    // In a real implementation, this would come from conversation history
+    const previousResponses: string[] = 
+      conversationHistory.filter(msg => 
+        !msg.startsWith("I'm") && 
+        !userInput.includes(msg)
+      ).slice(-3);
+    
     // HIGHEST PRIORITY: Check for emergency path indicators before any processing
     // This serves as an early warning system for potential hallucinations
-    const emergencyPathResult = detectEmergencyPath(response, userInput, conversationHistory);
+    const emergencyPathResult = detectEmergencyPath(response, userInput, conversationHistory, previousResponses);
     
     // If we detect a severe emergency pattern (like repeated phrases), intervene immediately
     if (emergencyPathResult.requiresImmediateIntervention) {
@@ -79,7 +116,8 @@ export const processResponseCore = (
     const finalEmergencyPathResult = detectEmergencyPath(
       hallucinationCheckedResponse, 
       userInput, 
-      conversationHistory
+      conversationHistory,
+      previousResponses
     );
     
     // If there's still an emergency path detected even after hallucination prevention,

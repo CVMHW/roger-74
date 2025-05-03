@@ -3,7 +3,7 @@
  * Pattern fixer for dangerous repetition patterns
  */
 
-import { hasRepeatedContent, fixRepeatedContent } from './specialCases';
+import { hasRepeatedContent, fixRepeatedContent, hasSharedThatPattern } from './specialCases';
 
 /**
  * Fixes dangerous repetition patterns in responses
@@ -16,8 +16,11 @@ export const fixDangerousRepetitionPatterns = (responseText: string): {
   // Check for repetition issues using common pattern detection
   const hasIssue = hasRepeatedContent(responseText);
   
+  // Special check for the problematic "It seems like you shared that" pattern
+  const hasSharedThatIssue = hasSharedThatPattern(responseText);
+  
   // If no issue, return the original text
-  if (!hasIssue) {
+  if (!hasIssue && !hasSharedThatIssue) {
     return { 
       fixedResponse: responseText, 
       hasRepetitionIssue: false 

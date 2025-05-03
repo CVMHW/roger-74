@@ -7,6 +7,7 @@
 
 import { SeverityLevel, EmergencyPathResult, EmergencyPathFlags, EmergencyPathFlag } from './types';
 import { UNCONDITIONAL_MEMORY_RULE } from '../../../masterRules/core/coreRules';
+import { detectPatternedResponses } from './patternDetector';
 
 // Critical patterns that indicate severe hallucination risk
 const CRITICAL_PATTERNS = [
@@ -67,6 +68,12 @@ const HIGH_RISK_PATTERNS = [
     type: 'phrase_conflation',
     description: 'Phrase conflation',
     severity: SeverityLevel.HIGH
+  },
+  {
+    pattern: /It seems like you shared that/i,
+    type: 'shared_that_pattern',
+    description: 'Use of problematic "It seems like you shared that" pattern',
+    severity: SeverityLevel.HIGH
   }
 ];
 
@@ -88,7 +95,7 @@ const MEDIUM_RISK_PATTERNS = [
 
 /**
  * Utility function to safely compare severity levels
- * This resolves the TypeScript comparison issues
+ * This resolves the TypeScript comparison issues with enums
  */
 const isSeverityEqual = (actual: SeverityLevel, expected: SeverityLevel): boolean => {
   return actual === expected;
@@ -96,6 +103,7 @@ const isSeverityEqual = (actual: SeverityLevel, expected: SeverityLevel): boolea
 
 /**
  * Utility function to check if severity is at least at a certain level
+ * This resolves the TypeScript comparison issues with enums
  */
 const isSeverityAtLeast = (actual: SeverityLevel, minimum: SeverityLevel): boolean => {
   const levels = [SeverityLevel.LOW, SeverityLevel.MEDIUM, SeverityLevel.HIGH, SeverityLevel.SEVERE];
@@ -159,6 +167,24 @@ export const detectEmergencyPath = (
     }
   }
   
+  // NEW: Detect patterned responses over time (Roger's conversation style)
+  const patternFlags = detectPatternedResponses(responseText, previousResponses);
+  flags.push(...patternFlags);
+  
+  // Update severity based on pattern flags
+  for (const flag of patternFlags) {
+    if (isSeverityEqual(flag.severity, SeverityLevel.SEVERE) && 
+        !isSeverityEqual(highestSeverity, SeverityLevel.SEVERE)) {
+      highestSeverity = SeverityLevel.SEVERE;
+    } else if (isSeverityEqual(flag.severity, SeverityLevel.HIGH) && 
+               !isSeverityAtLeast(highestSeverity, SeverityLevel.HIGH)) {
+      highestSeverity = SeverityLevel.HIGH;
+    } else if (isSeverityEqual(flag.severity, SeverityLevel.MEDIUM) && 
+               !isSeverityAtLeast(highestSeverity, SeverityLevel.MEDIUM)) {
+      highestSeverity = SeverityLevel.MEDIUM;
+    }
+  }
+  
   // Special check for nonsensical content in early conversation
   if (conversationHistory.length <= 3) {
     // Check for mentions of previous discussions in new conversations
@@ -190,8 +216,7 @@ export const detectEmergencyPath = (
   }
   
   // Determine if this is an emergency path and what action to take
-  const isEmergencyPath = isSeverityEqual(highestSeverity, SeverityLevel.HIGH) || 
-                           isSeverityEqual(highestSeverity, SeverityLevel.SEVERE);
+  const isEmergencyPath = isSeverityAtLeast(highestSeverity, SeverityLevel.HIGH);
   
   let recommendedAction: 'continue' | 'minor_intervention' | 'major_intervention' | 'reset_conversation' = 'continue';
   

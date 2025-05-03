@@ -18,7 +18,9 @@ export const hasRepeatedContent = (responseText: string): boolean => {
     /dealing with you may have indicated/i,
     /It seems like you shared that ([^.]{5,50})\. (I hear|It sounds like) you/i,
     // Check for sentences that have exact duplicates
-    /([\w\s',]{15,})\s+\1/i
+    /([\w\s',]{15,})\s+\1/i,
+    // Shared pattern detection
+    /It seems like you shared that/i
   ];
   
   for (const pattern of repetitionPatterns) {
@@ -53,6 +55,56 @@ const calculateSimilarity = (str1: string, str2: string): number => {
 };
 
 /**
+ * Specifically checks if the response has the problematic "It seems like you shared that" pattern
+ */
+export const hasSharedThatPattern = (responseText: string): boolean => {
+  return /It seems like you shared that/i.test(responseText);
+};
+
+/**
+ * Checks for invalid mention references that don't match conversation history
+ */
+export const hasInvalidMentionReference = (responseText: string, conversationHistory: string[]): boolean => {
+  // Check for references to previous messages that don't exist
+  const mentionPatterns = [
+    /you mentioned ([^,.]+)/i,
+    /you said ([^,.]+)/i,
+    /you told me ([^,.]+)/i,
+    /earlier you shared ([^,.]+)/i,
+    /previously you noted ([^,.]+)/i
+  ];
+  
+  // Nothing to check against if there's no history
+  if (!conversationHistory || conversationHistory.length === 0) {
+    // If there's no history but the response claims there was, that's a problem
+    for (const pattern of mentionPatterns) {
+      if (pattern.test(responseText)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  
+  // For each pattern, extract what was supposedly mentioned and check if it's in the history
+  for (const pattern of mentionPatterns) {
+    const matches = responseText.match(pattern);
+    if (matches && matches[1]) {
+      const supposedMention = matches[1].toLowerCase();
+      // Check if this is actually in the history
+      const historyHasMention = conversationHistory.some(
+        msg => msg.toLowerCase().includes(supposedMention)
+      );
+      
+      if (!historyHasMention) {
+        return true; // Found an invalid reference
+      }
+    }
+  }
+  
+  return false;
+};
+
+/**
  * Fixes repeated content in a response
  */
 export const fixRepeatedContent = (responseText: string): string => {
@@ -75,6 +127,12 @@ export const fixRepeatedContent = (responseText: string): string => {
   fixedResponse = fixedResponse.replace(
     /It seems like you shared that ([^.]{5,50})\. (I hear|It sounds like) you/i,
     "I hear you"
+  );
+  
+  // Fix the problematic "It seems like you shared that" pattern completely
+  fixedResponse = fixedResponse.replace(
+    /It seems like you shared that ([^.]+)\./i,
+    "I understand you're talking about $1."
   );
   
   // Remove all instances of "you may have indicated"
