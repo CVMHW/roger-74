@@ -1,4 +1,3 @@
-
 /**
  * Spontaneity Generator
  * 
@@ -598,7 +597,7 @@ const generateTopicSpecificResponse = (
     const meaningResponses = [
       "finding what gives our lives meaning can be an ongoing journey rather than a single destination",
       "connecting to something larger than ourselves often provides a sense of purpose and meaning",
-      "meaning can be found in what we create, what we experience, or even how we face unavoidable challenges",
+      "meaning can be found in what we create, what we experience, or even how we face unavoidable suffering",
       "those feelings of emptiness sometimes point us toward our deeper need for authentic meaning",
       "discovering what truly matters to you personally is at the heart of finding your unique purpose",
       "even in difficult circumstances, the possibility for meaning and purpose remains"
@@ -756,4 +755,5 @@ const hasCommonPhrases = (text1: string, text2: string): boolean => {
 };
 
 // Import necessary components and utilities
-import { detectConversationPatterns } from '../patternDetection';
+import { createMessage } from '../../utils/messageUtils';
+import { detectConversationPatterns } from './patternDetection';

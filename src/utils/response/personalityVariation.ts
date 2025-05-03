@@ -120,3 +120,6 @@ export const createPersonalityResponse = (
     return responseText;
   }
 };
+
+// Re-export necessary functions from spontaneityGenerator for other modules
+export { generateSpontaneousResponse, generateEnhancedResponse };

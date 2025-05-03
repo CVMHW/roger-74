@@ -5,6 +5,8 @@
  */
 
 import { UNIVERSAL_LAW_MEANING } from './logotherapyLaws';
+import { enhanceWithLogotherapyPerspective } from '../logotherapy/logotherapyIntegration';
+import { checkLogotherapyHallucinations } from '../response/processor/hallucinationHandler/logotherapyHandler';
 
 /**
  * UNIVERSAL LAW: SPONTANEITY AND PERSONALITY VARIATION
@@ -141,13 +143,20 @@ export const checkMeaningPurposeCompliance = (response: string): boolean => {
 export const enforceUniversalLaws = (
   response: string, 
   userInput: string, 
-  messageCount: number
+  messageCount: number,
+  conversationHistory: string[] = []
 ): string => {
   // Import necessary functions
   const { addResponseVariety } = require('../response/personalityVariation');
-  const { enhanceWithLogotherapyPerspective } = require('./logotherapyLaws');
+  const { enhanceWithLogotherapyPerspective } = require('../logotherapy/logotherapyIntegration');
   
   let processedResponse = response;
+  
+  // Always check for logotherapy-related hallucinations first
+  const logotherapyCheck = checkLogotherapyHallucinations(processedResponse, userInput, conversationHistory);
+  if (logotherapyCheck.hasHallucination && logotherapyCheck.correctedResponse) {
+    processedResponse = logotherapyCheck.correctedResponse;
+  }
   
   // Always enforce spontaneity as a universal law
   if (!checkSpontaneityCompliance(processedResponse)) {

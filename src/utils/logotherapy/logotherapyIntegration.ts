@@ -1,4 +1,3 @@
-
 /**
  * Logotherapy Integration Module
  * 
@@ -8,6 +7,10 @@
 
 import { generateLogotherapyResponse } from './logotherapyResponses';
 import { PersonalityMode, getRandomPersonality } from '../response/spontaneityGenerator';
+import { getContextualMemory } from '../nlpProcessor';
+import { getFiveResponseMemory } from '../memory/fiveResponseMemory';
+import { retrieveRelevantMemories } from '../memory/memoryBank';
+import { UNIVERSAL_LAW_MEMORY } from '../masterRules/universalLaws';
 
 /**
  * Integrate logotherapy into the adaptive response system
@@ -21,14 +24,92 @@ export const integrateLogotherapyResponse = (
   // Generate a pure logotherapy-based response
   const logotherapyResponse = generateLogotherapyResponse(userInput);
   
+  // Leverage memory systems for more personalized response
+  const memories = leverageMemorySystems(userInput);
+  
   // Determine integration approach based on response length and content
   if (baseResponse.length < 100) {
     // For shorter responses, simply append the logotherapy perspective
-    return `${baseResponse} ${logotherapyResponse}`;
+    return `${baseResponse} ${incorporateMemories(logotherapyResponse, memories)}`;
   } else {
     // For longer responses, blend the perspectives
-    return blendResponses(baseResponse, logotherapyResponse, personalityMode);
+    return blendResponses(baseResponse, logotherapyResponse, personalityMode, memories);
   }
+};
+
+/**
+ * Leverage all memory systems for enhanced personalization
+ */
+const leverageMemorySystems = (userInput: string): string[] => {
+  console.log("UNIVERSAL LAW COMPLIANCE: Leveraging memory systems for meaning enhancement", 
+              UNIVERSAL_LAW_MEMORY.name);
+  
+  const memories: string[] = [];
+  
+  try {
+    // Check FiveResponseMemory for recent context
+    const fiveResponseMemory = getFiveResponseMemory();
+    if (fiveResponseMemory.length > 0) {
+      // Extract relevant patient statements from 5ResponseMemory
+      const patientStatements = fiveResponseMemory
+        .filter(msg => msg.sender === 'patient')
+        .map(msg => msg.content);
+      
+      if (patientStatements.length > 0) {
+        memories.push(patientStatements[Math.floor(Math.random() * patientStatements.length)]);
+      }
+    }
+    
+    // Check MemoryBank for deeper context
+    const relevantMemories = retrieveRelevantMemories(userInput);
+    if (relevantMemories.length > 0) {
+      memories.push(relevantMemories[0].content);
+    }
+    
+    // Check primary memory system
+    const contextualMemory = getContextualMemory(userInput);
+    if (contextualMemory.dominantTopics && contextualMemory.dominantTopics.length > 0) {
+      memories.push(contextualMemory.dominantTopics[0]);
+    }
+  } catch (error) {
+    console.error('Error accessing memory systems in logotherapy integration:', error);
+  }
+  
+  return memories;
+};
+
+/**
+ * Incorporate memories into logotherapy response
+ */
+const incorporateMemories = (response: string, memories: string[]): string => {
+  if (!memories || memories.length === 0) return response;
+  
+  const memory = memories[Math.floor(Math.random() * memories.length)];
+  
+  // Avoid direct reference if the memory content isn't substantive
+  if (!memory || memory.length < 5) return response;
+  
+  const memoryReferences = [
+    `This connects to what you shared earlier about ${memory.substring(0, 15)}...`,
+    `I remember you mentioned ${memory.substring(0, 15)}... which relates to this idea of meaning.`,
+    `Considering what you said about ${memory.substring(0, 15)}..., this perspective might be helpful.`,
+    `This meaning-centered approach seems relevant to your experience with ${memory.substring(0, 15)}...`
+  ];
+  
+  const reference = memoryReferences[Math.floor(Math.random() * memoryReferences.length)];
+  
+  // Insert the memory reference at a natural point in the response
+  const sentences = response.split(/(?<=[.?!])\s+/);
+  
+  if (sentences.length <= 2) {
+    return `${reference} ${response}`;
+  }
+  
+  const insertPoint = Math.floor(sentences.length / 2);
+  const firstPart = sentences.slice(0, insertPoint).join(' ');
+  const secondPart = sentences.slice(insertPoint).join(' ');
+  
+  return `${firstPart} ${reference} ${secondPart}`;
 };
 
 /**
@@ -37,7 +118,8 @@ export const integrateLogotherapyResponse = (
 const blendResponses = (
   baseResponse: string, 
   logotherapyResponse: string, 
-  personalityMode: PersonalityMode
+  personalityMode: PersonalityMode,
+  memories: string[] = []
 ): string => {
   // Extract key sentences/parts from each response
   const baseSentences = baseResponse.split(/(?<=[.?!])\s+/);
@@ -50,16 +132,20 @@ const blendResponses = (
   // Select a key insight from the logotherapy response
   const keyLogoSentence = logoSentences[Math.floor(Math.random() * logoSentences.length)];
   
+  // Add memory-enhanced content if available
+  const memoryEnhancement = memories.length > 0 ? 
+    ` I remember you mentioned ${memories[0].substring(0, 15)}... which relates to this.` : '';
+  
   // Create a blended response based on length
   if (baseSentences.length <= 2) {
     // For very short base responses, add logotherapy perspective after
-    return `${baseResponse} ${transition} ${keyLogoSentence}`;
+    return `${baseResponse} ${transition} ${keyLogoSentence}${memoryEnhancement}`;
   } else {
     // For longer responses, insert logotherapy perspective before conclusion
     const openingPart = baseSentences.slice(0, Math.ceil(baseSentences.length * 0.7)).join(' ');
     const closingPart = baseSentences.slice(Math.ceil(baseSentences.length * 0.7)).join(' ');
     
-    return `${openingPart} ${transition} ${keyLogoSentence} ${closingPart}`;
+    return `${openingPart} ${transition} ${keyLogoSentence}${memoryEnhancement} ${closingPart}`;
   }
 };
 
@@ -141,6 +227,7 @@ const getLogotherapyTransitions = (personalityMode: PersonalityMode): string[] =
 /**
  * Enhance any response with a meaning-oriented perspective
  * Used as a universal rule to ensure meaning integration
+ * Now with age/cultural appropriateness checks
  */
 export const enhanceWithMeaningPerspective = (
   response: string,
@@ -151,8 +238,8 @@ export const enhanceWithMeaningPerspective = (
     return response;
   }
   
-  // Select an appropriate meaning enhancement
-  const enhancement = getMeaningEnhancement();
+  // Detect appropriate enhancement based on user input context
+  const enhancement = getAppropriateEnhancement(userInput);
   
   // Add the enhancement at an appropriate point in the response
   const sentences = response.split(/(?<=[.?!])\s+/);
@@ -187,9 +274,100 @@ const hasMeaningOrientation = (response: string): boolean => {
 };
 
 /**
- * Get a subtle meaning-oriented enhancement
+ * Get a culturally and age-appropriate meaning enhancement
  */
-const getMeaningEnhancement = (): string => {
+const getAppropriateEnhancement = (userInput: string): string => {
+  // Detect language and cultural indicators from user input
+  const hasChildIndicators = /school|homework|parents|mom|dad|teacher|game|play/i.test(userInput);
+  const hasTeenIndicators = /college|university|friends|social|dating|career|school|homework|teacher/i.test(userInput);
+  const hasProfessionalIndicators = /work|career|colleague|office|business|professional|job/i.test(userInput);
+  const hasElderlyIndicators = /retirement|grandchildren|aging|health|memory|legacy/i.test(userInput);
+  const hasSpiritualIndicators = /faith|god|religion|spiritual|belief|pray|meditation/i.test(userInput);
+  
+  // Select an appropriate enhancement based on detected indicators
+  if (hasChildIndicators) {
+    return getChildAppropriateEnhancement();
+  } else if (hasTeenIndicators) {
+    return getTeenAppropriateEnhancement();
+  } else if (hasProfessionalIndicators) {
+    return getProfessionalEnhancement();
+  } else if (hasElderlyIndicators) {
+    return getElderlyAppropriateEnhancement();
+  } else if (hasSpiritualIndicators) {
+    return getSpiritualEnhancement();
+  }
+  
+  // Default to general enhancements
+  return getGeneralMeaningEnhancement();
+};
+
+/**
+ * Age and culturally appropriate meaning enhancements
+ */
+const getChildAppropriateEnhancement = (): string => {
+  const enhancements = [
+    "The things that make you smile or feel proud can tell you what's special about you.",
+    "When you help others or create something, it can make you feel really good inside.",
+    "The way you handle tough situations shows your unique strengths.",
+    "Everyone has special talents that help them make a difference in their own way.",
+    "The activities you enjoy most might be clues to what makes you unique."
+  ];
+  
+  return enhancements[Math.floor(Math.random() * enhancements.length)];
+};
+
+const getTeenAppropriateEnhancement = (): string => {
+  const enhancements = [
+    "Finding what genuinely matters to you, beyond what others expect, is part of discovering who you are.",
+    "Your unique perspective and voice matter in ways you might not even realize yet.",
+    "The challenges you face now are helping shape your values and what you stand for.",
+    "Sometimes the activities that feel most meaningful give us clues about our future path.",
+    "Your unique contribution to the world might start with what you're passionate about right now."
+  ];
+  
+  return enhancements[Math.floor(Math.random() * enhancements.length)];
+};
+
+const getProfessionalEnhancement = (): string => {
+  const enhancements = [
+    "Connecting your daily work to your core values often reveals deeper purpose in professional life.",
+    "Even routine tasks can gain meaning when they align with what you fundamentally value.",
+    "Finding purpose often involves seeing how your work connects to something larger than yourself.",
+    "Your unique professional contributions reflect values that are important to you.",
+    "Work becomes more fulfilling when it expresses your authentic strengths and values."
+  ];
+  
+  return enhancements[Math.floor(Math.random() * enhancements.length)];
+};
+
+const getElderlyAppropriateEnhancement = (): string => {
+  const enhancements = [
+    "The wisdom you've gained through life's experiences offers unique value to others.",
+    "Your life story and the legacy you create reflect what has mattered most to you.",
+    "The meaning we find in later chapters of life often connects to how we've influenced others.",
+    "Your journey and the values you've lived by continue to create ripples of meaning.",
+    "The perspective gained through life's journey offers unique insights about what truly matters."
+  ];
+  
+  return enhancements[Math.floor(Math.random() * enhancements.length)];
+};
+
+const getSpiritualEnhancement = (): string => {
+  const enhancements = [
+    "Our spiritual beliefs often guide us toward what gives life its deepest meaning.",
+    "Connecting with something greater than ourselves can illuminate our unique purpose.",
+    "Many find that their faith provides a framework for understanding life's meaning.",
+    "Spiritual practices often help us connect with what matters most in our lives.",
+    "The values central to your spiritual beliefs can guide you toward meaningful choices."
+  ];
+  
+  return enhancements[Math.floor(Math.random() * enhancements.length)];
+};
+
+/**
+ * General meaning enhancements (default)
+ */
+const getGeneralMeaningEnhancement = (): string => {
   const enhancements = [
     "This experience might reveal something about what matters most to you.",
     "How we respond to situations like this often reflects our deeper values.",
