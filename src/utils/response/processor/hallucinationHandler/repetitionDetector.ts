@@ -58,11 +58,19 @@ export const detectRepeatedPhrases = (responseText: string): boolean => {
     /dealing with.*dealing with/i,
     /indicated.*indicated/i,
     /you('re| are).*you('re| are)/i,
-    /I hear you.*I hear you/i
+    /I hear you.*I hear you/i,
+    // Additional patterns to catch problematic responses
+    /you shared that.*you shared that/i,
+    /it seems like.*it seems like/i,
+    /I hear that.*I hear that/i,
+    /you('re| are) dealing with/i,
+    /I understand.*I understand.*I understand/i,
+    /seems like you.*seems like you/i
   ];
   
   for (const pattern of dangerousPatterns) {
     if (pattern.test(responseText)) {
+      console.log("REPETITION DETECTED: Pattern matched:", pattern.toString());
       return true;
     }
   }

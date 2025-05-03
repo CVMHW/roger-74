@@ -7,18 +7,14 @@ import type { ProcessMessageProps } from './types';
  * Process user message with proper detection and response generation
  */
 export const processUserMessage = async (
-  props: ProcessMessageProps
+  userInput: string,
+  detectConcernsFn: (input: string) => any,
+  generateResponseFn: (input: string, concernType: any) => string,
+  baseProcessUserMessage: any,
+  conversationHistory: string[],
+  clientPreferences: any,
+  updateStageFn: () => void
 ): Promise<MessageType> => {
-  const {
-    userInput,
-    detectConcernsFn,
-    generateResponseFn,
-    baseProcessUserMessage,
-    conversationHistory,
-    clientPreferences,
-    updateStageFn
-  } = props;
-  
   try {
     // Detect any concerns in the user input
     const concernType = detectConcernsFn(userInput);

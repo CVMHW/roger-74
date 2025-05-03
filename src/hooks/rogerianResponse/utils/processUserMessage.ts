@@ -95,19 +95,17 @@ export const processUserMessage = async (
       return emotionalResponse;
     }
     
-    // Create a props object for the processor function
-    const processorProps = {
+    // Fix: Pass the individual parameters to the function instead of an object
+    // The error indicates the processMessage function expects 7 individual arguments
+    const response = await processMessage(
       userInput,
-      detectConcernsFn: detectConcerns,
-      generateResponseFn: generateResponse,
+      detectConcerns,
+      generateResponse,
       baseProcessUserMessage,
       conversationHistory,
       clientPreferences,
-      updateStageFn: updateStage
-    };
-    
-    // Pass the properly structured props object to the processor
-    const response = await processMessage(processorProps);
+      updateStage
+    );
     
     // Enhance the response with memory rules, master rules, and chat log review
     const finalResponseText = enhanceResponse(
