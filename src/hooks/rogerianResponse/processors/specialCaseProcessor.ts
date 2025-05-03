@@ -19,11 +19,14 @@ export const processSpecialCases = async (
 ): Promise<MessageType | null> => {
   // Check for special case patterns
   const { detectSpecialCasePatterns } = await import('../specialCaseDetection');
+  const specialCaseResult = detectSpecialCasePatterns(userInput);
+  
+  // Extract special case flags
   const {
     isInpatientQuestion,
     isWeatherRelated,
     isCulturalAdjustment
-  } = detectSpecialCasePatterns(userInput);
+  } = specialCaseResult;
   
   // Check for statements about wanting to understand inpatient stays
   if (isInpatientQuestion) {

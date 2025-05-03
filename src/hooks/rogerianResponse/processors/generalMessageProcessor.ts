@@ -14,7 +14,7 @@ export const processGeneralMessage = async (
   updateStage: () => void
 ): Promise<MessageType> => {
   // Calculate appropriate response time multiplier based on content
-  const responseTimeMultiplier = await determineResponseTimeMultiplier(userInput, concernType);
+  const responseTimeMultiplier = determineResponseTimeMultiplier(userInput, concernType);
   
   // Update stage before processing
   updateStage();

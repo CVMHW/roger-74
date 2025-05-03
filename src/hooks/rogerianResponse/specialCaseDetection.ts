@@ -35,7 +35,7 @@ export const detectSpecialCasePatterns = (input: string) => {
   // Initialize results
   const matches: Record<string, any> = {};
   let hasMatch = false;
-
+  
   // Check each pattern
   SPECIAL_CASE_PATTERNS.forEach(specialCase => {
     if (specialCase.pattern.test(input)) {
@@ -62,9 +62,17 @@ export const detectSpecialCasePatterns = (input: string) => {
     }
   }
 
+  // Add specific detection flags for use in processors
+  const isInpatientQuestion = !!matches['inpatient'];
+  const isWeatherRelated = !!matches['weather'];
+  const isCulturalAdjustment = !!matches['culturalAdjustment'];
+
   return {
     hasSpecialCase: hasMatch,
-    specialCases: matches
+    specialCases: matches,
+    isInpatientQuestion,
+    isWeatherRelated,
+    isCulturalAdjustment
   };
 };
 
@@ -94,4 +102,35 @@ export const analyzeSpecialCases = (
     ...specialCaseResults,
     concernType
   };
+};
+
+/**
+ * Determines the appropriate response time multiplier based on message content
+ * @param userInput User's message
+ * @param concernType Type of concern detected
+ * @returns Multiplier for response timing (lower for urgent matters)
+ */
+export const determineResponseTimeMultiplier = (userInput: string, concernType: ConcernType): number => {
+  // Special case detection
+  const { hasSpecialCase, specialCases } = detectSpecialCasePatterns(userInput);
+  
+  // Critical concerns get fastest response (multiplier < 1)
+  if (concernType === 'crisis' || concernType === 'tentative-harm') {
+    return 0.7; // 30% faster for crisis situations
+  }
+  
+  // High concern special cases get slightly faster response
+  if (hasSpecialCase) {
+    // Check for high concern level special cases
+    const hasHighConcern = Object.values(specialCases).some(
+      (caseInfo: any) => caseInfo.concernLevel === 'high'
+    );
+    
+    if (hasHighConcern) {
+      return 0.85; // 15% faster for high concern special cases
+    }
+  }
+  
+  // Default response time for normal messages
+  return 1.0;
 };
