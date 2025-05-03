@@ -1,99 +1,45 @@
+
 /**
- * Special case detection for hallucination prevention
- * 
- * Handles specific patterns that indicate potential hallucinations
+ * Special cases for hallucination detection and handling
  */
 
 /**
- * Check for repeated content in responses which often indicates hallucinations
+ * Checks if the response has repeated content
+ * This is a sign of potential hallucination
  */
-export const hasRepeatedContent = (text: string): boolean => {
-  // Check for common repetition patterns
-  const repetitionPatterns = [
-    /I hear (you'?re|you are) dealing with I hear (you'?re|you are) dealing with/i,
-    /I hear (you'?re|you are) dealing with you may have indicated/i,
-    /I remember (you|your|we) I remember (you|your|we)/i,
-    /you (mentioned|said|told me) you (mentioned|said|told me)/i,
-    /(I hear|It sounds like) you('re| are) (dealing with|feeling) (I hear|It sounds like) you('re| are)/i,
-    /you may have indicated Just a/i,
-    /dealing with you may have indicated/i,
-    /I hear you're dealing with you mentioned/i,
-    /you're dealing with I hear you're dealing with/i,
-    /you mentioned I'm jumping in/i
-  ];
+export const hasRepeatedContent = (responseText: string): boolean => {
+  // Check for repeated phrases or sentences
+  const phrases = responseText.split(/[.!?]+/).filter(s => s.trim().length > 0);
   
-  // Check each pattern
-  for (const pattern of repetitionPatterns) {
-    if (pattern.test(text)) {
-      return true;
-    }
+  // If we have fewer than 2 phrases, there can't be repetition
+  if (phrases.length < 2) {
+    return false;
   }
   
-  // Check for multiple "I hear" instances which can indicate repetition
-  const iHearMatches = text.match(/I hear/gi);
-  if (iHearMatches && iHearMatches.length > 1) {
-    return true;
-  }
-  
-  // Check for sentences that appear multiple times
-  const sentences = text.split(/[.!?]+\s/).filter(s => s.trim().length > 0);
-  const uniqueSentences = new Set(sentences.map(s => s.trim().toLowerCase()));
-  
-  // If we have repeating sentences, that's a strong signal of repetition
-  if (uniqueSentences.size < sentences.length) {
-    return true;
-  }
-  
-  // Check for phrases that appear multiple times (4+ word phrases)
-  const phrases = [];
-  for (let i = 0; i < sentences.length; i++) {
-    const words = sentences[i].split(/\s+/);
-    for (let j = 0; j <= words.length - 4; j++) {
-      phrases.push(words.slice(j, j + 4).join(' ').toLowerCase());
-    }
-  }
-  
-  // Count phrase occurrences
-  const phraseCounts: Record<string, number> = {};
-  for (const phrase of phrases) {
-    if (phrase.length > 10) { // Only check substantial phrases
-      phraseCounts[phrase] = (phraseCounts[phrase] || 0) + 1;
-    }
-  }
-  
-  // If any substantial phrase appears more than once, that's repetition
-  return Object.values(phraseCounts).some(count => count > 1);
-};
-
-/**
- * Check for "you mentioned" hallucinations with no actual mention
- */
-export const hasInvalidMentionReference = (
-  responseText: string,
-  conversationHistory: string[]
-): boolean => {
-  // Look for specific mention patterns
-  const mentionMatches = responseText.match(/you mentioned ([^.!?]+)/i);
-  
-  if (mentionMatches && mentionMatches[1]) {
-    const allegedMention = mentionMatches[1].toLowerCase();
+  // Look for similar phrases (where one contains the other)
+  for (let i = 0; i < phrases.length; i++) {
+    const phrase1 = phrases[i].trim().toLowerCase();
+    if (phrase1.length < 5) continue; // Skip very short phrases
     
-    // Don't flag very generic mentions
-    if (allegedMention.includes('concern') || 
-        allegedMention.includes('feeling') || 
-        allegedMention.includes('experience') ||
-        allegedMention.length < 5) {
-      return false;
-    }
-    
-    // Check if this content actually exists in conversation history
-    const mentionExists = conversationHistory.some(msg => 
-      msg.toLowerCase().includes(allegedMention.substring(0, 
-        Math.min(allegedMention.length, 10)))
-    );
-    
-    if (!mentionExists) {
-      return true;
+    for (let j = i + 1; j < phrases.length; j++) {
+      const phrase2 = phrases[j].trim().toLowerCase();
+      if (phrase2.length < 5) continue; // Skip very short phrases
+      
+      // Check if one phrase contains the other
+      if (phrase1.includes(phrase2) || phrase2.includes(phrase1)) {
+        return true;
+      }
+      
+      // Check if there's significant word overlap (more than 70%)
+      const words1 = phrase1.split(/\s+/);
+      const words2 = phrase2.split(/\s+/);
+      
+      const commonWords = words1.filter(word => words2.includes(word));
+      const overlapRatio = commonWords.length / Math.min(words1.length, words2.length);
+      
+      if (overlapRatio > 0.7) {
+        return true;
+      }
     }
   }
   
@@ -101,58 +47,25 @@ export const hasInvalidMentionReference = (
 };
 
 /**
- * Check for and fix the specific "dealing with I hear you're dealing with" pattern
- */
-export const fixDealingWithPattern = (responseText: string): string => {
-  const pattern = /dealing with I hear you're dealing with/i;
-  
-  if (pattern.test(responseText)) {
-    return responseText.replace(pattern, "dealing with");
-  }
-  
-  return responseText;
-};
-
-/**
- * Detects and corrects the "you may have indicated" pattern
- */
-export const fixIndicatedPattern = (responseText: string): string => {
-  const pattern = /you may have indicated/i;
-  
-  if (pattern.test(responseText)) {
-    // Replace the entire response with a safer alternative
-    return "I'd like to understand what you're experiencing. Could you share more about what's going on?";
-  }
-  
-  return responseText;
-};
-
-/**
- * Fix repeated content in a response
- * This function removes or corrects repetitive phrases
+ * Fixes repeated content in a response
  */
 export const fixRepeatedContent = (responseText: string): string => {
-  // Split into sentences for analysis
-  const sentences = responseText.split(/[.!?]+\s/).filter(s => s.trim().length > 0);
-  
-  // Keep only unique sentences (avoiding repetition)
+  const sentences = responseText.split(/([.!?]+)/).filter(s => s.trim().length > 0);
   const uniqueSentences: string[] = [];
-  const addedPhrases = new Set<string>();
+  const addedContent = new Set<string>();
   
   for (const sentence of sentences) {
     const normalized = sentence.trim().toLowerCase();
     
-    // Skip if too similar to an existing sentence
+    // Skip punctuation-only items
+    if (/^[.!?]+$/.test(normalized)) {
+      continue;
+    }
+    
+    // Check if this content is similar to what we've already added
     let isDuplicate = false;
-    for (const existing of uniqueSentences) {
-      // Simple similarity check
-      const existingNormalized = existing.toLowerCase();
-      const commonWords = normalized.split(/\s+/).filter(word => 
-        word.length > 3 && existingNormalized.includes(word)
-      ).length;
-      
-      // If there's substantial overlap, consider it a duplicate
-      if (commonWords > 3 || (commonWords > 0 && existingNormalized.length / normalized.length > 0.7)) {
+    for (const existing of addedContent) {
+      if (normalized.includes(existing) || existing.includes(normalized)) {
         isDuplicate = true;
         break;
       }
@@ -160,75 +73,97 @@ export const fixRepeatedContent = (responseText: string): string => {
     
     if (!isDuplicate) {
       uniqueSentences.push(sentence);
+      addedContent.add(normalized);
     }
   }
   
-  // Fix specific patterns
-  let result = uniqueSentences.join(". ");
-  if (!result.endsWith(".")) result += ".";
-  
-  // Fix any remaining "I hear you're dealing with" repetitions
-  result = result.replace(/I hear (you'?re|you are) dealing with I hear (you'?re|you are) dealing with/gi, 
-                          "I hear you're dealing with");
-  
-  // Fix doubled statements about what user said
-  result = result.replace(/you (mentioned|said|told me).*?you (mentioned|said|told me)/gi, 
-                          (match) => match.split("you")[0] + "you mentioned");
-  
-  return result;
+  // Reconstruct the response
+  const fixedResponse = uniqueSentences.join('');
+  return fixedResponse;
 };
 
 /**
- * Handle potential health-related hallucinations
- * This is especially important for not giving false medical information or claims
+ * Handles health topic hallucinations
+ * Specifically targets the "we've been focusing on health" pattern
  */
 export const handleHealthHallucination = (
-  responseText: string,
+  responseText: string, 
   conversationHistory: string[]
-): { 
-  isHealthHallucination: boolean; 
+): {
+  isHealthHallucination: boolean;
   correctedResponse: string;
 } => {
-  // Default response
-  const result = {
-    isHealthHallucination: false,
-    correctedResponse: responseText
+  // Check for health topic hallucination patterns
+  const healthPattern = /we've been focusing on health|dealing with health|focusing on health|talking about health|discussing health/i;
+  
+  // Check if the pattern exists in the response
+  if (!healthPattern.test(responseText)) {
+    return {
+      isHealthHallucination: false,
+      correctedResponse: responseText
+    };
+  }
+  
+  // Check if health was actually mentioned in conversation history
+  const healthMentionedInHistory = conversationHistory.some(msg => 
+    /health|medical|doctor|sick|ill|wellness|hospital|symptom|disease|condition|therapy|medicine|treatment/i.test(msg)
+  );
+  
+  // If health was mentioned, this is not a hallucination
+  if (healthMentionedInHistory) {
+    return {
+      isHealthHallucination: false,
+      correctedResponse: responseText
+    };
+  }
+  
+  // This is a health hallucination, fix it
+  console.log("HEALTH HALLUCINATION: Replacing false health reference");
+  
+  // Replace the health reference with a more general statement
+  const correctedResponse = responseText.replace(
+    healthPattern,
+    "dealing with this situation"
+  );
+  
+  return {
+    isHealthHallucination: true,
+    correctedResponse
   };
+};
+
+/**
+ * Checks if the response contains invalid mentions of user content
+ */
+export const hasInvalidMentionReference = (
+  responseText: string,
+  conversationHistory: string[]
+): boolean => {
+  // Pattern for phrases like "you mentioned X" or "you said X"
+  const mentionPattern = /you (mentioned|said|told me) (about |that |how |)([\w\s'"]+)/gi;
   
-  // Check for health diagnosis patterns that might be hallucinations
-  const diagnosisPatterns = [
-    /you (may|might|could) have (a|an|the) ([a-z\s]+) (condition|disorder|disease|diagnosis)/i,
-    /sounds like you (have|might have|may have|are experiencing) ([a-z\s]+) (disorder|condition|disease)/i,
-    /based on your symptoms/i,
-    /I (can diagnose|can tell you have|believe you have|think you might have)/i,
-    /your (symptoms|condition) (appear|seem|look|sound) (like|consistent with|typical of)/i,
-    /this (could|may|might) be (a sign of|related to|connected to) ([a-z\s]+) (condition|disorder|disease)/i
-  ];
+  let match;
+  let hasInvalid = false;
   
-  // Check if response contains any diagnosis patterns
-  for (const pattern of diagnosisPatterns) {
-    if (pattern.test(responseText)) {
-      result.isHealthHallucination = true;
-      result.correctedResponse = "I understand you're sharing something about your health. Since I'm not a medical professional, I can't provide diagnoses or medical advice. Would you like to talk more about how you're feeling or what you're experiencing?";
-      return result;
+  while ((match = mentionPattern.exec(responseText)) !== null) {
+    const allegedContent = match[3].toLowerCase();
+    
+    // Skip very short or common phrases
+    if (allegedContent.length < 5 || 
+        /^(you|it|that|this|the|a|an|your|my|i|we|us|them)$/.test(allegedContent)) {
+      continue;
+    }
+    
+    // Check if this content actually appears in conversation history
+    const contentAppears = conversationHistory.some(msg => 
+      msg.toLowerCase().includes(allegedContent)
+    );
+    
+    if (!contentAppears) {
+      hasInvalid = true;
+      break;
     }
   }
   
-  // Check for medication recommendations which would be inappropriate
-  const medicationPatterns = [
-    /you (should|could|might want to|may) (try|consider|take|use) ([a-z\s]+) (medication|drug|pill|supplement)/i,
-    /(recommend|suggest) (taking|using|trying) ([a-z\s]+) for/i,
-    /(medication|drug|treatment) (called|known as|such as) ([a-z]+)/i,
-    /have you (tried|considered|thought about) (taking|using) ([a-z\s]+)/i
-  ];
-  
-  for (const pattern of medicationPatterns) {
-    if (pattern.test(responseText)) {
-      result.isHealthHallucination = true;
-      result.correctedResponse = "I hear you're talking about something health-related. As a peer support companion, I can't provide medical advice or medication recommendations. Would it be helpful to talk about how you're feeling emotionally about this situation?";
-      return result;
-    }
-  }
-  
-  return result;
+  return hasInvalid;
 };
