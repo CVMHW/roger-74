@@ -14,6 +14,8 @@ export interface MemoryItem {
   type?: string;
   importance?: number;
   metadata?: Record<string, any>;
+  embeddings?: number[];  // Vector embeddings for semantic search
+  verificationStatus?: 'verified' | 'unverified' | 'flagged';
 }
 
 /**
@@ -23,6 +25,18 @@ export interface MemoryContext {
   emotions?: string[];
   topics?: string[];
   problems?: string[];
+  factualEntities?: FactualEntity[]; // Named entities with factual verification
+}
+
+/**
+ * Factual entity with verification
+ */
+export interface FactualEntity {
+  name: string;
+  type: 'person' | 'location' | 'organization' | 'date' | 'other';
+  value: string;
+  confidence: number;
+  source?: 'patient' | 'system';
 }
 
 /**
@@ -38,6 +52,8 @@ export interface MemorySearchParams {
     end?: number;
   };
   limit?: number;
+  semanticQuery?: string; // For vector search
+  minConfidence?: number; // Minimum confidence score for vector search
 }
 
 /**
@@ -77,3 +93,26 @@ export interface MemorySystemStatus {
   significantEventsCount?: number;
 }
 
+/**
+ * Hallucination prevention type
+ */
+export interface HallucinationPreventionStatus {
+  earlyConversation: boolean; // Whether in first 1-3 messages where higher caution is needed
+  potentialMemoryReference: boolean; // Whether the response contains memory references
+  correctionApplied: boolean; // Whether a correction was applied
+  confidenceScore: number; // 0-1 confidence that no hallucination exists
+}
+
+/**
+ * Memory system configuration
+ */
+export interface MemorySystemConfig {
+  shortTermMemoryCapacity: number;
+  workingMemoryCapacity: number;
+  longTermImportanceThreshold: number;
+  semanticSearchEnabled: boolean;
+  hallucinationPreventionLevel: 'low' | 'medium' | 'high' | 'aggressive';
+  // Time thresholds
+  newSessionThresholdMs: number; // Time after which we consider it a new session
+  shortTermExpiryMs: number; // Time after which short-term memories begin to decay
+}

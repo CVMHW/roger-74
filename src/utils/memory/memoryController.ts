@@ -6,7 +6,8 @@
  * different memory components and ensures data integrity across systems
  */
 
-import { MemoryItem, MemoryContext, MemorySearchParams, MemorySystemStatus } from './types';
+import { MemoryItem, MemoryContext, MemorySearchParams, MemorySystemStatus, MemorySystemConfig } from './types';
+import { DEFAULT_MEMORY_CONFIG } from './config';
 
 // Import memory systems
 import * as ShortTermMemory from './systems/shortTermMemory';
@@ -15,9 +16,32 @@ import * as LongTermMemory from './systems/longTermMemory';
 import * as PatientProfileMemory from './systems/patientProfileMemory';
 import * as BackupMemory from './systems/backupMemory';
 
+// Import enhanced systems for hallucination prevention
+import { applyEarlyConversationHandling } from './systems/earlyConversationHandler';
+import { preventHallucinations } from './hallucination/preventionV2';
+
 // Import original memory system for backward compatibility
 import { recordToMemory as recordToOriginalMemory } from '../nlpProcessor';
 import { addToFiveResponseMemory as recordToFiveResponseMemory } from './fiveResponseMemory';
+
+// Memory system configuration
+let memoryConfig: MemorySystemConfig = { ...DEFAULT_MEMORY_CONFIG };
+
+/**
+ * Update memory configuration
+ */
+export const updateMemoryConfig = (config: Partial<MemorySystemConfig>): void => {
+  memoryConfig = { ...memoryConfig, ...config };
+  console.log("MEMORY CONTROLLER: Updated configuration", memoryConfig);
+};
+
+/**
+ * Get conversation message count across all systems
+ */
+export const getConversationMessageCount = (): number => {
+  // Use the short-term memory as the canonical source of message count
+  return ShortTermMemory.getAllShortTermMemory().length;
+};
 
 /**
  * Add a memory item to the appropriate memory stores
@@ -35,8 +59,25 @@ export const addMemory = (
     const defaultImportance = calculateImportance(content, context);
     const memoryImportance = importance ?? defaultImportance;
     
+    // Apply early conversation handling
+    let memoryItem: MemoryItem = {
+      id: `mem_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      content,
+      timestamp: Date.now(),
+      role,
+      importance: memoryImportance,
+      metadata: {
+        ...context,
+        accessCount: 0,
+        lastAccessed: Date.now()
+      }
+    };
+    
+    // Apply special handling for early conversation
+    memoryItem = applyEarlyConversationHandling(memoryItem);
+    
     // Always add to short-term memory
-    const shortTermItem = ShortTermMemory.addToShortTermMemory(content, role, context);
+    ShortTermMemory.addToShortTermMemory(content, role, context);
     
     // Add to working memory if important enough
     if (memoryImportance >= 0.7 || hasHighEmotionalContent(context)) {
@@ -62,8 +103,12 @@ export const addMemory = (
       // Add as significant event if important enough
       if (memoryImportance >= 0.9) {
         PatientProfileMemory.addSignificantEvent({
-          ...shortTermItem,
-          importance: memoryImportance
+          id: memoryItem.id,
+          content,
+          timestamp: Date.now(),
+          role,
+          importance: memoryImportance,
+          metadata: memoryItem.metadata
         });
       }
     }
@@ -75,6 +120,7 @@ export const addMemory = (
     if (!lastBackupTimestamp || lastBackupTimestamp < fiveMinutesAgo) {
       // Create backups of all memory systems
       BackupMemory.createBackup(ShortTermMemory.getAllShortTermMemory(), 'shortTerm');
+      BackupMemory.createBackup(WorkingMemory.getAllWorkingMemory(), 'working');
       BackupMemory.createBackup(LongTermMemory.getAllLongTermMemory(), 'longTerm');
       lastBackupTimestamp = now;
     }
@@ -196,6 +242,14 @@ export const searchMemory = (
     // Sort by relevance
     const sortedResults = sortByRelevance(uniqueResults, query);
     
+    // Update access metadata for retrieved items
+    sortedResults.forEach(item => {
+      if (item.metadata) {
+        item.metadata.accessCount = (item.metadata.accessCount || 0) + 1;
+        item.metadata.lastAccessed = Date.now();
+      }
+    });
+    
     // Apply limit if specified
     if (query.limit && sortedResults.length > query.limit) {
       return sortedResults.slice(0, query.limit);
@@ -206,6 +260,37 @@ export const searchMemory = (
   } catch (error) {
     console.error("MEMORY CONTROLLER: Error searching memory", error);
     return [];
+  }
+};
+
+/**
+ * Process a response to prevent hallucinations
+ */
+export const processResponse = (
+  responseText: string,
+  userInput: string,
+  conversationHistory: string[]
+): string => {
+  console.log("MEMORY CONTROLLER: Processing response to prevent hallucinations");
+  
+  try {
+    // Apply hallucination prevention
+    const preventionResult = preventHallucinations(
+      responseText,
+      userInput,
+      conversationHistory,
+      memoryConfig
+    );
+    
+    // If modified, log the change
+    if (preventionResult.wasModified) {
+      console.log("MEMORY CONTROLLER: Hallucination prevented, response modified");
+    }
+    
+    return preventionResult.text;
+  } catch (error) {
+    console.error("MEMORY CONTROLLER: Error in hallucination prevention", error);
+    return responseText;
   }
 };
 
@@ -270,7 +355,7 @@ export const resetMemory = (): void => {
     BackupMemory.createBackup(ShortTermMemory.getAllShortTermMemory(), 'shortTerm_preReset');
     BackupMemory.createBackup(WorkingMemory.getAllWorkingMemory(), 'working_preReset');
     
-    // Clear memory systems
+    // Clear short-term and working memory
     ShortTermMemory.clearShortTermMemory();
     WorkingMemory.clearWorkingMemory();
     
@@ -294,11 +379,10 @@ export const isNewConversation = (userInput: string): boolean => {
     return true;
   }
   
-  // Check for time gap (30+ minutes indicates new conversation)
+  // Check for time gap (using config value)
   const timeSinceLastUpdate = Date.now() - shortTermStatus.lastUpdated;
-  const thirtyMinutesMs = 30 * 60 * 1000;
   
-  if (timeSinceLastUpdate > thirtyMinutesMs) {
+  if (timeSinceLastUpdate > memoryConfig.newSessionThresholdMs) {
     return true;
   }
   
@@ -322,6 +406,7 @@ export const initializeMemory = (): void => {
   console.log("MEMORY CONTROLLER: Initializing all memory systems");
   
   ShortTermMemory.initializeShortTermMemory();
+  WorkingMemory.initializeWorkingMemory();
   LongTermMemory.initializeLongTermMemory();
   PatientProfileMemory.initializePatientProfile();
   BackupMemory.initializeBackupRecords();

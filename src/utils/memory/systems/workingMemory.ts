@@ -6,9 +6,7 @@
  */
 
 import { MemoryItem, MemoryContext, MemorySearchParams, MemoryRetrievalResult } from '../types';
-
-// Maximum capacity of working memory
-const MAX_WORKING_MEMORY_CAPACITY = 20;
+import { DEFAULT_MEMORY_CONFIG } from '../config';
 
 // In-memory storage for working memory
 let workingMemoryStore: MemoryItem[] = [];
@@ -34,7 +32,9 @@ export const addToWorkingMemory = (
       emotions: context?.emotions || [],
       topics: context?.topics || [],
       problems: context?.problems || [],
-      accessCount: 1
+      accessCount: 1,
+      lastAccessed: Date.now(),
+      isActive: true
     }
   };
   
@@ -42,13 +42,45 @@ export const addToWorkingMemory = (
   workingMemoryStore.unshift(newItem);
   
   // Keep within capacity limit with intelligent pruning
-  if (workingMemoryStore.length > MAX_WORKING_MEMORY_CAPACITY) {
-    // Sort by importance and keep most important items
-    workingMemoryStore.sort((a, b) => (b.importance || 0) - (a.importance || 0));
-    workingMemoryStore = workingMemoryStore.slice(0, MAX_WORKING_MEMORY_CAPACITY);
+  if (workingMemoryStore.length > DEFAULT_MEMORY_CONFIG.workingMemoryCapacity) {
+    intelligentPrune();
   }
   
   return newItem;
+};
+
+/**
+ * Intelligent pruning of working memory
+ * Considers importance, recency, and access patterns
+ */
+const intelligentPrune = (): void => {
+  // Calculate a "retention score" for each item
+  const scoredItems = workingMemoryStore.map(item => {
+    // Base score from importance
+    let score = item.importance || 0.5;
+    
+    // Adjust for recency (0-1 scale)
+    const ageMs = Date.now() - item.timestamp;
+    const recencyScore = Math.max(0, 1 - (ageMs / (30 * 60 * 1000))); // 30 minutes is "old"
+    
+    // Adjust for access frequency
+    const accessCount = item.metadata?.accessCount || 0;
+    const accessScore = Math.min(1, accessCount / 5); // 5+ accesses is max score
+    
+    // Combine scores with weights
+    const combinedScore = (score * 0.5) + (recencyScore * 0.3) + (accessScore * 0.2);
+    
+    return {
+      item,
+      score: combinedScore
+    };
+  });
+  
+  // Sort by score (descending) and keep the top items
+  const sortedItems = scoredItems.sort((a, b) => b.score - a.score);
+  workingMemoryStore = sortedItems
+    .slice(0, DEFAULT_MEMORY_CONFIG.workingMemoryCapacity)
+    .map(scored => scored.item);
 };
 
 /**
@@ -85,7 +117,7 @@ export const searchWorkingMemory = (
     results = results.filter(item => 
       item.metadata?.topics && 
       params.topics!.some(topic => 
-        item.metadata?.topics.includes(topic)
+        item.metadata?.topics?.includes(topic)
       )
     );
   }
@@ -95,7 +127,7 @@ export const searchWorkingMemory = (
     results = results.filter(item => 
       item.metadata?.emotions && 
       params.emotions!.some(emotion => 
-        item.metadata?.emotions.includes(emotion)
+        item.metadata?.emotions?.includes(emotion)
       )
     );
   }
@@ -107,12 +139,11 @@ export const searchWorkingMemory = (
   
   // Track access for each item
   results.forEach(item => {
-    if (item.metadata && item.metadata.accessCount) {
-      item.metadata.accessCount += 1;
-    } else if (item.metadata) {
-      item.metadata.accessCount = 1;
+    if (item.metadata) {
+      item.metadata.accessCount = (item.metadata.accessCount || 0) + 1;
+      item.metadata.lastAccessed = Date.now();
     } else {
-      item.metadata = { accessCount: 1 };
+      item.metadata = { accessCount: 1, lastAccessed: Date.now() };
     }
   });
   
@@ -127,6 +158,35 @@ export const clearWorkingMemory = (): void => {
 };
 
 /**
+ * Initialize working memory from storage if available
+ */
+export const initializeWorkingMemory = (): boolean => {
+  try {
+    const storedMemory = sessionStorage.getItem('rogerWorkingMemory');
+    if (storedMemory) {
+      workingMemoryStore = JSON.parse(storedMemory);
+      console.log("WORKING MEMORY: Initialized from sessionStorage");
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error("WORKING MEMORY: Failed to initialize", error);
+    return false;
+  }
+};
+
+/**
+ * Save working memory to storage
+ */
+const persistWorkingMemory = (): void => {
+  try {
+    sessionStorage.setItem('rogerWorkingMemory', JSON.stringify(workingMemoryStore));
+  } catch (error) {
+    console.error("WORKING MEMORY: Failed to persist", error);
+  }
+};
+
+/**
  * Get system status
  */
 export const getWorkingMemoryStatus = () => {
@@ -138,3 +198,7 @@ export const getWorkingMemoryStatus = () => {
       : Date.now()
   };
 };
+
+// Setup automatic persistence
+const PERSISTENCE_INTERVAL = 30000; // 30 seconds
+setInterval(persistWorkingMemory, PERSISTENCE_INTERVAL);

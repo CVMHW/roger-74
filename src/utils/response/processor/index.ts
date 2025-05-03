@@ -1,29 +1,77 @@
 
 /**
- * Response Processor - Main Module
+ * Response Processor
  * 
- * Processes responses through the MasterRules system before final delivery
- * UNCONDITIONAL: Ensures memory usage in all responses
+ * Central module for processing responses before sending to the user
+ * Integrates memory, hallucination prevention, and logotherapy
  */
 
-import { processResponseCore } from './core';
+import { processResponse } from '../../memory/memoryController';
+import { applyUnconditionalRules } from '../responseIntegration';
+import { processCore } from './core';
+import { applyConversationStageProcessing, determineConversationStage } from './conversationStageHandler';
+import { enhanceResponseWithMemory } from './memoryEnhancement';
+import { recordToMemorySystems } from './memorySystemHandler';
+import { handleLogotherapyIntegration } from './logotherapy/integrationHandler';
 
 /**
- * Process any response through the MasterRules system
- * @param response Initial response
- * @param userInput Original user input
- * @param messageCount Current message count
- * @param conversationHistory Array of recent conversation messages
- * @returns Processed response conforming to all MasterRules
+ * Process a response through all enhancement systems
  */
-export const processResponseThroughMasterRules = (
-  response: string,
+export const processCompleteResponse = (
+  responseText: string,
   userInput: string,
-  messageCount: number,
   conversationHistory: string[] = []
 ): string => {
-  return processResponseCore(response, userInput, messageCount, conversationHistory);
+  try {
+    console.log("RESPONSE PROCESSOR: Starting complete response processing");
+    
+    // Get conversation stage
+    const { isEarlyConversation, messageCount } = determineConversationStage();
+    
+    // 1. First apply core processing (universal rules)
+    let processedResponse = processCore(responseText, userInput, messageCount, conversationHistory);
+    
+    // 2. Apply logotherapy integration for meaning-centered responses
+    processedResponse = handleLogotherapyIntegration(processedResponse, userInput, conversationHistory);
+    
+    // 3. Apply memory enhancement
+    processedResponse = enhanceResponseWithMemory({
+      response: processedResponse,
+      userInput,
+      conversationHistory
+    });
+    
+    // 4. Apply conversation stage processing (special handling for early conversations)
+    processedResponse = applyConversationStageProcessing(
+      processedResponse, 
+      userInput,
+      isEarlyConversation
+    );
+    
+    // 5. Apply hallucination prevention as final safety
+    processedResponse = processResponse(processedResponse, userInput, conversationHistory);
+    
+    // Record final response to memory systems
+    recordToMemorySystems(processedResponse);
+    
+    return processedResponse;
+    
+  } catch (error) {
+    console.error("RESPONSE PROCESSOR: Error in processing", error);
+    
+    // Fallback: Ensure we at least apply basic rules in case of error
+    try {
+      const simpleProcessed = applyUnconditionalRules(responseText, userInput);
+      return simpleProcessed;
+    } catch (nestedError) {
+      console.error("RESPONSE PROCESSOR: Critical failure in fallback processing", nestedError);
+      return responseText;
+    }
+  }
 };
 
-// Re-export enhanceResponseWithMemory for direct usage
+// Re-export important components for direct access
+export { recordToMemorySystems } from './memorySystemHandler';
+export { handleMemoryHallucinations } from './hallucinationHandler';
 export { enhanceResponseWithMemory } from './memoryEnhancement';
+export { applyResponseRules } from './ruleProcessing';
