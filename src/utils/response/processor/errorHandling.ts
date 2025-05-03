@@ -1,72 +1,96 @@
 
 /**
- * Error handling utilities for response processor
+ * Error handling for response processor
  */
 
-import { addToFiveResponseMemory, getLastPatientMessage } from '../../memory/fiveResponseMemory';
-import { addToMemoryBank, retrieveRelevantMemories } from '../../memory/memoryBank';
-import { getContextualMemory } from '../../nlpProcessor';
+import { addMemory } from '../../memory/memoryController';
+import { MemoryPiece } from '../../memory/memoryBank';
 
 /**
- * Handle errors in response processing
- * Ensures memory systems are still updated and returns a graceful fallback
+ * Adds error to memory for future correction
  */
-export const handleResponseProcessingError = (
-  error: Error,
-  userInput: string,
-  response: string
-): string => {
-  console.error('Error in processing response through master rules:', error);
-  
-  // UNCONDITIONAL RULE: Even on error, record to ALL memory systems
+export const recordErrorToMemory = (
+  errorType: string,
+  errorContext: any,
+  userInput: string
+): void => {
   try {
-    // Primary memory system
-    const { enforceMemoryRule } = require('../../masterRules/unconditionalRuleProtections');
-    enforceMemoryRule(userInput, response);
+    // Create error record
+    const errorRecord = {
+      type: errorType,
+      timestamp: Date.now(),
+      context: errorContext,
+      userInput
+    };
     
-    // CRITICAL: Use 5ResponseMemory as backup even in error case
-    addToFiveResponseMemory('patient', userInput);
-    addToFiveResponseMemory('roger', response);
+    // Store in memory system with high importance
+    addMemory(
+      `ERROR: ${errorType} occurred during response processing`,
+      'roger',
+      { error: errorRecord },
+      0.9
+    );
     
-    // CRITICAL: Use MemoryBank as backup even in error case
-    addToMemoryBank(userInput, 'patient');
-    addToMemoryBank(response, 'roger');
-  } catch (memoryError) {
-    console.error('Failed to enforce memory rule during error recovery:', memoryError);
+    console.error(`Response processor error recorded: ${errorType}`, errorContext);
+  } catch (e) {
+    // If even error recording fails, just log to console
+    console.error("Failed to record error to memory:", e);
   }
-  
-  return generateErrorRecoveryResponse(userInput, response);
 };
 
 /**
- * Generate a response that attempts to recover from an error
- * Uses triple-redundant memory systems
+ * Checks past memory for similar errors
  */
-const generateErrorRecoveryResponse = (userInput: string, response: string): string => {
-  try {
-    // Try to get memory from most advanced system first (MemoryBank)
-    const relevantMemories = retrieveRelevantMemories(userInput);
-    if (relevantMemories.length > 0) {
-      return `I remember what you said about "${relevantMemories[0].content.substring(0, 20)}..." ${response}`;
+export const checkErrorHistory = (errorType: string): boolean => {
+  // Implementation would depend on memory system
+  // Just a placeholder for now
+  return false;
+};
+
+/**
+ * Get error-correction strategies from memory
+ */
+export const retrieveErrorCorrectionStrategies = (
+  errorType: string,
+  errorContext: any
+): string[] => {
+  // Implementation would vary based on the actual error correction system
+  // Just a placeholder for now
+  return [
+    "Try alternative phrasing",
+    "Focus on reflection instead of advice",
+    "Use simpler language",
+    "Break response into shorter sentences"
+  ];
+};
+
+/**
+ * Process errors in recent responses
+ */
+export const analyzeRecentResponseErrors = (
+  recentMemories: MemoryPiece[]
+): string[] => {
+  const errorPatterns: string[] = [];
+  
+  // Look for error patterns in recent responses
+  for (const memory of recentMemories) {
+    if (memory.role === 'roger' && memory.metadata?.error) {
+      const errorType = memory.metadata.error.type;
+      
+      // If content exists and is a string
+      if (memory.content && typeof memory.content === 'string' && 
+          memory.content.includes("ERROR")) {
+        errorPatterns.push(errorType);
+      }
     }
-    
-    // Try to get memory from 5ResponseMemory system next
-    const lastPatientMessage = getLastPatientMessage();
-    if (lastPatientMessage) {
-      return `I remember what you said about "${lastPatientMessage.substring(0, 20)}..." ${response}`;
-    }
-    
-    // Fallback to primary memory system
-    const memory = getContextualMemory(userInput);
-    if (memory.dominantTopics && memory.dominantTopics.length > 0) {
-      return `I remember what you've shared about ${memory.dominantTopics[0]}. ${response}`;
-    }
-    
-    // Ultimate fallback if all systems fail to provide context
-    return `I remember what you've told me. ${response}`;
-  } catch (finalError) {
-    console.error('Critical failure in error recovery:', finalError);
-    // Return original response with basic memory reference if all else fails
-    return `I remember what you've told me. ${response}`;
   }
+  
+  return errorPatterns;
+};
+
+export default {
+  recordErrorToMemory,
+  checkErrorHistory,
+  retrieveErrorCorrectionStrategies,
+  analyzeRecentResponseErrors
 };

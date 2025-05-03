@@ -11,37 +11,64 @@ import { detectClevelandTopics } from '../cleveland/clevelandTopics';
 import { findStressorMemories } from '../stressors/stressorMemory';
 import { detectStressors } from '../stressors/stressorDetection';
 
+// Define the MemoryPiece interface for use with multiHeadAttention
+export interface MemoryPiece {
+  content: string;
+  role: 'patient' | 'roger';
+  metadata?: any;
+  timestamp?: number;
+  importance?: number;
+}
+
 /**
  * Retrieve relevant memories based on user input
  */
-export const retrieveRelevantMemories = (userInput: string): string[] => {
-  const memories: string[] = [];
+export const retrieveRelevantMemories = (userInput: string, keywords?: string[]): MemoryPiece[] => {
+  const memories: MemoryPiece[] = [];
   
   try {
     // First check for Cleveland-specific memories
     const clevelandTopics = detectClevelandTopics(userInput);
     if (clevelandTopics.length > 0) {
       const clevelandMemories = findClevelandMemories(userInput);
-      memories.push(...clevelandMemories);
+      clevelandMemories.forEach(memory => {
+        memories.push({
+          content: memory,
+          role: 'roger',
+          importance: 0.7
+        });
+      });
     }
     
     // Check for stressor-related memories
     const stressors = detectStressors(userInput);
     if (stressors.length > 0) {
       const stressorMemories = findStressorMemories(userInput);
-      memories.push(...stressorMemories);
+      stressorMemories.forEach(memory => {
+        memories.push({
+          content: memory,
+          role: 'roger',
+          importance: 0.8
+        });
+      });
     }
     
     // Then check general memory system
+    const searchKeywords = keywords || extractKeywords(userInput);
     const memoryResults = searchMemory({
-      keywords: extractKeywords(userInput),
+      keywords: searchKeywords,
       limit: 3
     });
     
     if (memoryResults && memoryResults.length > 0) {
       for (const item of memoryResults) {
-        if (item.role === 'patient' && !memories.includes(item.content)) {
-          memories.push(`You mentioned ${item.content.substring(0, 30)}...`);
+        if (item.role === 'patient') {
+          memories.push({
+            content: `You mentioned ${item.content.substring(0, 30)}...`,
+            role: 'roger',
+            metadata: item.metadata,
+            importance: item.importance
+          });
         }
       }
     }
@@ -50,6 +77,18 @@ export const retrieveRelevantMemories = (userInput: string): string[] => {
   }
   
   return memories;
+};
+
+/**
+ * Add memory to the memory bank
+ * This function is for compatibility with older code
+ */
+export const addToMemoryBank = (content: string, role: 'patient' | 'roger', context?: any, importance: number = 0.5): void => {
+  try {
+    addMemory(content, role, context, importance);
+  } catch (error) {
+    console.error("Error adding to memory bank:", error);
+  }
 };
 
 /**
@@ -66,4 +105,3 @@ const extractKeywords = (text: string): string[] => {
 
 // Re-export other memory functions used elsewhere
 export { searchMemory } from './memoryController';
-

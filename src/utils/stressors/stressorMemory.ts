@@ -7,6 +7,7 @@
 
 import { addMemory, searchMemory } from '../memory/memoryController';
 import { detectStressors, getPrimaryStressor } from './stressorDetection';
+import { DetectedStressor } from './stressorTypes';
 
 /**
  * Store stressor-related memory from conversation

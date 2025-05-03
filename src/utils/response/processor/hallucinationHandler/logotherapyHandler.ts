@@ -1,112 +1,203 @@
 
 /**
- * Logotherapy-specific hallucination handling
+ * Logotherapy Hallucination Handler
  * 
- * Ensures that logotherapy-based responses maintain accuracy
- * and avoid false meaning attributions or fabricated memories
+ * Special handling for preventing hallucinations in logotherapy-related responses
  */
 
-import { UNIVERSAL_LAW_MEANING_PURPOSE } from '../../../masterRules/universalLaws';
-import { retrieveRelevantMemories } from '../../../memory/memoryBank';
+import { MemoryPiece } from '../../../../memory/memoryBank';
 
 /**
- * Check for common logotherapy-related hallucinations
+ * Checks if a logotherapy response contains hallucinations
  */
 export const checkLogotherapyHallucinations = (
-  responseText: string,
+  response: string,
   userInput: string,
   conversationHistory: string[]
-): {
-  hasHallucination: boolean;
-  correctedResponse?: string;
-} => {
-  console.log("LOGOTHERAPY HALLUCINATION CHECK: Enforcing", UNIVERSAL_LAW_MEANING_PURPOSE.name);
-  
-  // Check for false claims about patient values
-  const falseValuesClaim = /your values (are|include|seem to be) (truth|honesty|integrity|family|connection|achievement|peace|wisdom|power|security|tradition|stimulation|hedonism|benevolence|universalism|self-direction|conformity)/i;
-  
-  // Check for false claims about patient meaning sources
-  const falseMeaningSourceClaim = /your (main source|primary source|central source) of meaning (is|seems to be|appears to be) (work|family|creativity|spirituality|service|knowledge|relationships|self-improvement|nature)/i;
-  
-  // Check for fabricated meaningful experiences
-  const fabricatedExperienceClaim = /you (mentioned|shared|talked about|described) (a meaningful|an important|a significant) experience (with|about|involving) (your|a) (mentor|parent|friend|teacher|partner|child|colleague)/i;
-  
-  // Detect hallucinations
-  const hasValueHallucination = falseValuesClaim.test(responseText);
-  const hasMeaningSourceHallucination = falseMeaningSourceClaim.test(responseText);
-  const hasExperienceHallucination = fabricatedExperienceClaim.test(responseText);
-  
-  // Get actual meaningful memories from the memory system
-  const meaningfulMemories = getMeaningfulMemoriesLocal(userInput, 3);
-  
-  // If we have hallucinations, correct them
-  if (hasValueHallucination || hasMeaningSourceHallucination || hasExperienceHallucination) {
-    console.log("LOGOTHERAPY HALLUCINATION DETECTED: Correcting response");
-    
-    let correctedResponse = responseText;
-    
-    // Replace false values claims with Socratic questions
-    if (hasValueHallucination) {
-      correctedResponse = responseText.replace(
-        falseValuesClaim,
-        "I'm curious about what values are most important to you"
-      );
-    }
-    
-    // Replace false meaning source claims with exploration
-    if (hasMeaningSourceHallucination) {
-      correctedResponse = correctedResponse.replace(
-        falseMeaningSourceClaim,
-        "I wonder what sources of meaning are most significant in your life"
-      );
-    }
-    
-    // Replace fabricated experiences with genuine inquiry
-    if (hasExperienceHallucination) {
-      correctedResponse = correctedResponse.replace(
-        fabricatedExperienceClaim,
-        "I'd be interested in hearing about experiences that have felt meaningful to you"
-      );
-    }
-    
-    // If we have actual meaningful memories, incorporate them
-    if (meaningfulMemories.length > 0) {
-      const memory = meaningfulMemories[0];
-      correctedResponse += ` Based on what you've shared, ${memory.content.substring(0, 50)}... seems important to you.`;
-    }
-    
-    return {
-      hasHallucination: true,
-      correctedResponse
-    };
+): boolean => {
+  // Check for unsupported existential claims
+  if (containsUnsupportedExistentialClaims(response)) {
+    return true;
   }
   
-  return { hasHallucination: false };
+  // Check for inappropriate meaning attributions
+  if (containsInappropriateMeaningAttributions(response, userInput)) {
+    return true;
+  }
+  
+  // Check for hallucinatory life events
+  if (containsHallucinatoryLifeEvents(response, conversationHistory)) {
+    return true;
+  }
+  
+  return false;
 };
 
 /**
- * Get meaningful memories from the MemoryBank - local implementation
- * This is kept local to this file to avoid conflicts
+ * Check for unsupported claims about life meaning or purpose
  */
-const getMeaningfulMemoriesLocal = (userInput: string, count: number = 3): any[] => {
-  try {
-    // Try to get relevant memories from the memory bank
-    const memories = retrieveRelevantMemories(userInput);
-    
-    // Filter for potentially meaningful memories
-    const meaningfulMemories = memories.filter(memory => {
-      const content = memory.content.toLowerCase();
-      return content.includes('meaning') || 
-             content.includes('purpose') || 
-             content.includes('value') ||
-             content.includes('important') ||
-             content.includes('significant') ||
-             content.includes('care about');
-    });
-    
-    return meaningfulMemories.slice(0, count);
-  } catch (error) {
-    console.error('Error retrieving meaningful memories:', error);
-    return [];
+const containsUnsupportedExistentialClaims = (response: string): boolean => {
+  const unsupportedClaimPatterns = [
+    /the meaning of (your|one's) life is/i,
+    /your purpose is (clearly|obviously|definitely)/i,
+    /you (should|must|need to) find meaning in/i,
+    /the reason for your existence is/i
+  ];
+  
+  return unsupportedClaimPatterns.some(pattern => pattern.test(response));
+};
+
+/**
+ * Check for inappropriate attributions of meaning to user's experiences
+ */
+const containsInappropriateMeaningAttributions = (
+  response: string, 
+  userInput: string
+): boolean => {
+  // This happens when Roger assigns meaning to something without patient input
+  const attributionPatterns = [
+    /this (suffering|challenge|difficulty) means that/i,
+    /the (meaning|purpose|significance) of (this|your) (situation|experience) is/i,
+    /this happened (to you|in your life) (because|so that)/i
+  ];
+  
+  // If user mentioned looking for meaning, attributions are more acceptable
+  const userSeekingMeaning = /meaning|purpose|why.+happen|reason for/i.test(userInput);
+  
+  // If user is seeking meaning, be more permissive
+  if (userSeekingMeaning) {
+    return false;
   }
+  
+  return attributionPatterns.some(pattern => pattern.test(response));
+};
+
+/**
+ * Check for hallucinatory life events in logotherapy context
+ */
+const containsHallucinatoryLifeEvents = (
+  response: string,
+  conversationHistory: string[]
+): boolean => {
+  // Extract specific life events mentioned in response
+  const lifeEventPatterns = [
+    /when you (experienced|went through|faced) ([^,.]+)/i,
+    /your (past|previous) (experience|encounter) with ([^,.]+)/i,
+    /during your ([^,.]+) (experience|journey|challenge)/i
+  ];
+  
+  // Extract potential hallucinated events
+  for (const pattern of lifeEventPatterns) {
+    const matches = response.match(pattern);
+    if (matches && matches.length > 2) {
+      const potentialEvent = matches[2].toLowerCase().trim();
+      
+      // Skip very short events (less likely to be specific hallucinations)
+      if (potentialEvent.length < 5) continue;
+      
+      // Check if this event is mentioned in conversation history
+      const isEventInHistory = conversationHistory.some(msg => 
+        msg.toLowerCase().includes(potentialEvent)
+      );
+      
+      if (!isEventInHistory) {
+        // Potential hallucination detected
+        return true;
+      }
+    }
+  }
+  
+  return false;
+};
+
+/**
+ * Fix logotherapy hallucinations in a response
+ */
+export const fixLogotherapyHallucinations = (
+  response: string,
+  memories: MemoryPiece[]
+): string => {
+  let fixed = response;
+  
+  // Fix unsupported existential claims
+  fixed = replaceUnsupportedExistentialClaims(fixed);
+  
+  // Fix inappropriate meaning attributions
+  fixed = replaceInappropriateMeaningAttributions(fixed);
+  
+  // Fix hallucinatory life events
+  fixed = replaceHallucinatoryLifeEvents(fixed, memories);
+  
+  return fixed;
+};
+
+/**
+ * Replace unsupported existential claims
+ */
+const replaceUnsupportedExistentialClaims = (response: string): string => {
+  let fixed = response;
+  
+  // Replace definitive meaning statements with reflective questions
+  fixed = fixed.replace(
+    /the meaning of (your|one's) life is ([^,.]+)/gi,
+    "you might find it helpful to explore what meaning feels right for you"
+  );
+  
+  fixed = fixed.replace(
+    /your purpose is (clearly|obviously|definitely) ([^,.]+)/gi,
+    "discovering your own sense of purpose is a personal journey"
+  );
+  
+  fixed = fixed.replace(
+    /you (should|must|need to) find meaning in ([^,.]+)/gi,
+    "some people find it helpful to reflect on what brings meaning to their lives"
+  );
+  
+  return fixed;
+};
+
+/**
+ * Replace inappropriate meaning attributions
+ */
+const replaceInappropriateMeaningAttributions = (response: string): string => {
+  let fixed = response;
+  
+  // Replace attributions with reflective questions
+  fixed = fixed.replace(
+    /this (suffering|challenge|difficulty) means that ([^,.]+)/gi,
+    "I wonder what this $1 means to you"
+  );
+  
+  fixed = fixed.replace(
+    /the (meaning|purpose|significance) of (this|your) (situation|experience) is ([^,.]+)/gi,
+    "what do you think the $1 of this $3 might be for you"
+  );
+  
+  return fixed;
+};
+
+/**
+ * Replace hallucinatory life events
+ */
+const replaceHallucinatoryLifeEvents = (response: string, memories: MemoryPiece[]): string => {
+  let fixed = response;
+  
+  // For each potential life event pattern
+  const lifeEventPatterns = [
+    [/when you (experienced|went through|faced) ([^,.]+)/gi, "when people face challenges like this"],
+    [/your (past|previous) (experience|encounter) with ([^,.]+)/gi, "past experiences"],
+    [/during your ([^,.]+) (experience|journey|challenge)/gi, "during difficult times"]
+  ];
+  
+  for (const [pattern, replacement] of lifeEventPatterns) {
+    fixed = fixed.replace(pattern as RegExp, replacement as string);
+  }
+  
+  return fixed;
+};
+
+// Export main functions
+export default {
+  checkLogotherapyHallucinations,
+  fixLogotherapyHallucinations
 };

@@ -1,4 +1,3 @@
-
 /**
  * Cleveland Data
  * 
@@ -46,12 +45,27 @@ export interface WeatherFact {
   fact: string;
 }
 
+// Sports update structure
+export interface SportsUpdate {
+  team: string;
+  date: string;
+  update: string;
+}
+
+// Small talk topic structure
+export interface SmallTalkTopic {
+  topic: string;
+  prompt: string;
+}
+
 // Complete Cleveland knowledge base
 export interface ClevelandKnowledgeBase {
   places: ClevelandPlace[];
   sportsFacts: SportsFact[];
   tourismInfo: TourismInfo[];
   weatherFacts: WeatherFact[];
+  sportsUpdates: SportsUpdate[];
+  smallTalkTopics: SmallTalkTopic[];
   lastUpdated: number;
 }
 
@@ -169,6 +183,46 @@ let clevelandDataStore: ClevelandKnowledgeBase = {
       fact: 'Fall in Cleveland features beautiful foliage changes, especially in the Metroparks'
     }
   ],
+  sportsUpdates: [
+    {
+      team: 'cavaliers',
+      date: '2025-05-01',
+      update: 'The Cavs completed a first-round sweep against the Heat, winning Game 4 with a score of 128-110'
+    },
+    {
+      team: 'cavaliers',
+      date: '2025-04-27',
+      update: 'Donovan Mitchell scored 32 points to lead the Cavs to a Game 3 victory against Miami'
+    },
+    {
+      team: 'guardians',
+      date: '2025-05-02',
+      update: 'The Guardians won their third straight game, beating Detroit 5-2 with Steven Kwan going 3-for-4'
+    },
+    {
+      team: 'browns',
+      date: '2025-04-25',
+      update: 'The Browns selected defensive end Marcus Williams with their first-round pick in the NFL Draft'
+    }
+  ],
+  smallTalkTopics: [
+    {
+      topic: 'weather',
+      prompt: 'The lake effect weather in Cleveland can change so quickly - one minute it's sunny, the next it's snowing. How have you been handling our unpredictable weather lately?'
+    },
+    {
+      topic: 'food',
+      prompt: 'I was just at the West Side Market this weekend picking up some pierogies. Do you have any favorite local food spots around Cleveland?'
+    },
+    {
+      topic: 'sports',
+      prompt: 'The energy at Progressive Field during Guardians games is something special, especially when they're on a winning streak. Have you been following any of our Cleveland teams lately?'
+    },
+    {
+      topic: 'neighborhoods',
+      prompt: 'I love how each Cleveland neighborhood has its own unique character. Ohio City has all the breweries, Tremont has great restaurants... Do you have a favorite area to spend time in?'
+    }
+  ],
   lastUpdated: Date.now()
 };
 
@@ -203,6 +257,37 @@ export const loadClevelandData = (): boolean => {
  */
 export const getClevelandData = (): ClevelandKnowledgeBase => {
   return clevelandDataStore;
+};
+
+/**
+ * Get recent sports updates for a specific team
+ */
+export const getRecentSportsUpdates = (team?: 'cavs' | 'browns' | 'guardians'): string[] => {
+  const updates = clevelandDataStore.sportsUpdates;
+  
+  // If team is specified, filter by team
+  const filteredUpdates = team 
+    ? updates.filter(update => 
+        team === 'cavs' ? update.team === 'cavaliers' : update.team === team
+      )
+    : updates;
+  
+  // Return the update strings
+  return filteredUpdates.map(update => update.update);
+};
+
+/**
+ * Get a random small talk topic about Cleveland
+ */
+export const getRandomSmallTalkTopic = (): string => {
+  const topics = clevelandDataStore.smallTalkTopics;
+  if (topics.length === 0) {
+    return "Cleveland has such a rich cultural history. What's your experience been like living here?";
+  }
+  
+  // Pick a random topic
+  const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+  return randomTopic.prompt;
 };
 
 /**
@@ -271,4 +356,3 @@ export const getWeatherFacts = (season?: 'winter' | 'spring' | 'summer' | 'fall'
 
 // Initialize with any stored data on module load
 loadClevelandData();
-

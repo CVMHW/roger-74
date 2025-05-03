@@ -31,11 +31,13 @@ export const generateSmallTalkResponse = (userInput: string, messageCount: numbe
     if (/\b(weekend|plans|vacation|holiday|trip)\b/i.test(userInput)) {
       // Check if we have memory about their plans
       try {
-        const relevantMemories = retrieveRelevantMemories(userInput, ['plans', 'weekend', 'vacation']);
+        const relevantMemories = retrieveRelevantMemories(userInput);
         
         if (relevantMemories.length > 0) {
-          const planMemory = relevantMemories[0].content;
-          return `I remember you mentioned ${planMemory.substring(0, 30)}... How are you feeling about your plans now?`;
+          const planMemory = relevantMemories[0];
+          if (planMemory && typeof planMemory !== 'string') {
+            return `I remember you mentioned ${planMemory.content.substring(0, 30)}... How are you feeling about your plans now?`;
+          }
         }
       } catch (memoryError) {
         console.error('Error retrieving plan memories:', memoryError);
@@ -64,11 +66,13 @@ export const generateSmallTalkResponse = (userInput: string, messageCount: numbe
     if (/\b(work|job|boss|meeting|colleague|office)\b/i.test(userInput)) {
       // Try to find work-related memories
       try {
-        const workMemories = retrieveRelevantMemories(userInput, ['work', 'job', 'career']);
+        const workMemories = retrieveRelevantMemories(userInput);
         
         if (workMemories.length > 0) {
-          const workMemory = workMemories[0].content;
-          return `I remember you mentioned ${workMemory.substring(0, 30)}... How has work been affecting you lately?`;
+          const workMemory = workMemories[0];
+          if (workMemory && typeof workMemory !== 'string') {
+            return `I remember you mentioned ${workMemory.content.substring(0, 30)}... How has work been affecting you lately?`;
+          }
         }
       } catch (memoryError) {
         console.error('Error retrieving work memories:', memoryError);

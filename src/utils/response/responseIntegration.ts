@@ -1,212 +1,199 @@
 
 /**
- * Response Integration Module
+ * Response Integration
  * 
- * Applies unconditional rules and integrates memory directly into responses
- * to ensure Roger maintains memory usage in every interaction.
- * 
- * This module serves as another layer of memory redundancy in the system.
+ * Combines multiple response enhancement systems
  */
 
-import { getContextualMemory, recordToMemory } from '../nlpProcessor';
-import { applyMemoryRules } from '../rulesEnforcement/memoryEnforcer';
-import { getFiveResponseMemory, getLastPatientMessage } from '../memory/fiveResponseMemory';
-import { retrieveRelevantMemories } from '../memory/memoryBank';
+import { retrieveRelevantMemories, MemoryPiece } from '../memory/memoryBank';
+import { detectClevelandTopics } from '../cleveland/clevelandTopics';
+import { enhanceResponseWithClevelandPerspective } from '../cleveland/clevelandResponses';
+import { detectStressors } from '../stressors/stressorDetection';
+import { enhanceWithStressorAwareness } from './processor/stressorEnhancement';
 
 /**
- * Apply unconditional rules to a response
- * Always checks if memory is being used
+ * Integrate multiple response enhancement systems
  */
-export const applyUnconditionalRules = (
-  response: string,
+export const integrateResponseEnhancements = (
+  baseResponse: string,
   userInput: string,
-  messageCount: number,
-  conversationHistory: string[] = []
-): string => {
+  options: {
+    enhanceCleveland?: boolean;
+    enhanceStressors?: boolean;
+    enhanceWithMemory?: boolean;
+  } = {}
+): string {
+  let enhancedResponse = baseResponse;
+  
   try {
-    console.log("UNCONDITIONAL RULES: Applying to response");
+    const {
+      enhanceCleveland = true,
+      enhanceStressors = true,
+      enhanceWithMemory = true
+    } = options;
     
-    // Always force memory rule application
-    return applyMemoryRules(response, userInput, conversationHistory);
-  } catch (error) {
-    console.error('Error applying unconditional rules:', error);
-    
-    // Even on error, ensure response has memory reference
-    try {
-      // Try to get memory from any available system
-      let memoryReference = "";
-      
-      // Try 5ResponseMemory first
-      const lastPatientMessage = getLastPatientMessage();
-      if (lastPatientMessage) {
-        memoryReference = `I remember you mentioned "${lastPatientMessage.substring(0, 20)}..." `;
-      } else {
-        // Fall back to primary memory system
-        const memory = getContextualMemory(userInput);
-        memoryReference = `I remember our conversation about ${memory.dominantTopics[0] || 'your concerns'}. `;
+    // Enhance with Cleveland perspective if needed
+    if (enhanceCleveland) {
+      const clevelandTopics = detectClevelandTopics(userInput);
+      if (clevelandTopics.length > 0) {
+        enhancedResponse = enhanceResponseWithClevelandPerspective(
+          enhancedResponse, 
+          userInput,
+          clevelandTopics
+        );
       }
-      
-      // Return memory-enhanced fallback
-      return memoryReference + response;
-    } catch (memoryError) {
-      console.error('Error creating memory reference during error recovery:', memoryError);
-      return `I remember what you've shared with me. ${response}`;
     }
+    
+    // Enhance with stressor awareness if needed
+    if (enhanceStressors) {
+      const stressors = detectStressors(userInput);
+      if (stressors.length > 0) {
+        enhancedResponse = enhanceWithStressorAwareness(
+          enhancedResponse,
+          userInput
+        );
+      }
+    }
+    
+    // Enhance with memory if needed
+    if (enhanceWithMemory) {
+      enhancedResponse = enhanceWithMemoryReferences(
+        enhancedResponse,
+        userInput
+      );
+    }
+    
+    return enhancedResponse;
+  } catch (error) {
+    console.error("Error integrating response enhancements:", error);
+    return baseResponse;
   }
 };
 
 /**
- * Enhance response with rapport-building elements
- * Always ensures memory utilization
+ * Enhance response with memory references
  */
-export const enhanceResponseWithRapport = (
-  response: string,
-  userInput: string,
-  messageCount: number,
-  conversationHistory: string[] = []
-): string => {
-  try {
-    console.log("RAPPORT BUILDING: Enhancing response");
-    
-    // Check if response already contains memory reference
-    const hasMemoryReference = /remember|mentioned|earlier|previously|you've shared|you told me|we talked about|you said|as we discussed|based on what you/i.test(response);
-    
-    if (hasMemoryReference) {
-      return response; // Already using memory
-    }
-    
-    // Try to get relevant memories from MemoryBank
-    try {
-      const relevantMemories = retrieveRelevantMemories(userInput);
-      
-      if (relevantMemories.length > 0) {
-        const memory = relevantMemories[0];
-        return `I remember you mentioned ${memory.content.substring(0, 30)}... ${response}`;
-      }
-    } catch (memoryError) {
-      console.error('Error retrieving from MemoryBank during rapport building:', memoryError);
-    }
-    
-    // Try to get memory from 5ResponseMemory
-    try {
-      const fiveMemory = getFiveResponseMemory();
-      if (fiveMemory.length > 1) {
-        const patientEntries = fiveMemory.filter(entry => entry.role === 'patient');
-        if (patientEntries.length > 1) {
-          // Use second most recent to avoid repetition
-          const memoryEntry = patientEntries[1];
-          return `I remember you told me about ${memoryEntry.content.substring(0, 20)}... ${response}`;
-        }
-      }
-    } catch (memoryError) {
-      console.error('Error retrieving from 5ResponseMemory during rapport building:', memoryError);
-    }
-    
-    // Fall back to primary memory system
-    const memory = getContextualMemory(userInput);
-    if (memory.dominantTopics.length > 0) {
-      return `I remember we were talking about ${memory.dominantTopics[0]}. ${response}`;
-    }
-    
-    // Last resort
-    return `I remember what we've been discussing. ${response}`;
-    
-  } catch (error) {
-    console.error('Error enhancing response with rapport building:', error);
-    return response; // Return original response if error occurs
-  }
-};
-
-/**
- * Add memory integration to any response type
- */
-export const integrateMemoryIntoResponse = (
-  responseType: string,
+const enhanceWithMemoryReferences = (
   response: string,
   userInput: string
 ): string => {
   try {
-    console.log(`MEMORY INTEGRATION: Adding to ${responseType} response`);
-    
-    // Check if already using memory
-    if (/remember|mentioned|earlier|previously|you've shared|you told me|we talked about|you said|as we discussed|based on what you/i.test(response)) {
+    // Skip if response already has memory markers
+    if (hasMemoryMarkers(response)) {
       return response;
     }
     
-    // Different memory phrases based on response type
-    let memoryPhrase = "";
+    // Get relevant memories
+    const memories = retrieveRelevantMemories(userInput);
     
-    switch (responseType) {
-      case 'cultural':
-        memoryPhrase = "Based on what you've shared about your background, ";
-        break;
-      case 'smalltalk':
-        memoryPhrase = "As we've been talking, I remember you mentioned ";
-        break;
-      case 'reflection':
-        memoryPhrase = "From our conversation, I recall you said ";
-        break;
-      case 'safety':
-        memoryPhrase = "Given what you've shared with me, ";
-        break;
-      default:
-        memoryPhrase = "I remember you mentioned ";
+    // If no relevant memories, return original
+    if (memories.length === 0) {
+      return response;
     }
     
-    // Try to get specific memory content
-    try {
-      const relevantMemories = retrieveRelevantMemories(userInput);
-      
-      if (relevantMemories.length > 0) {
-        const memory = relevantMemories[0];
-        return `${memoryPhrase}${memory.content.substring(0, 20)}... ${response}`;
-      }
-    } catch (memoryError) {
-      console.error('Failed to retrieve relevant memories for integration:', memoryError);
+    // Get highest importance memory
+    const significantMemory = getSafeMemory(memories);
+    
+    // If no safe memory found, return original
+    if (!significantMemory) {
+      return response;
     }
     
-    // Fall back to the memory phrase without specific content
-    return `${memoryPhrase}your concerns. ${response}`;
+    // For very short responses, add memory at end
+    if (response.length < 100) {
+      return `${response} ${significantMemory}`;
+    }
     
+    // For longer responses, insert memory in middle
+    const sentences = response.split(/(?<=[.!?])\s+/);
+    if (sentences.length > 2) {
+      const insertPoint = Math.floor(sentences.length / 2);
+      return [
+        ...sentences.slice(0, insertPoint),
+        significantMemory,
+        ...sentences.slice(insertPoint)
+      ].join(' ');
+    }
+    
+    // Fallback to append
+    return `${response} ${significantMemory}`;
   } catch (error) {
-    console.error('Error integrating memory into response:', error);
+    console.error("Error enhancing with memory references:", error);
     return response;
   }
 };
 
 /**
- * Ensure any cultural response uses memory
+ * Get a safe memory to include
  */
-export const enhanceCulturalResponse = (response: string, userInput: string): string => {
-  return integrateMemoryIntoResponse('cultural', response, userInput);
+const getSafeMemory = (memories: MemoryPiece[]): string | null => {
+  if (memories.length === 0) return null;
+  
+  // Return the first memory with content
+  for (const memory of memories) {
+    if (typeof memory.content === 'string' && memory.content.trim().length > 0) {
+      return memory.content;
+    }
+  }
+  
+  return null;
 };
 
 /**
- * Ensure any small talk response uses memory
+ * Check if response already has memory markers
  */
-export const enhanceSmallTalkResponse = (response: string, userInput: string): string => {
-  return integrateMemoryIntoResponse('smalltalk', response, userInput);
+const hasMemoryMarkers = (response: string): boolean => {
+  const memoryMarkers = [
+    /you mentioned/i,
+    /you told me/i,
+    /you shared/i,
+    /previously you said/i,
+    /earlier you noted/i,
+    /I remember you/i
+  ];
+  
+  return memoryMarkers.some(marker => marker.test(response));
 };
 
 /**
- * Ensure any reflection response uses memory
+ * Enhance small talk response
  */
-export const enhanceReflectionResponse = (response: string, userInput: string): string => {
-  return integrateMemoryIntoResponse('reflection', response, userInput);
+export const enhanceSmallTalkResponse = (
+  response: string,
+  userInput: string
+): string => {
+  try {
+    // Check for Cleveland-specific content
+    const clevelandTopics = detectClevelandTopics(userInput);
+    
+    // If Cleveland content, enhance with Cleveland perspective
+    if (clevelandTopics.length > 0) {
+      return enhanceResponseWithClevelandPerspective(
+        response,
+        userInput,
+        clevelandTopics,
+        true // Force include for small talk
+      );
+    }
+    
+    // Check for stressor content
+    const stressors = detectStressors(userInput);
+    
+    // If stressor content, enhance with stressor awareness
+    if (stressors.length > 0) {
+      return enhanceWithStressorAwareness(response, userInput);
+    }
+    
+    // For general small talk, use memory enhancement
+    return enhanceWithMemoryReferences(response, userInput);
+  } catch (error) {
+    console.error("Error enhancing small talk response:", error);
+    return response;
+  }
 };
 
-/**
- * Ensure any safety response uses memory
- */
-export const enhanceSafetyResponse = (response: string, userInput: string): string => {
-  return integrateMemoryIntoResponse('safety', response, userInput);
-};
-
+// Export all enhancement functions
 export default {
-  applyUnconditionalRules,
-  enhanceResponseWithRapport,
-  enhanceCulturalResponse,
-  enhanceSmallTalkResponse,
-  enhanceReflectionResponse,
-  enhanceSafetyResponse
+  integrateResponseEnhancements,
+  enhanceSmallTalkResponse
 };
