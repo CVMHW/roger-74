@@ -11,6 +11,8 @@ import { addToMemoryBank } from '../../memory/memoryBank';
 import { applyResponseRules } from './ruleProcessing';
 import { handleResponseProcessingError } from './errorHandling';
 import { enhanceWithMemoryBank, processAttentionResults } from './memoryEnhancement';
+import { handlePotentialHallucinations, applyEarlyConversationRAG } from './hallucinationHandler';
+import { getConversationMessageCount } from '../../memory/newConversationDetector';
 
 /**
  * Process response through master rules system - core implementation
@@ -50,17 +52,36 @@ export const processResponseCore = (
       conversationHistory
     );
     
+    // Get accurate message count from conversation detector
+    const actualMessageCount = getConversationMessageCount();
+    
+    // For early conversations (first 1-2 messages), apply special RAG
+    let processedResponse = memoryBankEnhancedResponse;
+    if (actualMessageCount <= 2) {
+      processedResponse = applyEarlyConversationRAG(
+        processedResponse, 
+        userInput
+      );
+    }
+    
+    // NEW: Apply comprehensive hallucination prevention system
+    const { processedResponse: hallucinationCheckedResponse } = handlePotentialHallucinations(
+      processedResponse,
+      userInput,
+      conversationHistory
+    );
+    
     // CRITICAL: Record final response to all memory systems
     addToMemoryBank(
-      memoryBankEnhancedResponse, 
+      hallucinationCheckedResponse, 
       'roger', 
       attentionResults.emotionalContext,
       attentionResults.dominantTopics,
       0.7 // Good importance for roger responses
     );
-    addToFiveResponseMemory('roger', memoryBankEnhancedResponse);
+    addToFiveResponseMemory('roger', hallucinationCheckedResponse);
     
-    return memoryBankEnhancedResponse;
+    return hallucinationCheckedResponse;
   } catch (error) {
     if (error instanceof Error) {
       return handleResponseProcessingError(error, userInput, response);
