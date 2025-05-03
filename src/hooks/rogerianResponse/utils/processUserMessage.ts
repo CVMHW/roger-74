@@ -121,13 +121,7 @@ export const processUserMessage = async (
       response.text,
       userInput,
       messageCount,
-      conversationHistory,
-      { 
-        isEverydaySituation,
-        isSmallTalkContext,
-        isIntroductionContext,
-        isPersonalSharingContext
-      }
+      conversationHistory
     );
     
     // Record to memory systems

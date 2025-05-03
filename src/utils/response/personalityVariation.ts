@@ -8,7 +8,6 @@
 
 import { 
   PersonalityMode,
-  getRandomPersonality, 
   generateEnhancedResponse,
   generateSpontaneousResponse
 } from './spontaneityGenerator';
@@ -39,7 +38,7 @@ export const addResponseVariety = (
   try {
     console.log("Adding personality variation and spontaneity to response");
     
-    // Select a personality mode based on user input content
+    // Select a personality mode based on user input content - USING ROGER'S ESTABLISHED PERSONALITY
     let personalityMode: PersonalityMode = selectAppropriatePersonality(userInput);
     
     console.log(`Selected personality mode: ${personalityMode}`);
@@ -103,6 +102,7 @@ export const addResponseVariety = (
 
 /**
  * Select appropriate personality based on user input content
+ * Uses Roger's established personality traits from his background
  */
 const selectAppropriatePersonality = (userInput: string): PersonalityMode => {
   const input = userInput.toLowerCase();
@@ -127,8 +127,8 @@ const selectAppropriatePersonality = (userInput: string): PersonalityMode => {
     return 'warm';
   }
   
-  // Default to a random personality
-  return getRandomPersonality();
+  // Default to balanced personality - NOT RANDOM
+  return 'balanced';
 };
 
 /**

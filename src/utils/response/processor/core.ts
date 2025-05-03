@@ -92,7 +92,7 @@ export const processCore = (
     const patternResult = detectConversationPatterns(processedResponse, conversationHistory);
     
     // Add personality variation based on the selected approach
-    // For everyday social situations, use maximum spontaneity and creativity
+    // For everyday social situations, use maximum spontaneity and conversational tone
     if (isEverydaySituation || isSmallTalkContext) {
       console.log("EVERYDAY SITUATION: Using maximum spontaneity and conversational tone");
       processedResponse = addResponseVariety(
@@ -123,7 +123,7 @@ export const processCore = (
       // Apply unconditional rules as minimal safe processing
       const basicProcessed = applyUnconditionalRules(response, userInput, messageCount);
       // Apply grammar correction, but don't limit length in error cases
-      return correctGrammar(basicProcessed, userInput);
+      return correctGrammar(basicProcessed);
     } catch (nestedError) {
       console.error('Critical failure in response processing:', nestedError);
       return response; // Return original response if all processing fails
@@ -133,3 +133,6 @@ export const processCore = (
 
 // Export processed response utility for compatibility
 export const processResponseCore = processCore;
+
+// Re-export important components for direct access
+export { selectResponseApproach, adjustApproachForConversationFlow } from './approachSelector';

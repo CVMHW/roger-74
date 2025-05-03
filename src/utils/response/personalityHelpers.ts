@@ -24,5 +24,6 @@ export const getRogerPerspectivePhrase = (userInput: string, messageCount: numbe
   const enhancedFeelings = identifyEnhancedFeelings(userInput);
   const primaryFeeling = enhancedFeelings.length > 0 ? enhancedFeelings[0].detectedWord : '';
   
+  // Use Roger's established personality
   return getRogerPersonalityInsight(userInput, primaryFeeling, isPastThirtyMinutes);
 };

@@ -280,3 +280,9 @@ export const handleMemoryHallucinations = (
 const hasMemoryReference = (response: string): boolean => {
   return /you (mentioned|said|told me|indicated)|earlier you|previously you|we (discussed|talked about)|I remember|as you (mentioned|said|noted)|we've been/i.test(response);
 };
+
+// Fix the type issue
+const isBeyondThreshold = (value: number | unknown, threshold: number): boolean => {
+  if (typeof value !== 'number') return false;
+  return value > threshold;
+};
