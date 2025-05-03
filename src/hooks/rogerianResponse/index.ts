@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { MessageType } from '../../components/Message';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
@@ -29,6 +28,7 @@ import { processResponseThroughMasterRules } from '../../utils/response/response
 import { checkAllRules } from '../../utils/rulesEnforcement/rulesEnforcer';
 import { applyMemoryRules } from '../../utils/rulesEnforcement/memoryEnforcer';
 import { addToFiveResponseMemory, verifyFiveResponseMemorySystem } from '../../utils/memory/fiveResponseMemory';
+import { processThroughChatLogReview } from '../../utils/response/chatLogReviewer';
 
 // Initialize the NLP model when the module loads
 initializeNLPModel().catch(error => console.error('Failed to initialize NLP model:', error));
@@ -38,7 +38,8 @@ verifyFiveResponseMemorySystem();
 
 /**
  * Hook for generating Rogerian responses to user messages
- * Enhanced with pattern-matching NLP capabilities and UNCONDITIONAL memory retention
+ * Enhanced with pattern-matching NLP capabilities, UNCONDITIONAL memory retention,
+ * and TERTIARY SAFEGUARD for comprehensive chat log review
  */
 const useRogerianResponse = (): UseRogerianResponseReturn => {
   // UNCONDITIONAL: Run rule compliance check on every execution
@@ -116,11 +117,11 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
     return handlePotentialDeception(originalMessage, followUpMessage, addToResponseHistory);
   }, [addToResponseHistory]);
   
-  // Enhanced process user message with pattern-matching NLP capabilities 
-  // and UNCONDITIONAL memory utilization
+  // Enhanced process user message with pattern-matching NLP capabilities,
+  // UNCONDITIONAL memory utilization, and TERTIARY SAFEGUARD for chat log review
   const processUserMessage = useCallback(async (userInput: string): Promise<MessageType> => {
     try {
-      console.log("UNCONDITIONAL RULE: Processing new user message");
+      console.log("TERTIARY SAFEGUARD: Processing new user message with complete chat log review");
       
       // Run rule enforcement check at beginning of processing
       checkAllRules();
@@ -258,13 +259,20 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
         conversationHistory
       );
       
+      // NEW: TERTIARY SAFEGUARD - Process through comprehensive chat log review
+      finalResponseText = processThroughChatLogReview(
+        finalResponseText,
+        userInput,
+        conversationHistory
+      );
+      
       // UNCONDITIONAL RULE: Record final response to memory
       recordToMemory(userInput, finalResponseText);
       
       // CRITICAL: Record to 5ResponseMemory
       addToFiveResponseMemory('roger', finalResponseText);
       
-      // Return the memory-enhanced response
+      // Return the memory-enhanced response with tertiary safeguard applied
       const finalResponse = createMessage(finalResponseText, 'roger');
       return finalResponse;
       

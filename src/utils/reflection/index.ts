@@ -1,7 +1,7 @@
 
 /**
  * Public API for reflection utilities
- * With MULTI-MEMORY system integration
+ * With MULTI-MEMORY system integration and TERTIARY SAFEGUARD
  */
 
 import { ConcernType } from "./reflectionTypes";
@@ -10,6 +10,7 @@ import { identifyEnhancedFeelings } from "./detectors/basicFeelingDetector";
 import { generateReflectionResponse } from "./generators/reflectionResponseGenerator";
 import { recordToMemory } from '../nlpProcessor';
 import { addToFiveResponseMemory } from '../memory/fiveResponseMemory';
+import { processThroughChatLogReview } from '../response/chatLogReviewer';
 
 // Core reflection exports
 export {
@@ -19,9 +20,11 @@ export {
 };
 
 // Memory system integration helpers for reflection utilities
+// Now with tertiary safeguard integration
 export const recordReflectionToAllMemorySystems = (
   userInput: string,
-  reflection: string
+  reflection: string,
+  conversationHistory: string[] = []
 ) => {
   try {
     // Record to primary memory system
@@ -31,10 +34,28 @@ export const recordReflectionToAllMemorySystems = (
     addToFiveResponseMemory('patient', userInput);
     addToFiveResponseMemory('roger', reflection);
     
-    return true;
+    // Apply tertiary safeguard if conversation history is available
+    if (conversationHistory && conversationHistory.length > 0) {
+      // Process through chat log review to ensure continuity
+      const enhancedReflection = processThroughChatLogReview(
+        reflection,
+        userInput,
+        conversationHistory
+      );
+      
+      // If the reflection was enhanced, update both memory systems
+      if (enhancedReflection !== reflection) {
+        recordToMemory(userInput, enhancedReflection);
+        addToFiveResponseMemory('roger', enhancedReflection);
+        
+        return enhancedReflection;
+      }
+    }
+    
+    return reflection;
   } catch (error) {
     console.error("Failed to record reflection to memory systems:", error);
-    return false;
+    return reflection;
   }
 };
 

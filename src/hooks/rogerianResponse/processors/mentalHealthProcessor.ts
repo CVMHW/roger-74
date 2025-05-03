@@ -9,7 +9,7 @@ import { addToFiveResponseMemory } from '../../../utils/memory/fiveResponseMemor
  * Process mental health related concerns
  * With MULTI-MEMORY system integration
  */
-export const processMentalHealthConcerns = (
+export const processMentalHealthConcerns = async (
   userInput: string,
   concernType: ConcernType,
   baseProcessUserMessage: (userInput: string, responseFn: (input: string) => string, concernFn: () => ConcernType | null, multiplier?: number) => Promise<MessageType>,

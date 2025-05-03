@@ -1,5 +1,5 @@
 
 import useRogerianResponse from './rogerianResponse';
 
-// CRITICAL: Export useRogerianResponse hook with BOTH memory systems
+// Export the hook with the new tertiary safeguard that ensures complete chat log review
 export default useRogerianResponse;
