@@ -83,6 +83,55 @@ export const fixRepeatedContent = (responseText: string): string => {
 };
 
 /**
+ * Fixes the "dealing with" pattern repetition issue
+ */
+export const fixDealingWithPattern = (responseText: string): string => {
+  // Fix repeated "dealing with" patterns
+  let fixedText = responseText;
+  
+  // Fix the most common patterns
+  fixedText = fixedText.replace(
+    /I hear (you'?re|you are) dealing with I hear (you'?re|you are) dealing with/gi, 
+    "I hear you're dealing with"
+  );
+  
+  fixedText = fixedText.replace(
+    /dealing with dealing with/gi,
+    "dealing with"
+  );
+  
+  // Fix bizarre concatenations 
+  fixedText = fixedText.replace(
+    /I hear you're dealing with you/gi,
+    "I hear what you"
+  );
+  
+  return fixedText;
+};
+
+/**
+ * Fixes the "you may have indicated" pattern issue
+ */
+export const fixIndicatedPattern = (responseText: string): string => {
+  // Fix the problematic patterns with "you may have indicated"
+  let fixedText = responseText;
+  
+  // Replace the most problematic pattern
+  fixedText = fixedText.replace(
+    /you may have indicated Just a/gi,
+    "you're having"
+  );
+  
+  // Fix other variations
+  fixedText = fixedText.replace(
+    /you may have indicated/gi,
+    "you mentioned"
+  );
+  
+  return fixedText;
+};
+
+/**
  * Handles health topic hallucinations
  * Specifically targets the "we've been focusing on health" pattern
  */

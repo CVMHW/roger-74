@@ -217,3 +217,4 @@ export const categorizeFlags = (flags: EmergencyPathFlag[]): EmergencyPathFlags 
       flag.type.includes('malformed'))
   };
 };
+
