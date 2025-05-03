@@ -1,3 +1,4 @@
+
 import { toast } from '../components/ui/sonner';
 
 // Define model configuration
@@ -9,6 +10,18 @@ let modelLoaded = false;
 
 // Flag to track if we should attempt to use transformer models
 let useTransformerModels = false;
+
+// Enhanced memory system for persistent storage
+const MEMORY_STORAGE = {
+  patientStatements: [] as string[],
+  rogerResponses: [] as string[],
+  detectedEmotions: {} as Record<string, number>,
+  detectedTopics: {} as Record<string, number>,
+  conversationSummary: [] as string[],
+  detectedProblems: [] as string[],
+  lastUpdated: Date.now(),
+  persistentMemory: true
+};
 
 /**
  * Initialize the NLP model asynchronously
@@ -46,6 +59,143 @@ export const initializeNLPModel = async (): Promise<boolean> => {
     toast.error('Could not load the NLP model. Using fallback methods.');
     return false;
   }
+};
+
+/**
+ * Enhanced memory recording function - records all aspects of a conversation
+ * Treats memory retention as UNCONDITIONAL requirement
+ */
+export const recordToMemory = (
+  patientStatement: string, 
+  rogerResponse?: string, 
+  emotions?: string[], 
+  topics?: string[],
+  problems?: string[]
+): void => {
+  // Always record patient statements (UNCONDITIONAL)
+  if (patientStatement) {
+    MEMORY_STORAGE.patientStatements.push(patientStatement);
+    
+    // Limit size to prevent memory overflow while maintaining context
+    if (MEMORY_STORAGE.patientStatements.length > 100) {
+      MEMORY_STORAGE.patientStatements = MEMORY_STORAGE.patientStatements.slice(-100);
+    }
+  }
+  
+  // Record Roger's response if provided
+  if (rogerResponse) {
+    MEMORY_STORAGE.rogerResponses.push(rogerResponse);
+    
+    if (MEMORY_STORAGE.rogerResponses.length > 100) {
+      MEMORY_STORAGE.rogerResponses = MEMORY_STORAGE.rogerResponses.slice(-100);
+    }
+  }
+  
+  // Record emotions with frequency count
+  if (emotions && emotions.length > 0) {
+    emotions.forEach(emotion => {
+      MEMORY_STORAGE.detectedEmotions[emotion] = (MEMORY_STORAGE.detectedEmotions[emotion] || 0) + 1;
+    });
+  }
+  
+  // Record topics with frequency count
+  if (topics && topics.length > 0) {
+    topics.forEach(topic => {
+      MEMORY_STORAGE.detectedTopics[topic] = (MEMORY_STORAGE.detectedTopics[topic] || 0) + 1;
+    });
+  }
+  
+  // Record detected problems
+  if (problems && problems.length > 0) {
+    MEMORY_STORAGE.detectedProblems = [...new Set([...MEMORY_STORAGE.detectedProblems, ...problems])];
+  }
+  
+  // Update last interaction timestamp
+  MEMORY_STORAGE.lastUpdated = Date.now();
+  
+  // Create period summaries for long-term memory
+  if (MEMORY_STORAGE.patientStatements.length % 10 === 0) {
+    try {
+      const recentStatements = MEMORY_STORAGE.patientStatements.slice(-10);
+      const summary = createConversationSummary(recentStatements);
+      MEMORY_STORAGE.conversationSummary.push(summary);
+    } catch (error) {
+      console.error('Error creating conversation summary:', error);
+    }
+  }
+};
+
+/**
+ * Creates a summary of recent conversation for long-term memory
+ */
+const createConversationSummary = (statements: string[]): string => {
+  // Extract main topics
+  const topTopics = Object.entries(MEMORY_STORAGE.detectedTopics)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([topic]) => topic);
+    
+  // Extract main emotions
+  const topEmotions = Object.entries(MEMORY_STORAGE.detectedEmotions)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([emotion]) => emotion);
+    
+  return `Patient discussed ${topTopics.join(', ')} while expressing ${topEmotions.join(', ')}. Key statements included: "${statements[0]}", "${statements[statements.length-1]}".`;
+};
+
+/**
+ * Retrieves all memory data - UNCONDITIONAL access ensures Roger never forgets
+ */
+export const getAllMemory = (): typeof MEMORY_STORAGE => {
+  return MEMORY_STORAGE;
+};
+
+/**
+ * Gets most relevant memories based on current context - supports UNCONDITIONAL memory rule
+ */
+export const getContextualMemory = (currentInput: string): {
+  relevantStatements: string[];
+  dominantEmotion: string;
+  dominantTopics: string[];
+  detectedProblems: string[];
+  summary: string;
+} => {
+  // Find most relevant previous statements using basic keyword matching
+  const keywords = currentInput.toLowerCase().split(/\W+/).filter(word => 
+    word.length > 3 && !['this', 'that', 'with', 'would', 'could', 'have', 'been'].includes(word)
+  );
+  
+  // Find patient statements that match current context
+  const relevantStatements = MEMORY_STORAGE.patientStatements.filter(statement => 
+    keywords.some(keyword => statement.toLowerCase().includes(keyword))
+  );
+  
+  // Get dominant emotion
+  const dominantEmotion = Object.entries(MEMORY_STORAGE.detectedEmotions)
+    .sort((a, b) => b[1] - a[1])
+    .map(([emotion]) => emotion)[0] || 'neutral';
+  
+  // Get dominant topics
+  const dominantTopics = Object.entries(MEMORY_STORAGE.detectedTopics)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([topic]) => topic);
+  
+  // Create summary
+  const summary = MEMORY_STORAGE.conversationSummary.length > 0 
+    ? MEMORY_STORAGE.conversationSummary.join(' ') 
+    : "No conversation summary available yet.";
+  
+  return {
+    relevantStatements: relevantStatements.length > 0 
+      ? relevantStatements 
+      : MEMORY_STORAGE.patientStatements.slice(-3),
+    dominantEmotion,
+    dominantTopics,
+    detectedProblems: MEMORY_STORAGE.detectedProblems,
+    summary
+  };
 };
 
 /**
@@ -228,3 +378,45 @@ export function analyzeProblemSeverity(input: string): number {
   
   return Math.min(baseScore + intensityBonus, 1);
 }
+
+/**
+ * Detect problems in text using both NLP and pattern matching
+ * Ensures problems are remembered UNCONDITIONALLY
+ */
+export function detectProblems(input: string): string[] {
+  const lowerInput = input.toLowerCase();
+  const problems = [];
+  
+  // Problem pattern categories
+  const problemPatterns = [
+    { regex: /\b(can'?t sleep|insomnia|trouble sleeping|wake up|(stay|staying) awake)\b/i, problem: 'sleep-issues' },
+    { regex: /\b(anxious|anxiety|worry|worried|nervous|panic attack|on edge)\b/i, problem: 'anxiety' },
+    { regex: /\b(sad|depressed|depression|hopeless|down|blue|unhappy|miserable)\b/i, problem: 'depression' },
+    { regex: /\b(no friends|lonely|alone|isolated|no one to talk to|no social life)\b/i, problem: 'loneliness' },
+    { regex: /\b(fight|fighting|argument|broke up|divorce|separated)\b/i, problem: 'relationship-conflict' },
+    { regex: /\b(job loss|unemployed|fired|laid off|no work|can'?t find (a job|work))\b/i, problem: 'unemployment' },
+    { regex: /\b(no money|can'?t afford|debt|bills|financial|broke|poor)\b/i, problem: 'financial-stress' },
+    { regex: /\b(sick|ill|pain|disease|condition|diagnosis|chronic|symptoms)\b/i, problem: 'health-issues' },
+    { regex: /\b(drink|drinking|alcohol|drunk|sober|alcoholic|addiction|substance|drugs)\b/i, problem: 'substance-use' },
+    { regex: /\b(lost|grief|died|passed away|death|funeral|mourning)\b/i, problem: 'grief' },
+    { regex: /\b(work stress|too much work|overworked|boss|workload|burnout|job stress)\b/i, problem: 'work-stress' },
+    { regex: /\b(trauma|flashback|nightmare|ptsd|assault|attack|abuse)\b/i, problem: 'trauma' }
+  ];
+  
+  // Check each problem pattern
+  for (const pattern of problemPatterns) {
+    if (pattern.regex.test(lowerInput) && !problems.includes(pattern.problem)) {
+      problems.push(pattern.problem);
+    }
+  }
+  
+  // Record problems to memory (UNCONDITIONAL)
+  if (problems.length > 0) {
+    recordToMemory(input, undefined, undefined, undefined, problems);
+  }
+  
+  return problems;
+}
+
+// Initialize the NLP model in the background
+initializeNLPModel().catch(error => console.error('Failed to initialize NLP model:', error));

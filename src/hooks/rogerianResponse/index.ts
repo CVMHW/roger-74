@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { MessageType } from '../../components/Message';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
@@ -16,15 +17,23 @@ import { useRogerianState } from './stateManagement';
 import { handleEmotionalPatterns } from './emotionalResponseHandlers';
 import { processUserMessage as processMessage } from './messageProcessor';
 import { RecentCrisisMessage, UseRogerianResponseReturn } from './types';
-import { detectEnhancedFeelings, getPersistentFeelings, getDominantTopics } from '../../utils/reflection/feelingDetection';
+import { 
+  detectEnhancedFeelings, 
+  getPersistentFeelings, 
+  getDominantTopics, 
+  getAllMemory,
+  getContextualMemory,
+  recordToMemory
+} from '../../utils/reflection/feelingDetection';
 import { initializeNLPModel } from '../../utils/nlpProcessor';
+import { enforceMemoryRule } from '../../utils/masterRules/unconditionalRuleProtections';
 
 // Initialize the NLP model when the module loads
 initializeNLPModel().catch(error => console.error('Failed to initialize NLP model:', error));
 
 /**
  * Hook for generating Rogerian responses to user messages
- * Enhanced with transformer-based NLP capabilities
+ * Enhanced with transformer-based NLP capabilities and UNCONDITIONAL memory retention
  */
 const useRogerianResponse = (): UseRogerianResponseReturn => {
   // Hook for conversation stage management
@@ -99,10 +108,10 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
     return handlePotentialDeception(originalMessage, followUpMessage, addToResponseHistory);
   }, [addToResponseHistory]);
   
-  // Enhanced process user message with NLP capabilities
+  // Enhanced process user message with NLP capabilities and UNCONDITIONAL memory utilization
   const processUserMessage = useCallback(async (userInput: string): Promise<MessageType> => {
     try {
-      // Update conversation history and client preferences
+      // UNCONDITIONAL RULE: Always update conversation history
       updateConversationHistory(userInput);
       
       // Use enhanced NLP for better understanding
@@ -118,7 +127,10 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
           severity: feelingResult.severity,
         });
         
-        // Check for consistent emotional patterns
+        // UNCONDITIONAL RULE: Access memory for context
+        const memory = getContextualMemory(userInput);
+        
+        // Check for consistent emotional patterns - using UNCONDITIONAL memory rule
         const persistentFeelings = getPersistentFeelings();
         const dominantTopics = getDominantTopics();
         
@@ -162,6 +174,9 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
               // Update conversation stage
               updateStage();
               
+              // UNCONDITIONAL RULE: Record response to memory
+              recordToMemory(userInput, enhancedResponse);
+              
               // Return the enhanced context response
               return Promise.resolve(createMessage(enhancedResponse, 'roger'));
             }
@@ -177,6 +192,9 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
         // Update conversation stage
         updateStage();
         
+        // UNCONDITIONAL RULE: Record response to memory
+        recordToMemory(userInput, feedbackLoopResponse);
+        
         // Create a message with the recovery response
         return Promise.resolve(createMessage(feedbackLoopResponse, 'roger'));
       }
@@ -191,11 +209,14 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
       );
       
       if (emotionalResponse) {
+        // UNCONDITIONAL RULE: Record response to memory
+        recordToMemory(userInput, emotionalResponse.text);
+        
         return emotionalResponse;
       }
       
       // Process standard messages
-      return processMessage(
+      const response = await processMessage(
         userInput,
         detectConcerns,
         generateResponse,
@@ -204,8 +225,21 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
         clientPreferences,
         updateStage
       );
+      
+      // UNCONDITIONAL RULE: Record final response to memory
+      recordToMemory(userInput, response.text);
+      
+      return response;
     } catch (error) {
       console.error("Error in processUserMessage:", error);
+      
+      // UNCONDITIONAL RULE: Even in error, attempt to record the interaction
+      try {
+        recordToMemory(userInput, "Error processing response");
+      } catch (memoryError) {
+        console.error("Failed to record to memory during error:", memoryError);
+      }
+      
       // Return a fallback response if an error occurs
       return Promise.resolve(createMessage(
         "I'm sorry, I'm having trouble responding right now. Could you try again?", 

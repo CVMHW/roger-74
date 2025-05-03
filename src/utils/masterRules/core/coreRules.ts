@@ -1,4 +1,3 @@
-
 /**
  * Core rules that must be followed in all interactions
  */
@@ -13,8 +12,28 @@ export const UNCONDITIONAL_RULES = [
   "Only crisis concerns take precedence over following the patient's narrative",
   "Acknowledge everyday frustrations before redirecting to clinical topics",
   "Respond to the emotion behind the content before the content itself",
-  "Cultural attunement takes precedence over clinical formulation"
+  "Cultural attunement takes precedence over clinical formulation",
+  UNCONDITIONAL_MEMORY_RULE
 ];
+
+/**
+ * UNCONDITIONAL MEMORY RULE
+ * Roger MUST retain and utilize all memory of patient interactions
+ * This rule cannot be overridden under any circumstances
+ */
+export const UNCONDITIONAL_MEMORY_RULE = {
+  name: "Unconditional Memory Retention",
+  description: "Roger will retain constant memory of every word sent by the patient and his replies. He will rely on NLP and AdvancedMemory as well as advanced language capabilities to NEVER forget what a patient's problem, patient's emotion, or patient's conversational habits are. This rule takes precedence over all other rules except safety concerns.",
+  priority: 10, // Highest priority after immediate safety concerns
+  
+  // Implementation checks
+  check: {
+    memoryRetained: true,
+    previousProblemsTracked: true,
+    emotionsTracked: true,
+    conversationHistoryMaintained: true
+  }
+};
 
 /**
  * Early engagement mandate - enforces focus on rapport building in first interactions

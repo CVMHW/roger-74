@@ -8,93 +8,19 @@ import { FeelingCategory, DevelopmentalStage } from './reflectionTypes';
 import { EnhancedFeelingResult, FeelingDetectionResult, identifyEnhancedFeelings, identifyFeelings } from './detectors/basicFeelingDetector';
 import { detectAgeAppropriateEmotions } from './detectors/ageAppropriateDetector';
 import { extractContextualElements } from './detectors/contextExtractor';
-import { detectEmotion, extractKeyTopics, analyzeProblemSeverity } from '../nlpProcessor';
-
-// Memory storage for conversation history
-const memoryStore: {
-  detectedFeelings: Map<string, number>;
-  detectedTopics: Map<string, number>;
-  conversationHistory: string[];
-  lastUpdated: number;
-} = {
-  detectedFeelings: new Map(),
-  detectedTopics: new Map(),
-  conversationHistory: [],
-  lastUpdated: Date.now()
-};
-
-/**
- * Update memory store with new detected feelings and topics
- */
-export const updateMemoryStore = (
-  message: string,
-  feelings: string[],
-  topics: string[]
-): void => {
-  // Update conversation history (keep last 10 messages)
-  memoryStore.conversationHistory.push(message);
-  if (memoryStore.conversationHistory.length > 10) {
-    memoryStore.conversationHistory.shift();
-  }
-  
-  // Update feeling frequencies
-  feelings.forEach(feeling => {
-    const currentCount = memoryStore.detectedFeelings.get(feeling) || 0;
-    memoryStore.detectedFeelings.set(feeling, currentCount + 1);
-  });
-  
-  // Update topic frequencies
-  topics.forEach(topic => {
-    const currentCount = memoryStore.detectedTopics.get(topic) || 0;
-    memoryStore.detectedTopics.set(topic, currentCount + 1);
-  });
-  
-  // Update timestamp
-  memoryStore.lastUpdated = Date.now();
-};
-
-/**
- * Get persistent feelings (mentioned multiple times)
- */
-export const getPersistentFeelings = (): string[] => {
-  return Array.from(memoryStore.detectedFeelings.entries())
-    .filter(([_, count]) => count >= 2)
-    .map(([feeling]) => feeling);
-};
-
-/**
- * Get dominant topics in conversation
- */
-export const getDominantTopics = (): string[] => {
-  return Array.from(memoryStore.detectedTopics.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([topic]) => topic);
-};
-
-/**
- * Get conversation coherence score (0-1)
- * Higher scores indicate more consistent conversation focus
- */
-export const getConversationCoherence = (): number => {
-  const topics = Array.from(memoryStore.detectedTopics.entries());
-  
-  // If few or no topics, return low coherence
-  if (topics.length <= 1) return 0.5;
-  
-  // Sort topics by frequency
-  const sortedTopics = topics.sort((a, b) => b[1] - a[1]);
-  
-  // Calculate how dominant the top topics are
-  const totalMentions = sortedTopics.reduce((sum, [_, count]) => sum + count, 0);
-  const topTwoMentions = sortedTopics.slice(0, 2).reduce((sum, [_, count]) => sum + count, 0);
-  
-  // Return ratio of top topics to all topics
-  return topTwoMentions / totalMentions;
-};
+import { 
+  detectEmotion, 
+  extractKeyTopics, 
+  analyzeProblemSeverity,
+  recordToMemory,
+  getAllMemory,
+  getContextualMemory,
+  detectProblems
+} from '../nlpProcessor';
 
 /**
  * Enhanced feeling detection using transformer model
+ * Integrated with UNCONDITIONAL memory system
  */
 export const detectEnhancedFeelings = async (
   message: string
@@ -108,6 +34,9 @@ export const detectEnhancedFeelings = async (
     
     // Assess problem severity
     const severity = analyzeProblemSeverity(message);
+    
+    // Detect problems
+    const problems = detectProblems(message);
     
     // Get traditional feeling detection results
     const { primaryFeeling, allFeelings } = identifyFeelings(message);
@@ -123,11 +52,13 @@ export const detectEnhancedFeelings = async (
       hasEmotionalContent: allFeelings.length > 0 || !!primaryEmotion
     };
     
-    // Store in memory
-    updateMemoryStore(
+    // UNCONDITIONAL: Record to memory system
+    recordToMemory(
       message, 
+      undefined, 
       result.allFeelings.filter(Boolean) as string[], 
-      topics
+      topics,
+      problems
     );
     
     return result;
@@ -139,14 +70,86 @@ export const detectEnhancedFeelings = async (
       detectedWord: 'neutral'
     };
     
+    // Still record to memory even in fallback mode (UNCONDITIONAL)
+    try {
+      const topics = extractKeyTopics(message);
+      recordToMemory(message, undefined, [basicResults.category], topics);
+    } catch (innerError) {
+      console.error('Error in fallback memory recording:', innerError);
+    }
+    
     return {
       ...basicResults,
       primaryFeeling: basicResults.category,
       allFeelings: [basicResults.category],
-      topics: [],
-      severity: 0,
+      topics: extractKeyTopics(message),
+      severity: analyzeProblemSeverity(message),
       hasEmotionalContent: false
     };
+  }
+};
+
+/**
+ * Get persistent feelings from memory storage
+ * UNCONDITIONAL: Roger will always remember emotions
+ */
+export const getPersistentFeelings = (): string[] => {
+  try {
+    const memory = getAllMemory();
+    
+    // Extract emotions with frequency > 1
+    return Object.entries(memory.detectedEmotions)
+      .filter(([_, count]) => count >= 2)
+      .map(([emotion]) => emotion);
+  } catch (error) {
+    console.error('Error getting persistent feelings:', error);
+    return [];
+  }
+};
+
+/**
+ * Get dominant topics from conversation memory
+ * UNCONDITIONAL: Roger will always track conversation topics
+ */
+export const getDominantTopics = (): string[] => {
+  try {
+    const memory = getAllMemory();
+    
+    // Get top 3 most mentioned topics
+    return Object.entries(memory.detectedTopics)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([topic]) => topic);
+  } catch (error) {
+    console.error('Error getting dominant topics:', error);
+    return [];
+  }
+};
+
+/**
+ * Get conversation coherence score (0-1)
+ * Higher scores indicate more consistent conversation focus
+ */
+export const getConversationCoherence = (): number => {
+  try {
+    const memory = getAllMemory();
+    const topics = Object.entries(memory.detectedTopics);
+    
+    // If few or no topics, return low coherence
+    if (topics.length <= 1) return 0.5;
+    
+    // Sort topics by frequency
+    const sortedTopics = topics.sort((a, b) => b[1] - a[1]);
+    
+    // Calculate how dominant the top topics are
+    const totalMentions = sortedTopics.reduce((sum, [_, count]) => sum + count, 0);
+    const topTwoMentions = sortedTopics.slice(0, 2).reduce((sum, [_, count]) => sum + count, 0);
+    
+    // Return ratio of top topics to all topics
+    return topTwoMentions / totalMentions;
+  } catch (error) {
+    console.error('Error calculating conversation coherence:', error);
+    return 0.5;
   }
 };
 
@@ -155,7 +158,10 @@ export {
   identifyFeelings,
   identifyEnhancedFeelings,
   detectAgeAppropriateEmotions,
-  extractContextualElements
+  extractContextualElements,
+  recordToMemory,
+  getAllMemory,
+  getContextualMemory
 };
 
 // Re-export the types
