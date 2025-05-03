@@ -40,8 +40,8 @@ export const processUserMessage = async (
         // Create a custom response acknowledging what they've shared
         let customResponse = `I hear that you're dealing with ${topics.join(" and ")}. That sounds ${getAppropriateAdjective(topics)}. Could you tell me more about how this has been affecting you?`;
         
-        // Apply grammar correction
-        customResponse = correctGrammar(customResponse);
+        // Apply grammar correction with user input for length adjustment
+        customResponse = correctGrammar(customResponse, userInput);
         
         // Use the baseProcessUserMessage with our custom response
         return baseProcessUserMessage(
@@ -61,8 +61,8 @@ export const processUserMessage = async (
     });
     
     if (frustrationOrSmallTalkResponse) {
-      // Apply grammar correction to the response text
-      frustrationOrSmallTalkResponse.text = correctGrammar(frustrationOrSmallTalkResponse.text);
+      // Apply grammar correction to the response text with user input for length adjustment
+      frustrationOrSmallTalkResponse.text = correctGrammar(frustrationOrSmallTalkResponse.text, userInput);
       return frustrationOrSmallTalkResponse;
     }
     
@@ -82,7 +82,7 @@ export const processUserMessage = async (
     );
     
     if (safetyResponse) {
-      // Apply grammar correction to the response text
+      // Do not limit length for safety responses
       safetyResponse.text = correctGrammar(safetyResponse.text);
       return safetyResponse;
     }
@@ -97,8 +97,8 @@ export const processUserMessage = async (
     );
     
     if (specialCaseResponse) {
-      // Apply grammar correction to the response text
-      specialCaseResponse.text = correctGrammar(specialCaseResponse.text);
+      // Apply grammar correction with user input for length adjustment
+      specialCaseResponse.text = correctGrammar(specialCaseResponse.text, userInput);
       return specialCaseResponse;
     }
     
@@ -110,8 +110,8 @@ export const processUserMessage = async (
     );
     
     if (petIllnessResponse) {
-      // Apply grammar correction to the response text
-      petIllnessResponse.text = correctGrammar(petIllnessResponse.text);
+      // Apply grammar correction with user input for length adjustment
+      petIllnessResponse.text = correctGrammar(petIllnessResponse.text, userInput);
       return petIllnessResponse;
     }
     
@@ -126,8 +126,8 @@ export const processUserMessage = async (
     );
     
     if (mentalHealthResponse) {
-      // Apply grammar correction to the response text
-      mentalHealthResponse.text = correctGrammar(mentalHealthResponse.text);
+      // Apply grammar correction with user input for length adjustment
+      mentalHealthResponse.text = correctGrammar(mentalHealthResponse.text, userInput);
       return mentalHealthResponse;
     }
     
@@ -148,8 +148,8 @@ export const processUserMessage = async (
       conversationHistory
     );
     
-    // Apply grammar correction to the final processed response
-    processedText = correctGrammar(processedText);
+    // Apply grammar correction to the final processed response, with user input for length adjustment
+    processedText = correctGrammar(processedText, userInput);
     
     const processedResponse = {
       ...generalResponse,
@@ -160,10 +160,10 @@ export const processUserMessage = async (
   } catch (error) {
     console.error("Error in processUserMessage:", error);
     // Return a fallback response if an error occurs - even in error, provide a supportive response
+    // Don't limit length of fallback responses in error situations
     return Promise.resolve(createMessage(
       correctGrammar("I hear what you're sharing. What would be most helpful to focus on right now?"), 
       'roger'
     ));
   }
 };
-

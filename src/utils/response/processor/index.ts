@@ -53,8 +53,8 @@ export const processCompleteResponse = (
     // 5. Apply hallucination prevention as final safety
     processedResponse = processResponse(processedResponse, userInput, conversationHistory);
     
-    // 6. NEW: Apply grammar correction to ensure consistent writing style
-    processedResponse = correctGrammar(processedResponse);
+    // 6. Apply grammar correction with user input for length adjustment
+    processedResponse = correctGrammar(processedResponse, userInput);
     
     // Record final response to memory systems
     recordToMemorySystems(processedResponse, undefined, undefined, 0.8);
@@ -67,7 +67,7 @@ export const processCompleteResponse = (
     // Fallback: Ensure we at least apply basic rules in case of error
     try {
       const simpleProcessed = applyUnconditionalRules(responseText, userInput, 0);
-      // Still apply grammar correction even in fallback mode
+      // Don't limit length for fallback responses
       return correctGrammar(simpleProcessed);
     } catch (nestedError) {
       console.error("RESPONSE PROCESSOR: Critical failure in fallback processing", nestedError);

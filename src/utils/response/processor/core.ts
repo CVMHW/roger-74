@@ -10,11 +10,12 @@ import { applyUnconditionalRules } from '../responseIntegration';
 import { applyResponseRules } from './ruleProcessing';
 import { enhanceResponseWithMemory } from './memoryEnhancement';
 import { handleLogotherapyIntegration } from './logotherapy/integrationHandler';
-import { detectConversationPatterns } from '../patternDetection'; // Fixed import to use the correct function name
+import { detectConversationPatterns } from '../patternDetection';
 import { 
   addResponseVariety,
   generateSpontaneousResponse
 } from '../personalityVariation';
+import { correctGrammar } from './grammarCorrection';
 
 /**
  * Process a response through the core rules system
@@ -49,27 +50,32 @@ export const processCore = (
     // Check for repetitive patterns
     const patternResult = detectConversationPatterns(ruleProcessedResponse, conversationHistory);
     
+    let finalResponse;
+    
     // If repetition detected, force higher spontaneity
     if (patternResult.isRepetitive || patternResult.repetitionScore > 0.5) {
       console.log("PATTERN DETECTED: Increasing spontaneity and creativity");
       
-      return addResponseVariety(
+      finalResponse = addResponseVariety(
         ruleProcessedResponse,
         userInput,
         messageCount,
         95, // Very high spontaneity
         90  // Very high creativity
       );
+    } else {
+      // Add standard personality variation to ensure spontaneity (Universal Law)
+      finalResponse = addResponseVariety(
+        ruleProcessedResponse,
+        userInput,
+        messageCount,
+        70, // Standard spontaneity
+        65  // Standard creativity
+      );
     }
     
-    // Add standard personality variation to ensure spontaneity (Universal Law)
-    return addResponseVariety(
-      ruleProcessedResponse,
-      userInput,
-      messageCount,
-      70, // Standard spontaneity
-      65  // Standard creativity
-    );
+    // Apply grammar correction with user input for length adjustment
+    return correctGrammar(finalResponse, userInput);
     
   } catch (error) {
     console.error('Error in core response processing:', error);
@@ -77,7 +83,9 @@ export const processCore = (
     // Even in error, try to apply basic rules
     try {
       // Apply unconditional rules as minimal safe processing
-      return applyUnconditionalRules(response, userInput, messageCount);
+      const basicProcessed = applyUnconditionalRules(response, userInput, messageCount);
+      // Apply grammar correction, but don't limit length in error cases
+      return correctGrammar(basicProcessed);
     } catch (nestedError) {
       console.error('Critical failure in response processing:', nestedError);
       return response; // Return original response if all processing fails

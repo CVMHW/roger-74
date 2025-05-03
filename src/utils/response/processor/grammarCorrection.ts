@@ -1,8 +1,8 @@
-
 /**
  * Grammar Correction System
  * 
  * Fixes common grammar issues in Roger's responses to ensure consistency
+ * and maintains appropriate response length proportional to user input
  */
 
 /**
@@ -12,8 +12,9 @@
  * - Removes clunky phrases like "How does that sound to you?"
  * - Removes duplicated sentence starters
  * - Fixes awkward sentence transitions
+ * - Controls response length to be proportional to user input
  */
-export const correctGrammar = (response: string): string => {
+export const correctGrammar = (response: string, userInput?: string): string => {
   // Don't process empty responses
   if (!response) return response;
   
@@ -21,11 +22,11 @@ export const correctGrammar = (response: string): string => {
   
   // Remove duplicated sentence starters and awkward transitions
   const duplicateStarters = [
-    /based on what you('re| are) sharing right now, from what you('ve| have) shared/i,
-    /from what you('ve| have) shared, looking at how this connects to your values/i,
-    /looking at how this connects to your values/i,
-    /based on what you('re| are) sharing right now, from what you('ve| have) shared, looking at how this connects to your values/i,
-    /what('s| is) also important, /i
+    /based on what you('re| are) sharing right now,?\s*/i,
+    /from what you('ve| have) shared,?\s*/i,
+    /looking at how this connects to your values,?\s*/i,
+    /when we look at what truly matters here,?\s*/i,
+    /what('s| is) also important,?\s*/i
   ];
   
   for (const pattern of duplicateStarters) {
@@ -87,7 +88,110 @@ export const correctGrammar = (response: string): string => {
     correctedResponse = correctedResponse.charAt(0).toUpperCase() + correctedResponse.slice(1);
   }
   
+  // NEW: Control response length based on user input if available
+  if (userInput) {
+    correctedResponse = adjustResponseLength(correctedResponse, userInput);
+  }
+  
   return correctedResponse;
+};
+
+/**
+ * Adjusts response length to be proportional to user input
+ * Aims for a ratio of approximately 1.5-2.5x the user's message length
+ * for normal messages, with exceptions for critical content
+ */
+const adjustResponseLength = (response: string, userInput: string): string => {
+  // Don't adjust response if it contains critical keywords
+  if (containsCriticalKeywords(response)) {
+    return response;
+  }
+  
+  const userWords = userInput.split(/\s+/).filter(Boolean).length;
+  const responseWords = response.split(/\s+/).filter(Boolean).length;
+  
+  // Target range: 1.5-2.5x user input length, with minimum of 5-10 words
+  const minWords = Math.max(5, Math.round(userWords * 1.2));
+  const maxWords = Math.max(10, Math.round(userWords * 2.5));
+  
+  // If response is already in appropriate range, return as is
+  if (responseWords >= minWords && responseWords <= maxWords) {
+    return response;
+  }
+  
+  // If response is too long, trim it
+  if (responseWords > maxWords) {
+    return shortenResponse(response, maxWords);
+  }
+  
+  // If response is too short but still substantial, keep as is
+  // We don't want to artificially lengthen responses
+  return response;
+};
+
+/**
+ * Shortens a response to the target word count while keeping it coherent
+ */
+const shortenResponse = (response: string, targetWordCount: number): string => {
+  const sentences = response.match(/[^.!?]+[.!?]+/g) || [];
+  if (sentences.length <= 1) {
+    return response; // Can't shorten a single sentence response easily
+  }
+  
+  let shortened = "";
+  let wordCount = 0;
+  
+  // Start with most important sentences (usually the first 1-2)
+  // Keep adding sentences until we reach target word count
+  for (let i = 0; i < sentences.length; i++) {
+    const sentenceWords = sentences[i].split(/\s+/).filter(Boolean).length;
+    
+    // Always include first sentence
+    if (i === 0) {
+      shortened += sentences[i];
+      wordCount += sentenceWords;
+      continue;
+    }
+    
+    // Check if adding this sentence would exceed target
+    if (wordCount + sentenceWords > targetWordCount) {
+      // If we only have one sentence so far, add this one too
+      if (i === 1) {
+        shortened += sentences[i];
+      }
+      break;
+    }
+    
+    shortened += sentences[i];
+    wordCount += sentenceWords;
+    
+    // Break if we've reached target word count
+    if (wordCount >= targetWordCount) {
+      break;
+    }
+  }
+  
+  return shortened.trim();
+};
+
+/**
+ * Detects if message contains critical keywords that should not be shortened
+ */
+const containsCriticalKeywords = (text: string): boolean => {
+  const criticalPatterns = [
+    /suicid/i,
+    /kill (myself|yourself|himself|herself|themselves)/i,
+    /harm (myself|yourself|himself|herself|themselves)/i,
+    /hurt (myself|yourself|himself|herself|themselves)/i,
+    /emergency/i,
+    /crisis/i,
+    /immediate danger/i,
+    /bleeding/i,
+    /overdose/i,
+    /poison/i
+  ];
+  
+  return criticalPatterns.some(pattern => pattern.test(text));
 };
 
 /**
@@ -126,6 +230,9 @@ export const identifyGrammarIssues = (response: string): string[] => {
     issues.push("Contains duplicated sentence starters");
   }
   
+  // Check if response is excessively long compared to latest user input
+  const responseWords = response.split(/\s+/).filter(Boolean).length;
+  issues.push(`Response length: ${responseWords} words`);
+  
   return issues;
 };
-
