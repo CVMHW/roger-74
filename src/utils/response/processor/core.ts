@@ -19,6 +19,9 @@ import { correctGrammar } from './grammarCorrection';
 import { selectResponseApproach, adjustApproachForConversationFlow } from './approachSelector';
 import { getRogerPerspectivePhrase } from '../personalityHelpers';
 import { isIntroduction, isSmallTalk, isPersonalSharing } from '../../masterRules';
+import { detectClevelandContent } from '../../cleveland/clevelandDetectors';
+import { enhanceResponseWithClevelandPerspective } from '../../cleveland/clevelandResponses';
+import { detectClevelandTopics } from '../../cleveland/clevelandTopics';
 
 /**
  * Process a response through the core rules system
@@ -61,6 +64,10 @@ export const processCore = (
       return correctGrammar("I understand. That sounds challenging. Would you like to tell me more about what happened?");
     }
     
+    // Check for Cleveland content
+    const clevelandDetection = detectClevelandContent(userInput);
+    const clevelandTopics = detectClevelandTopics(userInput);
+    
     // SECOND: Select the appropriate approach based on context
     // This determines how heavily to apply different aspects of Roger's training
     const initialApproach = selectResponseApproach(userInput, conversationHistory);
@@ -86,6 +93,17 @@ export const processCore = (
     const isIntroductionContext = isIntroduction(userInput);
     const isSmallTalkContext = isSmallTalk(userInput);
     const isPersonalSharingContext = isPersonalSharing(userInput);
+    
+    // PRIORITY: For Cleveland content, ensure Roger's local knowledge is used
+    if (clevelandDetection.hasClevelandContent && clevelandDetection.shouldIncorporateLocalKnowledge) {
+      console.log("CLEVELAND CONTENT: Enhancing response with Cleveland perspective");
+      processedResponse = enhanceResponseWithClevelandPerspective(
+        processedResponse, 
+        userInput, 
+        clevelandTopics, 
+        true
+      );
+    }
     
     // Add Roger's personality perspective to appropriate responses - but NOT for everyday situations
     if (!isEverydaySituation && !resistanceToDeeperMeaning && Math.random() < 0.3) {

@@ -13,6 +13,9 @@ import { recordToMemorySystems } from './processor/memorySystemHandler';
 import { retrieveRelevantMemories } from '../memory/memoryBank';
 import { getRogerPersonalityInsight } from '../reflection/rogerPersonality';
 import { isSmallTalk, isIntroduction, isPersonalSharing } from '../masterRules';
+import { detectClevelandContent } from '../cleveland/clevelandDetectors';
+import { enhanceResponseWithClevelandPerspective } from '../cleveland/clevelandResponses';
+import { detectClevelandTopics, storeClevelandMemory } from '../cleveland';
 
 /**
  * Enhance a response with memory integration and hallucination prevention
@@ -47,6 +50,10 @@ export const enhanceResponse = (
       /what\?|all|that's all|just happened|it was just|how does.*reflect|are you insinuating|not that deep|too much|simple|regular|come on|get real/i.test(msg)
     );
     
+    // Check for Cleveland content
+    const clevelandDetection = detectClevelandContent(userInput);
+    const clevelandTopics = detectClevelandTopics(userInput);
+    
     // SPECIAL HANDLING: For social/everyday situations, immediately use casual response style
     // This is HIGHEST PRIORITY to prevent philosophical responses in casual contexts
     if (isEverydaySituation || isSmallTalkContext) {
@@ -59,6 +66,11 @@ export const enhanceResponse = (
         undefined,
         0.8 // High importance for Roger's responses
       );
+      
+      // If Cleveland content detected, store in Cleveland memory system
+      if (clevelandTopics.length > 0) {
+        storeClevelandMemory(userInput, 'patient', clevelandTopics);
+      }
       
       return casualResponse;
     }
@@ -79,6 +91,21 @@ export const enhanceResponse = (
       const personalityInsight = getRogerPersonalityInsight(userInput, '', messageCount >= 30);
       if (personalityInsight && !responseWithPersonality.includes(personalityInsight)) {
         responseWithPersonality += personalityInsight;
+      }
+    }
+    
+    // SPECIAL HANDLING: For Cleveland content, enhance with Cleveland perspective
+    if (clevelandDetection.hasClevelandContent && clevelandDetection.shouldIncorporateLocalKnowledge) {
+      console.log("CLEVELAND CONTENT: Enhancing response with Cleveland perspective");
+      responseWithPersonality = enhanceResponseWithClevelandPerspective(
+        responseWithPersonality, 
+        userInput, 
+        clevelandTopics
+      );
+      
+      // Store Cleveland content for future reference
+      if (clevelandTopics.length > 0) {
+        storeClevelandMemory(userInput, 'patient', clevelandTopics);
       }
     }
     
@@ -155,6 +182,12 @@ export const processUserMessageMemory = (userInput: string): void => {
   try {
     // Record user message to memory system
     recordToMemorySystems(userInput);
+    
+    // Check for Cleveland content
+    const clevelandTopics = detectClevelandTopics(userInput);
+    if (clevelandTopics.length > 0) {
+      storeClevelandMemory(userInput, 'patient', clevelandTopics);
+    }
   } catch (error) {
     console.error("Error recording user message to memory:", error);
   }

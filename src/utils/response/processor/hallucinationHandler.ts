@@ -6,6 +6,8 @@
  */
 
 import { detectHallucinations } from '../../memory/hallucination/detectorV2';
+import { detectClevelandContent } from '../../cleveland/clevelandDetectors';
+import { enhanceResponseWithClevelandPerspective } from '../../cleveland/clevelandResponses';
 
 /**
  * Checks and corrects potential hallucinations in a response
@@ -26,6 +28,9 @@ export const handlePotentialHallucinations = (
     // Check if this is an everyday social situation
     const isEverydaySituation = /trip(ped)?|spill(ed)?|embarrass(ing|ed)|awkward|class|teacher|student|bar|drink|party|date|girl|guy|cute|dating/i.test(userInput);
     
+    // Check for Cleveland-specific content
+    const clevelandDetection = detectClevelandContent(userInput);
+    
     // For everyday situations, apply conversational enhancements instead of hallucination checks
     if (isEverydaySituation) {
       console.log("EVERYDAY SITUATION: Applying Roger's conversational style");
@@ -34,6 +39,26 @@ export const handlePotentialHallucinations = (
       
       return {
         processedResponse: enhancedResponse,
+        hallucinationData: {
+          wasDetected: false,
+          confidence: 0
+        }
+      };
+    }
+    
+    // For Cleveland content, ensure Roger's local knowledge is incorporated
+    if (clevelandDetection.hasClevelandContent && clevelandDetection.shouldIncorporateLocalKnowledge) {
+      console.log("CLEVELAND CONTENT DETECTED: Enhancing with Roger's local knowledge");
+      
+      const clevelandEnhancedResponse = enhanceResponseWithClevelandPerspective(
+        response, 
+        userInput, 
+        clevelandDetection.topics,
+        true // Force inclusion of Cleveland perspective
+      );
+      
+      return {
+        processedResponse: clevelandEnhancedResponse,
         hallucinationData: {
           wasDetected: false,
           confidence: 0
