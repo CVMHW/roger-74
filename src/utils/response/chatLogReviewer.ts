@@ -1,276 +1,396 @@
 
 /**
- * Chat Log Reviewer - TERTIARY SAFEGUARD
+ * Chat Log Review Module - TERTIARY SAFEGUARD
  * 
- * This module provides a comprehensive review of the entire chat log
- * before each response to ensure continuity, understanding, and adherence
- * to patient needs and concerns.
+ * This module provides comprehensive conversation history review 
+ * to ensure response continuity and memory utilization.
  * 
- * ENHANCED: Now integrated with advanced MemoryBank architecture
+ * It acts as a tertiary safeguard after primary memory and 5ResponseMemory.
  */
 
-import { recordToMemory, getAllMemory } from '../nlpProcessor';
-import { addToFiveResponseMemory } from '../memory/fiveResponseMemory';
-import { addToMemoryBank, retrieveRelevantMemories } from '../memory/memoryBank';
-import { processWithMultiHeadAttention } from '../memory/multiHeadAttention';
+import { getFiveResponseMemory } from '../memory/fiveResponseMemory';
+import { retrieveRelevantMemories } from '../memory/memoryBank';
 
 /**
- * Process a response through comprehensive chat log review
- * This is the TERTIARY SAFEGUARD to ensure patient needs are addressed
- * 
- * @param proposedResponse The response to be reviewed
- * @param currentUserInput The current user input
- * @param conversationHistory The full conversation history
- * @returns Enhanced response that addresses continuity issues
+ * Process a response through complete chat log review
  */
 export const processThroughChatLogReview = (
-  proposedResponse: string,
-  currentUserInput: string,
-  conversationHistory: string[] = []
+  proposedResponse: string, 
+  userInput: string,
+  conversationHistory: string[]
 ): string => {
-  console.log("TERTIARY SAFEGUARD: Reviewing entire chat log before responding");
-  
   try {
-    // If conversation is too short, no need for extensive review
-    if (conversationHistory.length < 3) {
+    console.log("TERTIARY SAFEGUARD: Running complete chat log review");
+    
+    // Skip processing if conversation history is minimal
+    if (!conversationHistory || conversationHistory.length < 2) {
       return proposedResponse;
     }
     
-    // Step 1: Process with multi-head attention for comprehensive context
-    const attentionResults = processWithMultiHeadAttention(
-      currentUserInput,
+    // STEP 1: Identify key topics in current conversation
+    const conversationTopics = identifyConversationTopics(conversationHistory);
+    
+    // STEP 2: Check if response addresses current topics
+    const addressesCurrentTopics = checkTopicCoverage(proposedResponse, conversationTopics);
+    
+    // STEP 3: Check for unaddressed concerns from history
+    const unaddressedConcerns = identifyUnaddressedConcerns(
+      conversationHistory, 
+      proposedResponse
+    );
+    
+    // STEP 4: Check for potential misunderstandings
+    const potentialMisunderstandings = identifyPotentialMisunderstandings(
+      userInput,
+      proposedResponse,
       conversationHistory
     );
     
-    // Step 2: Identify key topics from attention results
-    const keyTopics = attentionResults.dominantTopics;
-    console.log("TERTIARY SAFEGUARD: Identified key topics:", keyTopics);
-    
-    // Step 3: Detect any unaddressed concerns from previous messages
-    const unaddressedConcerns = detectUnaddressedConcerns(conversationHistory);
-    console.log("TERTIARY SAFEGUARD: Unaddressed concerns:", unaddressedConcerns);
-    
-    // Step 4: Check for potential misunderstandings
-    const potentialMisunderstandings = identifyPotentialMisunderstandings(
-      conversationHistory,
-      currentUserInput,
-      proposedResponse
-    );
-    console.log("TERTIARY SAFEGUARD: Potential misunderstandings:", potentialMisunderstandings);
-    
-    // Step 5: Retrieve relevant memories from MemoryBank
-    const relevantMemories = retrieveRelevantMemories(
-      currentUserInput,
-      keyTopics,
-      attentionResults.emotionalContext
-    );
-    console.log("TERTIARY SAFEGUARD: Retrieved relevant memories:", 
-      relevantMemories.length > 0 ? "Yes" : "None");
-    
-    // Step 6: Enhance response based on findings
-    let enhancedResponse = proposedResponse;
-    
-    // Add acknowledgment of unaddressed concerns if needed
-    if (unaddressedConcerns.length > 0) {
-      const concern = unaddressedConcerns[0]; // Address the most important one
-      
-      // Only add if the concern isn't already mentioned in the response
-      if (!enhancedResponse.toLowerCase().includes(concern.toLowerCase())) {
-        const acknowledgment = `I also wanted to circle back to what you mentioned earlier about ${concern}. `;
-        enhancedResponse = acknowledgment + enhancedResponse;
-      }
-    }
-    
-    // Correct misunderstandings if detected
-    if (potentialMisunderstandings.length > 0) {
-      const misunderstanding = potentialMisunderstandings[0];
-      
-      // Check if the misunderstanding isn't already addressed
-      if (!enhancedResponse.toLowerCase().includes("clarify") && 
-          !enhancedResponse.toLowerCase().includes("understand better")) {
-        const correction = `Just to make sure I understand correctly - ${misunderstanding}. `;
-        enhancedResponse = correction + enhancedResponse;
-      }
-    }
-    
-    // Ensure continuity by referencing key topics if they're missing
-    const hasKeyTopicReference = keyTopics.some(topic => 
-      enhancedResponse.toLowerCase().includes(topic.toLowerCase())
-    );
-    
-    if (!hasKeyTopicReference && keyTopics.length > 0) {
-      const continuityPhrase = `Regarding our conversation about ${keyTopics[0]}, `;
-      enhancedResponse = continuityPhrase + enhancedResponse;
-    }
-    
-    // Ensure memory reference if none exists yet
-    if (!enhancedResponse.toLowerCase().includes("remember") && 
-        !enhancedResponse.toLowerCase().includes("mentioned") &&
-        !enhancedResponse.toLowerCase().includes("earlier") &&
-        relevantMemories.length > 0) {
-      
-      const memoryRef = relevantMemories[0];
-      const memoryPhrase = `I remember you mentioned "${memoryRef.content.substring(0, 20)}..." `;
-      enhancedResponse = memoryPhrase + enhancedResponse;
-    }
-    
-    // Record the enhancement to all memory systems
-    if (enhancedResponse !== proposedResponse) {
-      console.log("TERTIARY SAFEGUARD: Enhanced response based on chat log review");
-      recordToMemory(currentUserInput, enhancedResponse);
-      addToFiveResponseMemory('roger', enhancedResponse);
-      addToMemoryBank(
-        enhancedResponse, 
-        'roger', 
-        attentionResults.emotionalContext, 
-        attentionResults.dominantTopics,
-        0.8 // High importance for enhanced responses
+    // STEP 5: Enhance response if needed based on chat log review
+    if (!addressesCurrentTopics || unaddressedConcerns.length > 0 || potentialMisunderstandings.length > 0) {
+      return enhanceResponseBasedOnChatLogReview(
+        proposedResponse,
+        conversationTopics,
+        unaddressedConcerns,
+        potentialMisunderstandings
       );
     }
     
-    return enhancedResponse;
-    
+    return proposedResponse;
   } catch (error) {
     console.error("Error in chat log review:", error);
-    // In case of error, return the original response
     return proposedResponse;
   }
 };
 
 /**
- * Identify the key topics discussed throughout the conversation
+ * Identify key topics in the conversation history
  */
-const identifyKeyTopics = (conversationHistory: string[]): string[] => {
-  // Focus on user messages (even indices in conversation history)
-  const userMessages = conversationHistory.filter((_, index) => index % 2 === 0);
-  
-  // Simplified topic detection using frequency analysis
-  const topicFrequency: Record<string, number> = {};
-  
-  // Common topics to look for
-  const topicPatterns = [
-    { regex: /\b(work|job|career|boss|colleague|office)\b/i, topic: 'work' },
-    { regex: /\b(family|parent|child|mom|dad|brother|sister|spouse)\b/i, topic: 'family' },
-    { regex: /\b(friend|relationship|partner|social)\b/i, topic: 'relationships' },
-    { regex: /\b(health|sick|pain|doctor|hospital|illness)\b/i, topic: 'health' },
-    { regex: /\b(money|finance|bill|debt|afford|budget)\b/i, topic: 'finances' },
-    { regex: /\b(stress|anxiety|worry|concern|nervous)\b/i, topic: 'stress' },
-    { regex: /\b(sad|depression|unhappy|down|blue)\b/i, topic: 'depression' },
-    { regex: /\b(future|goal|plan|direction|purpose)\b/i, topic: 'future plans' },
-    { regex: /\b(sleep|tired|exhausted|insomnia|rest)\b/i, topic: 'sleep' },
-    { regex: /\b(anger|angry|mad|furious|rage)\b/i, topic: 'anger' },
-    // Add more patterns as needed
-  ];
-  
-  // Count occurrences of topics
-  userMessages.forEach(message => {
-    topicPatterns.forEach(({ regex, topic }) => {
-      if (regex.test(message)) {
-        topicFrequency[topic] = (topicFrequency[topic] || 0) + 1;
+const identifyConversationTopics = (conversationHistory: string[]): string[] => {
+  try {
+    const topics: string[] = [];
+    
+    // Define topic patterns to look for
+    const topicPatterns = [
+      { regex: /\b(work|job|career|boss|colleague|office|workplace)\b/i, topic: 'work' },
+      { regex: /\b(family|parent|child|mom|dad|brother|sister|spouse|marriage)\b/i, topic: 'family' },
+      { regex: /\b(friend|relationship|partner|social|dating|love)\b/i, topic: 'relationships' },
+      { regex: /\b(health|sick|pain|doctor|hospital|illness|symptom|medicine)\b/i, topic: 'health' },
+      { regex: /\b(money|finance|bill|debt|afford|budget|cost|spend|income)\b/i, topic: 'finances' },
+      { regex: /\b(stress|anxiety|worry|concern|nervous|overwhelm|pressure)\b/i, topic: 'stress' },
+      { regex: /\b(sad|depress|unhappy|down|blue|grief|loss|low)\b/i, topic: 'sadness' },
+      { regex: /\b(future|goal|plan|direction|purpose|meaning|hope)\b/i, topic: 'future' },
+      { regex: /\b(sleep|tired|exhausted|insomnia|rest|fatigue|energy)\b/i, topic: 'sleep' },
+      { regex: /\b(anger|angry|mad|furious|rage|irritate|frustrate)\b/i, topic: 'anger' }
+    ];
+    
+    // Focus on the most recent messages (last 5)
+    const recentMessages = conversationHistory.slice(-5);
+    const combinedText = recentMessages.join(' ').toLowerCase();
+    
+    // Identify topics using regex patterns
+    for (const { regex, topic } of topicPatterns) {
+      if (regex.test(combinedText) && !topics.includes(topic)) {
+        topics.push(topic);
       }
-    });
-  });
-  
-  // Sort topics by frequency
-  return Object.entries(topicFrequency)
-    .sort((a, b) => b[1] - a[1])
-    .map(([topic]) => topic);
+    }
+    
+    // Also check 5ResponseMemory for redundancy
+    try {
+      const fiveResponseMemory = getFiveResponseMemory();
+      const patientMessages = fiveResponseMemory
+        .filter(entry => entry.role === 'patient')
+        .map(entry => entry.content)
+        .join(' ').toLowerCase();
+      
+      for (const { regex, topic } of topicPatterns) {
+        if (regex.test(patientMessages) && !topics.includes(topic)) {
+          topics.push(topic);
+        }
+      }
+    } catch (memError) {
+      console.error('Error accessing 5ResponseMemory during topic identification:', memError);
+    }
+    
+    return topics;
+  } catch (error) {
+    console.error("Error identifying conversation topics:", error);
+    return [];
+  }
 };
 
 /**
- * Detect concerns that have been raised but not adequately addressed
+ * Check if response addresses the current topics
  */
-const detectUnaddressedConcerns = (conversationHistory: string[]): string[] => {
-  const unaddressedConcerns: string[] = [];
+const checkTopicCoverage = (response: string, topics: string[]): boolean => {
+  if (topics.length === 0) {
+    return true; // No specific topics to cover
+  }
   
-  // Look for explicit questions or concerns
-  for (let i = 0; i < conversationHistory.length - 2; i += 2) {
-    // Only examine user messages
-    const userMessage = conversationHistory[i];
-    const rogerResponse = conversationHistory[i + 1] || "";
-    
-    // Check for question patterns
-    const questionMatches = userMessage.match(/\b(what about|how do I|can you help|why is|when will|is there|can I|should I|would you|could you)[\w\s]+\?/gi);
-    if (questionMatches) {
-      // For each question, check if it was addressed in Roger's response
-      questionMatches.forEach(question => {
-        const questionKeywords = extractKeywords(question);
-        const isAddressed = questionKeywords.some(keyword => 
-          rogerResponse.toLowerCase().includes(keyword.toLowerCase())
-        );
-        
-        if (!isAddressed) {
-          unaddressedConcerns.push(question);
+  // Count how many topics are addressed in the response
+  const responseLower = response.toLowerCase();
+  let topicsCovered = 0;
+  
+  for (const topic of topics) {
+    // Check for direct mentions or related words
+    switch (topic) {
+      case 'work':
+        if (/\b(work|job|career|workplace|profession)\b/i.test(responseLower)) {
+          topicsCovered++;
         }
-      });
-    }
-    
-    // Check for concern statements
-    const concernMatches = userMessage.match(/\b(I'm concerned about|I'm worried about|I need help with|I'm struggling with|I don't know how to|I can't seem to)[\w\s]+/gi);
-    if (concernMatches) {
-      // For each concern, check if it was addressed
-      concernMatches.forEach(concern => {
-        const concernKeywords = extractKeywords(concern);
-        const isAddressed = concernKeywords.some(keyword => 
-          rogerResponse.toLowerCase().includes(keyword.toLowerCase())
-        );
-        
-        if (!isAddressed) {
-          unaddressedConcerns.push(concern);
+        break;
+      case 'family':
+        if (/\b(family|parent|child|mom|dad|brother|sister|spouse|marriage|relative)\b/i.test(responseLower)) {
+          topicsCovered++;
         }
-      });
+        break;
+      case 'relationships':
+        if (/\b(relationship|friend|partner|connection|social|dating|love)\b/i.test(responseLower)) {
+          topicsCovered++;
+        }
+        break;
+      case 'health':
+        if (/\b(health|wellness|wellbeing|medical|physical|mental|body|healing)\b/i.test(responseLower)) {
+          topicsCovered++;
+        }
+        break;
+      case 'finances':
+        if (/\b(money|finance|financial|budget|cost|expense|income|saving|afford)\b/i.test(responseLower)) {
+          topicsCovered++;
+        }
+        break;
+      case 'stress':
+        if (/\b(stress|pressure|overwhelm|tension|anxious|anxiety|cope|strain)\b/i.test(responseLower)) {
+          topicsCovered++;
+        }
+        break;
+      case 'sadness':
+        if (/\b(sad|sadness|unhappy|down|blue|grief|loss|low|depress|upset)\b/i.test(responseLower)) {
+          topicsCovered++;
+        }
+        break;
+      default:
+        // For other topics, just check for the topic word itself
+        if (responseLower.includes(topic)) {
+          topicsCovered++;
+        }
+        break;
     }
   }
   
-  return unaddressedConcerns;
+  // Consider it covered if we address at least one topic
+  // or if the response contains general acknowledgment
+  return topicsCovered > 0 || 
+    /\b(mentioned|talked about|shared|discussed|told me about)\b/i.test(responseLower);
 };
 
 /**
- * Extract meaningful keywords from a text string
+ * Identify potential concerns from history that aren't addressed
  */
-const extractKeywords = (text: string): string[] => {
-  // Remove common words and extract keywords
-  return text.toLowerCase()
-    .replace(/[.,?!;:'"]/g, '')
-    .split(/\s+/)
-    .filter(word => 
-      word.length > 3 && 
-      !['what', 'when', 'where', 'which', 'this', 'that', 'these', 'those', 
-        'about', 'would', 'could', 'should', 'their', 'there', 'have', 'with'].includes(word)
-    );
-};
-
-/**
- * Identify potential misunderstandings based on the conversation flow
- */
-const identifyPotentialMisunderstandings = (
+const identifyUnaddressedConcerns = (
   conversationHistory: string[],
-  currentInput: string,
   proposedResponse: string
 ): string[] => {
-  const misunderstandings: string[] = [];
-  
-  // Check if current message indicates a correction
-  const correctionPatterns = [
-    /\b(no|not|that's not|that is not|I didn't|I did not)\b/i,
-    /\b(you misunderstood|you didn't understand|you're not getting|you are not getting)\b/i,
-    /\b(that's not what I|that is not what I|that's not what I'm|that is not what I'm)\b/i,
-    /\b(I meant|I was saying|I'm trying to say|I am trying to say)\b/i
+  try {
+    const concerns: string[] = [];
+    
+    // Define patterns for common concerns
+    const concernPatterns = [
+      { regex: /\b(can'?t sleep|insomnia|trouble sleeping|wake up)\b/i, concern: 'sleep problems' },
+      { regex: /\bworry|anxious|scared|afraid|terrified\b/i, concern: 'anxiety' },
+      { regex: /\b(feeling down|depress|sad|hopeless|suicid|hurt myself|end my life)\b/i, concern: 'depression' },
+      { regex: /\b(alone|lonely|no friends|no one|isolated|abandoned)\b/i, concern: 'loneliness' },
+      { regex: /\b(fight|argument|conflict|divorce|breaking up|separated)\b/i, concern: 'relationship conflict' },
+      { regex: /\b(can'?t afford|money problems|debt|bills|financial|broke)\b/i, concern: 'financial difficulties' },
+      { regex: /\b(pain|hurt|ache|sore|chronic|suffering|agony)\b/i, concern: 'physical discomfort' }
+    ];
+    
+    // Look for concerns in recent messages
+    const recentMessages = conversationHistory.slice(-5);
+    
+    for (const message of recentMessages) {
+      for (const { regex, concern } of concernPatterns) {
+        if (regex.test(message) && !concerns.includes(concern)) {
+          // Check if concern is NOT mentioned in response
+          if (!proposedResponse.toLowerCase().includes(concern.toLowerCase())) {
+            concerns.push(concern);
+          }
+        }
+      }
+    }
+    
+    return concerns;
+  } catch (error) {
+    console.error("Error identifying unaddressed concerns:", error);
+    return [];
+  }
+};
+
+/**
+ * Identify potential misunderstandings in the response
+ */
+const identifyPotentialMisunderstandings = (
+  userInput: string,
+  proposedResponse: string,
+  conversationHistory: string[]
+): string[] => {
+  try {
+    const misunderstandings: string[] = [];
+    
+    // Check for questions in user input that aren't addressed
+    const userQuestions = userInput.match(/\b(what|how|why|when|where|who|which|can|could|would|should|is|are|will|did)\b.*\?/gi);
+    
+    if (userQuestions && userQuestions.length > 0 && 
+        !proposedResponse.includes("?") && 
+        !/I'm not sure|let me think|that's a good question/i.test(proposedResponse)) {
+      misunderstandings.push('unaddressed question');
+    }
+    
+    // Check for topic switches without acknowledgment
+    if (conversationHistory.length >= 2) {
+      const previousMessage = conversationHistory[conversationHistory.length - 2];
+      const topicShift = detectTopicShift(previousMessage, userInput);
+      
+      if (topicShift && !(/as you mentioned|shifting to|regarding your|about your/i.test(proposedResponse))) {
+        misunderstandings.push('unacknowledged topic shift');
+      }
+    }
+    
+    // Check if response tone matches emotional content of message
+    const emotionalMismatch = detectEmotionalMismatch(userInput, proposedResponse);
+    if (emotionalMismatch) {
+      misunderstandings.push('tone mismatch');
+    }
+    
+    return misunderstandings;
+  } catch (error) {
+    console.error("Error identifying potential misunderstandings:", error);
+    return [];
+  }
+};
+
+/**
+ * Detect if there was a significant topic shift between messages
+ */
+const detectTopicShift = (previousMessage: string, currentMessage: string): boolean => {
+  // Define major topic categories
+  const topicCategories = [
+    { name: 'work', patterns: /\b(work|job|career|boss|colleague|office|workplace)\b/i },
+    { name: 'family', patterns: /\b(family|parent|child|mom|dad|brother|sister|spouse|marriage)\b/i },
+    { name: 'health', patterns: /\b(health|sick|pain|doctor|hospital|illness|symptom|medicine)\b/i },
+    { name: 'emotions', patterns: /\b(feel|feeling|sad|happy|angry|anxious|worried|scared|stressed)\b/i },
+    { name: 'relationships', patterns: /\b(friend|relationship|partner|dating|love|boyfriend|girlfriend)\b/i }
   ];
   
-  const hasCorrectionIndicator = correctionPatterns.some(pattern => pattern.test(currentInput));
-  
-  if (hasCorrectionIndicator) {
-    // Extract what might have been misunderstood
-    const previousRogerResponse = conversationHistory[conversationHistory.length - 1] || "";
-    const topicsInPreviousResponse = identifyKeyTopics([previousRogerResponse]);
+  // Identify topics in each message
+  const previousTopics = topicCategories
+    .filter(topic => topic.patterns.test(previousMessage))
+    .map(topic => topic.name);
     
-    if (topicsInPreviousResponse.length > 0) {
-      misunderstandings.push(`I want to clarify what you meant about ${topicsInPreviousResponse[0]}`);
-    } else {
-      misunderstandings.push("I'd like to better understand what you're trying to convey");
-    }
-  }
+  const currentTopics = topicCategories
+    .filter(topic => topic.patterns.test(currentMessage))
+    .map(topic => topic.name);
   
-  return misunderstandings;
+  // Check if there's no overlap between topics
+  return (
+    previousTopics.length > 0 && 
+    currentTopics.length > 0 && 
+    !previousTopics.some(topic => currentTopics.includes(topic))
+  );
+};
+
+/**
+ * Detect if there's an emotional mismatch between message and response
+ */
+const detectEmotionalMismatch = (message: string, response: string): boolean => {
+  // Check for serious emotional content
+  const seriousEmotionalContent = 
+    /\b(crying|tears|sobbing|devastated|heartbroken|miserable|despair|grief|trauma|suicide|kill myself|die)\b/i.test(message);
+  
+  // Check for inappropriately light response
+  const lightResponse = 
+    /\b(great|wonderful|excellent|fantastic|exciting|happy to hear|glad|exciting)\b/i.test(response);
+  
+  // Check for angry message with overly positive response
+  const angryMessage = 
+    /\b(angry|furious|mad|outraged|pissed|hate|despise|resent)\b/i.test(message);
+  
+  return (seriousEmotionalContent && lightResponse) || (angryMessage && lightResponse);
+};
+
+/**
+ * Enhance response based on chat log review findings
+ */
+const enhanceResponseBasedOnChatLogReview = (
+  proposedResponse: string,
+  conversationTopics: string[],
+  unaddressedConcerns: string[],
+  potentialMisunderstandings: string[]
+): string => {
+  try {
+    let enhancedResponse = proposedResponse;
+    
+    // Check if memory is already referenced in the response
+    const containsMemoryReference = /remember|mentioned|earlier|previously|you've shared|you told me|we talked about|you said|as we discussed|based on what you/i.test(proposedResponse);
+    
+    // If we need to enhance the response
+    if (
+      (conversationTopics.length > 0 || unaddressedConcerns.length > 0) && 
+      !containsMemoryReference
+    ) {
+      // Try to get memories from MemoryBank first
+      try {
+        const relevantMemories = retrieveRelevantMemories(conversationTopics.join(' '), conversationTopics);
+        
+        if (relevantMemories.length > 0) {
+          const memory = relevantMemories[0];
+          
+          // Add memory reference at beginning of response
+          enhancedResponse = `I remember you mentioned ${memory.content.substring(0, 30)}... ${enhancedResponse}`;
+          return enhancedResponse;
+        }
+      } catch (memoryError) {
+        console.error('Failed to access MemoryBank during response enhancement:', memoryError);
+      }
+      
+      // Fallback to topic-based reference
+      if (conversationTopics.length > 0) {
+        const mainTopic = conversationTopics[0];
+        enhancedResponse = `I remember we were discussing ${mainTopic}. ${enhancedResponse}`;
+      }
+    }
+    
+    // Add acknowledgment if there are unaddressed concerns
+    if (unaddressedConcerns.length > 0 && !containsMemoryReference) {
+      const mainConcern = unaddressedConcerns[0];
+      
+      if (!enhancedResponse.includes(mainConcern)) {
+        enhancedResponse = `I also remember your concern about ${mainConcern}. ${enhancedResponse}`;
+      }
+    }
+    
+    // Fix potential misunderstandings
+    if (
+      potentialMisunderstandings.includes('unaddressed question') && 
+      !enhancedResponse.includes('?')
+    ) {
+      enhancedResponse += " Was there a specific question you wanted me to answer?";
+    }
+    
+    if (potentialMisunderstandings.includes('tone mismatch')) {
+      // Add a more appropriate emotional acknowledgment
+      if (!/understand|difficult|challenging|hard|tough|painful/i.test(enhancedResponse)) {
+        enhancedResponse = `I understand this must be difficult. ${enhancedResponse}`;
+      }
+    }
+    
+    return enhancedResponse;
+  } catch (error) {
+    console.error("Error enhancing response based on chat log review:", error);
+    return proposedResponse;
+  }
+};
+
+export default {
+  processThroughChatLogReview
 };

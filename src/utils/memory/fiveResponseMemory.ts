@@ -1,199 +1,140 @@
-
 /**
- * 5ResponseMemory Module
+ * 5ResponseMemory System - Robust Short-Term Memory Failsafe
  * 
- * CRITICAL: Maintains a rolling 5-response memory buffer as a redundant backup
- * to ensure conversation context is never lost even if primary memory fails.
- * 
- * This system operates in parallel with the main memory system and serves as a
- * fail-safe to guarantee memory retention in all cases.
+ * This system maintains a record of the 5 most recent patient messages and Roger responses
+ * to ensure continuity even if primary memory systems fail.
  */
 
-// Type definition for memory entries
 export interface MemoryEntry {
-  timestamp: number;
   role: 'patient' | 'roger';
   content: string;
+  timestamp: number;
 }
 
-// In-memory storage for 5 most recent interactions
-const FIVE_RESPONSE_BUFFER: MemoryEntry[] = [];
-
-// Maximum buffer size (5 total messages - both patient and roger)
-const MAX_BUFFER_SIZE = 5;
+// In-memory storage for 5ResponseMemory
+let memoryStore: MemoryEntry[] = [];
 
 /**
- * CRITICAL: Add new response to the memory buffer
- * @param role Who is speaking ('patient' or 'roger')
- * @param content The message content
+ * Add an entry to the 5ResponseMemory system
  */
 export const addToFiveResponseMemory = (role: 'patient' | 'roger', content: string): void => {
   try {
-    console.log(`5RESPONSE_MEMORY: Recording ${role} message`);
+    console.log("5RESPONSEMEMORY: Adding entry");
     
     // Create new memory entry
     const newEntry: MemoryEntry = {
-      timestamp: Date.now(),
       role,
-      content
+      content,
+      timestamp: Date.now()
     };
     
-    // Add to buffer
-    FIVE_RESPONSE_BUFFER.push(newEntry);
+    // Add to memory store
+    memoryStore.unshift(newEntry);
     
-    // Maintain buffer size by removing oldest entries
-    if (FIVE_RESPONSE_BUFFER.length > MAX_BUFFER_SIZE) {
-      FIVE_RESPONSE_BUFFER.shift(); // Remove oldest entry
+    // Keep only the last 10 entries (5 pairs of interactions)
+    if (memoryStore.length > 10) {
+      memoryStore = memoryStore.slice(0, 10);
     }
     
-    // Save to localStorage as backup persistence
+    // Also persist to session storage as backup
     try {
-      localStorage.setItem('fiveResponseMemory', JSON.stringify(FIVE_RESPONSE_BUFFER));
-      console.log(`5RESPONSE_MEMORY: Buffer saved to localStorage (${FIVE_RESPONSE_BUFFER.length} items)`);
+      sessionStorage.setItem('rogerFiveResponseMemory', JSON.stringify(memoryStore));
     } catch (storageError) {
-      console.error('5RESPONSE_MEMORY: Failed to save to localStorage', storageError);
+      console.error('Failed to persist 5ResponseMemory to sessionStorage', storageError);
     }
     
   } catch (error) {
-    console.error('5RESPONSE_MEMORY: Failed to add to memory buffer', error);
+    console.error('Error adding to 5ResponseMemory:', error);
   }
 };
 
 /**
- * CRITICAL: Retrieve all entries from the 5-response memory buffer
- * @returns Array of memory entries
+ * Get all entries from the 5ResponseMemory system
  */
 export const getFiveResponseMemory = (): MemoryEntry[] => {
   try {
-    // Attempt to load from localStorage if buffer is empty (page refresh)
-    if (FIVE_RESPONSE_BUFFER.length === 0) {
-      const storedMemory = localStorage.getItem('fiveResponseMemory');
-      if (storedMemory) {
-        const parsedMemory = JSON.parse(storedMemory);
-        // Validate and restore memory
-        if (Array.isArray(parsedMemory)) {
-          parsedMemory.forEach(entry => {
-            if (entry.timestamp && entry.role && entry.content) {
-              FIVE_RESPONSE_BUFFER.push(entry);
-            }
-          });
-          console.log(`5RESPONSE_MEMORY: Restored ${FIVE_RESPONSE_BUFFER.length} items from localStorage`);
+    console.log("5RESPONSEMEMORY: Retrieving all entries");
+    
+    // If memory store is empty, try to recover from session storage
+    if (memoryStore.length === 0) {
+      try {
+        const storedMemory = sessionStorage.getItem('rogerFiveResponseMemory');
+        if (storedMemory) {
+          memoryStore = JSON.parse(storedMemory);
         }
+      } catch (storageError) {
+        console.error('Failed to retrieve 5ResponseMemory from sessionStorage', storageError);
       }
     }
     
-    return [...FIVE_RESPONSE_BUFFER];
+    return [...memoryStore];
   } catch (error) {
-    console.error('5RESPONSE_MEMORY: Failed to retrieve memory buffer', error);
+    console.error('Error retrieving from 5ResponseMemory:', error);
     return [];
   }
 };
 
 /**
- * CRITICAL: Get the most recent patient message
- * @returns The most recent patient message or undefined if none exists
+ * Get the most recent patient message
  */
-export const getLastPatientMessage = (): string | undefined => {
+export const getLastPatientMessage = (): string | null => {
   try {
-    // Find most recent patient entry
-    for (let i = FIVE_RESPONSE_BUFFER.length - 1; i >= 0; i--) {
-      if (FIVE_RESPONSE_BUFFER[i].role === 'patient') {
-        return FIVE_RESPONSE_BUFFER[i].content;
-      }
+    console.log("5RESPONSEMEMORY: Retrieving last patient message");
+    
+    // Find the most recent patient entry
+    const patientEntries = memoryStore.filter(entry => entry.role === 'patient');
+    if (patientEntries.length > 0) {
+      return patientEntries[0].content;
     }
-    return undefined;
+    
+    return null;
   } catch (error) {
-    console.error('5RESPONSE_MEMORY: Failed to get last patient message', error);
-    return undefined;
+    console.error('Error retrieving last patient message from 5ResponseMemory:', error);
+    return null;
   }
 };
 
 /**
- * CRITICAL: Get the most recent roger response
- * @returns The most recent roger response or undefined if none exists
- */
-export const getLastRogerResponse = (): string | undefined => {
-  try {
-    // Find most recent roger entry
-    for (let i = FIVE_RESPONSE_BUFFER.length - 1; i >= 0; i--) {
-      if (FIVE_RESPONSE_BUFFER[i].role === 'roger') {
-        return FIVE_RESPONSE_BUFFER[i].content;
-      }
-    }
-    return undefined;
-  } catch (error) {
-    console.error('5RESPONSE_MEMORY: Failed to get last roger response', error);
-    return undefined;
-  }
-};
-
-/**
- * CRITICAL: Verify the 5ResponseMemory system is operational
- * @returns Boolean indicating if the memory system is functioning
+ * Verify that the 5ResponseMemory system is operational
  */
 export const verifyFiveResponseMemorySystem = (): boolean => {
   try {
-    // Test adding and retrieving from memory
-    const testMessage = `TEST_MESSAGE_${Date.now()}`;
-    addToFiveResponseMemory('roger', testMessage);
+    console.log("5RESPONSEMEMORY: Verifying system operational status");
     
-    const allMemory = getFiveResponseMemory();
-    const lastRogerMessage = getLastRogerResponse();
+    // Try to add a test entry
+    const testContent = `SYSTEM_TEST_${Date.now()}`;
+    const originalLength = memoryStore.length;
     
-    // Verify test message was stored and retrieved
-    const systemOperational = 
-      allMemory.length > 0 &&
-      lastRogerMessage === testMessage;
+    // Add test entry
+    addToFiveResponseMemory('roger', testContent);
     
-    console.log(`5RESPONSE_MEMORY: System verification ${systemOperational ? 'PASSED' : 'FAILED'}`);
-    return systemOperational;
+    // Verify entry was added
+    const newLength = memoryStore.length;
+    const testEntry = memoryStore[0];
+    
+    // Check if entry was added successfully
+    const systemWorking = newLength > originalLength && 
+                         testEntry && 
+                         testEntry.content === testContent;
+    
+    // Remove test entry
+    memoryStore.shift();
+    
+    console.log(`5RESPONSEMEMORY: System operational: ${systemWorking}`);
+    return systemWorking;
   } catch (error) {
-    console.error('5RESPONSE_MEMORY: System verification failed', error);
+    console.error('Error verifying 5ResponseMemory system:', error);
     return false;
   }
 };
 
-// Initialize the memory system on load
+// Initialize from session storage if available
 try {
-  // Load from localStorage on startup
-  const storedMemory = localStorage.getItem('fiveResponseMemory');
+  const storedMemory = sessionStorage.getItem('rogerFiveResponseMemory');
   if (storedMemory) {
-    try {
-      const parsedMemory = JSON.parse(storedMemory);
-      if (Array.isArray(parsedMemory)) {
-        parsedMemory.forEach(entry => {
-          if (entry.timestamp && entry.role && entry.content) {
-            FIVE_RESPONSE_BUFFER.push(entry);
-          }
-        });
-        
-        // Maintain buffer size
-        while (FIVE_RESPONSE_BUFFER.length > MAX_BUFFER_SIZE) {
-          FIVE_RESPONSE_BUFFER.shift();
-        }
-        
-        console.log(`5RESPONSE_MEMORY: Initialized with ${FIVE_RESPONSE_BUFFER.length} entries from localStorage`);
-      }
-    } catch (parseError) {
-      console.error('5RESPONSE_MEMORY: Failed to parse stored memory', parseError);
-    }
-  } else {
-    console.log('5RESPONSE_MEMORY: No stored memory found, initialized empty buffer');
+    memoryStore = JSON.parse(storedMemory);
+    console.log("5RESPONSEMEMORY: Initialized from sessionStorage");
   }
-  
-  // Verify system is operational
-  verifyFiveResponseMemorySystem();
-} catch (initError) {
-  console.error('5RESPONSE_MEMORY: Initialization failed', initError);
+} catch (storageError) {
+  console.error('Failed to initialize 5ResponseMemory from sessionStorage', storageError);
 }
-
-/**
- * Export a comprehensive memory interface
- */
-export default {
-  addToFiveResponseMemory,
-  getFiveResponseMemory,
-  getLastPatientMessage,
-  getLastRogerResponse,
-  verifyFiveResponseMemorySystem
-};
