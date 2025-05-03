@@ -11,7 +11,7 @@ import { applyResponseRules } from './ruleProcessing';
 import { enhanceResponseWithMemory } from './memoryEnhancement';
 import { verifyMemoryUtilization } from './memoryEnhancement';
 import { handleLogotherapyIntegration } from './logotherapyIntegration';
-import { detectPatterns } from './patternDetection';
+import { detectPatterns } from '../patternDetection'; // Fixed import path
 import { 
   addResponseVariety,
   generateSpontaneousResponse

@@ -1,4 +1,3 @@
-
 /**
  * Logotherapy Integration for Response Processor
  * 
@@ -89,8 +88,15 @@ const determineLogotherapyPathway = (
   const lowerInput = userInput.toLowerCase();
   
   // Check recent conversation history for relevant themes
-  const recentHistory = getFiveResponseMemory() as MessageEntry[];
-  const recentPatientMessages = recentHistory
+  const recentMemory = getFiveResponseMemory();
+  
+  // Type safety: Filter for valid MessageEntry objects with a sender property
+  const validMessageEntries = recentMemory.filter(
+    (msg): msg is MessageEntry => 'sender' in msg && typeof msg.sender === 'string'
+  );
+  
+  // Extract patient messages
+  const recentPatientMessages = validMessageEntries
     .filter(msg => msg.sender === 'patient')
     .map(msg => msg.content.toLowerCase());
   
