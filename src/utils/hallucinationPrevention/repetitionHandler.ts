@@ -1,3 +1,4 @@
+
 /**
  * Repetition detection and handling
  * 
@@ -46,7 +47,7 @@ export const hasRepeatedContent = (responseText: string): boolean => {
 /**
  * Fix repeated content by keeping only unique sentences
  */
-export const fixRepeatedContent = (responseText: string): string => {
+export const fixRepeatedContent = (responseText: string, userInput: string = ''): string => {
   // Split into sentences
   const sentences = responseText.split(/[.!?]+/).filter(s => s.trim().length > 0);
   

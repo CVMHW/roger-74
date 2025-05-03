@@ -1,3 +1,4 @@
+
 /**
  * Pattern fixer for dangerous repetition patterns
  */
@@ -27,7 +28,7 @@ export const fixDangerousRepetitionPatterns = (responseText: string, userInput: 
   }
   
   // Fix the repetition issues
-  let fixedResponse = fixRepeatedContent(responseText);
+  let fixedResponse = fixRepeatedContent(responseText, userInput);
   
   // If there was a "shared that" pattern, we need more aggressive fixing
   if (hasSharedThatIssue) {

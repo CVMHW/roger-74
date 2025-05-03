@@ -131,7 +131,7 @@ const replacePatternWithAlternative = (text: string, userInput: string): string 
 /**
  * Fixes repeated content in a response
  */
-export const fixRepeatedContent = (responseText: string): string => {
+export const fixRepeatedContent = (responseText: string, userInput: string): string => {
   // First, let's completely replace the "It seems like you shared that" pattern
   let fixedResponse = responseText;
   

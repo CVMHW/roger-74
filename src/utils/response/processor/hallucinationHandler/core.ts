@@ -64,7 +64,7 @@ export const handlePotentialHallucinations = (
     
     // SECOND PRIORITY: Check for dangerous repetition patterns that need immediate fixing
     // Example: "I hear you're dealing with I hear you're dealing with"
-    const { fixedResponse, hasRepetitionIssue } = fixDangerousRepetitionPatterns(responseText);
+    const { fixedResponse, hasRepetitionIssue } = fixDangerousRepetitionPatterns(responseText, userInput);
     
     // If we fixed repetition, return immediately
     if (hasRepetitionIssue) {
@@ -86,7 +86,7 @@ export const handlePotentialHallucinations = (
     
     // THIRD PRIORITY: Use the repetition handler to fix any other repeated content
     if (hasRepeatedContent(responseText)) {
-      const correctedText = fixRepeatedContent(responseText);
+      const correctedText = fixRepeatedContent(responseText, userInput);
       console.log("REPETITION FIXED: Using repetition handler");
       
       return {
