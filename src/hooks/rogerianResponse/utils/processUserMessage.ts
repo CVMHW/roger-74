@@ -1,3 +1,4 @@
+
 import { MessageType } from '../../../components/Message';
 import { createMessage } from '../../../utils/messageUtils';
 import { handleEmotionalPatterns } from '../emotionalResponseHandlers';
@@ -7,6 +8,7 @@ import { enhanceResponse } from './responseEnhancer';
 import { detectPatterns } from './patternDetection';
 import { useFeedbackLoopHandler } from '../../response/feedbackLoopHandler';
 import { checkAllRules } from '../../../utils/rulesEnforcement/rulesEnforcer';
+import { ProcessMessageProps } from '../messageProcessor/types';
 
 /**
  * Enhanced process user message with pattern-matching NLP capabilities,
@@ -95,7 +97,7 @@ export const processUserMessage = async (
     }
     
     // Process standard messages
-    const response = await processMessage(
+    const messageProcessorProps: ProcessMessageProps = {
       userInput,
       detectConcerns,
       generateResponse,
@@ -103,7 +105,9 @@ export const processUserMessage = async (
       conversationHistory,
       clientPreferences,
       updateStage
-    );
+    };
+    
+    const response = await processMessage(messageProcessorProps);
     
     // Enhance the response with memory rules, master rules, and chat log review
     const finalResponseText = enhanceResponse(
@@ -133,3 +137,4 @@ export const processUserMessage = async (
     ));
   }
 };
+
