@@ -4,6 +4,7 @@
  */
 
 import { MessageEntry } from './types';
+import { searchMemory } from '../memory/memoryController';
 
 /**
  * Leverage memory systems for personalized response
@@ -16,8 +17,18 @@ export const leverageMemorySystems = (userInput: string): string[] => {
   try {
     // Import memory systems here to avoid circular dependencies
     const { getFiveResponseMemory } = require('../memory/fiveResponseMemory');
-    const { retrieveRelevantMemories } = require('../memory/memoryBank');
     const { getContextualMemory } = require('../nlpProcessor');
+    
+    // First, use our refactored memory system
+    const relevantMemories = searchMemory({
+      keywords: extractKeywords(userInput),
+      role: 'patient',
+      limit: 3
+    });
+    
+    if (relevantMemories.length > 0) {
+      memories.push(relevantMemories[0].content);
+    }
     
     // Check FiveResponseMemory for recent context
     const fiveResponseMemory = getFiveResponseMemory();
@@ -35,27 +46,37 @@ export const leverageMemorySystems = (userInput: string): string[] => {
         .filter(msg => msg.sender === 'patient')
         .map(msg => msg.content);
       
-      if (patientStatements.length > 0) {
+      if (patientStatements.length > 0 && !memories.includes(patientStatements[0])) {
         memories.push(patientStatements[Math.floor(Math.random() * patientStatements.length)]);
       }
     }
     
-    // Check MemoryBank for deeper context
-    const relevantMemories = retrieveRelevantMemories(userInput);
-    if (relevantMemories.length > 0) {
-      memories.push(relevantMemories[0].content);
-    }
-    
-    // Check primary memory system
+    // Check primary memory system as fallback
     const contextualMemory = getContextualMemory(userInput);
     if (contextualMemory.dominantTopics && contextualMemory.dominantTopics.length > 0) {
-      memories.push(contextualMemory.dominantTopics[0]);
+      // Use this as last resort if we have no other memories
+      if (memories.length === 0) {
+        memories.push(contextualMemory.dominantTopics[0]);
+      }
     }
   } catch (error) {
     console.error('Error accessing memory systems in logotherapy integration:', error);
   }
   
   return memories;
+};
+
+/**
+ * Extract keywords from user input for memory search
+ */
+const extractKeywords = (text: string): string[] => {
+  // Split by non-word characters and filter out common words and short words
+  return text.toLowerCase()
+    .split(/\W+/)
+    .filter(word => 
+      word.length > 3 && 
+      !['this', 'that', 'with', 'have', 'what', 'when', 'where', 'would', 'could', 'should', 'about'].includes(word)
+    );
 };
 
 /**
