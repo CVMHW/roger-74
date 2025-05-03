@@ -63,6 +63,7 @@ export const useChatLogic = (): ChatLogicReturn => {
   const { processingContext, setProcessingContext } = useProcessContext();
   const { isGenericResponse } = useGenericResponseDetection();
   const { validateResponse } = useResponseValidator(rogerResponseHistory, isGenericResponse);
+  // Get crisis detector functionality
   const { checkForCrisisContent } = useCrisisDetector();
   const { createSpecificResponse } = useSpecificResponseGenerator();
 
