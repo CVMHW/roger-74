@@ -9,5 +9,4 @@
 // Export public API
 export { detectEmergencyPath } from './pathDetector';
 export { applyEmergencyIntervention } from './interventionHandler';
-export { EmergencyPathFlags, EmergencyPathResult } from './types';
-
+export type { EmergencyPathFlags, EmergencyPathResult } from './types';

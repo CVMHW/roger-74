@@ -1,4 +1,3 @@
-
 /**
  * Emergency Path Detector
  * 
@@ -179,8 +178,9 @@ export const detectEmergencyPath = (
     recommendedAction = 'minor_intervention';
   }
   
-  const requiresImmediateIntervention = highestSeverity === SeverityLevel.SEVERE || 
-                                      (highestSeverity === SeverityLevel.HIGH && flags.length >= 2);
+  const requiresImmediateIntervention = 
+    highestSeverity === SeverityLevel.SEVERE || 
+    (highestSeverity === SeverityLevel.HIGH && flags.length >= 2);
   
   return {
     isEmergencyPath,
