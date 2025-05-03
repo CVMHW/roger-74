@@ -1,10 +1,11 @@
+
 /**
  * Logotherapy Hallucination Handler
  * 
  * Specialized handler for preventing hallucinations in logotherapeutic responses
  */
 
-import { MemoryPiece } from '../.././../memory/memoryBank';
+import { MemoryPiece } from '../../../memory/memoryBank';
 
 /**
  * Handle potential hallucinations in logotherapeutic responses
