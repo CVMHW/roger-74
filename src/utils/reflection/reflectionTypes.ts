@@ -20,7 +20,9 @@ export type FeelingCategory =
   | 'proud'
   | 'excited'
   | 'passionate'
-  | 'neutral';
+  | 'neutral'
+  | 'relieved'
+  | 'overwhelmed';
 
 // Concern types that can be identified
 export type ConcernType = 
@@ -56,7 +58,11 @@ export type DevelopmentalStage =
   | 'young-adult'
   | 'adult'
   | 'older-adult'
-  | 'unknown';
+  | 'unknown'
+  | 'infant_toddler'
+  | 'young_child'
+  | 'middle_childhood'
+  | 'young_adult';
 
 // Conversation stages for adaptive response
 export type ConversationStage =
@@ -67,7 +73,10 @@ export type ConversationStage =
   | 'goal-setting'
   | 'coping-strategies'
   | 'wrap-up'
-  | 'follow-up';
+  | 'follow-up'
+  | 'initial'
+  | 'early'
+  | 'established';
 
 // Memory structure for response enhancement
 export interface PatientMemory {
@@ -78,7 +87,7 @@ export interface PatientMemory {
   timestamp: number;
 }
 
-// Add TraumaResponseAnalysis type which was missing
+// TraumaResponseAnalysis type
 export interface TraumaResponseAnalysis {
   dominant4F: {
     type: 'fight' | 'flight' | 'freeze' | 'fawn';
@@ -89,14 +98,51 @@ export interface TraumaResponseAnalysis {
     intensity: 'mild' | 'moderate' | 'severe' | 'extreme';
   };
   angerLevel: 'calm' | 'irritated' | 'angry' | 'enraged';
+  hybrid?: boolean; // Adding this property to fix related error
 }
 
-// Export all types
-export {
-  FeelingCategory,
-  ConcernType,
-  DevelopmentalStage,
-  ConversationStage,
-  PatientMemory,
-  TraumaResponseAnalysis
-};
+// Child emotion related types
+export type ChildEmotionCategory = 
+  | 'happy'
+  | 'sad'
+  | 'angry'
+  | 'anxious'
+  | 'confused'
+  | 'silly'
+  | 'excited'
+  | 'calm'
+  | 'hungry'
+  | 'tired'
+  | 'worried'
+  | 'scared'
+  | 'mad'
+  | 'loved';
+
+export interface ChildWheelEmotionData {
+  detectedFeeling: string;
+  category: ChildEmotionCategory;
+  relatedFeelings: string[];
+  color: string;
+  simpleDescription?: string;
+}
+
+// Context aware reflection type
+export interface ContextAwareReflection {
+  patterns: RegExp[];
+  response: string;
+  tags?: string[];
+  priority?: number;
+}
+
+// Reflection phrases and principles types
+export interface ReflectionPhrases {
+  openingPhrases: string[];
+  transitionPhrases: string[];
+  closingPhrases: string[];
+}
+
+export interface ReflectionPrinciple {
+  name: string;
+  description: string;
+  examples: string[];
+}

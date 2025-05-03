@@ -1,353 +1,68 @@
+// Add this line at the top of the file if it doesn't exist
+const MEMORY_STORAGE = { data: [] };
+
 /**
- * Memory Enforcer Module
+ * Memory Enforcer
  * 
- * UNCONDITIONAL RULE: Roger must ALWAYS leverage memory in every response.
- * This module enforces multiple checks to guarantee memory utilization
- * in every single interaction.
+ * Applies rules to enhance memory utilization in responses.
+ * This ensures Roger demonstrates understanding of the patient's concerns
+ * and integrates past conversation details into new responses.
  */
 
-import { getContextualMemory, recordToMemory, getAllMemory } from '../nlpProcessor';
-import { RuleType, RulePriority, withRuleEnforcement } from './rulesEnforcer';
-import { addToFiveResponseMemory, getLastPatientMessage, getFiveResponseMemory, verifyFiveResponseMemorySystem } from '../memory/fiveResponseMemory';
-
-// Memory reference patterns that should appear in responses
-const MEMORY_REFERENCE_PATTERNS = [
-  "remember", "mentioned", "earlier", "previously", 
-  "you've shared", "you told me", "we talked about",
-  "you said", "as we discussed", "based on what you"
-];
+import { getContextualMemory } from '../nlpProcessor';
+import { retrieveRelevantMemories } from '../memory/memoryBank';
+import { enhanceResponseWithMemory } from '../response/responseIntegration';
 
 /**
- * UNCONDITIONAL: Verify that a proposed response utilizes memory
+ * Enforce memory utilization in responses
  */
-export const verifyMemoryUtilization = (
-  userInput: string,
-  proposedResponse: string,
-  conversationHistory: string[] = []
-): boolean => {
-  console.log("UNCONDITIONAL MEMORY CHECK: Verifying memory utilization");
-  
-  try {
-    // Get contextual memory from primary system
-    const memory = getContextualMemory(userInput);
-    
-    // REDUNDANT: Also check 5ResponseMemory system
-    const fiveMemory = getFiveResponseMemory();
-    const hasFiveResponseMemory = fiveMemory.length > 0;
-    
-    // Check if response references memory in any way
-    const hasMemoryReference = MEMORY_REFERENCE_PATTERNS.some(ref => 
-      proposedResponse.toLowerCase().includes(ref.toLowerCase())
-    );
-    
-    // Check if response uses specific topics or emotions from memory
-    const usesSpecificMemory = memory.dominantTopics.some(topic => 
-      proposedResponse.toLowerCase().includes(topic.toLowerCase())
-    ) || proposedResponse.toLowerCase().includes(memory.dominantEmotion.toLowerCase());
-    
-    // Check for relevant statement correlation
-    const usesRelevantContext = memory.relevantStatements.some(statement => {
-      // Find key words (3+ letters) in the statement
-      const statementWords = statement.toLowerCase().split(/\s+/).filter(word => word.length > 3);
-      // Check if any of these words appear in the response
-      return statementWords.some(word => proposedResponse.toLowerCase().includes(word));
-    });
-    
-    // REDUNDANT: Check 5ResponseMemory for topic continuity if primary memory fails
-    let usesFiveResponseMemory = false;
-    if (!usesSpecificMemory && !usesRelevantContext && hasFiveResponseMemory) {
-      // Get recent patient messages from 5ResponseMemory
-      const recentPatientMessages = fiveMemory
-        .filter(entry => entry.role === 'patient')
-        .map(entry => entry.content);
-      
-      if (recentPatientMessages.length > 0) {
-        // Extract keywords from recent messages
-        const keywords = recentPatientMessages
-          .join(' ')
-          .toLowerCase()
-          .split(/\s+/)
-          .filter(word => word.length > 3)
-          .filter(word => !['this', 'that', 'then', 'than', 'what', 'when', 'where', 'which'].includes(word));
-        
-        // Check if response uses any of these keywords
-        usesFiveResponseMemory = keywords.some(keyword => 
-          proposedResponse.toLowerCase().includes(keyword)
-        );
-      }
-    }
-    
-    console.log("Memory utilization check results:", { 
-      hasMemoryReference, 
-      usesSpecificMemory, 
-      usesRelevantContext,
-      usesFiveResponseMemory
-    });
-    
-    // A response uses memory if it meets ANY of the memory criteria
-    const memoryUtilizationDetected = hasMemoryReference || usesSpecificMemory || usesRelevantContext || usesFiveResponseMemory;
-    
-    // UNCONDITIONAL RULE: Log violation if memory not used
-    if (!memoryUtilizationDetected) {
-      console.error("UNCONDITIONAL RULE VIOLATION: Response does not utilize memory");
-    }
-    
-    return memoryUtilizationDetected;
-  } catch (error) {
-    console.error('Error verifying memory utilization:', error);
-    return false;  // Return false to force memory enhancement
-  }
-};
-
-/**
- * UNCONDITIONAL: Force memory enhancement when verification fails
- * Enhanced to detect new conversations and avoid incorrect memory references
- */
-export const forceMemoryEnhancement = (response: string, userInput: string): string => {
-  console.log("UNCONDITIONAL RULE ENFORCEMENT: Adding memory references to response");
-  
-  try {
-    // CRITICAL CHECK: Verify if this is a new or early conversation
-    const isEarlyConversation = MEMORY_STORAGE.patientStatements.length <= 1;
-    
-    // If this is a new/early conversation, avoid specific memory references
-    if (isEarlyConversation) {
-      console.log("EARLY CONVERSATION DETECTED: Using generic engagement instead of memory reference");
-      
-      // For new conversations, use engagement prompts rather than memory references
-      const engagementPhrases = [
-        "I'm here to listen. ",
-        "I appreciate you sharing that with me. ",
-        "Thanks for telling me about that. ",
-        "I'm interested in hearing more. "
-      ];
-      
-      // Select a random engagement phrase
-      const randomPhrase = engagementPhrases[Math.floor(Math.random() * engagementPhrases.length)];
-      
-      // Create enhanced response with appropriate engagement
-      return randomPhrase + response;
-    }
-    
-    // CRITICAL: Check both memory systems for redundancy
-    
-    // First try 5ResponseMemory as it's our most reliable recent memory system
-    try {
-      // Verify 5ResponseMemory is operational
-      const fiveResponseMemoryOperational = verifyFiveResponseMemorySystem();
-      
-      if (fiveResponseMemoryOperational) {
-        const lastPatientMessage = getLastPatientMessage();
-        if (lastPatientMessage) {
-          const snippet = lastPatientMessage.substring(0, 30);
-          return `I remember you said "${snippet}..." ${response}`;
-        }
-      }
-    } catch (fiveMemoryError) {
-      console.error("Error accessing 5ResponseMemory:", fiveMemoryError);
-    }
-    
-    // Fallback to primary memory system
-    const memory = getContextualMemory(userInput);
-    
-    // Different ways to incorporate memory
-    const memoryPhrases = [
-      `I remember you mentioned ${memory.dominantTopics[0] || 'what you\'ve been going through'} earlier. `,
-      `Based on what you've told me about ${memory.dominantTopics[0] || 'your situation'}, `,
-      `Considering our conversation about ${memory.dominantTopics[0] || 'your concerns'}, `,
-      `From what you've shared about ${memory.dominantTopics[0] || 'your experiences'}, `,
-      `As we've been discussing ${memory.dominantTopics[0] || 'these issues'}, `
-    ];
-    
-    // Select a memory phrase
-    const randomPhrase = memoryPhrases[Math.floor(Math.random() * memoryPhrases.length)];
-    
-    // Create enhanced response with memory reference
-    const enhancedResponse = randomPhrase + response;
-    
-    // Log the memory enforcement
-    console.log("UNCONDITIONAL RULE ENFORCED: Memory reference added to response");
-    
-    return enhancedResponse;
-  } catch (error) {
-    console.error('Critical error in force memory enhancement:', error);
-    
-    // CRITICAL: Try to use 5ResponseMemory as fallback
-    try {
-      const lastPatientMessage = getLastPatientMessage();
-      if (lastPatientMessage) {
-        const snippet = lastPatientMessage.substring(0, 30);
-        return `I remember you said "${snippet}..." ${response}`;
-      }
-    } catch (memoryError) {
-      console.error('Critical failure in 5ResponseMemory fallback:', memoryError);
-    }
-    
-    // Even if everything fails, still add a basic memory reference
-    return `I remember what you've shared with me. ${response}`;
-  }
-};
-
-/**
- * UNCONDITIONAL: Process response through memory rules system
- * Enhanced to detect new conversations and avoid incorrect memory references
- */
-export const processResponseWithMemoryRules = (
-  response: string,
-  userInput: string,
-  conversationHistory: string[] = []
-): string => {
-  console.log("UNCONDITIONAL MEMORY RULE: Processing response");
-  
-  try {
-    // CRITICAL: First verify 5ResponseMemory is operational
-    verifyFiveResponseMemorySystem();
-    
-    // CRITICAL: Add to 5ResponseMemory 
-    addToFiveResponseMemory('patient', userInput);
-    
-    // CRITICAL CHECK: Verify if this is a new or early conversation
-    const isEarlyConversation = conversationHistory.length <= 1;
-    
-    // For very early conversations, avoid explicit memory references
-    if (isEarlyConversation) {
-      console.log("EARLY CONVERSATION DETECTED: Skipping explicit memory references");
-      
-      // Record to memory systems but without adding memory references
-      recordToMemory(userInput, response);
-      addToFiveResponseMemory('roger', response);
-      
-      return response;
-    }
-    
-    // REQUIRED: Verify memory system is active
-    const memory = getAllMemory();
-    if (!memory.persistentMemory) {
-      console.error("CRITICAL VIOLATION: Memory system disabled");
-      // Force enable memory
-      recordToMemory("SYSTEM: Memory verification", "SYSTEM: Re-enabling memory");
-    }
-    
-    // REQUIRED: Check if the response already uses memory
-    const usesMemory = verifyMemoryUtilization(userInput, response, conversationHistory);
-    
-    // UNCONDITIONAL: If memory isn't used, force memory enhancement
-    if (!usesMemory) {
-      console.warn("UNCONDITIONAL RULE ENFORCEMENT: Response requires memory enhancement");
-      const enhancedResponse = forceMemoryEnhancement(response, userInput);
-      
-      // Record the enhanced response to BOTH memory systems
-      recordToMemory(userInput, enhancedResponse);
-      addToFiveResponseMemory('roger', enhancedResponse);
-      
-      return enhancedResponse;
-    }
-    
-    // Already uses memory - record to BOTH systems and return
-    recordToMemory(userInput, response);
-    addToFiveResponseMemory('roger', response);
-    
-    return response;
-    
-  } catch (error) {
-    console.error("CRITICAL ERROR in memory rule processing:", error);
-    
-    // CRITICAL: Try 5ResponseMemory fallback
-    try {
-      const fiveResponseMemory = getFiveResponseMemory();
-      const lastPatientMessage = getLastPatientMessage();
-      
-      if (lastPatientMessage) {
-        const snippet = lastPatientMessage.substring(0, 20);
-        const fallbackResponse = `I remember you mentioned "${snippet}..." ${response}`;
-        
-        // Record to 5ResponseMemory
-        addToFiveResponseMemory('roger', fallbackResponse);
-        
-        return fallbackResponse;
-      }
-    } catch (fiveResponseError) {
-      console.error("CRITICAL FAILURE in 5ResponseMemory fallback:", fiveResponseError);
-    }
-    
-    // UNCONDITIONAL: Even in critical failure, ensure memory reference
-    const fallbackResponse = `I remember what you've shared with me. ${response}`;
-    
-    try {
-      // Try to record to memory even in error state
-      recordToMemory(userInput, fallbackResponse);
-      
-      // Try to record to 5ResponseMemory
-      addToFiveResponseMemory('roger', fallbackResponse);
-    } catch (memError) {
-      console.error("CRITICAL MEMORY FAILURE:", memError);
-    }
-    
-    return fallbackResponse;
-  }
-};
-
-// Wrap the process function with rule enforcement to ensure double checking
-export const processWithEnforcedMemoryRules = withRuleEnforcement(processResponseWithMemoryRules);
-
-// Export a function that applies all memory rules as a single call
 export const applyMemoryRules = (
-  response: string, 
+  responseText: string,
   userInput: string,
-  conversationHistory: string[] = []
+  conversationHistory: string[]
 ): string => {
-  console.log("APPLYING ALL MEMORY RULES: Beginning enforcement");
-  
-  // CRITICAL: Verify 5ResponseMemory system before proceeding
-  verifyFiveResponseMemorySystem();
-  
-  // CRITICAL: Record to both memory systems first 
-  addToFiveResponseMemory('patient', userInput);
-  recordToMemory(userInput, "PROCESSING RESPONSE");
-  
-  // Process through enforced rules
-  const memoryEnforcedResponse = processWithEnforcedMemoryRules(
-    response, 
-    userInput,
-    conversationHistory
-  );
-  
-  // Perform final verification through BOTH memory systems
-  const finalCheckPassed = verifyMemoryUtilization(
-    userInput,
-    memoryEnforcedResponse,
-    conversationHistory
-  );
-  
-  // CRITICAL: Record to both memory systems
-  addToFiveResponseMemory('roger', memoryEnforcedResponse);
-  recordToMemory(userInput, memoryEnforcedResponse);
-  
-  if (!finalCheckPassed) {
-    console.error("CRITICAL VERIFICATION FAILURE: Memory rules not enforced correctly");
+  try {
+    console.log("MEMORY ENFORCER: Applying memory rules to response");
     
-    // Try fallback from 5ResponseMemory first
-    try {
-      const lastPatient = getLastPatientMessage();
-      if (lastPatient) {
-        const snippet = lastPatient.substring(0, 20);
-        return `I remember our conversation about ${snippet}... ${memoryEnforcedResponse}`;
-      }
-    } catch (fallbackError) {
-      console.error("CRITICAL FAILURE in 5ResponseMemory fallback:", fallbackError);
+    // UNCONDITIONAL RULE: Always use contextual memory
+    const memory = getContextualMemory(userInput);
+    
+    // If we have dominant topics or emotions, enhance the response
+    if (memory.dominantTopics.length > 0 || memory.dominantEmotion !== 'neutral') {
+      const topicPhrase = memory.dominantTopics.length > 0 
+        ? `talking about ${memory.dominantTopics[0]}`
+        : 'sharing your thoughts';
+      
+      const emotionPhrase = memory.dominantEmotion !== 'neutral'
+        ? `feeling ${memory.dominantEmotion}`
+        : 'having these experiences';
+      
+      const memoryEnhancedResponse = `I remember you ${topicPhrase} and ${emotionPhrase}. ${responseText}`;
+      return memoryEnhancedResponse;
     }
     
-    // Last resort emergency fix
-    return `I remember our conversation about ${userInput.substring(0, 20)}... ${memoryEnforcedResponse}`;
+    // UNCONDITIONAL RULE: Always check for relevant memories
+    const relevantMemories = retrieveRelevantMemories(userInput);
+    
+    if (relevantMemories.length > 0) {
+      // Use most relevant memory for response enhancement
+      const topMemory = relevantMemories[0];
+      
+      // Enhance response based on memory content
+      const memoryEnhancedResponse = `I remember you mentioned ${topMemory.content.substring(0, 30)}... ${responseText}`;
+      return memoryEnhancedResponse;
+    }
+    
+    // UNCONDITIONAL RULE: Enhance response with memory integration
+    const enhancedResponse = enhanceResponseWithMemory(responseText, userInput);
+    return enhancedResponse;
+    
+  } catch (error) {
+    console.error('Error applying memory rules:', error);
+    return responseText;
   }
-  
-  return memoryEnforcedResponse;
 };
 
-// Export functions
 export default {
-  verifyMemoryUtilization,
-  forceMemoryEnhancement,
-  processResponseWithMemoryRules,
   applyMemoryRules
 };

@@ -446,16 +446,15 @@ export const generatePersonalSharingResponse = (message: string): string => {
   return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
 };
 
-import { 
-  isWaitingRoomRelated, 
+// Add these imports at the appropriate location in the file
+import {
+  isWaitingRoomRelated,
   generateWaitingRoomResponse,
-  shouldUseSmallTalk,
-  generateSmallTalkResponse
+  shouldUseSmallTalk
 } from './conversation/smallTalk';
 
-// Re-export the imported small talk functions
-export { 
-  isWaitingRoomRelated, 
+export {
+  isWaitingRoomRelated,
   generateWaitingRoomResponse,
-  shouldUseSmallTalk 
+  shouldUseSmallTalk
 };

@@ -19,8 +19,8 @@ import {
   adaptResponseStyle,
   generateFirstMessageResponse,
   enhanceRapportInEarlyConversation,
-  identifyImmediateConcern,
-  generateImmediateConcernResponse,
+  identifyImmediateConcern as identifySmallStuffConcern,
+  generateImmediateConcernResponse as generateSmallStuffConcernResponse,
   generateSmallTalkTransition
 } from './theSmallStuff';
 
@@ -31,13 +31,13 @@ export {
   adaptResponseStyle,
   generateFirstMessageResponse,
   enhanceRapportInEarlyConversation,
-  identifyImmediateConcern as identifySmallStuffConcern,
-  generateImmediateConcernResponse as generateSmallStuffConcernResponse,
+  identifySmallStuffConcern,
+  generateSmallStuffConcernResponse,
   generateSmallTalkTransition
 };
 
-// Export smallTalk with explicit naming to avoid conflicts
-export { 
+// Import and export smallTalk functions correctly
+import {
   isLikelyChild,
   isLikelyNewcomer,
   detectSocialOverstimulation,
@@ -46,7 +46,28 @@ export {
   turnTakingPrompts
 } from './smallTalk';
 
-// Export specific functions from earlyEngagement to avoid conflicts
+export {
+  isLikelyChild,
+  isLikelyNewcomer,
+  detectSocialOverstimulation,
+  smallTalkTopics,
+  conversationStarters,
+  turnTakingPrompts
+};
+
+// Export specific functions from earlyEngagement
+import {
+  isLikelyTeen,
+  isLikelyMale,
+  isLikelyBlueCollar,
+  mightPreferSimpleLanguage,
+  getAppropriateConversationStyle,
+  shouldUseWaitingRoomEngagement,
+  identifyImmediateConcern,
+  generateImmediateConcernResponse,
+  generateWaitingRoomEngagement
+} from './smallTalk';
+
 export {
   isLikelyTeen,
   isLikelyMale,
@@ -54,19 +75,25 @@ export {
   mightPreferSimpleLanguage,
   getAppropriateConversationStyle,
   shouldUseWaitingRoomEngagement,
-  // Re-export with original names from waitingRoomEngagement
   identifyImmediateConcern,
   generateImmediateConcernResponse,
   generateWaitingRoomEngagement
-} from './earlyEngagement';
+};
 
 // Export culturalConnector functions explicitly from their source file
-export { 
+import { 
   generateCulturalConnectionPrompt,
   incorporateRogerPersonality,
   generateConnectionStatement,
   generateTransitionToEric 
 } from './earlyEngagement/culturalConnector';
+
+export {
+  generateCulturalConnectionPrompt,
+  incorporateRogerPersonality,
+  generateConnectionStatement,
+  generateTransitionToEric 
+};
 
 // Export everything else from smallTalkUtils directly
 export * from './smallTalkUtils';

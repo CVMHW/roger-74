@@ -99,8 +99,9 @@ export const shouldUseSmallTalk = (userInput: string, messageCount: number): boo
   return smallTalkPatterns.some(pattern => pattern.test(userInput));
 };
 
-// Now explicitly export these functions from patientDetectors
-export { isLikelyChild, isLikelyNewcomer } from './patientDetectors';
+// Import these functions from patientDetectors.ts to re-export them
+import { isLikelyChild, isLikelyNewcomer } from './patientDetectors';
+export { isLikelyChild, isLikelyNewcomer };
 
 // Define missing functions from earlyConversationHandlers
 export const isLikelyTeen = (userInput: string): boolean => {
