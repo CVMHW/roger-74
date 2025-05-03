@@ -16,6 +16,7 @@ import {
   generateSpontaneousResponse
 } from '../personalityVariation';
 import { correctGrammar } from './grammarCorrection';
+import { selectResponseApproach } from './approachSelector';
 
 /**
  * Process a response through the core rules system
@@ -29,53 +30,47 @@ export const processCore = (
   try {
     console.log("CORE PROCESSING: Applying response processing pipeline");
     
-    // First enhance with meaning and purpose (logotherapy integration)
-    const logotherapyEnhancedResponse = handleLogotherapyIntegration(response, userInput, conversationHistory);
+    // FIRST: Select the appropriate approach based on context
+    // This determines how heavily to apply different aspects of Roger's training
+    const approach = selectResponseApproach(userInput, conversationHistory);
+    console.log("Selected approach:", approach);
+    
+    let processedResponse = response;
     
     // Apply basic memory enhancement
-    const memoryEnhancedResponse = enhanceResponseWithMemory({
-      response: logotherapyEnhancedResponse,
+    processedResponse = enhanceResponseWithMemory({
+      response: processedResponse,
       userInput,
       conversationHistory
     });
     
+    // Apply logotherapy integration - with strength based on selected approach
+    if (approach.logotherapyStrength > 0.3) {
+      processedResponse = handleLogotherapyIntegration(processedResponse, userInput, conversationHistory);
+    }
+    
     // Apply all response rules
-    const ruleProcessedResponse = applyResponseRules(
-      memoryEnhancedResponse,
+    processedResponse = applyResponseRules(
+      processedResponse,
       userInput,
       messageCount,
       conversationHistory
     );
     
     // Check for repetitive patterns
-    const patternResult = detectConversationPatterns(ruleProcessedResponse, conversationHistory);
+    const patternResult = detectConversationPatterns(processedResponse, conversationHistory);
     
-    let finalResponse;
-    
-    // If repetition detected, force higher spontaneity
-    if (patternResult.isRepetitive || patternResult.repetitionScore > 0.5) {
-      console.log("PATTERN DETECTED: Increasing spontaneity and creativity");
-      
-      finalResponse = addResponseVariety(
-        ruleProcessedResponse,
-        userInput,
-        messageCount,
-        95, // Very high spontaneity
-        90  // Very high creativity
-      );
-    } else {
-      // Add standard personality variation to ensure spontaneity (Universal Law)
-      finalResponse = addResponseVariety(
-        ruleProcessedResponse,
-        userInput,
-        messageCount,
-        70, // Standard spontaneity
-        65  // Standard creativity
-      );
-    }
+    // Add personality variation based on the selected approach
+    processedResponse = addResponseVariety(
+      processedResponse,
+      userInput,
+      messageCount,
+      approach.spontaneityLevel,  // Dynamic spontaneity level
+      approach.creativityLevel    // Dynamic creativity level
+    );
     
     // Apply grammar correction with user input for length adjustment
-    return correctGrammar(finalResponse, userInput);
+    return correctGrammar(processedResponse, userInput);
     
   } catch (error) {
     console.error('Error in core response processing:', error);

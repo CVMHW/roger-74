@@ -35,6 +35,9 @@ export {
   handleSuicidalIdeation
 };
 
+// Export response approach selection system
+export { selectResponseApproach, adjustApproachForConversationFlow } from '../response/processor/approachSelector';
+
 // Export other rule systems
 export * from './conversationRules';
 export * from './clinicalProtections';

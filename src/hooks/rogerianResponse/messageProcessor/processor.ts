@@ -11,6 +11,7 @@ import { processPetIllnessConcerns } from '../processors/petIllnessProcessor';
 import { processMentalHealthConcerns } from '../processors/mentalHealthProcessor';
 import { processGeneralMessage } from '../processors/generalMessageProcessor';
 import { correctGrammar } from '../../../utils/response/processor/grammarCorrection';
+import { selectResponseApproach } from '../../../utils/response/processor/approachSelector';
 
 /**
  * Processes user messages and generates appropriate responses
@@ -27,6 +28,10 @@ export const processUserMessage = async (
   try {
     // CRITICAL - Check if user just shared something but Roger is about to ask "what's going on"
     const isContentfulFirstMessage = userInput.length > 15 && conversationHistory.length <= 1;
+    
+    // Determine the appropriate approach before processing
+    const approach = selectResponseApproach(userInput, conversationHistory);
+    console.log("Selected response approach:", approach.type, "with logotherapy strength:", approach.logotherapyStrength);
     
     // If this is the first substantive message, ensure we don't ask a redundant question
     if (isContentfulFirstMessage) {
@@ -52,18 +57,20 @@ export const processUserMessage = async (
       }
     }
     
-    // Process everyday frustrations and small talk
-    const frustrationOrSmallTalkResponse = await processFrustrationAndSmallTalk({
-      userInput,
-      baseProcessUserMessage,
-      conversationHistory,
-      updateStage
-    });
-    
-    if (frustrationOrSmallTalkResponse) {
-      // Apply grammar correction to the response text with user input for length adjustment
-      frustrationOrSmallTalkResponse.text = correctGrammar(frustrationOrSmallTalkResponse.text, userInput);
-      return frustrationOrSmallTalkResponse;
+    // Process everyday frustrations and small talk - particularly important for social situations
+    if (approach.type === 'smalltalk' || approach.type === 'everydayFrustration') {
+      const frustrationOrSmallTalkResponse = await processFrustrationAndSmallTalk({
+        userInput,
+        baseProcessUserMessage,
+        conversationHistory,
+        updateStage
+      });
+      
+      if (frustrationOrSmallTalkResponse) {
+        // Apply grammar correction to the response text with user input for length adjustment
+        frustrationOrSmallTalkResponse.text = correctGrammar(frustrationOrSmallTalkResponse.text, userInput);
+        return frustrationOrSmallTalkResponse;
+      }
     }
     
     // CRITICAL: Check for suicide/self-harm mentions as next highest priority

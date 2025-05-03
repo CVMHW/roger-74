@@ -15,6 +15,7 @@ import { recordToMemorySystems } from './memorySystemHandler';
 import { handleLogotherapyIntegration } from './logotherapy/integrationHandler';
 import { handlePotentialHallucinations } from './hallucinationHandler';
 import { correctGrammar } from './grammarCorrection';
+import { selectResponseApproach, adjustApproachForConversationFlow } from './approachSelector';
 
 /**
  * Process a response through all enhancement systems
@@ -30,11 +31,23 @@ export const processCompleteResponse = (
     // Get conversation stage
     const { isEarlyConversation, messageCount } = determineConversationStage();
     
+    // Select appropriate response approach based on content and context
+    const initialApproach = selectResponseApproach(userInput, conversationHistory);
+    const approach = adjustApproachForConversationFlow(initialApproach, conversationHistory, messageCount);
+    
+    console.log("Using approach:", approach);
+    
     // 1. First apply core processing (universal rules)
     let processedResponse = processCore(responseText, userInput, messageCount, conversationHistory);
     
-    // 2. Apply logotherapy integration for meaning-centered responses
-    processedResponse = handleLogotherapyIntegration(processedResponse, userInput, conversationHistory);
+    // 2. Apply logotherapy integration based on approach strength
+    if (approach.logotherapyStrength > 0.2) {
+      processedResponse = handleLogotherapyIntegration(
+        processedResponse, 
+        userInput, 
+        conversationHistory
+      );
+    }
     
     // 3. Apply memory enhancement
     processedResponse = enhanceResponseWithMemory({

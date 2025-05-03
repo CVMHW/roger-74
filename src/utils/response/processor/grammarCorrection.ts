@@ -26,12 +26,23 @@ export const correctGrammar = (response: string, userInput?: string): string => 
     /from what you('ve| have) shared,?\s*/i,
     /looking at how this connects to your values,?\s*/i,
     /when we look at what truly matters here,?\s*/i,
-    /what('s| is) also important,?\s*/i
+    /what('s| is) also important,?\s*/i,
+    /related to this,?\s*/i,
+    /additionally,?\s*/i,
+    /another perspective is how this\s*/i,
+    /maybe there's a way\s*/i
   ];
   
+  // Only keep one starter if multiple are present
+  let hasRemovedStarter = false;
   for (const pattern of duplicateStarters) {
-    // Pick one clear starter and replace duplicated versions
-    correctedResponse = correctedResponse.replace(pattern, "");
+    if (pattern.test(correctedResponse) && !hasRemovedStarter) {
+      // Keep the first one we find
+      hasRemovedStarter = true;
+    } else if (pattern.test(correctedResponse)) {
+      // Remove additional starters
+      correctedResponse = correctedResponse.replace(pattern, "");
+    }
   }
   
   // Clean up sentence structure awkwardness
@@ -88,7 +99,7 @@ export const correctGrammar = (response: string, userInput?: string): string => 
     correctedResponse = correctedResponse.charAt(0).toUpperCase() + correctedResponse.slice(1);
   }
   
-  // NEW: Control response length based on user input if available
+  // Control response length based on user input if available
   if (userInput) {
     correctedResponse = adjustResponseLength(correctedResponse, userInput);
   }
@@ -98,7 +109,7 @@ export const correctGrammar = (response: string, userInput?: string): string => 
 
 /**
  * Adjusts response length to be proportional to user input
- * Aims for a ratio of approximately 1.5-2.5x the user's message length
+ * Aims for a ratio of approximately 1.2-2.5x the user's message length
  * for normal messages, with exceptions for critical content
  */
 const adjustResponseLength = (response: string, userInput: string): string => {
@@ -110,7 +121,7 @@ const adjustResponseLength = (response: string, userInput: string): string => {
   const userWords = userInput.split(/\s+/).filter(Boolean).length;
   const responseWords = response.split(/\s+/).filter(Boolean).length;
   
-  // Target range: 1.5-2.5x user input length, with minimum of 5-10 words
+  // Target range: 1.2-2.5x user input length, with minimum of 5-10 words
   const minWords = Math.max(5, Math.round(userWords * 1.2));
   const maxWords = Math.max(10, Math.round(userWords * 2.5));
   
