@@ -18,7 +18,8 @@ export const getHallucinationOptions = (isEarlyConversation: boolean): Hallucina
       enableRAG: false,             // Don't enhance with RAG in early conversations
       enableTokenLevelDetection: true,
       enableReranking: true,        // Use re-ranking for early conversations
-      reasoningThreshold: 0.7       // Required threshold for reasoning
+      reasoningThreshold: 0.7,      // Required threshold for reasoning
+      enableDetection: true         // Added the required enableDetection property
     };
   } 
   
@@ -29,6 +30,7 @@ export const getHallucinationOptions = (isEarlyConversation: boolean): Hallucina
     enableRAG: true,
     enableTokenLevelDetection: false,
     enableReranking: false,
-    reasoningThreshold: 0.7
+    reasoningThreshold: 0.7,
+    enableDetection: true         // Added the required enableDetection property
   };
 };
