@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { MessageType } from '../../components/Message';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';

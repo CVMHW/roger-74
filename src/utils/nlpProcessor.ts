@@ -1,4 +1,3 @@
-import { AutoTokenizer, AutoModelForSequenceClassification } from '@huggingface/transformers';
 import { toast } from '../components/ui/sonner';
 
 // Define model configuration
