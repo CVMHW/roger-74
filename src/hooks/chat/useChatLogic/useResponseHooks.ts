@@ -1,6 +1,9 @@
-
 import { useState, useCallback } from 'react';
 import { MessageType } from '../../../components/Message';
+import { enhanceResponse, processUserMessageMemory, checkForResponseRepetition, getRepetitionRecoveryResponse } from '../../../utils/response/enhancer';
+import { isLocationDataNeeded } from '../../../utils/messageUtils';
+import { containsCriticalKeywords } from '../messageProcessor/detectionUtils';
+import { handleErrorResponse } from './useErrorHandling';
 
 /**
  * Hook that combines and orchestrates various response-related hooks
@@ -19,9 +22,14 @@ export const useResponseHooks = (
 ) => {
   // Track conversation history
   const [conversationHistory, setConversationHistory] = useState<string[]>([]);
+  // Track recent responses for repetition detection
+  const [recentResponses, setRecentResponses] = useState<string[]>([]);
 
   // Process a response with appropriate delay and handling
   const processResponse = useCallback((userInput: string) => {
+    // Record user message to memory system
+    processUserMessageMemory(userInput);
+    
     // Check if this is a potentially critical message
     const isCritical = containsCriticalKeywords(userInput);
     
@@ -43,37 +51,56 @@ export const useResponseHooks = (
       processUserMessage(userInput)
         .then(rogerResponse => {
           try {
-            // Use master rules to process response with conversation context
-            const responseWithContextCheck = processResponseThroughMasterRules(
+            // Use unified enhancement pipeline for comprehensive response processing
+            const responseWithContextCheck = enhanceResponse(
               rogerResponse.text,
               userInput,
               conversationHistory.length,
               conversationHistory
             );
             
-            // Update the response with enhanced text that has contextual awareness
-            const updatedResponse = {
-              ...rogerResponse,
-              text: responseWithContextCheck
-            };
+            // Check for repetition in recent responses
+            if (checkForResponseRepetition(responseWithContextCheck, recentResponses)) {
+              // If repetition detected, use a recovery response
+              const recoveryResponse = getRepetitionRecoveryResponse();
+              
+              // Update the response with the recovery text
+              rogerResponse = {
+                ...rogerResponse,
+                text: recoveryResponse
+              };
+            } else {
+              // Update the response with enhanced text
+              rogerResponse = {
+                ...rogerResponse,
+                text: responseWithContextCheck
+              };
+              
+              // Update recent responses for future repetition checks
+              setRecentResponses(prev => {
+                const updated = [responseWithContextCheck, ...prev];
+                // Keep only the 5 most recent responses
+                return updated.slice(0, 5);
+              });
+            }
             
-            // Add the response to history to prevent future repetition through enhanced tracking
-            const enhancedText = enhanceAndTrackResponse(responseWithContextCheck);
+            // Track response with enhanced tracking system
+            enhanceAndTrackResponse(rogerResponse.text);
             
             // Check if this is a crisis-related response and store it for deception detection
-            handleCrisisMessage(userInput, updatedResponse);
+            handleCrisisMessage(userInput, rogerResponse);
             
             // Add the empty response message first (will be updated during typing simulation)
-            setMessages(prevMessages => [...prevMessages, updatedResponse]);
+            setMessages(prevMessages => [...prevMessages, rogerResponse]);
             
             // Set up to request location after this message if needed
-            if (updatedResponse.concernType && 
-                isLocationDataNeeded(updatedResponse.concernType) && 
+            if (rogerResponse.concernType && 
+                isLocationDataNeeded(rogerResponse.concernType) && 
                 !activeLocationConcern) {
               
               setActiveLocationConcern({
-                concernType: updatedResponse.concernType,
-                messageId: updatedResponse.id,
+                concernType: rogerResponse.concernType,
+                messageId: rogerResponse.id,
                 askedForLocation: false
               });
             }
@@ -82,10 +109,10 @@ export const useResponseHooks = (
             setConversationHistory(prev => [...prev, responseWithContextCheck]);
             
             // Simulate typing with a callback to update the message text
-            simulateTypingResponse(responseWithContextCheck, (text) => {
+            simulateTypingResponse(rogerResponse.text, (text) => {
               setMessages(prevMessages => 
                 prevMessages.map(msg => 
-                  msg.id === updatedResponse.id ? { ...msg, text } : msg
+                  msg.id === rogerResponse.id ? { ...msg, text } : msg
                 )
               );
               
@@ -113,7 +140,8 @@ export const useResponseHooks = (
     getResponseDelay,
     setProcessingContext,
     conversationHistory,
-    enhanceAndTrackResponse
+    enhanceAndTrackResponse,
+    recentResponses
   ]);
 
   return {
@@ -121,9 +149,3 @@ export const useResponseHooks = (
     conversationHistory
   };
 };
-
-// Import dependencies needed for implementation
-import { containsCriticalKeywords } from '../messageProcessor/detectionUtils';
-import { handleErrorResponse } from './useErrorHandling';
-import { processResponseThroughMasterRules } from '../../../utils/response/responseProcessor';
-import { isLocationDataNeeded } from '../../../utils/messageUtils';

@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { MessageType } from '../../../components/Message';
 import { createMessage } from '../../../utils/messageUtils';
 import { checkForCrisisContent } from './useCrisisDetector';
+import { processUserMessageMemory } from '../../../utils/response/enhancer';
 
 /**
  * Hook for handling message sending and processing
@@ -33,6 +34,9 @@ export const useMessageHandling = (
     setIsProcessing(true);
 
     try {
+      // Record user message to memory system immediately
+      processUserMessageMemory(userInput);
+      
       // Add user message
       const newUserMessage = createMessage(userInput, 'user');
       setMessages(prevMessages => [...prevMessages, newUserMessage]);

@@ -1,10 +1,16 @@
 
-import { processResponseThroughMasterRules } from '../../../utils/response/processor';
-import { applyMemoryRules } from '../../../utils/rulesEnforcement/memoryEnforcer';
-import { processThroughChatLogReview } from '../../../utils/response/chatLogReviewer';
+/**
+ * Response Enhancer - Acts as adapter to the unified enhancement pipeline
+ * 
+ * This maintains backward compatibility for existing imports while
+ * using the new unified pipeline under the hood.
+ */
+
+import { enhanceResponse as enhanceResponseUnified } from '../../../utils/response/enhancer';
 
 /**
  * Enhances a response with memory rules, master rules, and chat log review
+ * Now delegates to the unified enhancement pipeline
  */
 export const enhanceResponse = (
   responseText: string,
@@ -12,32 +18,5 @@ export const enhanceResponse = (
   messageCount: number,
   conversationHistory: string[]
 ): string => {
-  try {
-    // First process through master rules to ensure memory utilization
-    let enhancedText = processResponseThroughMasterRules(
-      responseText,
-      userInput,
-      messageCount,
-      conversationHistory
-    );
-    
-    // Force memory enhancement according to memory rules
-    enhancedText = applyMemoryRules(
-      enhancedText,
-      userInput,
-      conversationHistory
-    );
-    
-    // Apply tertiary safeguard - comprehensive chat log review
-    enhancedText = processThroughChatLogReview(
-      enhancedText,
-      userInput,
-      conversationHistory
-    );
-    
-    return enhancedText;
-  } catch (error) {
-    console.error("Error enhancing response:", error);
-    return responseText; // Return original if enhancement fails
-  }
+  return enhanceResponseUnified(responseText, userInput, messageCount, conversationHistory);
 };
