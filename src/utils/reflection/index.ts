@@ -7,7 +7,7 @@
  */
 
 import { generateReflectionResponse } from './generators/reflectionResponseGenerator';
-import { ConversationStage } from './reflectionTypes';
+import type { ConversationStage } from './reflectionTypes';
 import { retrieveRelevantMemories } from '../memory/memoryBank';
 import { getContextualMemory } from '../nlpProcessor';
 import { getFiveResponseMemory } from '../memory/fiveResponseMemory';
@@ -97,6 +97,8 @@ export const getDeepReflection = (
 };
 
 export { 
-  generateReflectionResponse,
-  ConversationStage
+  generateReflectionResponse
 };
+
+// Export types
+export type { ConversationStage };

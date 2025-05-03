@@ -1,22 +1,15 @@
 import { isIntroduction, generateIntroductionResponse, isSmallTalk, isPersonalSharing, generatePersonalSharingResponse } from '../../utils/masterRules';
 import { generateReflectionResponse } from '../reflection';
-import { generateSmallTalkResponse, isLikelyChild, isLikelyNewcomer } from '../conversation/smallTalk';
-import { ConversationStage } from '../../hooks/response/conversationStageManager';
+import { 
+  generateSmallTalkResponse,
+  isLikelyChild,
+  isLikelyNewcomer 
+} from '../conversation/smallTalk';
+import type { ConversationStage } from '../../hooks/response/conversationStageManager';
 import { detectDevelopmentalStage } from '../reflection/reflectionStrategies';
 import { shouldUseConversationStarter, generateConversationStarterResponse } from '../reflection/ageAppropriateConversation';
 import { getRogerPerspectivePhrase } from './personalityHelpers';
 import { createOhioContextResponse } from './handlers';
-import { 
-  shouldUseWaitingRoomEngagement, 
-  generateWaitingRoomEngagement,
-  isLikelyTeen,
-  isLikelyMale,
-  isLikelyBlueCollar,
-  mightPreferSimpleLanguage,
-  getAppropriateConversationStyle,
-  identifyImmediateConcern,
-  generateImmediateConcernResponse
-} from '../conversation/earlyEngagement';
 
 // Import the functions from culturalConnector through the main export
 import { 
