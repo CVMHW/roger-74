@@ -14,9 +14,9 @@ import { HallucinationPreventionOptions } from '../../../../types/hallucinationP
 export const determinePreventionOptions = (
   response: string,
   conversationHistory: string[]
-): HallucinationPreventionOptions => {
+): { preventionOptions: HallucinationPreventionOptions; requiresPrevention: boolean } => {
   // Default prevention options
-  const options: HallucinationPreventionOptions = {
+  const preventionOptions: HallucinationPreventionOptions = {
     enableReasoning: true,
     enableRAG: true,
     enableDetection: true,
@@ -34,26 +34,30 @@ export const determinePreventionOptions = (
   
   // Early conversation requires more aggressive prevention
   const isEarlyConversation = conversationHistory.length < 3;
+  let requiresPrevention = false;
   
   if (isEarlyConversation) {
-    options.enableRAG = true;
-    options.detectionSensitivity = 0.85;
-    options.enableTokenLevelDetection = true;
-    options.tokenThreshold = 0.7;
+    preventionOptions.enableRAG = true;
+    preventionOptions.detectionSensitivity = 0.85;
+    preventionOptions.enableTokenLevelDetection = true;
+    preventionOptions.tokenThreshold = 0.7;
+    requiresPrevention = true;
   }
   
   // Adjust options for high-risk responses
   if (containsMemoryReference) {
-    options.detectionSensitivity = 0.85;
-    options.enableReranking = true;
+    preventionOptions.detectionSensitivity = 0.85;
+    preventionOptions.enableReranking = true;
+    requiresPrevention = true;
   }
   
   // Extra precautions for early conversation references
   if (containsEarlyReference && isEarlyConversation) {
-    options.detectionSensitivity = 0.95;
-    options.enableTokenLevelDetection = true;
-    options.enableNLIVerification = true;
+    preventionOptions.detectionSensitivity = 0.95;
+    preventionOptions.enableTokenLevelDetection = true;
+    preventionOptions.enableNLIVerification = true;
+    requiresPrevention = true;
   }
   
-  return options;
+  return { preventionOptions, requiresPrevention };
 };

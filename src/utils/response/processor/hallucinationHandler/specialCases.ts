@@ -5,33 +5,48 @@
  * Handles specific types of hallucinations that need special treatment
  */
 
+import { calculateSimilarity } from './utils';
+
 /**
  * Handle health-related hallucinations
  */
 export const handleHealthHallucination = (
   response: string,
   userInput: string
-): string => {
-  // Remove any definitive medical diagnoses or interpretations
-  let modified = response;
-  
+): { isHealthHallucination: boolean; correctedResponse: string } => {
   // Check for medical diagnosis patterns
-  if (/you have|you're experiencing|sounds like you have|you might have|you could have|you are suffering from/i.test(response)) {
+  const hasMedicalDiagnosis = /you have|you're experiencing|sounds like you have|you might have|you could have|you are suffering from/i.test(response);
+  
+  // Check for health topic patterns without user mentioning them
+  const hasHealthTopic = /health|medical condition|diagnosis|medical issue|health condition/i.test(response);
+  const userMentionedHealth = /health|medical|doctor|sick|ill|wellness|condition|diagnosis/i.test(userInput);
+  
+  const isHealthHallucination = (hasHealthTopic && !userMentionedHealth) || hasMedicalDiagnosis;
+  
+  if (isHealthHallucination) {
     // Add heavy hedging to any potential medical interpretations
-    modified = modified.replace(
+    let correctedResponse = response.replace(
       /(you have|you're experiencing|sounds like you have|you might have|you could have|you are suffering from)\s+([^.,]*)/gi,
       "what you're describing might be similar to $2, though I'm not qualified to diagnose"
     );
+    
+    // Replace mentions of health topics with more general terms
+    correctedResponse = correctedResponse
+      .replace(/health condition/gi, "situation")
+      .replace(/medical (issue|condition)/gi, "challenge")
+      .replace(/health issues/gi, "difficulties");
+    
+    return { isHealthHallucination: true, correctedResponse };
   }
   
-  return modified;
+  return { isHealthHallucination: false, correctedResponse: response };
 };
 
 /**
  * Check if response has repeated content
  */
 export const hasRepeatedContent = (response: string): boolean => {
-  // Simple check for repeated sentence patterns
+  // Split into sentences
   const sentences = response.split(/(?<=[.!?])\s+/);
   
   // If fewer than 2 sentences, no repetition
@@ -43,10 +58,10 @@ export const hasRepeatedContent = (response: string): boolean => {
     return true;
   }
   
-  // Check for high similarity between sentences (simplified)
+  // Check for high similarity between sentences
   for (let i = 0; i < sentences.length; i++) {
     for (let j = i + 1; j < sentences.length; j++) {
-      if (stringSimilarity(sentences[i], sentences[j]) > 0.7) {
+      if (calculateSimilarity(sentences[i], sentences[j]) > 0.7) {
         return true;
       }
     }
@@ -74,7 +89,7 @@ export const fixRepeatedContent = (response: string): string => {
     
     // Check against already filtered sentences
     for (let j = 0; j < filteredSentences.length; j++) {
-      if (stringSimilarity(uniqueSentences[i], filteredSentences[j]) > 0.7) {
+      if (calculateSimilarity(uniqueSentences[i], filteredSentences[j]) > 0.7) {
         isDuplicate = true;
         break;
       }
@@ -89,22 +104,8 @@ export const fixRepeatedContent = (response: string): string => {
 };
 
 /**
- * Calculate string similarity (simplified version)
+ * Check if text has a "you shared that" pattern
  */
-const stringSimilarity = (str1: string, str2: string): number => {
-  // Convert to lowercase
-  const s1 = str1.toLowerCase();
-  const s2 = str2.toLowerCase();
-  
-  // Split into words
-  const words1 = new Set(s1.split(/\s+/));
-  const words2 = new Set(s2.split(/\s+/));
-  
-  // Find intersection
-  const intersection = new Set([...words1].filter(x => words2.has(x)));
-  
-  // Calculate Jaccard similarity
-  const union = new Set([...words1, ...words2]);
-  
-  return intersection.size / union.size;
+export const hasSharedThatPattern = (text: string): boolean => {
+  return /you (shared|mentioned|said|told me) that/i.test(text);
 };

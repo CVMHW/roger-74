@@ -35,8 +35,7 @@ export const handlePotentialHallucinations = (
       
       const interventionResponse = applyEmergencyIntervention(
         responseText,
-        emergencyPathResult,
-        userInput
+        emergencyPathResult
       );
       
       return {
@@ -63,16 +62,15 @@ export const handlePotentialHallucinations = (
     }
     
     // SECOND PRIORITY: Check for dangerous repetition patterns that need immediate fixing
-    // Example: "I hear you're dealing with I hear you're dealing with"
-    const { fixedResponse, hasRepetitionIssue } = fixDangerousRepetitionPatterns(responseText, userInput);
+    const repetitionResult = fixDangerousRepetitionPatterns(responseText, userInput);
     
     // If we fixed repetition, return immediately
-    if (hasRepetitionIssue) {
+    if (repetitionResult.hasRepetitionIssue) {
       console.log("CRITICAL: Fixed dangerous repetition pattern");
       return {
-        processedResponse: fixedResponse,
+        processedResponse: repetitionResult.fixedResponse,
         hallucinationData: {
-          processedResponse: fixedResponse,
+          processedResponse: repetitionResult.fixedResponse,
           wasRevised: true,
           reasoningApplied: false,
           detectionApplied: true,
@@ -86,7 +84,7 @@ export const handlePotentialHallucinations = (
     
     // THIRD PRIORITY: Use the repetition handler to fix any other repeated content
     if (hasRepeatedContent(responseText)) {
-      const correctedText = fixRepeatedContent(responseText, userInput);
+      const correctedText = fixRepeatedContent(responseText);
       console.log("REPETITION FIXED: Using repetition handler");
       
       return {
@@ -105,7 +103,7 @@ export const handlePotentialHallucinations = (
     }
     
     // FOURTH PRIORITY: Check for specific health hallucination
-    const healthHallucinationResult = handleHealthHallucination(responseText, conversationHistory);
+    const healthHallucinationResult = handleHealthHallucination(responseText, userInput);
     if (healthHallucinationResult.isHealthHallucination) {
       return {
         processedResponse: healthHallucinationResult.correctedResponse,
@@ -154,8 +152,7 @@ export const handlePotentialHallucinations = (
       // Apply a more subtle intervention for non-critical cases
       const interventionResponse = applyEmergencyIntervention(
         responseText,
-        emergencyPathResult,
-        userInput
+        emergencyPathResult
       );
       
       return {

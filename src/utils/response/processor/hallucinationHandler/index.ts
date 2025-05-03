@@ -7,7 +7,7 @@
  */
 
 // Export the main functionality
-export { handlePotentialHallucinations } from '../hallucinationHandler';
+export { handlePotentialHallucinations } from './core';
 
 // Export specialized handlers
 export { fixDangerousRepetitionPatterns } from './patternFixer';
@@ -19,6 +19,9 @@ export { handleHealthHallucination, hasRepeatedContent, fixRepeatedContent } fro
 export * from './utils';
 
 // Export the new early conversation functionality
+export { fixFalseMemoryReferences } from './memoryHandler';
+
+// Create a separate function for early conversation RAG
 export const applyEarlyConversationRAG = (
   response: string,
   userInput: string
@@ -39,31 +42,5 @@ export const applyEarlyConversationRAG = (
   return modified;
 };
 
-// Export the new memory hallucination handler
-export const handleMemoryHallucinations = (
-  response: string,
-  userInput: string,
-  conversationHistory: string[] = []
-): string => {
-  // Check if this is early in conversation
-  const isEarlyConversation = conversationHistory.length < 3;
-  
-  // For early conversations, be extra cautious about memory claims
-  if (isEarlyConversation) {
-    return applyEarlyConversationRAG(response, userInput);
-  }
-  
-  // For established conversations, just do basic checks
-  if (response.includes("you mentioned") || response.includes("I remember")) {
-    // Add hedging language
-    return "From what I understand, " + response;
-  }
-  
-  return response;
-};
-
-// Export from previous implementations
-export { applyEarlyConversationRAG } from './earlyConversation';
-
-// Export the new emergency path detection system
+// Export the emergency path detection system
 export * from '../emergencyPathDetection';

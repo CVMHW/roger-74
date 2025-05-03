@@ -1,68 +1,50 @@
 
 /**
- * Conversation stage handling functionality
- * Manages early vs established conversation processing
+ * Conversation Stage Handler
+ * 
+ * Manages detection and handling of conversation stages
  */
 
 import { getConversationMessageCount } from '../../memory/newConversationDetector';
+import { applyEarlyConversationRAG } from './hallucinationHandler';
 
 /**
- * Apply early conversation RAG
- */
-export const applyEarlyConversationRAG = (
-  response: string,
-  userInput: string
-): string => {
-  // Remove any false continuity claims
-  let modified = response
-    .replace(/as we've been discussing/gi, "based on what you're sharing")
-    .replace(/our previous conversation/gi, "what you've shared")
-    .replace(/we've been focusing on/gi, "regarding")
-    .replace(/as I mentioned (earlier|before|previously)/gi, "")
-    .replace(/continuing (from|with) (where we left off|our previous)/gi, "focusing on");
-  
-  // Add hedging language for early conversations
-  if (!modified.startsWith("It sounds like") && !modified.startsWith("I understand")) {
-    modified = "Based on what you're sharing, " + modified;
-  }
-  
-  return modified;
-};
-
-/**
- * Apply special handling for early conversation stages
- */
-export const applyConversationStageProcessing = (
-  processedResponse: string,
-  userInput: string,
-  isEarlyConversation: boolean
-): string => {
-  // For early conversations (first 1-2 messages), apply special RAG
-  if (isEarlyConversation) {
-    return applyEarlyConversationRAG(
-      processedResponse, 
-      userInput
-    );
-  }
-  
-  return processedResponse;
-};
-
-/**
- * Determine if the conversation is in early stage
+ * Determine the current conversation stage
  */
 export const determineConversationStage = (): {
   isEarlyConversation: boolean;
   messageCount: number;
+  stage: 'initial' | 'developing' | 'established';
 } => {
-  // Get accurate message count from conversation detector
-  const actualMessageCount = getConversationMessageCount();
+  // Get message count from memory system
+  const messageCount = getConversationMessageCount();
   
-  // CRITICAL: Check for early conversation - be extra careful with memory references
-  const isEarlyConversation = actualMessageCount <= 2;
+  // Determine conversation stage based on message count
+  const isEarlyConversation = messageCount < 3;
+  let stage: 'initial' | 'developing' | 'established' = 'initial';
   
-  return {
-    isEarlyConversation,
-    messageCount: actualMessageCount
-  };
+  if (messageCount >= 10) {
+    stage = 'established';
+  } else if (messageCount >= 3) {
+    stage = 'developing';
+  }
+  
+  return { isEarlyConversation, messageCount, stage };
+};
+
+/**
+ * Apply conversation stage specific processing
+ */
+export const applyConversationStageProcessing = (
+  response: string,
+  userInput: string,
+  isEarlyConversation: boolean
+): string => {
+  // Apply early conversation processing if needed
+  if (isEarlyConversation) {
+    return applyEarlyConversationRAG(response, userInput);
+  }
+  
+  // For established conversations, no special processing needed
+  return response;
 };

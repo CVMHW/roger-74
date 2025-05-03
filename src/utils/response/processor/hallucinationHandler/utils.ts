@@ -43,3 +43,28 @@ export const addHedging = (text: string): string => {
   
   return "From what I understand, " + text;
 };
+
+/**
+ * Calculate string similarity between two texts
+ * Uses Jaccard similarity coefficient for simple comparison
+ */
+export const calculateSimilarity = (str1: string, str2: string): number => {
+  // Convert to lowercase and split into words
+  const words1 = new Set(str1.toLowerCase().split(/\s+/).filter(word => word.length > 2));
+  const words2 = new Set(str2.toLowerCase().split(/\s+/).filter(word => word.length > 2));
+  
+  // Find intersection
+  const intersection = [...words1].filter(word => words2.has(word)).length;
+  
+  // Calculate Jaccard similarity
+  const union = words1.size + words2.size - intersection;
+  
+  return union === 0 ? 0 : intersection / union;
+};
+
+/**
+ * Check if text matches the "you shared that" pattern
+ */
+export const hasSharedThatPattern = (text: string): boolean => {
+  return /you (shared|mentioned|said|told me) that/i.test(text);
+};

@@ -13,7 +13,7 @@ import { applyConversationStageProcessing, determineConversationStage } from './
 import { enhanceResponseWithMemory } from './memoryEnhancement';
 import { recordToMemorySystems } from './memorySystemHandler';
 import { handleLogotherapyIntegration } from './logotherapy/integrationHandler';
-import { handleMemoryHallucinations } from './hallucinationHandler';
+import { handlePotentialHallucinations } from './hallucinationHandler';
 
 /**
  * Process a response through all enhancement systems
