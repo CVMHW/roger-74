@@ -1,20 +1,7 @@
+
 /**
  * Core rules that must be followed in all interactions
  */
-
-/**
- * Core unconditional rules that must be followed in all interactions
- * These are ranked in order of priority
- */
-export const UNCONDITIONAL_RULES = [
-  "Follow the patient's concerns and stories completely in early conversation",
-  "Prioritize deep engagement with non-clinical concerns to build rapport",
-  "Only crisis concerns take precedence over following the patient's narrative",
-  "Acknowledge everyday frustrations before redirecting to clinical topics",
-  "Respond to the emotion behind the content before the content itself",
-  "Cultural attunement takes precedence over clinical formulation",
-  UNCONDITIONAL_MEMORY_RULE
-];
 
 /**
  * UNCONDITIONAL MEMORY RULE
@@ -34,6 +21,20 @@ export const UNCONDITIONAL_MEMORY_RULE = {
     conversationHistoryMaintained: true
   }
 };
+
+/**
+ * Core unconditional rules that must be followed in all interactions
+ * These are ranked in order of priority
+ */
+export const UNCONDITIONAL_RULES = [
+  "Follow the patient's concerns and stories completely in early conversation",
+  "Prioritize deep engagement with non-clinical concerns to build rapport",
+  "Only crisis concerns take precedence over following the patient's narrative",
+  "Acknowledge everyday frustrations before redirecting to clinical topics",
+  "Respond to the emotion behind the content before the content itself",
+  "Cultural attunement takes precedence over clinical formulation",
+  UNCONDITIONAL_MEMORY_RULE
+];
 
 /**
  * Early engagement mandate - enforces focus on rapport building in first interactions
