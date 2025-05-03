@@ -6,9 +6,9 @@
  * response processing pipeline with enhanced detection capabilities.
  */
 
-import { preventHallucinations, HallucinationProcessResult } from '../../hallucinationPrevention';
+import { preventHallucinations } from '../../hallucinationPrevention';
 import { getConversationMessageCount } from '../../memory/newConversationDetector';
-import { HallucinationPreventionOptions } from '../../../types/hallucinationPrevention';
+import { HallucinationPreventionOptions, HallucinationProcessResult } from '../../../types/hallucinationPrevention';
 
 /**
  * Apply hallucination prevention to a response

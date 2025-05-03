@@ -10,13 +10,19 @@
  * 6. Response re-ranking
  */
 
-import { checkAndFixHallucinations } from './detector';
+import { 
+  checkAndFixHallucinations,
+  detectHallucinations
+} from './detector';
 import { applyReasoning } from './reasoner';
 import { retrieveAugmentation, augmentResponseWithRetrieval } from './retrieval';
 import { 
   HallucinationPreventionOptions,
   HallucinationProcessResult
 } from '../../types/hallucinationPrevention';
+
+// Export the needed types
+export { HallucinationProcessResult };
 
 const DEFAULT_OPTIONS: HallucinationPreventionOptions = {
   enableReasoning: true,
@@ -277,6 +283,9 @@ const calculateSimilarity = (str1: string, str2: string): number => {
   
   return matches / Math.max(words1.length, words2.length);
 };
+
+// Fixing the export error by making sure the HallucinationProcessResult is exported
+export { checkAndFixHallucinations, detectHallucinations };
 
 // Export all sub-module functions
 export * from './detector';
