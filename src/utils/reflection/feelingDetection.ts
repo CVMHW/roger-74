@@ -1,10 +1,11 @@
+
 /**
  * Main export file for feeling detection utilities
  * Re-exports functionality from specialized modules
  */
 
 import { FeelingCategory, DevelopmentalStage } from './reflectionTypes';
-import { EnhancedFeelingResult, identifyEnhancedFeelings, identifyFeelings } from './detectors/basicFeelingDetector';
+import { EnhancedFeelingResult, FeelingDetectionResult, identifyEnhancedFeelings, identifyFeelings } from './detectors/basicFeelingDetector';
 import { detectAgeAppropriateEmotions } from './detectors/ageAppropriateDetector';
 import { extractContextualElements } from './detectors/contextExtractor';
 import { detectEmotion, extractKeyTopics, analyzeProblemSeverity } from '../nlpProcessor';
@@ -112,7 +113,9 @@ export const detectEnhancedFeelings = async (
     const { primaryFeeling, allFeelings } = identifyFeelings(message);
     
     // Merge results, prioritizing transformer model results
-    const result = {
+    const result: EnhancedFeelingResult = {
+      category: primaryEmotion as FeelingCategory || 'neutral' as FeelingCategory,
+      detectedWord: primaryEmotion || 'neutral',
       primaryFeeling: primaryEmotion || primaryFeeling,
       allFeelings: [...new Set([primaryEmotion, ...allFeelings])].filter(Boolean),
       topics,
@@ -131,7 +134,19 @@ export const detectEnhancedFeelings = async (
   } catch (error) {
     console.error('Error in enhanced feeling detection:', error);
     // Fall back to traditional method
-    return identifyEnhancedFeelings(message);
+    const basicResults = identifyEnhancedFeelings(message)[0] || {
+      category: 'neutral' as FeelingCategory,
+      detectedWord: 'neutral'
+    };
+    
+    return {
+      ...basicResults,
+      primaryFeeling: basicResults.category,
+      allFeelings: [basicResults.category],
+      topics: [],
+      severity: 0,
+      hasEmotionalContent: false
+    };
   }
 };
 
@@ -144,4 +159,4 @@ export {
 };
 
 // Re-export the types
-export type { EnhancedFeelingResult };
+export type { EnhancedFeelingResult, FeelingDetectionResult };

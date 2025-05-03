@@ -1,4 +1,3 @@
-
 /**
  * Core feeling detection utilities
  * Identifies feelings in user messages using various techniques
@@ -18,6 +17,11 @@ import { mapChildEmotionToCategory, mapWheelEmotionToCategory } from './emotionM
 export interface EnhancedFeelingResult {
   category: FeelingCategory;
   detectedWord: string;
+  primaryFeeling?: string;
+  allFeelings?: string[];
+  topics?: string[];
+  severity?: number;
+  hasEmotionalContent?: boolean;
   wheelData?: {
     coreEmotion: string;
     intensity: number;
@@ -36,14 +40,24 @@ export interface EnhancedFeelingResult {
 }
 
 /**
+ * Structure for the feeling detection result
+ */
+export interface FeelingDetectionResult {
+  primaryFeeling: string;
+  allFeelings: string[];
+}
+
+/**
  * Identifies potential feelings in a user's message with enhanced context awareness
  * Now leverages the Feelings Wheel for more nuanced emotional detection
  * @param userMessage The user's message text
- * @returns Array of detected feelings
+ * @returns Object with primary feeling and array of all detected feelings
  */
-export const identifyFeelings = (userMessage: string): FeelingCategory[] => {
+export const identifyFeelings = (userMessage: string): FeelingDetectionResult => {
   const enhancedResults = identifyEnhancedFeelings(userMessage);
-  return enhancedResults.map(result => result.category);
+  const primaryFeeling = enhancedResults.length > 0 ? enhancedResults[0].category : 'neutral';
+  const allFeelings = enhancedResults.map(result => result.category);
+  return { primaryFeeling, allFeelings };
 };
 
 /**

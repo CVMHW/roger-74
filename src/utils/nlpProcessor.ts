@@ -1,4 +1,3 @@
-
 import { AutoTokenizer, AutoModelForSequenceClassification } from '@huggingface/transformers';
 import { toast } from '../components/ui/sonner';
 
@@ -9,8 +8,12 @@ let model: any = null;
 let modelLoading = false;
 let modelLoaded = false;
 
+// Flag to track if we should attempt to use transformer models
+let useTransformerModels = false;
+
 /**
  * Initialize the NLP model asynchronously
+ * Only attempts to load if the transformers library is available
  */
 export const initializeNLPModel = async (): Promise<boolean> => {
   if (modelLoaded) return true;
@@ -19,14 +22,25 @@ export const initializeNLPModel = async (): Promise<boolean> => {
   try {
     modelLoading = true;
     
-    console.log('Loading NLP model and tokenizer...');
-    tokenizer = await AutoTokenizer.from_pretrained(MODEL_NAME);
-    model = await AutoModelForSequenceClassification.from_pretrained(MODEL_NAME);
+    // Check if we can import the transformers library
+    try {
+      const { AutoTokenizer, AutoModelForSequenceClassification } = await import('@huggingface/transformers');
+      
+      console.log('Loading NLP model and tokenizer...');
+      tokenizer = await AutoTokenizer.from_pretrained(MODEL_NAME);
+      model = await AutoModelForSequenceClassification.from_pretrained(MODEL_NAME);
+      
+      useTransformerModels = true;
+      modelLoaded = true;
+      console.log('NLP model loaded successfully');
+    } catch (error) {
+      console.error('Error importing transformers library:', error);
+      useTransformerModels = false;
+      toast.error('Using simplified emotion detection (transformers not available)');
+    }
     
-    modelLoaded = true;
     modelLoading = false;
-    console.log('NLP model loaded successfully');
-    return true;
+    return useTransformerModels;
   } catch (error) {
     console.error('Error loading NLP model:', error);
     modelLoading = false;
@@ -45,35 +59,43 @@ export async function detectEmotion(input: string): Promise<string> {
     return 'neutral';
   }
   
-  // Try to use the transformer model
-  try {
-    // Initialize model if not already loaded
-    if (!modelLoaded) {
-      const initialized = await initializeNLPModel();
-      if (!initialized) {
-        return detectEmotionFallback(input);
+  // Try to use the transformer model if available
+  if (useTransformerModels) {
+    try {
+      // Initialize model if not already loaded
+      if (!modelLoaded) {
+        const initialized = await initializeNLPModel();
+        if (!initialized) {
+          return detectEmotionFallback(input);
+        }
       }
+      
+      // Dynamically import transformers if needed
+      const { AutoTokenizer, AutoModelForSequenceClassification } = await import('@huggingface/transformers');
+      
+      // Tokenize input
+      const encoded = await tokenizer.encode(input, { return_tensors: 'pt' });
+      
+      // Get model prediction
+      const output = await model(encoded);
+      const logits = output.logits;
+      const probabilities = logits.softmax(1);
+      const emotionIndex = probabilities.argmax().item();
+      
+      // Map model output to emotion
+      const modelEmotion = model.config.id2label[emotionIndex] || 'neutral';
+      
+      // Enhance basic sentiment with more specific emotion detection
+      return enhanceEmotionDetection(modelEmotion, input);
+      
+    } catch (error) {
+      console.error('Error in emotion detection:', error);
+      return detectEmotionFallback(input);
     }
-    
-    // Tokenize input
-    const encoded = await tokenizer.encode(input, { return_tensors: 'pt' });
-    
-    // Get model prediction
-    const output = await model(encoded);
-    const logits = output.logits;
-    const probabilities = logits.softmax(1);
-    const emotionIndex = probabilities.argmax().item();
-    
-    // Map model output to emotion
-    const modelEmotion = model.config.id2label[emotionIndex] || 'neutral';
-    
-    // Enhance basic sentiment with more specific emotion detection
-    return enhanceEmotionDetection(modelEmotion, input);
-    
-  } catch (error) {
-    console.error('Error in emotion detection:', error);
-    return detectEmotionFallback(input);
   }
+  
+  // Fall back to pattern matching when transformers aren't available
+  return detectEmotionFallback(input);
 }
 
 /**
