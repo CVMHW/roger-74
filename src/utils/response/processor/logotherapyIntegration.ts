@@ -1,4 +1,3 @@
-
 /**
  * Logotherapy Integration for Response Processor
  * 
@@ -18,13 +17,8 @@ import {
   EXISTENTIAL_CONCEPTS 
 } from '../../masterRules/logotherapyLaws';
 import { UNIVERSAL_LAW_MEANING_PURPOSE } from '../../masterRules/universalLaws';
-
-// Define MessageEntry interface for FiveResponseMemory
-interface MessageEntry {
-  sender: string;
-  content: string;
-  timestamp?: number;
-}
+import { MessageEntry } from '../../logotherapy/types';
+import { hasMeaningOrientation } from '../../logotherapy/meaning-detection';
 
 /**
  * Handle integration of logotherapy principles into responses
@@ -62,21 +56,6 @@ export const handleLogotherapyIntegration = (
     console.error('Error in logotherapy integration:', error);
     return response;
   }
-};
-
-/**
- * Check if response already contains meaning-oriented language
- */
-const hasMeaningOrientation = (response: string): boolean => {
-  const meaningWords = [
-    'meaning', 'purpose', 'value', 'values', 'meaningful', 'purposeful',
-    'contribution', 'legacy', 'transcend', 'significance', 'calling',
-    'mission', 'fulfillment', 'authentic', 'genuine', 'worthy'
-  ];
-  
-  const lowerResponse = response.toLowerCase();
-  
-  return meaningWords.some(word => lowerResponse.includes(word));
 };
 
 /**
