@@ -5,6 +5,11 @@ import { createMessage } from '../../utils/messageUtils';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
 import { enhanceResponseWithContext } from '../../utils/conversation/contextAware';
 import { processResponseThroughMasterRules } from '../../utils/response/responseProcessor';
+import { detectEnhancedFeelings, getPersistentFeelings, getDominantTopics } from '../../utils/reflection/feelingDetection';
+import { initializeNLPModel } from '../../utils/nlpProcessor';
+
+// Initialize the NLP model as early as possible
+initializeNLPModel().catch(error => console.error('Failed to initialize NLP model:', error));
 
 interface MessageProcessorProps {
   processUserMessage: (userInput: string) => Promise<MessageType>;
@@ -54,8 +59,8 @@ export const useMessageProcessor = ({
     return /already told you|just said that|weren't listening|not listening|didn't hear|didn't read|ignoring|pay attention|listen to me|read what i wrote|i just told you|i said|i mentioned|you asked|you're repeating|you just asked|you already asked/.test(lowerText);
   };
   
-  // Function to determine appropriate processing context based on user input
-  const determineProcessingContext = (userInput: string): string => {
+  // Enhanced function to determine appropriate processing context based on user input
+  const determineProcessingContext = async (userInput: string): Promise<string> => {
     if (containsCriticalKeywords(userInput)) {
       return "Roger is carefully considering your message about self-harm...";
     } else if (isPetLossContent(userInput)) {
@@ -63,7 +68,22 @@ export const useMessageProcessor = ({
     } else if (isUserPointingOutNonResponsiveness(userInput)) {
       return "Roger is reviewing your previous messages...";
     } else {
-      // Choose from various "thinking" contexts
+      try {
+        // Use enhanced NLP to detect emotions and generate more specific context
+        const feelingResult = await detectEnhancedFeelings(userInput);
+        if (feelingResult.primaryFeeling) {
+          return `Roger is reflecting on your feelings of ${feelingResult.primaryFeeling}...`;
+        }
+        
+        // If no specific emotions detected, use topics
+        if (feelingResult.topics && feelingResult.topics.length > 0) {
+          return `Roger is considering what you shared about ${feelingResult.topics[0]}...`;
+        }
+      } catch (error) {
+        console.error('Error in enhanced processing context:', error);
+      }
+      
+      // Choose from various "thinking" contexts if NLP analysis fails
       const contexts = [
         "Roger is carefully listening...",
         "Roger is considering how to respond...",
@@ -77,7 +97,7 @@ export const useMessageProcessor = ({
   // Track conversation history for context enhancement
   let conversationHistory: string[] = [];
   
-  const processResponse = useCallback((userInput: string) => {
+  const processResponse = useCallback(async (userInput: string) => {
     // Add user input to conversation history
     conversationHistory.push(userInput);
     
@@ -95,49 +115,71 @@ export const useMessageProcessor = ({
     const isCritical = containsCriticalKeywords(userInput);
     const isPetLoss = isPetLossContent(userInput);
     
-    // Set an appropriate processing context to show Roger is "thinking"
-    const processingContext = determineProcessingContext(userInput);
+    // Use enhanced NLP to set an appropriate processing context
+    const processingContext = await determineProcessingContext(userInput);
     setProcessingContext(processingContext);
     
     // Calculate appropriate delay time based on message content
     const responseDelay = getResponseDelay(userInput);
     
-    // If user is pointing out that Roger didn't listen, prioritize addressing this
-    if (isPointingOutNonResponsiveness && conversationHistory.length >= 3) {
-      setTimeout(() => {
-        // Generate a special acknowledgment response
-        let acknowledgmentResponse = "I apologize for not properly acknowledging what you've already shared. Looking back at our conversation, I see that you mentioned ";
-        
-        // Extract topics from conversation history
-        const topics = extractTopicsFromHistory(conversationHistory.slice(-3));
-        acknowledgmentResponse += topics + ". Could you help me understand which aspects of this are most important for us to focus on right now?";
-        
-        // Create message object
-        const responseMsg = createMessage(acknowledgmentResponse, 'roger');
-        
-        // Add the response
-        setMessages(prevMessages => [...prevMessages, responseMsg]);
-        
-        // Add response to conversation history
-        conversationHistory.push(acknowledgmentResponse);
-        
-        // Update the response history to prevent future repetition
-        updateRogerResponseHistory(acknowledgmentResponse);
-        
-        // Simulate typing with a callback to update the message text
-        simulateTypingResponse(acknowledgmentResponse, (text) => {
-          setMessages(prevMessages => 
-            prevMessages.map(msg => 
-              msg.id === responseMsg.id ? { ...msg, text } : msg
-            )
-          );
-          
-          // Clear the processing context once response is complete
-          setProcessingContext(null);
-        });
-      }, Math.min(responseDelay, 1000)); // Respond faster to acknowledgment requests
+    // Use enhanced NLP analysis for better response handling
+    try {
+      const feelingResult = await detectEnhancedFeelings(userInput);
+      console.log("Detected feelings:", feelingResult);
       
-      return;
+      // Get persistent feelings and dominant topics
+      const persistentFeelings = getPersistentFeelings();
+      const dominantTopics = getDominantTopics();
+      
+      console.log("Persistent feelings:", persistentFeelings);
+      console.log("Dominant topics:", dominantTopics);
+      
+      // Enhanced handling for non-responsiveness complaints
+      if (isPointingOutNonResponsiveness && conversationHistory.length >= 3) {
+        setTimeout(() => {
+          // Generate an enhanced acknowledgment response
+          let acknowledgmentResponse = "I apologize for not properly acknowledging what you've already shared. ";
+          
+          // Use persistent feelings and topics for better acknowledgment
+          if (persistentFeelings.length > 0) {
+            acknowledgmentResponse += `I notice you've mentioned feeling ${persistentFeelings.join(", ")}. `;
+          }
+          
+          if (dominantTopics.length > 0) {
+            acknowledgmentResponse += `You've been talking about ${dominantTopics.join(", ")}. `;
+          }
+          
+          acknowledgmentResponse += "Could you help me understand which aspects of this are most important for us to focus on right now?";
+          
+          // Create message object
+          const responseMsg = createMessage(acknowledgmentResponse, 'roger');
+          
+          // Add the response
+          setMessages(prevMessages => [...prevMessages, responseMsg]);
+          
+          // Add response to conversation history
+          conversationHistory.push(acknowledgmentResponse);
+          
+          // Update the response history to prevent future repetition
+          updateRogerResponseHistory(acknowledgmentResponse);
+          
+          // Simulate typing with a callback to update the message text
+          simulateTypingResponse(acknowledgmentResponse, (text) => {
+            setMessages(prevMessages => 
+              prevMessages.map(msg => 
+                msg.id === responseMsg.id ? { ...msg, text } : msg
+              )
+            );
+            
+            // Clear the processing context once response is complete
+            setProcessingContext(null);
+          });
+        }, Math.min(responseDelay, 1000)); // Respond faster to acknowledgment requests
+        
+        return;
+      }
+    } catch (error) {
+      console.error("Error in enhanced NLP processing:", error);
     }
     
     // Double-check throttling for non-critical messages

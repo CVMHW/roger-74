@@ -17,9 +17,15 @@ import { useRogerianState } from './stateManagement';
 import { handleEmotionalPatterns } from './emotionalResponseHandlers';
 import { processUserMessage as processMessage } from './messageProcessor';
 import { RecentCrisisMessage, UseRogerianResponseReturn } from './types';
+import { detectEnhancedFeelings, getPersistentFeelings, getDominantTopics } from '../../utils/reflection/feelingDetection';
+import { initializeNLPModel } from '../../utils/nlpProcessor';
+
+// Initialize the NLP model when the module loads
+initializeNLPModel().catch(error => console.error('Failed to initialize NLP model:', error));
 
 /**
  * Hook for generating Rogerian responses to user messages
+ * Enhanced with transformer-based NLP capabilities
  */
 const useRogerianResponse = (): UseRogerianResponseReturn => {
   // Hook for conversation stage management
@@ -94,11 +100,77 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
     return handlePotentialDeception(originalMessage, followUpMessage, addToResponseHistory);
   }, [addToResponseHistory]);
   
-  // Process user message with stage update and special cases
+  // Enhanced process user message with NLP capabilities
   const processUserMessage = useCallback(async (userInput: string): Promise<MessageType> => {
     try {
       // Update conversation history and client preferences
       updateConversationHistory(userInput);
+      
+      // Use enhanced NLP for better understanding
+      try {
+        // Analyze message with transformer model
+        const feelingResult = await detectEnhancedFeelings(userInput);
+        
+        // Log enhanced understanding
+        console.log("Enhanced NLP analysis:", {
+          feelings: feelingResult.allFeelings,
+          primaryFeeling: feelingResult.primaryFeeling,
+          topics: feelingResult.topics,
+          severity: feelingResult.severity,
+        });
+        
+        // Check for consistent emotional patterns
+        const persistentFeelings = getPersistentFeelings();
+        const dominantTopics = getDominantTopics();
+        
+        // If we detect consistent emotions or topics, create more targeted responses
+        if ((persistentFeelings.length > 0 || dominantTopics.length > 0) && 
+            messageCount > 2 && messageCount < 10) {
+          
+          // Create enhanced context-aware response
+          let enhancedResponse = "";
+          
+          // Acknowledge persistent emotions if present
+          if (persistentFeelings.length > 0) {
+            enhancedResponse = `I notice you've mentioned feeling ${persistentFeelings.join(", ")} several times. `;
+            
+            // Add relevant follow-up based on emotion
+            if (persistentFeelings.includes('angry')) {
+              enhancedResponse += "It sounds like this is really frustrating for you. ";
+            } else if (persistentFeelings.includes('sad')) {
+              enhancedResponse += "This seems to be weighing heavily on you. ";
+            } else if (persistentFeelings.includes('anxious')) {
+              enhancedResponse += "This appears to be causing you some worry. ";
+            }
+          }
+          
+          // Acknowledge dominant topics
+          if (dominantTopics.length > 0) {
+            if (enhancedResponse) {
+              enhancedResponse += "I also notice we've been talking about ";
+            } else {
+              enhancedResponse = "I notice we've been focusing on ";
+            }
+            enhancedResponse += `${dominantTopics.join(", ")}. `;
+          }
+          
+          // Add appropriate follow-up question
+          if (enhancedResponse) {
+            enhancedResponse += "What aspect of this feels most important for us to discuss right now?";
+            
+            // If this is detailed enough, use it directly
+            if (enhancedResponse.length > 80 && Math.random() < 0.7) {
+              // Update conversation stage
+              updateStage();
+              
+              // Return the enhanced context response
+              return Promise.resolve(createMessage(enhancedResponse, 'roger'));
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error in enhanced NLP processing:", error);
+      }
       
       // Check if the user is indicating Roger isn't listening or is stuck in a loop
       const feedbackLoopResponse = handleFeedbackLoop(userInput, conversationHistory);
@@ -149,7 +221,8 @@ const useRogerianResponse = (): UseRogerianResponseReturn => {
     baseProcessUserMessage,
     detectConcerns,
     clientPreferences,
-    generateResponse
+    generateResponse,
+    messageCount
   ]);
   
   return {
