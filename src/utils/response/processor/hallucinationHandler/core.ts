@@ -21,9 +21,14 @@ export const handlePotentialHallucinations = (
 } => {
   try {
     // First check for dangerous repetition patterns like "I hear you're dealing with I hear you're dealing with"
+    // and other common issues
     const repetitionPatterns = [
       {
         pattern: /(I hear (you'?re|you are) dealing with) I hear (you'?re|you are) dealing with/i,
+        replacement: '$1'
+      },
+      {
+        pattern: /(I hear (you'?re|you are) dealing with) you may have indicated/i,
         replacement: '$1'
       },
       {
@@ -32,6 +37,14 @@ export const handlePotentialHallucinations = (
       },
       {
         pattern: /(you (mentioned|said|told me)) you (mentioned|said|told me)/i,
+        replacement: '$1'
+      },
+      {
+        pattern: /you may have indicated (Just|just) a/i,
+        replacement: 'with'
+      },
+      {
+        pattern: /(I hear you're feeling) (I hear you're feeling)/i,
         replacement: '$1'
       }
     ];
@@ -116,6 +129,32 @@ export const handlePotentialHallucinations = (
           processingTime: 0,
           confidence: 0.4,
           issueDetails: ["Fixed health topic hallucination"]
+        }
+      };
+    }
+    
+    // Check for "you may have indicated" phrases - these often lead to confusion
+    const indicatedPattern = /you may have indicated/i;
+    if (indicatedPattern.test(responseText)) {
+      console.log("DETECTED 'you may have indicated' PATTERN: Fixing directly");
+      
+      // Direct fix for this phrasing issue
+      const correctedResponse = responseText.replace(
+        indicatedPattern,
+        "about"
+      );
+      
+      return {
+        processedResponse: correctedResponse,
+        hallucinationData: {
+          processedResponse: correctedResponse,
+          wasRevised: true,
+          reasoningApplied: false,
+          detectionApplied: true,
+          ragApplied: false,
+          processingTime: 0,
+          confidence: 0.4,
+          issueDetails: ["Fixed confusing phrasing"]
         }
       };
     }

@@ -8,7 +8,6 @@ import { enhanceResponse } from './responseEnhancer';
 import { detectPatterns } from './patternDetection';
 import { useFeedbackLoopHandler } from '../../response/feedbackLoopHandler';
 import { checkAllRules } from '../../../utils/rulesEnforcement/rulesEnforcer';
-import { ProcessMessageProps } from '../messageProcessor/types';
 
 /**
  * Enhanced process user message with pattern-matching NLP capabilities,
@@ -96,16 +95,16 @@ export const processUserMessage = async (
       return emotionalResponse;
     }
     
-    // We need to pass all 7 arguments separately to the processMessage function
-    const response = await processMessage(
+    // Pass all required arguments to the processMessage function
+    const response = await processMessage({
       userInput,
-      detectConcerns,
-      generateResponse,
+      detectConcernsFn: detectConcerns,
+      generateResponseFn: generateResponse,
       baseProcessUserMessage,
       conversationHistory,
       clientPreferences,
-      updateStage
-    );
+      updateStageFn: updateStage
+    });
     
     // Enhance the response with memory rules, master rules, and chat log review
     const finalResponseText = enhanceResponse(

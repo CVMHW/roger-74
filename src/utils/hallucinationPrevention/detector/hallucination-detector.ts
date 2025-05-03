@@ -28,10 +28,13 @@ export const detectHallucinations = (
   let confidenceScore = 1.0; // Start with high confidence
   
   // CRITICAL: First specifically check for repetition patterns like "I hear you're dealing with I hear you're dealing with"
+  // Also catch "I hear you're dealing with you may have indicated" pattern
   const repetitionPatterns = [
     /I hear (you'?re|you are) dealing with I hear (you'?re|you are) dealing with/i,
+    /I hear (you'?re|you are) dealing with you may have indicated/i,
     /I remember (you|your|we) I remember (you|your|we)/i,
-    /you (mentioned|said|told me) you (mentioned|said|told me)/i
+    /you (mentioned|said|told me) you (mentioned|said|told me)/i,
+    /(I hear|It sounds like) you('re| are) (dealing with|feeling) (I hear|It sounds like) you('re| are)/i
   ];
   
   for (const pattern of repetitionPatterns) {
@@ -55,6 +58,16 @@ export const detectHallucinations = (
       description: 'False reference to discussing health topics that were not mentioned'
     });
     confidenceScore -= 0.6; // Heavy penalty for this specific hallucination
+  }
+  
+  // NEW: Check for confusing phrases like "you may have indicated Just a rough day"
+  if (/you may have indicated/i.test(responseText)) {
+    flags.push({
+      type: 'false_continuity',
+      severity: 'high',
+      description: 'Confused phrasing that creates an unclear reference'
+    });
+    confidenceScore -= 0.5;
   }
   
   // Check for memory references without actual memory
