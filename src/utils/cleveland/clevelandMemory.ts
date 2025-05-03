@@ -7,7 +7,7 @@
 
 import { searchMemory, addMemory } from '../memory/memoryController';
 import { getClevelandData, getClevelandPlace, getSportsFacts, getTourismInfo } from './clevelandData';
-import { detectClevelandTopics, ClevelandTopic } from './clevelandTopics';
+import { detectClevelandTopics, ClevelandTopic, ClevelandTopicType } from './clevelandTopics';
 
 /**
  * Find relevant Cleveland memories based on user input
@@ -86,8 +86,8 @@ export const findClevelandMemories = (userInput: string): string[] => {
       limit: 1
     });
     
-    if (memoryResults.items && memoryResults.items.length > 0) {
-      const relevantMemory = memoryResults.items[0];
+    if (memoryResults && memoryResults.length > 0) {
+      const relevantMemory = memoryResults[0];
       if (relevantMemory.role === 'patient' && relevantMemory.content) {
         memories.push(`You mentioned ${primaryTopic.keywords[0]} before when we talked about ${relevantMemory.content.substring(0, 30)}...`);
       }
@@ -113,6 +113,9 @@ export const storeClevelandMemory = (
   try {
     // Create context with Cleveland topics
     const context = {
+      emotions: [],
+      topics: topics.map(t => t.type as string),
+      problems: [],
       clevelandTopics: topics.map(t => t.type),
       keywords: topics.flatMap(t => t.keywords)
     };
@@ -155,12 +158,14 @@ export const shouldUseClevelandKnowledge = (
     });
     
     // Check if recent memories had Cleveland context
-    const recentClevelandDiscussion = recentMemories.items.some(
-      memory => memory.metadata && memory.metadata.clevelandTopics
-    );
+    if (recentMemories && recentMemories.length > 0) {
+      const recentClevelandDiscussion = recentMemories.some(
+        memory => memory.metadata && memory.metadata.clevelandTopics
+      );
     
-    if (recentClevelandDiscussion) {
-      return true;
+      if (recentClevelandDiscussion) {
+        return true;
+      }
     }
   } catch (error) {
     console.error("Error checking recent Cleveland memories:", error);
@@ -169,3 +174,4 @@ export const shouldUseClevelandKnowledge = (
   // Default - use sparingly
   return Math.random() < 0.3; // 30% chance
 };
+

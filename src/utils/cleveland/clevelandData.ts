@@ -1,300 +1,274 @@
 
 /**
- * Cleveland Data Repository
+ * Cleveland Data
  * 
- * Contains structured Cleveland-specific information about restaurants,
- * sports, landmarks, and other local knowledge important to Roger's identity.
+ * Core data structures for Cleveland-specific knowledge
  */
 
-// Define Cleveland data types
+// Types for Cleveland places
+export type PlaceType = 'restaurant' | 'bar' | 'brewery' | 'landmark' | 'park' | 'venue' | 'attraction';
+export type PlaceArea = 'Downtown' | 'Ohio City' | 'Tremont' | 'Gordon Square' | 'The Flats' | 'University Circle' | 'Lakewood' | 'Cleveland Heights' | 'Shaker Heights' | 'Edgewater' | 'Little Italy' | 'Shaker Square';
+
+// Place data structure
 export interface ClevelandPlace {
+  id: string;
   name: string;
+  type: PlaceType;
   area: string;
   description: string;
-  category: 'restaurant' | 'bar' | 'landmark' | 'entertainment' | 'sports' | 'park';
-  keywords: string[];
+  keywords?: string[];
 }
 
-export interface ClevelandSportsFact {
-  team: 'Browns' | 'Cavaliers' | 'Cavs' | 'Guardians' | 'Indians' | 'Monsters' | 'general';
+// Sports fact structure
+export interface SportsFact {
+  id: string;
+  team: string;
+  sport: 'football' | 'basketball' | 'baseball' | 'hockey' | 'other';
   fact: string;
-  isHistorical: boolean;
-  year?: number;
-  keywords: string[];
+  keywords?: string[];
 }
 
-export interface ClevelandTourismFact {
+// Tourism information structure
+export type TourismType = 'landmark' | 'park' | 'museum' | 'event' | 'neighborhood' | 'attraction';
+
+export interface TourismInfo {
+  id: string;
   location: string;
+  type: TourismType;
   fact: string;
-  category: 'museum' | 'park' | 'landmark' | 'event' | 'neighborhood' | 'attraction';
-  keywords: string[];
+  keywords?: string[];
 }
 
-export interface ClevelandData {
+// Weather information
+export interface WeatherFact {
+  id: string;
+  season: 'winter' | 'spring' | 'summer' | 'fall' | 'all';
+  fact: string;
+}
+
+// Complete Cleveland knowledge base
+export interface ClevelandKnowledgeBase {
   places: ClevelandPlace[];
-  sportsFacts: ClevelandSportsFact[];
-  tourismFacts: ClevelandTourismFact[];
-  smallTalkTopics: string[];
-  recentSportsUpdates: {
-    cavs: string[];
-    browns: string[];
-    guardians: string[];
-    lastUpdated: Date;
-  };
+  sportsFacts: SportsFact[];
+  tourismInfo: TourismInfo[];
+  weatherFacts: WeatherFact[];
+  lastUpdated: number;
 }
 
-// Initialize Cleveland data repository
-let clevelandData: ClevelandData = {
-  places: [],
-  sportsFacts: [],
-  tourismFacts: [],
-  smallTalkTopics: [],
-  recentSportsUpdates: {
-    cavs: [],
-    browns: [],
-    guardians: [],
-    lastUpdated: new Date()
-  }
+// Cleveland knowledge data store
+let clevelandDataStore: ClevelandKnowledgeBase = {
+  places: [
+    {
+      id: 'place_001',
+      name: 'Great Lakes Brewing Company',
+      type: 'brewery',
+      area: 'Ohio City',
+      description: 'craft beers and pub fare with a historic atmosphere',
+      keywords: ['beer', 'brewery', 'food', 'ohio city', 'west side']
+    },
+    {
+      id: 'place_002',
+      name: 'West Side Market',
+      type: 'landmark',
+      area: 'Ohio City',
+      description: 'historic public market with over 100 vendors',
+      keywords: ['market', 'food', 'shopping', 'ohio city', 'historic']
+    },
+    {
+      id: 'place_003',
+      name: 'Lola Bistro',
+      type: 'restaurant',
+      area: 'Downtown',
+      description: 'Michael Symon\'s flagship restaurant with modern American cuisine',
+      keywords: ['fine dining', 'american', 'symon', 'downtown', 'upscale']
+    },
+    {
+      id: 'place_004',
+      name: 'Barrio',
+      type: 'restaurant',
+      area: 'Tremont',
+      description: 'popular build-your-own tacos spot with multiple locations',
+      keywords: ['mexican', 'tacos', 'casual', 'tremont', 'margaritas']
+    },
+    {
+      id: 'place_005',
+      name: 'The Velvet Tango Room',
+      type: 'bar',
+      area: 'Tremont',
+      description: 'sophisticated cocktail lounge with live jazz',
+      keywords: ['cocktails', 'jazz', 'upscale', 'tremont', 'drinks']
+    }
+  ],
+  sportsFacts: [
+    {
+      id: 'sports_001',
+      team: 'Cavaliers',
+      sport: 'basketball',
+      fact: 'won their first NBA championship in 2016 by coming back from a 3-1 deficit against the Warriors',
+      keywords: ['cavs', 'basketball', 'championship', 'nba', 'lebron']
+    },
+    {
+      id: 'sports_002',
+      team: 'Browns',
+      sport: 'football',
+      fact: 'were founded in 1946 and named after their first head coach Paul Brown',
+      keywords: ['browns', 'football', 'nfl', 'paul brown', 'history']
+    },
+    {
+      id: 'sports_003',
+      team: 'Guardians',
+      sport: 'baseball',
+      fact: 'changed their name from the Indians to the Guardians in 2022',
+      keywords: ['guardians', 'indians', 'baseball', 'mlb', 'name change']
+    }
+  ],
+  tourismInfo: [
+    {
+      id: 'tourism_001',
+      location: 'Rock and Roll Hall of Fame',
+      type: 'museum',
+      fact: 'houses exhibits from the most influential rock and roll artists in history',
+      keywords: ['rock', 'music', 'museum', 'downtown', 'tourist']
+    },
+    {
+      id: 'tourism_002',
+      location: 'Cleveland Museum of Art',
+      type: 'museum',
+      fact: 'offers free general admission and houses over 61,000 works of art',
+      keywords: ['art', 'museum', 'university circle', 'free', 'culture']
+    },
+    {
+      id: 'tourism_003',
+      location: 'Edgewater Park',
+      type: 'park',
+      fact: 'features a beach on Lake Erie with skyline views of downtown Cleveland',
+      keywords: ['beach', 'park', 'lake', 'outdoor', 'recreation']
+    },
+    {
+      id: 'tourism_004',
+      location: 'Playhouse Square',
+      type: 'attraction',
+      fact: 'is the largest performing arts center in the US outside of New York',
+      keywords: ['theater', 'performance', 'downtown', 'arts', 'broadway']
+    }
+  ],
+  weatherFacts: [
+    {
+      id: 'weather_001',
+      season: 'winter',
+      fact: 'Cleveland often experiences "lake effect snow" due to its location on Lake Erie'
+    },
+    {
+      id: 'weather_002',
+      season: 'summer',
+      fact: 'Summers in Cleveland are generally warm and humid with temperatures typically in the 70s and 80s'
+    },
+    {
+      id: 'weather_003',
+      season: 'fall',
+      fact: 'Fall in Cleveland features beautiful foliage changes, especially in the Metroparks'
+    }
+  ],
+  lastUpdated: Date.now()
 };
 
 /**
  * Load Cleveland data into memory
  */
-export const loadClevelandData = (): void => {
-  // Popular restaurants and bars
-  clevelandData.places = [
-    {
-      name: "Lola Bistro",
-      area: "Downtown Cleveland",
-      description: "Michael Symon's modern American cuisine flagship",
-      category: "restaurant",
-      keywords: ["lola", "symon", "downtown", "fine dining", "american"]
-    },
-    {
-      name: "Great Lakes Brewing Company",
-      area: "Ohio City",
-      description: "Craft beers and pub fare staple",
-      category: "bar",
-      keywords: ["great lakes", "beer", "brewery", "ohio city", "pub"]
-    },
-    {
-      name: "Mabel's BBQ",
-      area: "Downtown Cleveland",
-      description: "Michael Symon's Cleveland-style barbecue",
-      category: "restaurant",
-      keywords: ["mabels", "bbq", "barbecue", "downtown", "symon"]
-    },
-    {
-      name: "Barrio",
-      area: "Tremont",
-      description: "Popular tacos with multiple locations",
-      category: "restaurant",
-      keywords: ["barrio", "tacos", "mexican", "tremont"]
-    },
-    {
-      name: "TownHall",
-      area: "Ohio City",
-      description: "Health-conscious dining with an extensive beer list",
-      category: "restaurant",
-      keywords: ["townhall", "ohio city", "healthy", "vegan", "beer"]
-    },
-    {
-      name: "Velvet Tango Room",
-      area: "Tremont", 
-      description: "Elegant craft cocktails",
-      category: "bar",
-      keywords: ["velvet", "tango", "cocktails", "tremont", "upscale"]
-    },
-    {
-      name: "Sokolowski's University Inn",
-      area: "Tremont",
-      description: "Historic Polish dining since 1923",
-      category: "restaurant",
-      keywords: ["sokolowski", "polish", "tremont", "traditional"]
+export const loadClevelandData = (): boolean => {
+  try {
+    // If we're in a browser environment, try to load from localStorage for persistence
+    if (typeof localStorage !== 'undefined') {
+      const storedData = localStorage.getItem('clevelandData');
+      if (storedData) {
+        const parsedData = JSON.parse(storedData);
+        // Only use stored data if it's not too old (7 days)
+        const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
+        if (parsedData.lastUpdated && Date.now() - parsedData.lastUpdated < maxAge) {
+          clevelandDataStore = parsedData;
+          return true;
+        }
+      }
     }
-  ];
-  
-  // Sports facts
-  clevelandData.sportsFacts = [
-    {
-      team: "Cavaliers",
-      fact: "Won their first NBA championship in 2016, led by LeBron James",
-      isHistorical: true,
-      year: 2016,
-      keywords: ["championship", "lebron", "2016", "nba", "finals"]
-    },
-    {
-      team: "Browns",
-      fact: "Founded in 1946, won four NFL championships before the Super Bowl era",
-      isHistorical: true,
-      year: 1964,
-      keywords: ["championship", "nfl", "history", "football"]
-    },
-    {
-      team: "Guardians",
-      fact: "Changed their name from Indians to Guardians in 2021",
-      isHistorical: true,
-      year: 2021,
-      keywords: ["name change", "indians", "baseball", "mlb"]
-    },
-    {
-      team: "Browns",
-      fact: "Play at FirstEnergy Stadium on the shores of Lake Erie",
-      isHistorical: false,
-      keywords: ["stadium", "lake erie", "firstenergy"]
-    },
-    {
-      team: "Cavaliers",
-      fact: "Play at Rocket Mortgage FieldHouse in downtown Cleveland",
-      isHistorical: false,
-      keywords: ["arena", "rocket mortgage", "downtown", "fieldhouse"]
-    },
-    {
-      team: "Guardians",
-      fact: "Play at Progressive Field in downtown Cleveland",
-      isHistorical: false,
-      keywords: ["stadium", "progressive field", "ballpark", "downtown"]
-    }
-  ];
-  
-  // Tourism facts
-  clevelandData.tourismFacts = [
-    {
-      location: "Rock and Roll Hall of Fame",
-      fact: "Iconic museum celebrating rock music history, designed by I.M. Pei",
-      category: "museum",
-      keywords: ["rock", "music", "museum", "downtown", "tourist"]
-    },
-    {
-      location: "Cleveland Museum of Art",
-      fact: "World-renowned art museum with free general admission",
-      category: "museum",
-      keywords: ["art", "museum", "university circle", "free"]
-    },
-    {
-      location: "West Side Market",
-      fact: "Historic public market with over 100 vendors since 1912",
-      category: "landmark",
-      keywords: ["market", "food", "ohio city", "historic", "shopping"]
-    },
-    {
-      location: "Cleveland Metroparks",
-      fact: "Extensive park system known as the 'Emerald Necklace' with over 23,000 acres",
-      category: "park",
-      keywords: ["parks", "emerald necklace", "nature", "outdoors"]
-    },
-    {
-      location: "Playhouse Square",
-      fact: "Second largest performing arts center in the US after NYC",
-      category: "entertainment",
-      keywords: ["theater", "theatre", "broadway", "downtown", "arts"]
-    }
-  ];
-  
-  // Small talk topics
-  clevelandData.smallTalkTopics = [
-    "How about those Browns this season?",
-    "Have you checked out any new restaurants in Ohio City lately?",
-    "What do you think about the weather we've been having?",
-    "Did you catch the Guardians game last night?",
-    "The Metroparks are looking beautiful this time of year",
-    "Have you been to the Rock Hall recently?",
-    "That lake effect snow hit us pretty hard last week",
-    "Cleveland Orchestra has an amazing program this season",
-    "The West Side Market was packed last weekend",
-    "How's the traffic on the Shoreway been with the construction?"
-  ];
-  
-  // Recent sports updates (as of May 3, 2025)
-  clevelandData.recentSportsUpdates = {
-    cavs: [
-      "Cavaliers are excelling with a 64-18 regular season record",
-      "Swept the Miami Heat 4-0 in the first round of playoffs",
-      "Darius Garland is leading scorer in playoffs at 24.0 PPG",
-      "Donovan Mitchell averaging 23.8 points in playoff games",
-      "Team considered strong championship contenders"
-    ],
-    browns: [
-      "Browns finished the 2024 season with a 3-14 record",
-      "Currently rebuilding for the 2025 season",
-      "Looking to address quarterback needs in the draft",
-      "Training camp starts in July 2025",
-      "New defensive coordinator brought in to improve team"
-    ],
-    guardians: [
-      "Currently 19-14, second in AL Central",
-      "Steven Kwan leading hitter with .328 batting average",
-      "Ben Lively is top starter with 3.72 ERA",
-      "Hit 38 home runs in first 33 games of the season",
-      "2 games behind Detroit in division race"
-    ],
-    lastUpdated: new Date('2025-05-03')
-  };
+    
+    return false;
+  } catch (error) {
+    console.error("Error loading Cleveland data:", error);
+    return false;
+  }
 };
 
 /**
  * Get all Cleveland data
  */
-export const getClevelandData = (): ClevelandData => {
-  return clevelandData;
+export const getClevelandData = (): ClevelandKnowledgeBase => {
+  return clevelandDataStore;
 };
 
 /**
- * Get specific Cleveland place information
+ * Find a Cleveland place by keyword
  */
-export const getClevelandPlace = (nameOrKeyword: string): ClevelandPlace | undefined => {
-  const normalizedSearch = nameOrKeyword.toLowerCase();
+export const getClevelandPlace = (keyword: string): ClevelandPlace | null => {
+  const places = clevelandDataStore.places;
   
-  return clevelandData.places.find(place => 
-    place.name.toLowerCase().includes(normalizedSearch) || 
-    place.keywords.some(keyword => keyword.toLowerCase().includes(normalizedSearch))
+  // First look for direct matches in name or keywords
+  const exactMatch = places.find(
+    place => place.name.toLowerCase().includes(keyword.toLowerCase()) ||
+           place.keywords?.some(k => k === keyword.toLowerCase())
+  );
+  
+  if (exactMatch) return exactMatch;
+  
+  // Then look for partial matches
+  const partialMatch = places.find(
+    place => place.description.toLowerCase().includes(keyword.toLowerCase()) ||
+           place.keywords?.some(k => k.includes(keyword.toLowerCase()))
+  );
+  
+  return partialMatch || null;
+};
+
+/**
+ * Get sports facts by team or keyword
+ */
+export const getSportsFacts = (keyword: string): SportsFact[] => {
+  const facts = clevelandDataStore.sportsFacts;
+  
+  return facts.filter(
+    fact => fact.team.toLowerCase().includes(keyword.toLowerCase()) ||
+          fact.sport.toLowerCase().includes(keyword.toLowerCase()) ||
+          fact.keywords?.some(k => k.includes(keyword.toLowerCase()))
   );
 };
 
 /**
- * Get sports facts based on team or keyword
+ * Get tourism information by keyword
  */
-export const getSportsFacts = (teamOrKeyword: string): ClevelandSportsFact[] => {
-  const normalizedSearch = teamOrKeyword.toLowerCase();
+export const getTourismInfo = (keyword: string): TourismInfo[] => {
+  const info = clevelandDataStore.tourismInfo;
   
-  return clevelandData.sportsFacts.filter(fact => 
-    fact.team.toLowerCase().includes(normalizedSearch) || 
-    fact.keywords.some(keyword => keyword.toLowerCase().includes(normalizedSearch))
+  return info.filter(
+    item => item.location.toLowerCase().includes(keyword.toLowerCase()) ||
+          item.type.toLowerCase().includes(keyword.toLowerCase()) ||
+          item.keywords?.some(k => k.includes(keyword.toLowerCase()))
   );
 };
 
 /**
- * Get tourism information based on location or keyword
+ * Get weather facts by season
  */
-export const getTourismInfo = (locationOrKeyword: string): ClevelandTourismFact[] => {
-  const normalizedSearch = locationOrKeyword.toLowerCase();
+export const getWeatherFacts = (season?: 'winter' | 'spring' | 'summer' | 'fall'): WeatherFact[] => {
+  const facts = clevelandDataStore.weatherFacts;
   
-  return clevelandData.tourismFacts.filter(info => 
-    info.location.toLowerCase().includes(normalizedSearch) || 
-    info.keywords.some(keyword => keyword.toLowerCase().includes(normalizedSearch))
-  );
-};
-
-/**
- * Get recent sports updates
- */
-export const getRecentSportsUpdates = (team?: 'cavs' | 'browns' | 'guardians'): string[] => {
-  if (team) {
-    return clevelandData.recentSportsUpdates[team];
+  if (!season) {
+    return facts;
   }
   
-  // Return all updates if no team specified
-  return [
-    ...clevelandData.recentSportsUpdates.cavs,
-    ...clevelandData.recentSportsUpdates.browns,
-    ...clevelandData.recentSportsUpdates.guardians
-  ];
+  return facts.filter(
+    fact => fact.season === season || fact.season === 'all'
+  );
 };
 
-/**
- * Get random small talk topic
- */
-export const getRandomSmallTalkTopic = (): string => {
-  const topics = clevelandData.smallTalkTopics;
-  return topics[Math.floor(Math.random() * topics.length)];
-};
+// Initialize with any stored data on module load
+loadClevelandData();
+

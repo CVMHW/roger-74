@@ -8,6 +8,8 @@
 import { searchMemory } from './memoryController';
 import { findClevelandMemories } from '../cleveland/clevelandMemory';
 import { detectClevelandTopics } from '../cleveland/clevelandTopics';
+import { findStressorMemories } from '../stressors/stressorMemory';
+import { detectStressors } from '../stressors/stressorDetection';
 
 /**
  * Retrieve relevant memories based on user input
@@ -23,14 +25,21 @@ export const retrieveRelevantMemories = (userInput: string): string[] => {
       memories.push(...clevelandMemories);
     }
     
+    // Check for stressor-related memories
+    const stressors = detectStressors(userInput);
+    if (stressors.length > 0) {
+      const stressorMemories = findStressorMemories(userInput);
+      memories.push(...stressorMemories);
+    }
+    
     // Then check general memory system
     const memoryResults = searchMemory({
       keywords: extractKeywords(userInput),
       limit: 3
     });
     
-    if (memoryResults.items && memoryResults.items.length > 0) {
-      for (const item of memoryResults.items) {
+    if (memoryResults && memoryResults.length > 0) {
+      for (const item of memoryResults) {
         if (item.role === 'patient' && !memories.includes(item.content)) {
           memories.push(`You mentioned ${item.content.substring(0, 30)}...`);
         }
@@ -57,3 +66,4 @@ const extractKeywords = (text: string): string[] => {
 
 // Re-export other memory functions used elsewhere
 export { searchMemory } from './memoryController';
+

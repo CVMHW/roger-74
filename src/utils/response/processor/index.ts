@@ -16,6 +16,7 @@ import { handleLogotherapyIntegration } from './logotherapy/integrationHandler';
 import { handlePotentialHallucinations } from './hallucinationHandler';
 import { correctGrammar } from './grammarCorrection';
 import { selectResponseApproach, adjustApproachForConversationFlow } from './approachSelector';
+import { enhanceWithStressorAwareness } from './stressorEnhancement';
 
 /**
  * Process a response through all enhancement systems
@@ -56,17 +57,23 @@ export const processCompleteResponse = (
       conversationHistory
     });
     
-    // 4. Apply conversation stage processing (special handling for early conversations)
+    // 4. NEW: Enhance with stressor awareness if applicable
+    processedResponse = enhanceWithStressorAwareness(
+      processedResponse,
+      userInput
+    );
+    
+    // 5. Apply conversation stage processing (special handling for early conversations)
     processedResponse = applyConversationStageProcessing(
       processedResponse, 
       userInput,
       isEarlyConversation
     );
     
-    // 5. Apply hallucination prevention as final safety
+    // 6. Apply hallucination prevention as final safety
     processedResponse = processResponse(processedResponse, userInput, conversationHistory);
     
-    // 6. Apply grammar correction with user input for length adjustment
+    // 7. Apply grammar correction with user input for length adjustment
     processedResponse = correctGrammar(processedResponse, userInput);
     
     // Record final response to memory systems
@@ -96,3 +103,4 @@ export const processResponseThroughMasterRules = processCompleteResponse;
 export { recordToMemorySystems } from './memorySystemHandler';
 export { enhanceResponseWithMemory } from './memoryEnhancement';
 export { applyResponseRules } from './ruleProcessing';
+
