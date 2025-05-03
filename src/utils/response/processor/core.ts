@@ -10,7 +10,7 @@ import { applyUnconditionalRules } from '../responseIntegration';
 import { applyResponseRules } from './ruleProcessing';
 import { enhanceResponseWithMemory } from './memoryEnhancement';
 import { verifyMemoryUtilization } from './memoryEnhancement';
-import { handleLogotherapyIntegration } from './logotherapyIntegration';
+import { handleLogotherapyIntegration } from './logotherapy/integrationHandler';
 import { detectConversationPatterns } from '../patternDetection'; // Fixed import to use the correct function name
 import { 
   addResponseVariety,
