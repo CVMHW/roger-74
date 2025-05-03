@@ -8,7 +8,6 @@ import { enforceMemoryRule } from '../../masterRules/unconditionalRuleProtection
 import { applyMemoryRules } from '../../rulesEnforcement/memoryEnforcer';
 import { checkAllRules } from '../../rulesEnforcement/rulesEnforcer';
 import { processThroughChatLogReview } from '../chatLogReviewer';
-import { verifyMemoryUtilization } from './memoryEnhancement';
 
 /**
  * Apply all response rules in proper order
@@ -55,10 +54,10 @@ export const applyResponseRules = (
       conversationHistory
     );
     
-    // FINAL CHECK: Verify response meets all requirements
-    const primaryMemoryCheck = verifyMemoryUtilization(userInput, reviewedResponse, conversationHistory);
+    // Check if response passes our memory criteria
+    const isMemoryAdequate = checkMemoryUtilization(userInput, reviewedResponse, conversationHistory);
     
-    if (!primaryMemoryCheck) {
+    if (!isMemoryAdequate) {
       console.error("CRITICAL ERROR: Final response fails primary memory verification");
       
       // Last-resort fix - add explicit memory reference
@@ -70,6 +69,31 @@ export const applyResponseRules = (
     console.error('Error in applying response rules:', error);
     return response;
   }
+};
+
+/**
+ * Check if response adequately utilizes memory
+ */
+const checkMemoryUtilization = (
+  userInput: string, 
+  response: string, 
+  conversationHistory: string[] = []
+): boolean => {
+  // Basic check - see if we have memory references when needed
+  const needsMemoryReference = conversationHistory.length > 2 && userInput.length > 15;
+  
+  if (needsMemoryReference) {
+    const hasMemoryReference = response.includes("you mentioned") || 
+      response.includes("earlier you") || 
+      response.includes("I remember") || 
+      response.includes("we discussed") ||
+      response.includes("you're saying") || 
+      response.includes("you've shared");
+    
+    return hasMemoryReference;
+  }
+  
+  return true;
 };
 
 /**

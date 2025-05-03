@@ -109,3 +109,66 @@ const addHedgingForMemoryReferences = (response: string): string => {
   // For other memory references, add general hedging
   return "It seems that " + response;
 };
+
+/**
+ * Enhance with memory bank integration
+ * Used by the enhancer
+ */
+export const enhanceWithMemoryBank = (
+  response: string,
+  userInput: string,
+  relevantMemories: any[] = [],
+  conversationHistory: string[] = []
+): string => {
+  // If no relevant memories found, return original response
+  if (!relevantMemories || relevantMemories.length === 0) {
+    return response;
+  }
+  
+  // Check if we already have memory references
+  if (hasMemoryReference(response)) {
+    return response;
+  }
+  
+  // Get top memory
+  const topMemory = relevantMemories[0];
+  
+  // Create a memory reference
+  const memoryText = topMemory.content || "";
+  const memoryPreview = memoryText.substring(0, 30) + (memoryText.length > 30 ? "..." : "");
+  
+  // Add a natural memory reference
+  return `Based on what you've shared about ${memoryPreview}, ${response}`;
+};
+
+/**
+ * Process attention results from multi-head attention system
+ * Used by attentionProcessor
+ */
+export const processAttentionResults = (
+  userInput: string,
+  attentionResults: any
+): void => {
+  // Process and utilize attention results
+  // This is a placeholder for the actual implementation
+  console.log("Processing attention results for input:", userInput.substring(0, 20));
+};
+
+/**
+ * Verify memory utilization in response
+ * Used by rule processing
+ */
+export const verifyMemoryUtilization = (
+  userInput: string, 
+  response: string, 
+  conversationHistory: string[] = []
+): boolean => {
+  // Basic check - see if we have memory references when needed
+  const needsMemoryReference = conversationHistory.length > 2 && userInput.length > 15;
+  
+  if (needsMemoryReference) {
+    return hasMemoryReference(response) || response.includes("you're saying") || response.includes("you've shared");
+  }
+  
+  return true;
+};

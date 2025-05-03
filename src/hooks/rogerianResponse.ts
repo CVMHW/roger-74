@@ -17,7 +17,7 @@ import { resetFiveResponseMemory, isNewConversationFiveResponse } from '../utils
 import { detectNewConversation, resetConversationSession } from '../utils/memory/newConversationDetector';
 
 // Import hallucination prevention system with enhanced features
-import { preventHallucinations } from '../utils/hallucinationPrevention';
+import { preventHallucinations } from '../utils/memory/hallucination/preventionV2';
 import { HallucinationPreventionOptions } from '../types/hallucinationPrevention';
 
 /**

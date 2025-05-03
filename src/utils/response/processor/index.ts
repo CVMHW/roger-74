@@ -13,6 +13,7 @@ import { applyConversationStageProcessing, determineConversationStage } from './
 import { enhanceResponseWithMemory } from './memoryEnhancement';
 import { recordToMemorySystems } from './memorySystemHandler';
 import { handleLogotherapyIntegration } from './logotherapy/integrationHandler';
+import { handleMemoryHallucinations } from './hallucinationHandler';
 
 /**
  * Process a response through all enhancement systems
@@ -52,7 +53,7 @@ export const processCompleteResponse = (
     processedResponse = processResponse(processedResponse, userInput, conversationHistory);
     
     // Record final response to memory systems
-    recordToMemorySystems(processedResponse);
+    recordToMemorySystems(processedResponse, undefined, undefined, 0.8);
     
     return processedResponse;
     
@@ -61,7 +62,7 @@ export const processCompleteResponse = (
     
     // Fallback: Ensure we at least apply basic rules in case of error
     try {
-      const simpleProcessed = applyUnconditionalRules(responseText, userInput);
+      const simpleProcessed = applyUnconditionalRules(responseText, userInput, 0);
       return simpleProcessed;
     } catch (nestedError) {
       console.error("RESPONSE PROCESSOR: Critical failure in fallback processing", nestedError);
@@ -75,6 +76,5 @@ export const processResponseThroughMasterRules = processCompleteResponse;
 
 // Re-export important components for direct access
 export { recordToMemorySystems } from './memorySystemHandler';
-export { handleMemoryHallucinations } from './hallucinationHandler';
 export { enhanceResponseWithMemory } from './memoryEnhancement';
 export { applyResponseRules } from './ruleProcessing';

@@ -1,76 +1,46 @@
 
 /**
- * Memory-related hallucination handling
+ * Memory Hallucination Handler
  * 
- * Focuses on detecting and fixing false memory references
+ * Specialized handler for memory-related hallucinations
  */
 
-import { getConversationMessageCount } from '../../../memory/newConversationDetector';
-import { getAllMemory } from '../../../nlpProcessor';
-import { getFiveResponseMemory } from '../../../memory/fiveResponseMemory';
-import { retrieveRelevantMemories } from '../../../memory/memoryBank';
-import { hasInvalidMentionReference } from './specialCases';
-import { UNCONDITIONAL_MEMORY_RULE } from '../../../masterRules/core/coreRules';
+import { applyEarlyConversationRAG } from './earlyConversation';
 
 /**
- * Handle memory-related hallucinations
+ * Handles memory-related hallucinations in responses
  */
 export const handleMemoryHallucinations = (
-  responseText: string,
-  conversationHistory: string[]
-): {
-  requiresStrictPrevention: boolean;
-} => {
-  // UNCONDITIONAL RULE: Memory usage must be accurate (from UNCONDITIONAL_MEMORY_RULE)
-  console.log("ENFORCING UNCONDITIONAL MEMORY RULE:", UNCONDITIONAL_MEMORY_RULE.name);
+  response: string,
+  userInput: string,
+  conversationHistory: string[] = []
+): string => {
+  // Check if this is early in conversation
+  const isEarlyConversation = conversationHistory.length < 3;
   
-  // Track if we have a potential memory reference
-  const containsMemoryReference = /I remember|you mentioned|you told me|you said|earlier you|previously you|we talked about|we discussed|we've been|you shared|as I recall/i.test(responseText);
+  // For early conversations, be extra cautious about memory claims
+  if (isEarlyConversation) {
+    return applyEarlyConversationRAG(response, userInput);
+  }
   
-  // Get conversation message count from all memory systems
-  const messageCount = getConversationMessageCount();
-  const isNewConversation = messageCount < 3;
+  // For established conversations, just do basic checks
+  if (response.includes("you mentioned") || response.includes("I remember")) {
+    // Add hedging language
+    return "From what I understand, " + response;
+  }
   
-  // Check all memory systems for consistency
-  const primaryMemory = getAllMemory();
-  const fiveResponseMemory = getFiveResponseMemory();
-  const memoryBankResult = retrieveRelevantMemories(conversationHistory[conversationHistory.length - 1] || '');
-  
-  // Critical check for false continuity claims like "we've been focusing on"
-  const falseContinuityPattern = /(?:we've been focusing on|we've been discussing|we've been talking about|as we discussed|we were discussing|we talked about earlier) (?:your|the|about|how|what|why)?\s*([a-zA-Z\s]+)/gi;
-  
-  const containsFalseContinuity = falseContinuityPattern.test(responseText);
-  
-  // Check for "you may have indicated" which is often a sign of confusion
-  const containsMayHaveIndicated = /you may have indicated/i.test(responseText);
-  
-  // Check for multiple "I hear" statements which suggest repetition
-  const multipleIHear = (responseText.match(/I hear/gi) || []).length > 1;
-  
-  // Check for specific invalid memory references
-  const hasInvalidMention = hasInvalidMentionReference(responseText, conversationHistory);
-  
-  // Special check for inconsistency across memory systems
-  const hasMemorySystemInconsistency = 
-    (primaryMemory.patientStatements.length > 0 && fiveResponseMemory.length === 0) ||
-    (memoryBankResult.length === 0 && messageCount > 5);
-  
-  // Determine if strict prevention is required by checking all memory systems
-  const requiresStrictPrevention = 
-      // Memory references in new conversations are always concerning
-      (isNewConversation && containsMemoryReference) || 
-      // False continuity claims in new conversations
-      (containsFalseContinuity && isNewConversation) ||
-      // "you may have indicated" is a strong sign of hallucination
-      containsMayHaveIndicated ||
-      // Multiple "I hear" statements suggest repetition
-      multipleIHear ||
-      // Invalid mention of user content
-      hasInvalidMention ||
-      // Memory system inconsistency
-      hasMemorySystemInconsistency;
-  
-  return {
-    requiresStrictPrevention
-  };
+  return response;
+};
+
+/**
+ * Fixes false memory references in responses
+ */
+export const fixFalseMemoryReferences = (response: string): string => {
+  return response
+    .replace(/you (mentioned|said|told me) that/gi, "it sounds like")
+    .replace(/earlier you (mentioned|said|indicated)/gi, "you just shared")
+    .replace(/as you mentioned/gi, "from what you're saying")
+    .replace(/we (discussed|talked about)/gi, "regarding")
+    .replace(/I remember you saying/gi, "I understand")
+    .replace(/from our previous conversation/gi, "from what you've shared");
 };

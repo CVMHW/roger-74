@@ -1,40 +1,45 @@
 
 /**
- * Utility functions for hallucination handling
+ * Hallucination Handler Utilities
+ * 
+ * Common utility functions for hallucination detection and prevention
  */
 
 /**
- * Calculate similarity between strings
+ * Detect common memory reference patterns that might indicate hallucinations
  */
-export const calculateSimilarity = (str1: string, str2: string): number => {
-  // Check length first
-  if (Math.abs(str1.length - str2.length) > 10) {
-    return 0;
-  }
+export const detectMemoryReferencePatterns = (text: string): boolean => {
+  // Common patterns that might indicate false memory references
+  const patterns = [
+    /you (mentioned|said|told me) (earlier|before|previously)/i,
+    /as we discussed (earlier|before|previously)/i,
+    /in our (previous|last|earlier) (conversation|session|discussion)/i,
+    /continuing (from|with) where we left off/i,
+    /when we last spoke/i,
+    /as I (said|mentioned|noted) (earlier|before|previously)/i
+  ];
   
-  // Simple word overlap for basic similarity
-  const words1 = str1.toLowerCase().split(/\s+/);
-  const words2 = str2.toLowerCase().split(/\s+/);
-  
-  // Count matching words
-  let matches = 0;
-  for (const word of words1) {
-    if (word.length > 3 && words2.includes(word)) {
-      matches++;
-    }
-  }
-  
-  return matches / Math.max(words1.length, words2.length);
+  return patterns.some(pattern => pattern.test(text));
 };
 
 /**
- * Check if word is a common function word to filter out
+ * Determine if this is likely a continuous conversation
  */
-export const isCommonWord = (word: string): boolean => {
-  const commonWords = ["the", "a", "an", "in", "on", "at", "for", "to", "with", "by", "and", "or", "but",
-    "is", "are", "was", "were", "be", "been", "have", "has", "had", "do", "does", "did", 
-    "will", "would", "can", "could", "may", "might", "must", "should", "i", "you", "he", "she", "it",
-    "we", "they", "me", "him", "her", "us", "them"];
+export const isContinuousConversation = (
+  conversationHistory: string[]
+): boolean => {
+  // Simple method - just check if we have enough history
+  return conversationHistory && conversationHistory.length > 3;
+};
+
+/**
+ * Add hedging language to potentially hallucinated content
+ */
+export const addHedging = (text: string): string => {
+  // Only add hedging if not already present
+  if (/^(It seems|From what I understand|If I'm understanding correctly|Based on|It sounds like)/i.test(text)) {
+    return text;
+  }
   
-  return commonWords.includes(word.toLowerCase());
+  return "From what I understand, " + text;
 };

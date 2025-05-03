@@ -7,7 +7,7 @@
  */
 
 import { processResponseThroughMasterRules } from './responseProcessor';
-import { enhanceWithMemoryBank } from './processor/memoryEnhancement';
+import { enhanceResponseWithMemory } from './processor/memoryEnhancement';
 import { handlePotentialHallucinations } from './processor/hallucinationHandler';
 import { recordToMemorySystems } from './processor/memorySystemHandler';
 import { retrieveRelevantMemories } from '../memory/memoryBank';
@@ -25,17 +25,9 @@ export const enhanceResponse = (
     // Get relevant memories from the memory bank
     const relevantMemories = retrieveRelevantMemories(userInput);
     
-    // First enhance with memory bank system
-    const memoryEnhanced = enhanceWithMemoryBank(
-      response,
-      userInput,
-      relevantMemories,
-      conversationHistory
-    );
-    
     // Apply master rules through the integrated processor
     const masterProcessed = processResponseThroughMasterRules(
-      memoryEnhanced,
+      response,
       userInput,
       conversationHistory
     );

@@ -5,7 +5,18 @@
  */
 
 import { processWithMultiHeadAttention } from '../../memory/multiHeadAttention';
-import { processAttentionResults } from './memoryEnhancement';
+
+/**
+ * Process attention results
+ */
+export const processAttentionResults = (
+  userInput: string,
+  attentionResults: any
+): void => {
+  // Process and utilize attention results
+  // This is a placeholder for the actual implementation
+  console.log("Processing attention results for input:", userInput.substring(0, 20));
+};
 
 /**
  * Process input through attention system and update memory

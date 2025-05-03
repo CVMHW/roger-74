@@ -1,8 +1,5 @@
 
 import { MessageType } from "../../../components/Message";
-import { extractUserFrustrations } from "../../../utils/conversation/theSmallStuff/everydayFrustrations";
-import { detectSmallTalk } from "../../../utils/conversation/smallTalk/detectors";
-import { generateSmallTalkResponse } from "../../../utils/conversation/smallTalk/responseGenerators";
 
 interface FrustrationParams {
   userInput: string;
@@ -20,8 +17,12 @@ export const processFrustrationAndSmallTalk = async ({
   conversationHistory,
   updateStage,
 }: FrustrationParams): Promise<MessageType | null> => {
+  // Import these functions dynamically to avoid circular dependencies
+  const { extractUserFrustrations } = require("../../../utils/conversation/theSmallStuff/everydayFrustrations");
+  const { detectSmallTalk } = require("../../../utils/conversation/smallTalk/detectors");
+  
   // First check for everyday frustrations
-  const userFrustrations = extractUserFrustrations(userInput);
+  const userFrustrations = extractUserFrustrations ? extractUserFrustrations(userInput) : null;
   
   // Check if we have detected frustrations
   if (userFrustrations && userFrustrations.detected) {
@@ -38,13 +39,12 @@ export const processFrustrationAndSmallTalk = async ({
     // Process using the base message processor but with our custom response
     return baseProcessUserMessage(
       userInput,
-      generateFrustrationResponse,
-      () => null
+      generateFrustrationResponse
     );
   }
   
   // Next check for small talk
-  const smallTalkResult = detectSmallTalk(userInput, conversationHistory);
+  const smallTalkResult = detectSmallTalk ? detectSmallTalk(userInput, conversationHistory) : { isSmallTalk: false };
   
   if (smallTalkResult.isSmallTalk) {
     console.log("Small talk detected:", smallTalkResult.category);
@@ -54,14 +54,16 @@ export const processFrustrationAndSmallTalk = async ({
     
     // Generate a response based on small talk category
     const generateSmallTalkResponseFn = () => {
-      return generateSmallTalkResponse(smallTalkResult.category, userInput, conversationHistory);
+      const { generateSmallTalkResponse } = require("../../../utils/conversation/smallTalk/responseGenerators");
+      return generateSmallTalkResponse ? 
+        generateSmallTalkResponse(smallTalkResult.category, userInput, conversationHistory) :
+        "I see. What would be most helpful to focus on in our conversation?";
     };
     
     // Process using the base message processor but with our custom response
     return baseProcessUserMessage(
       userInput,
-      generateSmallTalkResponseFn,
-      () => null
+      generateSmallTalkResponseFn
     );
   }
   
