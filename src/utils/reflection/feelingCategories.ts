@@ -23,9 +23,11 @@ export const FEELING_WORDS: Record<FeelingCategory, string[]> = {
   relieved: ["relieved", "unburdened", "calmed", "reassured", "eased", "comforted"]
 };
 
-// Define the empty export to prevent errors
+// Also export FEELING_WORDS as feelingCategories for backward compatibility
+export const feelingCategories = FEELING_WORDS;
+
+// Define the FeelingCategory type
 export type FeelingCategory = 
   | "angry" | "happy" | "sad" | "anxious" | "confused" 
   | "hurt" | "embarrassed" | "guilty" | "ashamed" | "afraid" 
   | "hopeful" | "lonely" | "overwhelmed" | "relieved";
-

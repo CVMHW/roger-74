@@ -1,3 +1,4 @@
+
 import {
   generateSmallTalkResponse,
   isLikelyChild,
@@ -64,6 +65,9 @@ export const generateEarlyConversationResponse = (
   // Default response
   return "I'm here to chat while you wait. How are you feeling today?";
 };
+
+// Export the handleEarlyConversation function to fix the import issue
+export const handleEarlyConversation = generateEarlyConversationResponse;
 
 export default {
   generateEarlyConversationResponse

@@ -1,3 +1,4 @@
+
 import { FeelingCategory } from './feelingCategories';
 
 // Define the types of concerns that can be identified
@@ -6,13 +7,34 @@ export type ConcernType =
   | "pre_session_anxiety"
   | "first_visit"
   | "payment_concerns"
-  | "other";
+  | "other"
+  | "crisis"
+  | "medical"
+  | "mental-health"
+  | "eating-disorder"
+  | "substance-use"
+  | "tentative-harm"
+  | "mild-gambling"
+  | "ptsd"
+  | "ptsd-mild"
+  | "trauma-response"
+  | "pet-illness"
+  | "weather-related"
+  | "cultural-adjustment";
 
 // Define the developmental stages
 export type DevelopmentalStage =
   | "child"
+  | "adolescent" 
   | "teen"
-  | "adult";
+  | "adult"
+  | "young-adult"
+  | "older-adult"
+  | "unknown"
+  | "infant_toddler"
+  | "young_child"
+  | "middle_childhood"
+  | "young_adult";
 
 // Define the conversation stages
 export type ConversationStage =
@@ -31,32 +53,36 @@ export interface PatientMemory {
   relevanceScore: number;
 }
 
-// Add the missing TraumaResponseAnalysis interface
+// Add the TraumaResponseAnalysis interface with all needed properties
 export interface TraumaResponseAnalysis {
   severity: number;
   recommendedApproach: string;
   triggerWords?: string[];
   topics?: string[];
+  dominant4F?: string;
+  secondary4F?: string;
+  angerLevel?: number;
+  hybrid?: boolean;
 }
 
-// Add the missing ContextAwareReflection interface
+// Add the ContextAwareReflection interface
 export interface ContextAwareReflection {
   context: string;
   reflection: string;
   examples: string[];
 }
 
-// Add the missing ChildEmotionCategory type
+// Add the ChildEmotionCategory type
 export type ChildEmotionCategory = "happy" | "sad" | "angry" | "scared" | "confused";
 
-// Add the missing ChildWheelEmotionData interface
+// Add the ChildWheelEmotionData interface
 export interface ChildWheelEmotionData {
   category: ChildEmotionCategory;
   emotions: string[];
   descriptions: string[];
 }
 
-// Add the missing ReflectionPhrases interface
+// Add the ReflectionPhrases interface
 export interface ReflectionPhrases {
   opening: string[];
   feelings: string[];
@@ -67,7 +93,7 @@ export interface ReflectionPhrases {
   closing: string[];
 }
 
-// Add the missing ReflectionPrinciple interface
+// Add the ReflectionPrinciple interface
 export interface ReflectionPrinciple {
   name: string;
   description: string;
@@ -75,9 +101,5 @@ export interface ReflectionPrinciple {
   implementation: string[];
 }
 
-// Fix the re-exports to use 'export type'
+// Use 'export type' for all type re-exports
 export type { FeelingCategory };
-export type { ConcernType };
-export type { DevelopmentalStage };
-export type { ConversationStage };
-export type { PatientMemory };
