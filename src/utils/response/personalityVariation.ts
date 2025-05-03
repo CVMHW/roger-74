@@ -2,9 +2,20 @@
 /**
  * Personality Variation System
  * 
- * Adds variety, spontaneity and authentic personality to Roger's responses
+ * UNIVERSAL LAW: Adds variety, spontaneity and authentic personality to Roger's responses
  * to avoid formulaic and repetitive interactions
  */
+
+// Import personality tools
+import { 
+  getRandomPersonality, 
+  getSentenceStarters, 
+  getTransitionPhrases, 
+  getClosingPhrases, 
+  getPersonalTouches,
+  generateSpontaneousResponse as generateEnhancedSpontaneousResponse
+} from './spontaneityGenerator';
+import { PersonalityMode } from './spontaneityGenerator';
 
 // Import reflection helpers
 import { getRogerPersonalityInsight } from '../reflection/rogerPersonality';
@@ -82,11 +93,28 @@ const followUpEncouragements = [
 /**
  * Add variety to Roger's responses by replacing repetitive patterns with
  * more natural, varied phrasing
+ * 
+ * @param response The original response text
+ * @param userInput The user's input for context
+ * @param messageCount How many messages in the conversation
+ * @param spontaneityLevel Level of spontaneity to apply (0-100)
+ * @param creativityLevel Level of creativity to apply (0-100)
+ * @returns Enhanced response with varied phrasing
  */
-export const addResponseVariety = (response: string, userInput: string, messageCount: number): string => {
+export const addResponseVariety = (
+  response: string, 
+  userInput: string, 
+  messageCount: number,
+  spontaneityLevel: number = 65,
+  creativityLevel: number = 60
+): string => {
   let enhancedResponse = response;
+
+  // Randomly choose a personality mode based on spontaneity level
+  const personalityMode = getRandomPersonality();
   
-  // Replace the problematic "It seems like you shared that" pattern 
+  // CRITICAL: Check for and replace the problematic "It seems like you shared that" pattern
+  // This pattern is a major hallucination trigger
   if (/It seems like you shared that/i.test(enhancedResponse)) {
     const match = enhancedResponse.match(/It seems like you shared that ([^.]+)\./i);
     
@@ -101,7 +129,7 @@ export const addResponseVariety = (response: string, userInput: string, messageC
     }
   }
   
-  // Replace "I hear you're feeling" pattern
+  // Replace "I hear you're feeling" pattern with more varied expressions
   if (/I hear you('re| are) feeling/i.test(enhancedResponse)) {
     const match = enhancedResponse.match(/I hear you('re| are) feeling ([^.]+)\./i);
     
@@ -111,7 +139,9 @@ export const addResponseVariety = (response: string, userInput: string, messageC
         `It sounds like you're feeling ${feeling}.`,
         `You seem to be experiencing ${feeling}.`,
         `I'm picking up that you feel ${feeling}.`,
-        `From what you've shared, you're feeling ${feeling}.`
+        `From what you've shared, you're feeling ${feeling}.`,
+        `It makes sense that you'd feel ${feeling} in that situation.`,
+        `That kind of experience often brings up feelings of ${feeling}.`
       ];
       const replacement = replacements[Math.floor(Math.random() * replacements.length)];
       
@@ -132,8 +162,42 @@ export const addResponseVariety = (response: string, userInput: string, messageC
     );
   }
   
-  // Add occasional empathic statement
-  if (Math.random() < 0.7 && !enhancedResponse.includes("feeling")) {
+  // Replace pattern-breaking language with more natural variations
+  if (/I notice I may have been repeating myself/i.test(enhancedResponse)) {
+    const replacements = [
+      "Let me approach this from a different angle.",
+      "I want to make sure I'm understanding what matters most to you here.",
+      "Let's focus more specifically on your experience.",
+      "I'd like to explore this from a fresh perspective.",
+      "Let me try a different approach to better understand your experience."
+    ];
+    const replacement = replacements[Math.floor(Math.random() * replacements.length)];
+    
+    enhancedResponse = enhancedResponse.replace(
+      /I notice I may have been repeating myself[^.]*\./i,
+      replacement
+    );
+  }
+  
+  // Replace generic "I'd like to focus specifically on" pattern
+  if (/I'd like to focus specifically on/i.test(enhancedResponse)) {
+    const replacements = [
+      "What stands out to me is",
+      "I'm particularly interested in",
+      "Let's explore",
+      "I'm curious about",
+      "What seems important here is"
+    ];
+    const replacement = replacements[Math.floor(Math.random() * replacements.length)];
+    
+    enhancedResponse = enhancedResponse.replace(
+      /I'd like to focus specifically on/i,
+      replacement
+    );
+  }
+  
+  // Add occasional empathic statement based on spontaneity level
+  if (Math.random() * 100 < spontaneityLevel && !enhancedResponse.includes("feeling")) {
     const randomEmpathy = empathicStatements[Math.floor(Math.random() * empathicStatements.length)];
     
     // Look for a good place to insert the empathic statement
@@ -148,11 +212,14 @@ export const addResponseVariety = (response: string, userInput: string, messageC
     }
   }
   
-  // Add personal touches occasionally but especially after message #3 
-  // to increase personality and connection after initial rapport
-  if ((messageCount > 3 && Math.random() < 0.4) || 
-      (userInput.toLowerCase().includes("embarrass") && Math.random() < 0.7)) {
-    const randomPersonalTouch = personalTouches[Math.floor(Math.random() * personalTouches.length)];
+  // Add personal touches based on spontaneity and message count
+  // Higher probability after a few messages for natural rapport building
+  if ((messageCount > 3 && Math.random() * 100 < spontaneityLevel) || 
+      (userInput.toLowerCase().includes("embarrass") && Math.random() * 100 < spontaneityLevel)) {
+    
+    // Get personality-specific touches
+    const availableTouches = getPersonalTouches(personalityMode);
+    const randomPersonalTouch = availableTouches[Math.floor(Math.random() * availableTouches.length)];
     
     // Find a good place to insert the personal touch
     if (enhancedResponse.includes(". ")) {
@@ -168,7 +235,9 @@ export const addResponseVariety = (response: string, userInput: string, messageC
   
   // Add varied follow-up encouragements instead of repeating the same question
   if (/Would you like to tell me more\?$|Can you tell me more\?$/i.test(enhancedResponse)) {
-    const randomFollowUp = followUpEncouragements[Math.floor(Math.random() * followUpEncouragements.length)];
+    // Get personality-specific closings
+    const availableClosings = getClosingPhrases(personalityMode);
+    const randomFollowUp = availableClosings[Math.floor(Math.random() * availableClosings.length)];
     
     enhancedResponse = enhancedResponse.replace(
       /Would you like to tell me more\?$|Can you tell me more\?$/i,
@@ -176,80 +245,114 @@ export const addResponseVariety = (response: string, userInput: string, messageC
     );
   }
   
+  // Add spontaneous thought transitions based on spontaneity level
+  if (Math.random() * 100 < spontaneityLevel / 2) {
+    const transitions = getTransitionPhrases(personalityMode);
+    const randomTransition = transitions[Math.floor(Math.random() * transitions.length)];
+    
+    // Only add if response doesn't already have too many sentences
+    const sentenceCount = (enhancedResponse.match(/[.!?]/g) || []).length;
+    
+    if (sentenceCount < 4) {
+      // Find a good spot to insert the transition
+      const sentences = enhancedResponse.split(/(?<=[.!?])\s+/);
+      if (sentences.length > 1) {
+        // Create a transition thought
+        const transitionThought = `${randomTransition}, ${getRandomThought(userInput, personalityMode)}`;
+        
+        // Insert near the end but before any questions
+        let insertPosition = sentences.length - 1;
+        if (sentences[sentences.length - 1].includes('?')) {
+          insertPosition = sentences.length - 2;
+        }
+        insertPosition = Math.max(0, insertPosition);
+        
+        sentences.splice(insertPosition, 0, transitionThought);
+        enhancedResponse = sentences.join(" ");
+      }
+    }
+  }
+  
   return enhancedResponse;
+};
+
+/**
+ * Generate a random thought related to the user's input
+ */
+const getRandomThought = (userInput: string, personality: PersonalityMode): string => {
+  const lowerInput = userInput.toLowerCase();
+  
+  // Social situation thoughts
+  if (lowerInput.includes('embarrass') || lowerInput.includes('awkward') || 
+      lowerInput.includes('spill') || lowerInput.includes('bar')) {
+      
+    const socialThoughts = [
+      "these social moments often feel bigger to us than to others",
+      "most people are usually more focused on themselves than on our mistakes",
+      "even confident people have these kinds of awkward moments",
+      "it's how we respond to these situations that often matters most",
+      "our self-judgment can be harsher than how others actually see us"
+    ];
+    
+    return socialThoughts[Math.floor(Math.random() * socialThoughts.length)];
+  }
+  
+  // Generic thoughts based on personality
+  switch (personality) {
+    case 'curious':
+      return "I'm interested in understanding how this fits into your broader experience";
+      
+    case 'empathetic':
+      return "it makes sense that this experience would bring up these feelings";
+      
+    case 'reflective':
+      return "experiences like these often reveal something about what matters to us";
+      
+    case 'direct':
+      return "it might help to focus on what specific aspects of this situation you'd like to address";
+      
+    case 'analytical':
+      return "looking at patterns in these situations can sometimes provide helpful insights";
+      
+    case 'warm':
+      return "I appreciate you sharing something that clearly matters to you";
+      
+    case 'thoughtful':
+      return "I wonder what meaning this experience holds for you";
+      
+    case 'conversational':
+      return "these kinds of situations happen to all of us at some point";
+      
+    case 'gentle':
+      return "it might be worth considering what would feel most supportive right now";
+      
+    case 'grounded':
+      return "focusing on what's within your control might be helpful";
+      
+    default:
+      return "everyone processes experiences differently";
+  }
 };
 
 /**
  * Generate a completely spontaneous response when detecting a repetition loop
  * This function creates a fresh response that breaks any detected patterns
  */
-export const generateSpontaneousResponse = (userInput: string, recentResponses: string[]): string => {
-  // Detect key topics in the user's input
-  const topics = detectTopics(userInput);
-  
-  // Choose a fresh perspective based on the topics
-  if (topics.includes('socialSituation') || topics.includes('embarrassment')) {
-    const socialResponses = [
-      "These social moments that feel awkward to us often aren't as noticed by others as we might think. What do you think the other person might have been feeling in that moment?",
-      "It's interesting how our brains can replay embarrassing moments on a loop. What would you say to a friend who experienced the same situation?",
-      "Social interactions can be complex! I'm curious - what would have felt like a better outcome for you in that moment?",
-      "Those split-second decisions in awkward situations can be really tough. Looking back now, what would have felt more authentic to you?"
-    ];
-    return socialResponses[Math.floor(Math.random() * socialResponses.length)];
-  }
-  
-  if (topics.includes('regret') || topics.includes('shouldHave')) {
-    const regretResponses = [
-      "It's natural to think about what we could have done differently. What would you have preferred to say or do in that moment?",
-      "Replaying situations and thinking 'I should have' is something most of us do. What would the most compassionate response to yourself be right now?", 
-      "If you could go back to that moment with what you know now, what might you do differently?",
-      "I wonder if there's something from this experience that might be useful next time you're in a similar situation?"
-    ];
-    return regretResponses[Math.floor(Math.random() * regretResponses.length)];
-  }
-  
-  // Default spontaneous responses that avoid patterns detected in recent responses
-  const defaultResponses = [
-    "Let's take a different angle on this - what's the most important aspect of this experience for you?",
-    "I'm curious about what this situation tells you about what matters to you?",
-    "Sometimes talking about these moments helps us see them differently. Has your perspective shifted at all as we've been talking?",
-    "What would feel most helpful to focus on right now as we continue our conversation?",
-    "I'm wondering what stood out to you most about how you handled that situation?"
-  ];
-  
-  // If we have recent responses, make sure we're not repeating patterns
-  if (recentResponses.length > 0) {
-    // Find responses that don't contain phrases from recent responses
-    const uniqueResponses = defaultResponses.filter(potential => 
-      !recentResponses.some(recent => 
-        // Check if any 4-word sequence from recent appears in potential
-        hasCommonPhrases(recent, potential)
-      )
-    );
-    
-    // If we have unique responses, choose one
-    if (uniqueResponses.length > 0) {
-      return uniqueResponses[Math.floor(Math.random() * uniqueResponses.length)];
-    }
-  }
-  
-  return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
-};
-
-// Helper function to detect common phrases between responses
-const hasCommonPhrases = (text1: string, text2: string): boolean => {
-  const words1 = text1.toLowerCase().split(/\s+/);
-  const words2 = text2.toLowerCase().split(/\s+/);
-  
-  // Check for 4-word sequences
-  for (let i = 0; i <= words1.length - 4; i++) {
-    const phrase = words1.slice(i, i + 4).join(' ');
-    if (words2.join(' ').includes(phrase)) {
-      return true;
-    }
-  }
-  
-  return false;
+export const generateSpontaneousResponse = (
+  userInput: string, 
+  recentResponses: string[] = [],
+  spontaneityLevel: number = 75,
+  creativityLevel: number = 70,
+  personalityMode: PersonalityMode = getRandomPersonality()
+): string => {
+  // Use the enhanced spontaneous response generator
+  return generateEnhancedSpontaneousResponse(
+    userInput, 
+    recentResponses, 
+    spontaneityLevel, 
+    creativityLevel,
+    personalityMode
+  );
 };
 
 // Helper function to detect key topics in user input
@@ -274,4 +377,20 @@ const detectTopics = (userInput: string): string[] => {
   }
   
   return topics;
+};
+
+// Helper function to detect common phrases between responses
+const hasCommonPhrases = (text1: string, text2: string): boolean => {
+  const words1 = text1.toLowerCase().split(/\s+/);
+  const words2 = text2.toLowerCase().split(/\s+/);
+  
+  // Check for 4-word sequences
+  for (let i = 0; i <= words1.length - 4; i++) {
+    const phrase = words1.slice(i, i + 4).join(' ');
+    if (words2.join(' ').includes(phrase)) {
+      return true;
+    }
+  }
+  
+  return false;
 };

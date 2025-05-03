@@ -1,7 +1,11 @@
 
 /**
  * Special cases for hallucination detection and handling
+ * ENHANCED with pattern detection and personality variation
  */
+
+import { addResponseVariety } from '../../personalityVariation';
+import { getRandomPersonality } from '../../spontaneityGenerator';
 
 /**
  * Check for the "It seems like you shared that" problematic pattern
@@ -51,11 +55,34 @@ export const hasRepeatedContent = (responseText: string): boolean => {
     }
   }
   
+  // Check for repeated reflective questions
+  const reflectiveQuestions = [
+    /what do you think\?.*what do you think\?/i,
+    /how does that feel\?.*how does that feel\?/i,
+    /would you like to share more\?.*would you like to share more\?/i
+  ];
+  
+  for (const pattern of reflectiveQuestions) {
+    if (pattern.test(responseText)) {
+      return true;
+    }
+  }
+  
+  // New check: Look for very short sentences repeated
+  const shortSentences = responseText.match(/[^.!?]{5,30}[.!?]/g) || [];
+  for (let i = 0; i < shortSentences.length; i++) {
+    for (let j = i + 1; j < shortSentences.length; j++) {
+      if (shortSentences[i] === shortSentences[j]) {
+        return true;
+      }
+    }
+  }
+  
   return false;
 };
 
 /**
- * Fixes repeated content in a response
+ * Fixes repeated content in a response with enhanced personality variation
  */
 export const fixRepeatedContent = (responseText: string, userInput: string): string => {
   // First, let's completely replace the "It seems like you shared that" pattern
@@ -128,7 +155,11 @@ export const fixRepeatedContent = (responseText: string, userInput: string): str
   }
   
   // Recombine unique sentences
-  return uniqueSentences.join(" ");
+  let cleanedResponse = uniqueSentences.join(" ");
+  
+  // Apply personality variation to the fixed response for extra diversity
+  // Use high spontaneity level (80) to ensure significant variation
+  return addResponseVariety(cleanedResponse, userInput, 5, 80, 75);
 };
 
 /**

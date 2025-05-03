@@ -2,6 +2,7 @@
 /**
  * Core processor functionality
  * Contains the main processing logic without peripheral concerns
+ * ENHANCED with personality variation as a UNIVERSAL LAW
  */
 
 import { applyResponseRules } from './ruleProcessing';
@@ -19,10 +20,12 @@ import { fixDangerousRepetitionPatterns } from './hallucinationHandler/patternFi
 import { isSeverityEqual } from './emergencyPathDetection/severityUtils'; 
 import { SeverityLevel } from './emergencyPathDetection/types';
 import { addResponseVariety, generateSpontaneousResponse } from '../personalityVariation';
+import { detectConversationPatterns } from '../patternDetection';
+import { getRandomPersonality } from '../spontaneityGenerator';
 
 /**
  * Process response through master rules system - core implementation
- * Now with integrated emergency path detection
+ * Now with integrated emergency path detection and UNIVERSAL PERSONALITY VARIATION
  */
 export const processResponseCore = (
   response: string,
@@ -98,6 +101,24 @@ export const processResponseCore = (
       conversationHistory
     );
     
+    // NEW: Use conversation pattern detection to adjust spontaneity and variety levels
+    const patternResults = detectConversationPatterns(hallucinationCheckedResponse, previousResponses, conversationHistory);
+    
+    // Determine spontaneity level based on pattern detection
+    let spontaneityLevel = 65; // Default base level
+    let creativityLevel = 60;   // Default base level
+    
+    // Increase spontaneity based on pattern detection results
+    if (patternResults.isRepetitive) {
+      console.log("PATTERN DETECTION: Repetitive patterns detected, increasing spontaneity");
+      spontaneityLevel += 25; // Significant increase
+      creativityLevel += 20;
+    } else if (patternResults.repetitionScore > 0.5) {
+      console.log("PATTERN DETECTION: Some repetition tendencies detected, moderately increasing spontaneity");
+      spontaneityLevel += 15;
+      creativityLevel += 10;
+    }
+    
     // Check if we're in a loop of similar responses
     const inSimilarResponseLoop = previousResponses.length >= 2 && 
       previousResponses.slice(0, 2).some(prev => 
@@ -109,7 +130,17 @@ export const processResponseCore = (
     // to create a completely fresh response that breaks the pattern
     if (inSimilarResponseLoop) {
       console.log("PATTERN INTERRUPT: Detecting loop of similar responses, generating spontaneous response");
-      const spontaneousResponse = generateSpontaneousResponse(userInput, previousResponses);
+      
+      // Use the personality mode system for variety
+      const personalityMode = getRandomPersonality();
+      
+      const spontaneousResponse = generateSpontaneousResponse(
+        userInput, 
+        previousResponses,
+        90, // Very high spontaneity for pattern breaking
+        85, // Very high creativity for pattern breaking
+        personalityMode
+      );
       
       // Record final spontaneous response to all memory systems
       recordToMemorySystems(
@@ -121,11 +152,14 @@ export const processResponseCore = (
       return spontaneousResponse;
     }
     
-    // VITAL NEW STEP: Apply personality variation system to make responses more natural and varied
+    // UNIVERSAL LAW: ALWAYS APPLY PERSONALITY VARIATION TO EVERY RESPONSE
+    // This is a core requirement to ensure spontaneity and variety
     let enhancedPersonalityResponse = addResponseVariety(
       hallucinationCheckedResponse,
       userInput,
-      messageCount
+      messageCount,
+      spontaneityLevel,
+      creativityLevel
     );
     
     // Final check for potential emergency path in the processed response

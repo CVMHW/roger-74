@@ -1,10 +1,13 @@
 
 import { useCallback, useState } from 'react';
 import { MessageType } from '../../../components/Message';
-import { generateSpontaneousResponse } from '../../../utils/response/personalityVariation';
+import { generateSpontaneousResponse, addResponseVariety } from '../../../utils/response/personalityVariation';
+import { getRandomPersonality } from '../../../utils/response/spontaneityGenerator';
+import { detectConversationPatterns } from '../../../utils/response/patternDetection';
 
 /**
  * Hook for enhancing responses with specific context and improving response quality
+ * Now with ENHANCED personality and spontaneity as universal laws
  */
 export const useResponseEnhancement = (
   isGenericResponse: (response: string) => boolean,
@@ -20,8 +23,12 @@ export const useResponseEnhancement = (
   const [recentResponses, setRecentResponses] = useState<string[]>([]);
   // Track specific patterns we've seen
   const [seenPatterns, setSeenPatterns] = useState<Record<string, number>>({});
+  // Track personality spontaneity level (0-100)
+  const [spontaneityLevel, setSpontaneityLevel] = useState<number>(65);
+  // Track creativity level (0-100)
+  const [creativityLevel, setCreativityLevel] = useState<number>(70);
 
-  // Enhanced response tracking with generic response detection
+  // Enhanced response tracking with generic response detection and spontaneity injection
   const enhanceAndTrackResponse = useCallback((responseText: string) => {
     // First, check for repetition patterns
     const patterns = extractPatterns(responseText);
@@ -33,6 +40,8 @@ export const useResponseEnhancement = (
       updatedSeenPatterns[pattern] = (updatedSeenPatterns[pattern] || 0) + 1;
       if (updatedSeenPatterns[pattern] >= 2) {
         hasRepeatedPattern = true;
+        // Increase spontaneity when patterns repeat
+        setSpontaneityLevel(prev => Math.min(prev + 15, 100));
       }
     }
     
@@ -41,24 +50,50 @@ export const useResponseEnhancement = (
     
     // Check if this response is too similar to recent responses
     const isTooSimilar = recentResponses.length > 0 && 
-      recentResponses.some(prevResponse => calculateSimilarity(responseText, prevResponse) > 0.65);
+      recentResponses.some(prevResponse => calculateSimilarity(responseText, prevResponse) > 0.5); // Lower threshold to catch more repetition
+    
+    // Detect conversation patterns and adjust spontaneity/creativity accordingly
+    const patternResults = detectConversationPatterns(responseText, recentResponses, userMessageHistory);
+    
+    if (patternResults.isRepetitive) {
+      setSpontaneityLevel(prev => Math.min(prev + 20, 100)); // Significant increase in spontaneity
+      setCreativityLevel(prev => Math.min(prev + 15, 100));
+    }
+    
+    // UNIVERSAL LAW: APPLY PERSONALITY VARIATION REGARDLESS OF PATTERN DETECTION
+    // This ensures every response has some level of personality variation
+    let enhancedResponse = addResponseVariety(responseText, 
+                                            userMessageHistory[userMessageHistory.length - 1] || "", 
+                                            userMessageHistory.length,
+                                            spontaneityLevel,
+                                            creativityLevel);
     
     // Add to recent responses for future checking
-    setRecentResponses(prev => [responseText, ...prev.slice(0, 4)]);
+    setRecentResponses(prev => [enhancedResponse, ...prev.slice(0, 4)]);
     
-    // Check if this is a generic response
-    if (isGenericResponse(responseText)) {
+    // Check if the response is generic or we're seeing patterns
+    // Now we check AFTER adding basic personality variation
+    if (isGenericResponse(enhancedResponse) || hasRepeatedPattern || isTooSimilar) {
       setConsecutiveGenericResponses(prev => prev + 1);
       
-      // If we've had too many generic responses in a row, force a more specific response
-      if (consecutiveGenericResponses >= 1 || hasRepeatedPattern || isTooSimilar) {
-        console.warn("PATTERN BREAKING: Forcing more personalized response");
+      // If we've had any generic responses, patterns, or similar responses, force a more spontaneous response
+      if (consecutiveGenericResponses >= 0 || hasRepeatedPattern || isTooSimilar) {
+        console.warn("PATTERN BREAKING: Forcing highly personalized spontaneous response");
         
         // Force a more specific response that acknowledges the user's input
         const lastUserMessage = userMessageHistory[userMessageHistory.length - 1] || "";
         
-        // Get a completely fresh response using the spontaneity system
-        const spontaneousResponse = generateSpontaneousResponse(lastUserMessage, recentResponses);
+        // Select a random personality mode to further vary responses
+        const personalityMode = getRandomPersonality();
+        
+        // Get a completely fresh response using the enhanced spontaneity system
+        const spontaneousResponse = generateSpontaneousResponse(
+          lastUserMessage, 
+          recentResponses, 
+          spontaneityLevel, 
+          creativityLevel,
+          personalityMode
+        );
         
         // Replace the generic response with a specific one after a deliberate pause
         setTimeout(() => {
@@ -87,17 +122,23 @@ export const useResponseEnhancement = (
           // Reset the counter and add the spontaneous response to tracked responses
           setConsecutiveGenericResponses(0);
           setRecentResponses(prev => [spontaneousResponse, ...prev.slice(0, 4)]);
+          
+          // Adjust spontaneity and creativity levels after generating a spontaneous response
+          setSpontaneityLevel(prev => Math.max(prev - 10, 50)); // Don't go below 50
+          setCreativityLevel(prev => Math.max(prev - 5, 55)); // Don't go below 55
         }, getResponseDelay(lastUserMessage));
         
         // Return the original for now, it will be replaced
-        return responseText;
+        return enhancedResponse;
       }
     } else {
       // Reset the counter if we get a non-generic response
       setConsecutiveGenericResponses(0);
+      // Gradually reduce spontaneity for natural conversation flow
+      setSpontaneityLevel(prev => Math.max(prev - 5, 45)); 
     }
     
-    return responseText;
+    return enhancedResponse;
   }, [
     isGenericResponse,
     consecutiveGenericResponses,
@@ -107,14 +148,20 @@ export const useResponseEnhancement = (
     simulateTypingResponse,
     getResponseDelay,
     seenPatterns,
-    recentResponses
+    recentResponses,
+    spontaneityLevel,
+    creativityLevel
   ]);
 
   return {
     consecutiveGenericResponses,
     setConsecutiveGenericResponses,
     enhanceAndTrackResponse,
-    recentResponses
+    recentResponses,
+    spontaneityLevel,
+    setSpontaneityLevel,
+    creativityLevel,
+    setCreativityLevel
   };
 };
 
@@ -143,17 +190,30 @@ const extractPatterns = (text: string): string[] => {
     patterns.push('tell-more-about');
   }
   
+  // New pattern detection for even more variability
+  if (/that sounds (difficult|challenging|hard|tough)/i.test(text)) {
+    patterns.push('sounds-difficult');
+  }
+  
+  if (/I understand (that|how) you/i.test(text)) {
+    patterns.push('understand-you');
+  }
+  
+  if (/what (do you think|would you say|feels)/i.test(text)) {
+    patterns.push('what-do-you');
+  }
+  
   return patterns;
 };
 
 // Calculate simple text similarity
 const calculateSimilarity = (text1: string, text2: string): number => {
-  // Get 4-word sequences from both texts
+  // Get 3-word sequences from both texts (reduced from 4 to catch more similarities)
   const getSequences = (text: string): string[] => {
     const words = text.toLowerCase().split(/\s+/);
     const sequences: string[] = [];
-    for (let i = 0; i <= words.length - 4; i++) {
-      sequences.push(words.slice(i, i + 4).join(' '));
+    for (let i = 0; i <= words.length - 3; i++) {
+      sequences.push(words.slice(i, i + 3).join(' '));
     }
     return sequences;
   };
