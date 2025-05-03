@@ -1,31 +1,16 @@
 
-import { ConcernType } from '../../../utils/reflection/reflectionTypes';
-import { MessageType } from '../../../components/Message';
+import { MessageType } from "../../../components/Message";
+import { ConcernType } from "../../../utils/reflection/reflectionTypes";
 
 /**
- * Type definitions for message processor
+ * Props for processing messages
  */
-
-export type ProcessMessageProps = {
+export interface ProcessMessageProps {
   userInput: string;
-  detectConcerns: (userInput: string) => ConcernType;
-  generateResponse: (userInput: string, concernType: ConcernType) => string;
-  baseProcessUserMessage: (
-    userInput: string, 
-    responseFn: (input: string) => string, 
-    concernFn: () => ConcernType | null, 
-    multiplier?: number
-  ) => Promise<MessageType>;
+  detectConcernsFn: (input: string) => ConcernType;
+  generateResponseFn: (input: string, concernType: ConcernType) => string;
+  baseProcessUserMessage: (input: string, responseFn: any, concernFn: any) => Promise<MessageType>;
   conversationHistory: string[];
   clientPreferences: any;
-  updateStage: () => void;
-};
-
-export type ProcessorPipeline = {
-  userInput: string;
-  concernType: ConcernType;
-  baseProcessUserMessage: ProcessMessageProps['baseProcessUserMessage'];
-  clientPreferences: any;
-  conversationHistory: string[];
-  updateStage: () => void;
-};
+  updateStageFn?: () => void;
+}
