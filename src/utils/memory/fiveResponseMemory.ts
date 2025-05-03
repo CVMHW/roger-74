@@ -75,6 +75,44 @@ export const getFiveResponseMemory = (): MemoryEntry[] => {
 };
 
 /**
+ * Reset the 5ResponseMemory system for a new conversation
+ */
+export const resetFiveResponseMemory = (): void => {
+  try {
+    console.log("5RESPONSEMEMORY: Resetting for new conversation");
+    
+    // Clear memory store
+    memoryStore = [];
+    
+    // Clear session storage
+    try {
+      sessionStorage.removeItem('rogerFiveResponseMemory');
+    } catch (storageError) {
+      console.error('Failed to clear 5ResponseMemory from sessionStorage', storageError);
+    }
+    
+  } catch (error) {
+    console.error('Error resetting 5ResponseMemory:', error);
+  }
+};
+
+/**
+ * Check if this appears to be a new conversation
+ * Uses time-based heuristic: 30+ minutes since last interaction indicates new conversation
+ */
+export const isNewConversationFiveResponse = (): boolean => {
+  if (memoryStore.length === 0) return true;
+  
+  const lastEntry = memoryStore[0];
+  const currentTime = Date.now();
+  const timeSinceLastEntry = currentTime - lastEntry.timestamp;
+  
+  // If more than 30 minutes have passed, consider it a new conversation
+  const thirtyMinutesMs = 30 * 60 * 1000;
+  return timeSinceLastEntry > thirtyMinutesMs;
+};
+
+/**
  * Get the most recent patient message
  */
 export const getLastPatientMessage = (): string | null => {
@@ -128,12 +166,30 @@ export const verifyFiveResponseMemorySystem = (): boolean => {
   }
 };
 
-// Initialize from session storage if available
+// Modified 5ResponseMemory initialization to check if this appears to be a new session
+// Initialize from session storage if available and if it doesn't appear to be a new session
 try {
   const storedMemory = sessionStorage.getItem('rogerFiveResponseMemory');
+  
   if (storedMemory) {
-    memoryStore = JSON.parse(storedMemory);
-    console.log("5RESPONSEMEMORY: Initialized from sessionStorage");
+    const parsedMemory = JSON.parse(storedMemory);
+    
+    // Check if this is potentially a new session (browser just opened)
+    const lastEntryTime = parsedMemory[0]?.timestamp || 0;
+    const currentTime = Date.now();
+    const timeSinceLastEntry = currentTime - lastEntryTime;
+    
+    // If the last entry is recent (within 30 minutes), restore the memory
+    // Otherwise, start fresh
+    const thirtyMinutesMs = 30 * 60 * 1000;
+    
+    if (timeSinceLastEntry < thirtyMinutesMs) {
+      memoryStore = parsedMemory;
+      console.log("5RESPONSEMEMORY: Initialized from sessionStorage");
+    } else {
+      console.log("5RESPONSEMEMORY: Previous session detected but timed out, starting fresh");
+      resetFiveResponseMemory();
+    }
   }
 } catch (storageError) {
   console.error('Failed to initialize 5ResponseMemory from sessionStorage', storageError);

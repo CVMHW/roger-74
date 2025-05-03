@@ -1,4 +1,3 @@
-
 /**
  * NLP Processor with STRICT Rule Enforcement
  * 
@@ -91,6 +90,12 @@ export const recordToMemory = (
 ): void => {
   // Log memory recording with UNCONDITIONAL flag
   console.log("UNCONDITIONAL MEMORY RULE: Recording to memory system");
+  
+  // Check if this is a new conversation and reset memory if needed
+  if (isNewConversation(patientStatement)) {
+    console.log("NEW CONVERSATION DETECTED: Resetting memory");
+    resetMemoryForNewConversation();
+  }
   
   // REQUIRED CHECK: Verify memory system is active
   if (!MEMORY_SYSTEM_REQUIRED) {
@@ -452,7 +457,7 @@ export function detectProblems(input: string): string[] {
   const problemPatterns = [
     { regex: /\b(can'?t sleep|insomnia|trouble sleeping|wake up|(stay|staying) awake|sleep (problem|issue|trouble)|poor sleep|restless|nightmares)\b/i, problem: 'sleep-issues' },
     { regex: /\b(anxious|anxiety|worry|worried|nervous|panic attack|on edge|stress|overwhelm|apprehension|dread|fear|(feel|feeling) scared)\b/i, problem: 'anxiety' },
-    { regex: /\b(sad|depressed|depression|hopeless|down|blue|unhappy|miserable|despair|grief|loss|empty|hollow|meaningless|purposeless)\b/i, problem: 'depression' },
+    { regex: /\b(sad|depressed|depression|hopeless|down|blue|miserable|despair|grief|loss|empty|hollow|meaningless|purposeless)\b/i, problem: 'depression' },
     { regex: /\b(no friends|lonely|alone|isolated|no one to talk to|no social life|social isolation|disconnected|abandoned|rejected|outcast)\b/i, problem: 'loneliness' },
     { regex: /\b(fight|fighting|argument|broke up|divorce|separated|relationship (problem|issue|trouble)|marriage (problem|issue)|conflict)\b/i, problem: 'relationship-conflict' },
     { regex: /\b(job loss|unemployed|fired|laid off|no work|can'?t find (a job|work)|lost (my|the) job|out of work|employment (issue|problem)|downsized)\b/i, problem: 'unemployment' },
@@ -533,4 +538,94 @@ export const checkRuleCompliance = (): {
     rulesEnforced: true,
     unconditionalRulesActive
   };
+};
+
+/**
+ * Function to detect if a conversation is new or continuing
+ * Uses multiple heuristics to determine if this is a new conversation
+ */
+export const isNewConversation = (userInput: string): boolean => {
+  try {
+    // If this is the first message or there are no stored messages, it's a new conversation
+    if (MEMORY_STORAGE.patientStatements.length === 0) {
+      return true;
+    }
+    
+    // Check for time gap (more than 30 minutes since last update indicates new conversation)
+    const timeSinceLastUpdate = Date.now() - MEMORY_STORAGE.lastUpdated;
+    const thirtyMinutesMs = 30 * 60 * 1000;
+    if (timeSinceLastUpdate > thirtyMinutesMs) {
+      return true;
+    }
+    
+    // Check for introduction patterns indicating a new conversation
+    const introductionPatterns = [
+      /\b(hi|hello|hey)\b/i,
+      /\bhow are you\b/i,
+      /\bnice to meet you\b/i,
+      /\bfirst time\b/i,
+      /\bnew here\b/i
+    ];
+    
+    if (introductionPatterns.some(pattern => pattern.test(userInput))) {
+      // Cross-check with memory - if we have a history, introduction may indicate new conversation
+      if (MEMORY_STORAGE.patientStatements.length > 3) {
+        return true;
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error determining if conversation is new:', error);
+    // Default to false so we don't lose memory
+    return false;
+  }
+};
+
+/**
+ * Add new function to reset memory for new conversations
+ */
+export const resetMemoryForNewConversation = (): void => {
+  try {
+    console.log("MEMORY SYSTEM: Resetting memory for new conversation");
+    
+    // Clear existing memory structures
+    MEMORY_STORAGE.patientStatements = [];
+    MEMORY_STORAGE.rogerResponses = [];
+    MEMORY_STORAGE.detectedEmotions = {};
+    MEMORY_STORAGE.detectedTopics = {};
+    MEMORY_STORAGE.conversationSummary = [];
+    MEMORY_STORAGE.detectedProblems = [];
+    MEMORY_STORAGE.lastUpdated = Date.now();
+    
+    // Maintain memory system status
+    MEMORY_STORAGE.persistentMemory = true;
+    MEMORY_STORAGE.memoryEnforcementLevel = RULE_ENFORCEMENT_LEVEL.UNCONDITIONAL;
+    
+    // Update memory check statistics
+    MEMORY_CHECKS.totalChecks++;
+    MEMORY_CHECKS.passedChecks++;
+    MEMORY_CHECKS.lastCheck = new Date();
+    
+    console.log("MEMORY SYSTEM: Successfully reset memory");
+    
+    // Also clear localStorage to prevent incorrect memory persistence
+    try {
+      localStorage.removeItem('rogerMemoryStorage');
+      console.log("MEMORY SYSTEM: Cleared localStorage memory");
+    } catch (storageError) {
+      console.error('Error clearing localStorage memory:', storageError);
+    }
+    
+    // Clear session storage as well
+    try {
+      sessionStorage.removeItem('rogerMemoryStorage');
+      console.log("MEMORY SYSTEM: Cleared sessionStorage memory");
+    } catch (sessionError) {
+      console.error('Error clearing sessionStorage memory:', sessionError);
+    }
+    
+  } catch (error) {
+    console.error('Error resetting memory for new conversation:', error);
+  }
 };

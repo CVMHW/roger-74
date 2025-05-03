@@ -1,4 +1,3 @@
-
 /**
  * Memory Enforcer Module
  * 
@@ -102,11 +101,34 @@ export const verifyMemoryUtilization = (
 
 /**
  * UNCONDITIONAL: Force memory enhancement when verification fails
+ * Enhanced to detect new conversations and avoid incorrect memory references
  */
 export const forceMemoryEnhancement = (response: string, userInput: string): string => {
   console.log("UNCONDITIONAL RULE ENFORCEMENT: Adding memory references to response");
   
   try {
+    // CRITICAL CHECK: Verify if this is a new or early conversation
+    const isEarlyConversation = MEMORY_STORAGE.patientStatements.length <= 1;
+    
+    // If this is a new/early conversation, avoid specific memory references
+    if (isEarlyConversation) {
+      console.log("EARLY CONVERSATION DETECTED: Using generic engagement instead of memory reference");
+      
+      // For new conversations, use engagement prompts rather than memory references
+      const engagementPhrases = [
+        "I'm here to listen. ",
+        "I appreciate you sharing that with me. ",
+        "Thanks for telling me about that. ",
+        "I'm interested in hearing more. "
+      ];
+      
+      // Select a random engagement phrase
+      const randomPhrase = engagementPhrases[Math.floor(Math.random() * engagementPhrases.length)];
+      
+      // Create enhanced response with appropriate engagement
+      return randomPhrase + response;
+    }
+    
     // CRITICAL: Check both memory systems for redundancy
     
     // First try 5ResponseMemory as it's our most reliable recent memory system
@@ -168,7 +190,7 @@ export const forceMemoryEnhancement = (response: string, userInput: string): str
 
 /**
  * UNCONDITIONAL: Process response through memory rules system
- * This is the primary function to ensure memory compliance
+ * Enhanced to detect new conversations and avoid incorrect memory references
  */
 export const processResponseWithMemoryRules = (
   response: string,
@@ -183,6 +205,20 @@ export const processResponseWithMemoryRules = (
     
     // CRITICAL: Add to 5ResponseMemory 
     addToFiveResponseMemory('patient', userInput);
+    
+    // CRITICAL CHECK: Verify if this is a new or early conversation
+    const isEarlyConversation = conversationHistory.length <= 1;
+    
+    // For very early conversations, avoid explicit memory references
+    if (isEarlyConversation) {
+      console.log("EARLY CONVERSATION DETECTED: Skipping explicit memory references");
+      
+      // Record to memory systems but without adding memory references
+      recordToMemory(userInput, response);
+      addToFiveResponseMemory('roger', response);
+      
+      return response;
+    }
     
     // REQUIRED: Verify memory system is active
     const memory = getAllMemory();
