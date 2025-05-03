@@ -37,8 +37,49 @@ export {
   generateSmallTalkTransition
 };
 
-// Import from smallTalk module and re-export directly
-export * from './smallTalk';
+// Import from smallTalk module and re-export explicitly
+import {
+  isLikelyChild,
+  isLikelyNewcomer,
+  detectSocialOverstimulation,
+  smallTalkTopics,
+  conversationStarters,
+  turnTakingPrompts,
+  isLikelyTeen,
+  isLikelyMale,
+  isLikelyBlueCollar,
+  mightPreferSimpleLanguage,
+  getAppropriateConversationStyle,
+  shouldUseWaitingRoomEngagement,
+  identifyImmediateConcern,
+  generateImmediateConcernResponse,
+  generateWaitingRoomEngagement,
+  isWaitingRoomRelated,
+  generateWaitingRoomResponse,
+  shouldUseSmallTalk
+} from './smallTalk';
+
+// Re-export smallTalk functions
+export {
+  isLikelyChild,
+  isLikelyNewcomer,
+  detectSocialOverstimulation,
+  smallTalkTopics,
+  conversationStarters,
+  turnTakingPrompts,
+  isLikelyTeen,
+  isLikelyMale,
+  isLikelyBlueCollar,
+  mightPreferSimpleLanguage,
+  getAppropriateConversationStyle,
+  shouldUseWaitingRoomEngagement,
+  identifyImmediateConcern,
+  generateImmediateConcernResponse,
+  generateWaitingRoomEngagement,
+  isWaitingRoomRelated,
+  generateWaitingRoomResponse,
+  shouldUseSmallTalk
+};
 
 // Import and export culturalConnector functions
 import { 
@@ -57,3 +98,4 @@ export {
 
 // Export smallTalkUtils directly
 export * from './smallTalkUtils';
+

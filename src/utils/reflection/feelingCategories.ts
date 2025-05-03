@@ -1,50 +1,31 @@
 
-import { FeelingCategory } from './reflectionTypes';
-
 /**
- * Basic feeling categories and their associated words
+ * Feeling Categories
+ * 
+ * Provides a structured approach to categorizing feelings
  */
-export const feelingCategories: Record<FeelingCategory, string[]> = {
-  'angry': [
-    'angry', 'mad', 'upset', 'furious', 'outraged', 'irritated',
-    'annoyed', 'frustrated', 'agitated', 'hostile', 'enraged',
-    'irate', 'livid', 'indignant', 'bitter', 'resentful',
-    'exasperated', 'irked', 'vexed', 'cross', 'incensed'
-  ],
-  'happy': [
-    'happy', 'glad', 'joyful', 'pleased', 'delighted', 'cheerful', 
-    'content', 'satisfied', 'thrilled', 'excited', 'elated',
-    'ecstatic', 'overjoyed', 'pleased', 'jubilant', 'blissful',
-    'merry', 'upbeat', 'chipper', 'gleeful', 'jolly'
-  ],
-  'sad': [
-    'sad', 'unhappy', 'sorrowful', 'depressed', 'gloomy', 'downcast',
-    'miserable', 'blue', 'down', 'low', 'melancholy', 'heartbroken',
-    'forlorn', 'despondent', 'disheartened', 'dejected', 'crestfallen',
-    'inconsolable', 'grief', 'wistful', 'dismal'
-  ],
-  'anxious': [
-    'anxious', 'worried', 'nervous', 'tense', 'uneasy', 'afraid',
-    'fearful', 'scared', 'panicky', 'apprehensive', 'concerned',
-    'distressed', 'troubled', 'fretful', 'agitated', 'alarmed',
-    'terrified', 'dread', 'frantic', 'jittery', 'stressed'
-  ],
-  'confused': [
-    'confused', 'puzzled', 'perplexed', 'bewildered', 'baffled',
-    'uncertain', 'unsure', 'disoriented', 'muddled', 'befuddled',
-    'mystified', 'lost', 'unclear', 'ambivalent', 'doubtful',
-    'undecided', 'torn', 'hesitant', 'dubious', 'skeptical', 'embarrassed'
-  ],
-  'relieved': [
-    'relieved', 'eased', 'reassured', 'unburdened', 'comforted',
-    'calmed', 'relaxed', 'soothed', 'at ease', 'freed', 'unburdened', 
-    'pacified', 'placated', 'grateful', 'thankful', 'unburdened',
-    'alleviated', 'settled', 'secure', 'safe', 'liberated'
-  ],
-  'overwhelmed': [
-    'overwhelmed', 'overloaded', 'swamped', 'flooded', 'snowed under',
-    'buried', 'inundated', 'bombarded', 'stressed', 'overworked',
-    'stretched', 'exhausted', 'drained', 'depleted', 'worn out',
-    'spent', 'taxed', 'burdened', 'crushed', 'besieged', 'powerless'
-  ]
+
+// Define the feeling categories and their associated words
+export const FEELING_WORDS: Record<FeelingCategory, string[]> = {
+  angry: ["angry", "mad", "furious", "annoyed", "irritated", "frustrated"],
+  happy: ["happy", "glad", "content", "excited", "joyful", "pleased"],
+  sad: ["sad", "unhappy", "depressed", "down", "melancholy", "gloomy"],
+  anxious: ["anxious", "worried", "nervous", "stressed", "tense", "concerned"],
+  confused: ["confused", "puzzled", "perplexed", "unsure", "uncertain", "bewildered"],
+  hurt: ["hurt", "pained", "wounded", "damaged", "injured", "harmed"],
+  embarrassed: ["embarrassed", "ashamed", "humiliated", "mortified", "self-conscious"],
+  guilty: ["guilty", "remorseful", "sorry", "regretful", "apologetic"],
+  ashamed: ["ashamed", "disgraced", "humiliated", "embarrassed", "self-conscious"],
+  afraid: ["afraid", "scared", "terrified", "fearful", "frightened", "panicked"],
+  hopeful: ["hopeful", "optimistic", "encouraged", "positive", "expectant"],
+  lonely: ["lonely", "isolated", "abandoned", "forsaken", "solitary", "alone"],
+  overwhelmed: ["overwhelmed", "swamped", "overloaded", "stressed", "burdened", "flooded"],
+  relieved: ["relieved", "unburdened", "calmed", "reassured", "eased", "comforted"]
 };
+
+// Define the empty export to prevent errors
+export type FeelingCategory = 
+  | "angry" | "happy" | "sad" | "anxious" | "confused" 
+  | "hurt" | "embarrassed" | "guilty" | "ashamed" | "afraid" 
+  | "hopeful" | "lonely" | "overwhelmed" | "relieved";
+

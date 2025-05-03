@@ -380,7 +380,7 @@ export const generatePersonalSharingResponse = (message: string): string => {
       lowerMessage.includes("feeling sad")) {
     const responses = [
       "I hear that you're feeling sad. It's important to acknowledge emotions directly. In my experience, identifying specific triggers for sadness helps process the feeling. Would you like to tell me more about what's been contributing to those feelings?",
-      "I understand you're feeling sad right now. I appreciate you sharing that clearly. I've learned how important it is to create space for emotions. What's been happening that's made you feel this way?",
+      "I understand you're feeling sad right now. I appreciate you sharing that clearly. I've learned how important it is to create space for emotions. What's been going on for you lately?",
       "Thank you for sharing that you're feeling sad. Naming emotions directly like you just did helps in processing them. I've found that using structured approaches to explore feelings can be helpful. Could you tell me more about what's been going on?",
       "I appreciate you letting me know you're feeling sad. In my experience, sadness often has specific triggers that we can identify and address. What aspects of your situation have been most difficult?",
       "I'm hearing that sadness is present for you right now. Acknowledging emotions is an important first step. I've found that creative expression can sometimes help process sadness when words are difficult. Can you share more about what's been happening?"
