@@ -6,6 +6,11 @@
  */
 
 import { getConversationMessageCount } from '../../../memory/newConversationDetector';
+import { getAllMemory } from '../../../nlpProcessor';
+import { getFiveResponseMemory } from '../../../memory/fiveResponseMemory';
+import { retrieveRelevantMemories } from '../../../memory/memoryBank';
+import { hasInvalidMentionReference } from './specialCases';
+import { UNCONDITIONAL_MEMORY_RULE } from '../../../masterRules/core/coreRules';
 
 /**
  * Handle memory-related hallucinations
@@ -16,12 +21,20 @@ export const handleMemoryHallucinations = (
 ): {
   requiresStrictPrevention: boolean;
 } => {
+  // UNCONDITIONAL RULE: Memory usage must be accurate (from UNCONDITIONAL_MEMORY_RULE)
+  console.log("ENFORCING UNCONDITIONAL MEMORY RULE:", UNCONDITIONAL_MEMORY_RULE.name);
+  
   // Track if we have a potential memory reference
   const containsMemoryReference = /I remember|you mentioned|you told me|you said|earlier you|previously you|we talked about|we discussed|we've been|you shared|as I recall/i.test(responseText);
   
-  // Get conversation message count
+  // Get conversation message count from all memory systems
   const messageCount = getConversationMessageCount();
   const isNewConversation = messageCount < 3;
+  
+  // Check all memory systems for consistency
+  const primaryMemory = getAllMemory();
+  const fiveResponseMemory = getFiveResponseMemory();
+  const memoryBankResult = retrieveRelevantMemories(conversationHistory[conversationHistory.length - 1] || '');
   
   // Critical check for false continuity claims like "we've been focusing on"
   const falseContinuityPattern = /(?:we've been focusing on|we've been discussing|we've been talking about|as we discussed|we were discussing|we talked about earlier) (?:your|the|about|how|what|why)?\s*([a-zA-Z\s]+)/gi;
@@ -34,7 +47,15 @@ export const handleMemoryHallucinations = (
   // Check for multiple "I hear" statements which suggest repetition
   const multipleIHear = (responseText.match(/I hear/gi) || []).length > 1;
   
-  // Determine if strict prevention is required
+  // Check for specific invalid memory references
+  const hasInvalidMention = hasInvalidMentionReference(responseText, conversationHistory);
+  
+  // Special check for inconsistency across memory systems
+  const hasMemorySystemInconsistency = 
+    (primaryMemory.patientStatements.length > 0 && fiveResponseMemory.length === 0) ||
+    (memoryBankResult.length === 0 && messageCount > 5);
+  
+  // Determine if strict prevention is required by checking all memory systems
   const requiresStrictPrevention = 
       // Memory references in new conversations are always concerning
       (isNewConversation && containsMemoryReference) || 
@@ -43,7 +64,11 @@ export const handleMemoryHallucinations = (
       // "you may have indicated" is a strong sign of hallucination
       containsMayHaveIndicated ||
       // Multiple "I hear" statements suggest repetition
-      multipleIHear;
+      multipleIHear ||
+      // Invalid mention of user content
+      hasInvalidMention ||
+      // Memory system inconsistency
+      hasMemorySystemInconsistency;
   
   return {
     requiresStrictPrevention

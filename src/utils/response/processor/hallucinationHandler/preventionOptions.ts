@@ -6,6 +6,9 @@
  */
 
 import { HallucinationPreventionOptions } from '../../../../types/hallucinationPrevention';
+import { hasRepeatedContent } from './specialCases';
+import { UNCONDITIONAL_MEMORY_RULE } from '../../../masterRules/core/coreRules';
+import { checkAllRules } from '../../../rulesEnforcement/rulesEnforcer';
 
 /**
  * Determine appropriate prevention options based on content
@@ -17,6 +20,11 @@ export const determinePreventionOptions = (
   preventionOptions: HallucinationPreventionOptions;
   requiresPrevention: boolean;
 } => {
+  console.log("ENFORCING UNCONDITIONAL RULE:", UNCONDITIONAL_MEMORY_RULE.name);
+  
+  // Ensure all rules are checked before configuring prevention options
+  checkAllRules();
+  
   // Default prevention options
   const preventionOptions: HallucinationPreventionOptions = {
     enableReasoning: false,
@@ -33,7 +41,7 @@ export const determinePreventionOptions = (
   const containsMemoryReference = /I remember|you mentioned|you told me|you said|earlier you|previously you|we talked about|we discussed|we've been|you shared|as I recall/i.test(responseText);
   
   // Check for repeated phrases which are a strong signal for hallucination
-  const repeatedPhrases = detectRepeatedPhrases(responseText);
+  const repeatedPhrases = hasRepeatedContent(responseText);
   
   // For responses with potential repetition, apply special prevention focused on repetition
   if (repeatedPhrases) {
@@ -43,6 +51,7 @@ export const determinePreventionOptions = (
     preventionOptions.detectionSensitivity = 0.95;
     preventionOptions.enableReasoning = true;
     preventionOptions.enableRAG = false;
+    preventionOptions.enableDetection = true;
     preventionOptions.enableTokenLevelDetection = true;
     preventionOptions.enableReranking = true;
     preventionOptions.reasoningThreshold = 0.8; // Adjusted for repetition cases
@@ -65,6 +74,7 @@ export const determinePreventionOptions = (
   }
   
   // For basic check with low sensitivity
+  preventionOptions.enableDetection = true;
   requiresPrevention = true;
   return { preventionOptions, requiresPrevention };
 };
