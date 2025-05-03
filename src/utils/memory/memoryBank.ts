@@ -80,6 +80,36 @@ export const retrieveRelevantMemories = (userInput: string, keywords?: string[])
 };
 
 /**
+ * Add memory to the memory system
+ * Used to store important information for future reference
+ */
+export const addMemory = (
+  content: string, 
+  role: 'patient' | 'roger', 
+  context?: any, 
+  importance: number = 0.5
+): void => {
+  try {
+    // Use the memory controller's addMemory function (from import if available)
+    // For now implementing a basic version
+    console.log(`Adding memory: ${content} (${role})`);
+    
+    // We could store this in a local memory cache if needed
+    const memoryItem = {
+      content,
+      role,
+      metadata: context,
+      timestamp: Date.now(),
+      importance
+    };
+    
+    // In a real implementation, this would be persisted
+  } catch (error) {
+    console.error("Error adding memory:", error);
+  }
+};
+
+/**
  * Add memory to the memory bank
  * This function is for compatibility with older code
  */

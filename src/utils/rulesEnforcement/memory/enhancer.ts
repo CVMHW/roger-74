@@ -6,7 +6,7 @@
 
 import { getContextualMemory } from '../../nlpProcessor';
 import { retrieveRelevantMemories } from '../../memory/memoryBank';
-import { enhanceResponseWithRapport } from '../../response/responseIntegration';
+// Import our local version instead of the one from responseIntegration
 import { getConversationMessageCount } from '../../memory/newConversationDetector';
 
 /**
@@ -134,5 +134,45 @@ export const enhanceWithRapport = (
     }
   }
   
-  return enhanceResponseWithRapport(responseText, userInput, 0, conversationHistory);
+  // Implementation without using external enhanceResponseWithRapport
+  try {
+    // Get relevant memories for rapport building
+    const memories = retrieveRelevantMemories(userInput);
+    
+    if (memories.length === 0) {
+      return responseText;
+    }
+    
+    // Get first memory with content
+    let memoryContent = null;
+    for (const memory of memories) {
+      if (typeof memory.content === 'string' && memory.content.trim().length > 0) {
+        memoryContent = memory.content;
+        break;
+      }
+    }
+    
+    if (!memoryContent) {
+      return responseText;
+    }
+    
+    // For short responses, add rapport at beginning
+    if (responseText.length < 80) {
+      return `I remember you mentioned ${memoryContent}. ${responseText}`;
+    }
+    
+    // For longer responses, integrate naturally
+    const sentences = responseText.split(/(?<=[.!?])\s+/);
+    const insertPoint = Math.min(2, sentences.length - 1);
+    
+    return [
+      ...sentences.slice(0, insertPoint),
+      `I remember you mentioned ${memoryContent}.`,
+      ...sentences.slice(insertPoint)
+    ].join(' ');
+    
+  } catch (error) {
+    console.error("Error enhancing with rapport:", error);
+    return responseText;
+  }
 };

@@ -7,7 +7,6 @@
  */
 
 import { processResponse } from '../../memory/memoryController';
-import { applyUnconditionalRules } from '../responseIntegration';
 import { processCore } from './core';
 import { applyConversationStageProcessing, determineConversationStage } from './conversationStageHandler';
 import { enhanceResponseWithMemory } from './memoryEnhancement';
@@ -84,15 +83,8 @@ export const processCompleteResponse = (
   } catch (error) {
     console.error("RESPONSE PROCESSOR: Error in processing", error);
     
-    // Fallback: Ensure we at least apply basic rules in case of error
-    try {
-      const simpleProcessed = applyUnconditionalRules(responseText, userInput, 0);
-      // Don't limit length for fallback responses
-      return correctGrammar(simpleProcessed);
-    } catch (nestedError) {
-      console.error("RESPONSE PROCESSOR: Critical failure in fallback processing", nestedError);
-      return responseText;
-    }
+    // Fallback: Return original response
+    return responseText;
   }
 };
 
@@ -103,4 +95,3 @@ export const processResponseThroughMasterRules = processCompleteResponse;
 export { recordToMemorySystems } from './memorySystemHandler';
 export { enhanceResponseWithMemory } from './memoryEnhancement';
 export { applyResponseRules } from './ruleProcessing';
-

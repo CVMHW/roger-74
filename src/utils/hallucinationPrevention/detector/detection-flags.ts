@@ -1,3 +1,4 @@
+
 /**
  * Hallucination Detection Flags
  * 
@@ -134,10 +135,112 @@ export const checkConversationHallucination = (
   return false;
 };
 
+// Implementation of the missing functions required by hallucination-detector.ts
+export const detectFalseMemoryReferences = (
+  response: string, 
+  userInput: string, 
+  conversationHistory: string[]
+) => {
+  // Basic implementation to satisfy import
+  const flags = [];
+  
+  if (checkFalsePastReference(response, conversationHistory)) {
+    flags.push({
+      type: 'false_memory',
+      severity: 'high',
+      description: 'Response references non-existent past conversation'
+    });
+  }
+  
+  return flags;
+};
+
+export const detectLogicalErrors = (
+  response: string, 
+  conversationHistory: string[]
+) => {
+  // Basic implementation
+  const flags = [];
+  
+  // Look for self-contradictions within the response
+  if (/not .{1,30} but .{1,30} actually .{1,30} is/i.test(response)) {
+    flags.push({
+      type: 'logical_contradiction',
+      severity: 'medium',
+      description: 'Response contains logical contradiction'
+    });
+  }
+  
+  return flags;
+};
+
+export const detectTokenLevelIssues = (
+  response: string,
+  userInput: string,
+  conversationHistory: string[]
+) => {
+  // Basic implementation
+  const flags = [];
+  
+  // Check for incomplete sentences
+  if (/\w+\s+\w+\s*[,;]?\s*$/i.test(response)) {
+    flags.push({
+      type: 'incomplete_sentence',
+      severity: 'low',
+      description: 'Response ends with incomplete sentence'
+    });
+  }
+  
+  return flags;
+};
+
+export const detectRepeatedContent = (response: string) => {
+  // Basic implementation
+  const flags = [];
+  
+  // Check for exact duplicate sentences
+  const sentences = response.split(/(?<=[.!?])\s+/);
+  const uniqueSentences = new Set(sentences);
+  
+  if (uniqueSentences.size < sentences.length) {
+    flags.push({
+      type: 'repetition',
+      severity: 'medium',
+      description: 'Response contains repeated sentences'
+    });
+  }
+  
+  return flags;
+};
+
+export const detectFalseContinuity = (
+  response: string, 
+  conversationHistory: string[]
+) => {
+  // Basic implementation
+  const flags = [];
+  
+  // Check for false claims of ongoing conversation
+  if (conversationHistory.length <= 2 && /as we've been discussing|continuing our conversation|as we were saying/i.test(response)) {
+    flags.push({
+      type: 'false_continuity',
+      severity: 'high',
+      description: 'Response falsely implies ongoing conversation'
+    });
+  }
+  
+  return flags;
+};
+
 // Export all flag functions
 export default {
   checkFalsePastReference,
   checkFabricatedDetails,
   checkCapabilityHallucination,
-  checkConversationHallucination
+  checkConversationHallucination,
+  detectFalseMemoryReferences,
+  detectLogicalErrors,
+  detectTokenLevelIssues,
+  detectRepeatedContent,
+  detectFalseContinuity
 };

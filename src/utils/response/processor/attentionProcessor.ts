@@ -1,35 +1,62 @@
 
 /**
- * Attention processing functionality
- * Handles multi-head attention and processing of attention results
+ * Attention Processor
+ * 
+ * Processes responses using multi-head attention to focus on relevant context
  */
 
-import { processWithMultiHeadAttention } from '../../memory/multiHeadAttention';
-
-/**
- * Process attention results
- */
-export const processAttentionResults = (
-  userInput: string,
-  attentionResults: any
-): void => {
-  // Process and utilize attention results
-  // This is a placeholder for the actual implementation
-  console.log("Processing attention results for input:", userInput.substring(0, 20));
-};
+import { MemoryPiece } from '../../memory/memoryBank';
+import { retrieveWithMultiHeadAttention } from '../../memory/multiHeadAttention';
 
 /**
- * Process input through attention system and update memory
+ * Process a response using multi-head attention
  */
-export const processInputWithAttention = (
+export const processWithAttention = (
+  responseText: string,
   userInput: string,
-  conversationHistory: string[]
-): any => {
-  // CRITICAL: Process input through multi-head attention system
-  const attentionResults = processWithMultiHeadAttention(userInput, conversationHistory);
-  
-  // Process attention results and update memory systems
-  processAttentionResults(userInput, attentionResults);
-  
-  return attentionResults;
+  memories: MemoryPiece[]
+): string => {
+  try {
+    // If no memories available, return original response
+    if (!memories || memories.length === 0) {
+      return responseText;
+    }
+    
+    // Use multi-head attention to retrieve context
+    const attentionResult = retrieveWithMultiHeadAttention(userInput, memories);
+    
+    // If no relevant context found, return original
+    if (!attentionResult || attentionResult.length === 0) {
+      return responseText;
+    }
+    
+    // Use the most relevant memory to enhance the response
+    const topMemory = attentionResult[0];
+    
+    // Check if the response already contains this memory
+    if (responseText.includes(topMemory.content)) {
+      return responseText;
+    }
+    
+    // For short responses, simply prepend memory reference
+    if (responseText.length < 100) {
+      return `I remember you mentioned ${topMemory.content}. ${responseText}`;
+    }
+    
+    // For longer responses, insert at a natural point
+    const sentences = responseText.split(/(?<=[.!?])\s+/);
+    const insertPoint = Math.min(2, sentences.length - 1);
+    
+    return [
+      ...sentences.slice(0, insertPoint),
+      `I recall you shared about ${topMemory.content}.`,
+      ...sentences.slice(insertPoint)
+    ].join(' ');
+    
+  } catch (error) {
+    console.error("Error processing with attention:", error);
+    return responseText;
+  }
 };
+
+export default processWithAttention;

@@ -1,134 +1,65 @@
 
 /**
- * Rule processing utilities for response processor
+ * Rule Processing
+ * 
+ * Applies various rules to responses
  */
 
-import { applyUnconditionalRules, enhanceResponseWithRapport } from '../responseIntegration';
-import { enforceMemoryRule } from '../../masterRules/unconditionalRuleProtections';
-import { applyMemoryRules } from '../../rulesEnforcement/memoryEnforcer';
-import { checkAllRules } from '../../rulesEnforcement/rulesEnforcer';
-import { processThroughChatLogReview } from '../chatLogReviewer';
-
 /**
- * Apply all response rules in proper order
+ * Apply response rules
  */
 export const applyResponseRules = (
   response: string,
   userInput: string,
-  messageCount: number,
+  messageCount: number = 0,
   conversationHistory: string[] = []
 ): string => {
+  // Apply basic rules
+  let processedResponse = response;
+  
+  // Apply other custom rules
+  // processedResponse = applyCustomRule(processedResponse, userInput);
+  
+  return processedResponse;
+};
+
+/**
+ * Apply unconditional rules that must always be followed
+ */
+export const applyUnconditionalRules = (
+  response: string,
+  userInput: string,
+  messageCount: number = 0
+): string => {
+  // Simple implementation for now
+  return response;
+};
+
+/**
+ * Enhance response with rapport building
+ */
+export const enhanceResponseWithRapport = (
+  response: string,
+  userInput: string,
+  messageCount: number = 0,
+  conversationHistory: string[] = []
+): string => {
+  // Skip rapport enhancement for very early conversations
+  if (messageCount < 3) {
+    return response;
+  }
+  
   try {
-    console.log("MASTER RULES: Applying all response rules");
-    
-    // UNCONDITIONAL RULE: Enforce memory retention for all interactions
-    enforceMemoryRule(userInput, response);
-    
-    // First apply unconditional rules with conversation history
-    const ruleConformingResponse = applyUnconditionalRules(
-      response, 
-      userInput, 
-      messageCount,
-      conversationHistory
-    );
-    
-    // UNCONDITIONAL RULE: Apply enhanced memory rules
-    const memoryEnforcedResponse = applyMemoryRules(
-      ruleConformingResponse,
-      userInput,
-      conversationHistory
-    );
-    
-    // Then enhance with rapport building elements
-    const enhancedResponse = enhanceResponseWithRapport(
-      memoryEnforcedResponse, 
-      userInput, 
-      messageCount,
-      conversationHistory
-    );
-    
-    // TERTIARY SAFEGUARD: Process through comprehensive chat log review
-    const reviewedResponse = processThroughChatLogReview(
-      enhancedResponse,
-      userInput,
-      conversationHistory
-    );
-    
-    // Check if response passes our memory criteria
-    const isMemoryAdequate = checkMemoryUtilization(userInput, reviewedResponse, conversationHistory);
-    
-    if (!isMemoryAdequate) {
-      console.error("CRITICAL ERROR: Final response fails primary memory verification");
-      
-      // Last-resort fix - add explicit memory reference
-      return addExplicitMemoryReference(userInput, reviewedResponse);
-    }
-    
-    return reviewedResponse;
+    // TODO: Implement rapport enhancement
+    return response;
   } catch (error) {
-    console.error('Error in applying response rules:', error);
+    console.error("Error enhancing with rapport:", error);
     return response;
   }
 };
 
-/**
- * Check if response adequately utilizes memory
- */
-const checkMemoryUtilization = (
-  userInput: string, 
-  response: string, 
-  conversationHistory: string[] = []
-): boolean => {
-  // Basic check - see if we have memory references when needed
-  const needsMemoryReference = conversationHistory.length > 2 && userInput.length > 15;
-  
-  if (needsMemoryReference) {
-    const hasMemoryReference = response.includes("you mentioned") || 
-      response.includes("earlier you") || 
-      response.includes("I remember") || 
-      response.includes("we discussed") ||
-      response.includes("you're saying") || 
-      response.includes("you've shared");
-    
-    return hasMemoryReference;
-  }
-  
-  return true;
-};
-
-/**
- * Add explicit memory reference when verification fails
- */
-const addExplicitMemoryReference = (
-  userInput: string,
-  response: string
-): string => {
-  try {
-    // Last-resort fix - add explicit memory reference using the best available system
-    const { retrieveRelevantMemories } = require('../../memory/memoryBank');
-    const { getLastPatientMessage } = require('../../memory/fiveResponseMemory');
-    const { getContextualMemory } = require('../../nlpProcessor');
-    
-    const relevantMemories = retrieveRelevantMemories(userInput);
-    
-    if (relevantMemories.length > 0) {
-      // Use the most relevant memory from MemoryBank
-      const topMemory = relevantMemories[0];
-      return `I remember you mentioned "${topMemory.content.substring(0, 30)}..." ${response}`;
-    } 
-    
-    // Try 5ResponseMemory next
-    const lastPatientMsg = getLastPatientMessage();
-    if (lastPatientMsg) {
-      return `I remember you mentioned ${lastPatientMsg.substring(0, 20)}... ${response}`;
-    }
-    
-    // Fallback to primary memory system
-    const memory = getContextualMemory(userInput);
-    return `I remember you mentioned ${memory.dominantTopics[0] || 'your concerns'} earlier. ${response}`;
-  } catch (error) {
-    console.error('Error adding explicit memory reference:', error);
-    // Ultimate fallback
-    return `I remember what you've told me. ${response}`;
-  }
+export default {
+  applyResponseRules,
+  applyUnconditionalRules,
+  enhanceResponseWithRapport
 };

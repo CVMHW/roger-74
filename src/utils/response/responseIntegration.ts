@@ -192,8 +192,70 @@ export const enhanceSmallTalkResponse = (
   }
 };
 
+/**
+ * Enhance response with rapport
+ */
+export const enhanceResponseWithRapport = (
+  response: string,
+  userInput: string,
+  messageCount: number = 0,
+  conversationHistory: string[] = []
+): string => {
+  // Skip rapport enhancement for very early conversations
+  if (messageCount < 3) {
+    return response;
+  }
+  
+  try {
+    // Get relevant memories for rapport building
+    const memories = retrieveRelevantMemories(userInput);
+    
+    if (memories.length === 0) {
+      return response;
+    }
+    
+    // Similar implementation as enhanceWithMemoryReferences but tuned for rapport
+    const significantMemory = getSafeMemory(memories);
+    
+    if (!significantMemory) {
+      return response;
+    }
+    
+    // For short responses, add rapport at beginning
+    if (response.length < 80) {
+      return `I remember you mentioned ${significantMemory}. ${response}`;
+    }
+    
+    // For longer responses, integrate naturally
+    const sentences = response.split(/(?<=[.!?])\s+/);
+    const insertPoint = Math.min(2, sentences.length - 1);
+    
+    return [
+      ...sentences.slice(0, insertPoint),
+      `I remember you mentioned ${significantMemory}.`,
+      ...sentences.slice(insertPoint)
+    ].join(' ');
+    
+  } catch (error) {
+    console.error("Error enhancing with rapport:", error);
+    return response;
+  }
+};
+
+// Add unconditional rules
+export const applyUnconditionalRules = (
+  response: string,
+  userInput: string,
+  messageCount: number = 0
+): string => {
+  // Simple implementation for now
+  return response;
+};
+
 // Export all enhancement functions
 export default {
   integrateResponseEnhancements,
-  enhanceSmallTalkResponse
+  enhanceSmallTalkResponse,
+  enhanceResponseWithRapport,
+  applyUnconditionalRules
 };

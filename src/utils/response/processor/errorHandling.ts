@@ -3,8 +3,7 @@
  * Error handling for response processor
  */
 
-import { addMemory } from '../../memory/memoryController';
-import { MemoryPiece } from '../../memory/memoryBank';
+import { addMemory } from '../../memory/memoryBank';
 
 /**
  * Adds error to memory for future correction
@@ -27,7 +26,7 @@ export const recordErrorToMemory = (
     addMemory(
       `ERROR: ${errorType} occurred during response processing`,
       'roger',
-      { error: errorRecord },
+      { errorInfo: errorRecord },
       0.9
     );
     
@@ -68,14 +67,14 @@ export const retrieveErrorCorrectionStrategies = (
  * Process errors in recent responses
  */
 export const analyzeRecentResponseErrors = (
-  recentMemories: MemoryPiece[]
+  recentMemories: any[]
 ): string[] => {
   const errorPatterns: string[] = [];
   
   // Look for error patterns in recent responses
   for (const memory of recentMemories) {
-    if (memory.role === 'roger' && memory.metadata?.error) {
-      const errorType = memory.metadata.error.type;
+    if (memory.role === 'roger' && memory.metadata?.errorInfo) {
+      const errorType = memory.metadata.errorInfo.type;
       
       // If content exists and is a string
       if (memory.content && typeof memory.content === 'string' && 

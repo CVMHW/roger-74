@@ -2,108 +2,116 @@
 /**
  * Logotherapy Hallucination Handler
  * 
- * Special handling for preventing hallucinations in logotherapy-related responses
+ * Specialized handler for preventing hallucinations in logotherapeutic responses
  */
 
+import { checkFalsePastReference } from '../../../../hallucinationPrevention/detector/detection-flags';
 import { MemoryPiece } from '../../../../memory/memoryBank';
 
 /**
- * Checks if a logotherapy response contains hallucinations
+ * Handle potential hallucinations in logotherapeutic responses
  */
-export const checkLogotherapyHallucinations = (
+export const handleLogotherapyHallucinations = (
+  response: string,
+  userInput: string,
+  conversationHistory: string[],
+  memories: MemoryPiece[]
+): {
+  processedResponse: string;
+  wasHallucinationDetected: boolean;
+} => {
+  try {
+    // Check for references to past conversations that might not exist
+    const hasFalsePastReference = checkFalsePastReference(response, conversationHistory);
+    
+    // Check for references to philosophical frameworks not mentioned
+    const hasPhilosophicalHallucination = checkPhilosophicalHallucination(response, userInput, conversationHistory);
+    
+    // Check for false attributions to specific philosophers
+    const hasPhilosopherAttribution = checkPhilosopherAttribution(response, userInput);
+    
+    // If no issues detected, return original
+    if (!hasFalsePastReference && !hasPhilosophicalHallucination && !hasPhilosopherAttribution) {
+      return {
+        processedResponse: response,
+        wasHallucinationDetected: false
+      };
+    }
+    
+    // Apply appropriate fixes
+    let fixedResponse = response;
+    
+    if (hasFalsePastReference) {
+      fixedResponse = fixPastReferences(fixedResponse);
+    }
+    
+    if (hasPhilosophicalHallucination) {
+      fixedResponse = fixPhilosophicalFrameworks(fixedResponse);
+    }
+    
+    if (hasPhilosopherAttribution) {
+      fixedResponse = fixPhilosopherAttributions(fixedResponse);
+    }
+    
+    return {
+      processedResponse: fixedResponse,
+      wasHallucinationDetected: true
+    };
+    
+  } catch (error) {
+    console.error("Error handling logotherapy hallucinations:", error);
+    return {
+      processedResponse: response,
+      wasHallucinationDetected: false
+    };
+  }
+};
+
+/**
+ * Check for hallucinated philosophical frameworks
+ */
+const checkPhilosophicalHallucination = (
   response: string,
   userInput: string,
   conversationHistory: string[]
 ): boolean => {
-  // Check for unsupported existential claims
-  if (containsUnsupportedExistentialClaims(response)) {
-    return true;
-  }
-  
-  // Check for inappropriate meaning attributions
-  if (containsInappropriateMeaningAttributions(response, userInput)) {
-    return true;
-  }
-  
-  // Check for hallucinatory life events
-  if (containsHallucinatoryLifeEvents(response, conversationHistory)) {
-    return true;
-  }
-  
-  return false;
-};
-
-/**
- * Check for unsupported claims about life meaning or purpose
- */
-const containsUnsupportedExistentialClaims = (response: string): boolean => {
-  const unsupportedClaimPatterns = [
-    /the meaning of (your|one's) life is/i,
-    /your purpose is (clearly|obviously|definitely)/i,
-    /you (should|must|need to) find meaning in/i,
-    /the reason for your existence is/i
+  // Philosophical frameworks to check for
+  const frameworks = [
+    'existentialism',
+    'nihilism',
+    'stoicism',
+    'absurdism',
+    'determinism',
+    'empiricism',
+    'utilitarianism'
   ];
   
-  return unsupportedClaimPatterns.some(pattern => pattern.test(response));
-};
-
-/**
- * Check for inappropriate attributions of meaning to user's experiences
- */
-const containsInappropriateMeaningAttributions = (
-  response: string, 
-  userInput: string
-): boolean => {
-  // This happens when Roger assigns meaning to something without patient input
-  const attributionPatterns = [
-    /this (suffering|challenge|difficulty) means that/i,
-    /the (meaning|purpose|significance) of (this|your) (situation|experience) is/i,
-    /this happened (to you|in your life) (because|so that)/i
-  ];
+  // Look for mentions in response
+  const mentionedFrameworks = frameworks.filter(framework => 
+    new RegExp(`\\b${framework}\\b`, 'i').test(response)
+  );
   
-  // If user mentioned looking for meaning, attributions are more acceptable
-  const userSeekingMeaning = /meaning|purpose|why.+happen|reason for/i.test(userInput);
-  
-  // If user is seeking meaning, be more permissive
-  if (userSeekingMeaning) {
+  if (mentionedFrameworks.length === 0) {
     return false;
   }
   
-  return attributionPatterns.some(pattern => pattern.test(response));
-};
-
-/**
- * Check for hallucinatory life events in logotherapy context
- */
-const containsHallucinatoryLifeEvents = (
-  response: string,
-  conversationHistory: string[]
-): boolean => {
-  // Extract specific life events mentioned in response
-  const lifeEventPatterns = [
-    /when you (experienced|went through|faced) ([^,.]+)/i,
-    /your (past|previous) (experience|encounter) with ([^,.]+)/i,
-    /during your ([^,.]+) (experience|journey|challenge)/i
-  ];
+  // Check if any were mentioned by user
+  const userMentionedFrameworks = frameworks.filter(framework =>
+    new RegExp(`\\b${framework}\\b`, 'i').test(userInput)
+  );
   
-  // Extract potential hallucinated events
-  for (const pattern of lifeEventPatterns) {
-    const matches = response.match(pattern);
-    if (matches && matches.length > 2) {
-      const potentialEvent = matches[2].toLowerCase().trim();
-      
-      // Skip very short events (less likely to be specific hallucinations)
-      if (potentialEvent.length < 5) continue;
-      
-      // Check if this event is mentioned in conversation history
-      const isEventInHistory = conversationHistory.some(msg => 
-        msg.toLowerCase().includes(potentialEvent)
-      );
-      
-      if (!isEventInHistory) {
-        // Potential hallucination detected
-        return true;
-      }
+  // Check conversation history
+  const historyMentionedFrameworks = frameworks.filter(framework =>
+    conversationHistory.some(msg => new RegExp(`\\b${framework}\\b`, 'i').test(msg))
+  );
+  
+  // Combine user and history mentions
+  const validFrameworks = [...new Set([...userMentionedFrameworks, ...historyMentionedFrameworks])];
+  
+  // For each mentioned framework, check if it's valid
+  for (const framework of mentionedFrameworks) {
+    if (!validFrameworks.includes(framework)) {
+      return true; // Hallucination detected
     }
   }
   
@@ -111,93 +119,108 @@ const containsHallucinatoryLifeEvents = (
 };
 
 /**
- * Fix logotherapy hallucinations in a response
+ * Check for false attributions to philosophers
  */
-export const fixLogotherapyHallucinations = (
+const checkPhilosopherAttribution = (
   response: string,
-  memories: MemoryPiece[]
-): string => {
-  let fixed = response;
-  
-  // Fix unsupported existential claims
-  fixed = replaceUnsupportedExistentialClaims(fixed);
-  
-  // Fix inappropriate meaning attributions
-  fixed = replaceInappropriateMeaningAttributions(fixed);
-  
-  // Fix hallucinatory life events
-  fixed = replaceHallucinatoryLifeEvents(fixed, memories);
-  
-  return fixed;
-};
-
-/**
- * Replace unsupported existential claims
- */
-const replaceUnsupportedExistentialClaims = (response: string): string => {
-  let fixed = response;
-  
-  // Replace definitive meaning statements with reflective questions
-  fixed = fixed.replace(
-    /the meaning of (your|one's) life is ([^,.]+)/gi,
-    "you might find it helpful to explore what meaning feels right for you"
-  );
-  
-  fixed = fixed.replace(
-    /your purpose is (clearly|obviously|definitely) ([^,.]+)/gi,
-    "discovering your own sense of purpose is a personal journey"
-  );
-  
-  fixed = fixed.replace(
-    /you (should|must|need to) find meaning in ([^,.]+)/gi,
-    "some people find it helpful to reflect on what brings meaning to their lives"
-  );
-  
-  return fixed;
-};
-
-/**
- * Replace inappropriate meaning attributions
- */
-const replaceInappropriateMeaningAttributions = (response: string): string => {
-  let fixed = response;
-  
-  // Replace attributions with reflective questions
-  fixed = fixed.replace(
-    /this (suffering|challenge|difficulty) means that ([^,.]+)/gi,
-    "I wonder what this $1 means to you"
-  );
-  
-  fixed = fixed.replace(
-    /the (meaning|purpose|significance) of (this|your) (situation|experience) is ([^,.]+)/gi,
-    "what do you think the $1 of this $3 might be for you"
-  );
-  
-  return fixed;
-};
-
-/**
- * Replace hallucinatory life events
- */
-const replaceHallucinatoryLifeEvents = (response: string, memories: MemoryPiece[]): string => {
-  let fixed = response;
-  
-  // For each potential life event pattern
-  const lifeEventPatterns = [
-    [/when you (experienced|went through|faced) ([^,.]+)/gi, "when people face challenges like this"],
-    [/your (past|previous) (experience|encounter) with ([^,.]+)/gi, "past experiences"],
-    [/during your ([^,.]+) (experience|journey|challenge)/gi, "during difficult times"]
+  userInput: string
+): boolean => {
+  // Philosophers to check for
+  const philosophers = [
+    'Frankl',
+    'Viktor Frankl',
+    'Nietzsche',
+    'Sartre',
+    'Camus',
+    'Kierkegaard',
+    'Heidegger',
+    'Schopenhauer',
+    'Socrates',
+    'Plato',
+    'Aristotle'
   ];
   
-  for (const [pattern, replacement] of lifeEventPatterns) {
-    fixed = fixed.replace(pattern as RegExp, replacement as string);
+  // Check if any philosophers are mentioned in response
+  const mentionedPhilosophers = philosophers.filter(philosopher => 
+    new RegExp(`\\b${philosopher}\\b`, 'i').test(response)
+  );
+  
+  if (mentionedPhilosophers.length === 0) {
+    return false;
   }
   
-  return fixed;
+  // Check if user mentioned any of these philosophers
+  const userMentionedPhilosophers = philosophers.filter(philosopher =>
+    new RegExp(`\\b${philosopher}\\b`, 'i').test(userInput)
+  );
+  
+  // For each mentioned philosopher, check if user mentioned them
+  for (const philosopher of mentionedPhilosophers) {
+    if (!userMentionedPhilosophers.includes(philosopher)) {
+      // Special case: Allow Viktor Frankl references (logotherapy founder)
+      if (philosopher === 'Frankl' || philosopher === 'Viktor Frankl') {
+        continue;
+      }
+      return true; // Hallucination detected
+    }
+  }
+  
+  return false;
 };
 
-// Export main functions
-export default {
-  checkLogotherapyHallucinations,
-  fixLogotherapyHallucinations
+/**
+ * Fix false references to past conversations
+ */
+const fixPastReferences = (response: string): string => {
+  return response
+    .replace(/as (we|you) (mentioned|discussed|talked about) (earlier|before|previously)/gi, "from what you're sharing")
+    .replace(/you (told|shared with) me (earlier|before|previously|last time)/gi, "you're saying")
+    .replace(/in our (previous|earlier|last|prior) (conversation|session|discussion)/gi, "in our discussion")
+    .replace(/when we (last|previously) (spoke|talked|met)/gi, "as we talk");
 };
+
+/**
+ * Fix hallucinated philosophical frameworks
+ */
+const fixPhilosophicalFrameworks = (response: string): string => {
+  return response
+    .replace(/in (existentialism|nihilism|stoicism|absurdism|determinism)/gi, "in some philosophical perspectives")
+    .replace(/from an? (existentialist|nihilist|stoic|absurdist|determinist) (perspective|viewpoint|standpoint)/gi, "from a certain philosophical perspective")
+    .replace(/according to (existentialism|nihilism|stoicism|absurdism|determinism)/gi, "according to some philosophical views");
+};
+
+/**
+ * Fix false attributions to philosophers
+ */
+const fixPhilosopherAttributions = (response: string): string => {
+  // Allow Frankl references but modify other philosopher attributions
+  const otherPhilosophers = [
+    'Nietzsche',
+    'Sartre',
+    'Camus',
+    'Kierkegaard',
+    'Heidegger',
+    'Schopenhauer',
+    'Socrates',
+    'Plato',
+    'Aristotle'
+  ];
+  
+  let fixedResponse = response;
+  
+  for (const philosopher of otherPhilosophers) {
+    fixedResponse = fixedResponse.replace(
+      new RegExp(`(as|like|according to) ${philosopher} (said|noted|observed|stated|pointed out|believed|thought)`, 'gi'),
+      "as some philosophers suggest"
+    );
+    
+    fixedResponse = fixedResponse.replace(
+      new RegExp(`${philosopher} (said|noted|observed|stated|pointed out|believed|thought)`, 'gi'),
+      "Philosophers suggest"
+    );
+  }
+  
+  return fixedResponse;
+};
+
+export default handleLogotherapyHallucinations;
