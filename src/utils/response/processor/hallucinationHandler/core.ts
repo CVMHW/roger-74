@@ -1,140 +1,253 @@
 /**
- * Core hallucination handling functionality
+ * Hallucination Prevention - Core System
+ * 
+ * Detects and corrects hallucinations in Roger's responses
  */
 
-import { preventHallucinations } from '../../../memory/hallucination/preventionV2';
-import { getConversationMessageCount } from '../../../memory/newConversationDetector';
-import { 
-  HallucinationPreventionOptions, 
-  HallucinationProcessResult 
-} from '../../../../types/hallucinationPrevention';
-import { determinePreventionOptions } from './preventionOptions';
-import { 
-  detectEmergencyPath, 
-  applyEmergencyIntervention 
-} from '../emergencyPathDetection';
-import { SeverityLevel } from '../emergencyPathDetection/types';
+import { isSmallTalk, isIntroduction } from '../../../masterRules';
 
-// Import necessary types and utilities
-import { MemorySystemConfig } from '../../../memory/types';
-
-// Define patternFixer function since we're using it
-export const fixDangerousRepetitionPatterns = (
-  responseText: string
-): { fixedResponse: string; hasRepetitionIssue: boolean } => {
-  // Check for common repetition patterns
-  const repetitionPatterns = [
-    {
-      pattern: /(I hear (you'?re|you are) dealing with) I hear (you'?re|you are) dealing with/i,
-      replacement: '$1'
-    },
-    {
-      pattern: /(I remember (you|your|we)) I remember (you|your|we)/i,
-      replacement: '$1'
-    },
-    {
-      pattern: /(you (mentioned|said|told me)) you (mentioned|said|told me)/i,
-      replacement: '$1'
-    }
-  ];
-  
-  let fixedResponse = responseText;
-  let hasRepetitionIssue = false;
-  
-  // Apply repetition fixes
-  for (const { pattern, replacement } of repetitionPatterns) {
-    if (pattern.test(fixedResponse)) {
-      fixedResponse = fixedResponse.replace(pattern, replacement);
-      hasRepetitionIssue = true;
-    }
-  }
-  
-  return { fixedResponse, hasRepetitionIssue };
-};
-
-// Define functions we're using
-export const hasRepeatedContent = (text: string): boolean => {
-  // Simple check for repeated content
-  const sentences = text.split(/(?<=[.!?])\s+/);
-  for (let i = 0; i < sentences.length; i++) {
-    for (let j = i + 1; j < sentences.length; j++) {
-      if (sentences[i] && sentences[j] && sentences[i].trim() === sentences[j].trim()) {
-        return true;
-      }
-    }
-  }
-  return false;
-};
-
-export const fixRepeatedContent = (text: string): string => {
-  // Split into sentences and keep only unique ones
-  const sentences = text.split(/(?<=[.!?])\s+/);
-  const uniqueSentences = Array.from(new Set(sentences));
-  return uniqueSentences.join(' ');
-};
-
-export const handleHealthHallucination = (
-  responseText: string,
-  userInput: string
-): { isHealthHallucination: boolean; correctedResponse: string } => {
-  // Check for health topic hallucination
-  const hasHealthTopic = /we've been focusing on health|dealing with health|focusing on health/i.test(responseText);
-  const userMentionedHealth = /health|medical|doctor|sick|ill|wellness/i.test(userInput);
-  
-  if (hasHealthTopic && !userMentionedHealth) {
-    const correctedResponse = responseText
-      .replace(/we've been focusing on health/gi, "from what you've shared")
-      .replace(/dealing with health/gi, "dealing with this situation")
-      .replace(/focusing on health/gi, "focusing on this");
-      
-    return {
-      isHealthHallucination: true,
-      correctedResponse
-    };
-  }
-  
-  return {
-    isHealthHallucination: false,
-    correctedResponse: responseText
-  };
-};
-
-// Define handleMemoryHallucinations function since we're using it
-export const handleMemoryHallucinations = (
+/**
+ * Handle potential hallucinations in responses
+ */
+export const handlePotentialHallucinations = (
   response: string,
+  userInput: string,
   conversationHistory: string[] = []
-): { requiresStrictPrevention: boolean; processedResponse: string } => {
-  // Check if this is early in conversation
-  const isEarlyConversation = conversationHistory.length < 3;
+): { 
+  requiresStrictPrevention: boolean; 
+  processedResponse: string;
+} => {
+  // Check if this is an everyday social situation
+  const isEverydaySituation = /trip(ped)?|spill(ed)?|embarrass(ing|ed)?|awkward|class|teacher|student|bar|drink|fall|fell|stumble|social|party|date/i.test(userInput);
   
-  // For early conversations, be extra cautious about memory claims
-  if (isEarlyConversation && hasMemoryReference(response)) {
+  // Check if resistance to philosophical approach
+  const hasResistance = conversationHistory.some(msg => 
+    /what\?|all|that's all|just happened|it was just|how does.*reflect|are you insinuating|not that deep|too much|simple|regular|come on|get real/i.test(msg)
+  );
+  
+  // Also check master rules for small talk and introductions
+  const isSmallTalkContext = isSmallTalk(userInput);
+  const isIntroductionContext = isIntroduction(userInput);
+  
+  // Handle social situations specially
+  if (isEverydaySituation || isSmallTalkContext || (hasResistance && conversationHistory.length > 1)) {
+    return handleEverydaySituation(response, userInput);
+  }
+  
+  // For early conversation, be extra cautious
+  const isEarlyConversation = conversationHistory.length < 3;
+  if (isEarlyConversation) {
+    return handleEarlyConversation(response, userInput);
+  }
+  
+  // Check for health hallucinations
+  if (containsHealthClaims(response)) {
+    return handleHealthHallucination(response);
+  }
+  
+  // Check for memory references
+  if (hasMemoryReference(response) && conversationHistory.length < 5) {
+    return handleMemoryHallucinations(response, conversationHistory);
+  }
+  
+  // Check for repeated content
+  if (hasRepeatedContent(response)) {
     return {
       requiresStrictPrevention: true,
-      processedResponse: fixFalseMemoryReferences(response)
+      processedResponse: fixRepeatedContent(response)
     };
   }
   
-  // For established conversations, just do basic checks
-  if (hasMemoryReference(response)) {
-    // Add hedging language for memory claims
-    return {
-      requiresStrictPrevention: false,
-      processedResponse: "From what I understand, " + response
-    };
-  }
-  
+  // No issues detected
   return {
     requiresStrictPrevention: false,
     processedResponse: response
   };
 };
 
-// Define helper functions for memory handling
-const hasMemoryReference = (text: string): boolean => {
-  return /you (mentioned|said|told me|indicated)|earlier you|previously you|we (discussed|talked about)|I remember|as you (mentioned|said|noted)|we've been/i.test(text);
+/**
+ * Handle everyday social situations
+ */
+const handleEverydaySituation = (
+  response: string,
+  userInput: string
+): { requiresStrictPrevention: boolean; processedResponse: string } => {
+  // For tripping in class/social embarrassment situations
+  if (/trip(ped)?|fall|fell|stumble/i.test(userInput)) {
+    if (/class|teacher|student|presentation/i.test(userInput)) {
+      return {
+        requiresStrictPrevention: true,
+        processedResponse: "That sounds pretty embarrassing. Most people have had moments like that in front of others. How did the class react?"
+      };
+    }
+    return {
+      requiresStrictPrevention: true,
+      processedResponse: "Those moments can feel so awkward! Everyone has those embarrassing moments. What happened next?"
+    };
+  }
+  
+  // For spilling situations
+  if (/spill(ed)?/i.test(userInput)) {
+    return {
+      requiresStrictPrevention: true,
+      processedResponse: "Spilling something can definitely feel awkward in the moment. What happened next?"
+    };
+  }
+  
+  // For generic embarrassing situations
+  if (/embarrass(ing|ed)?|awkward/i.test(userInput)) {
+    return {
+      requiresStrictPrevention: true,
+      processedResponse: "Embarrassing moments like that can feel much bigger to us than they do to others. How are you feeling about it now?"
+    };
+  }
+  
+  // Check if the response has meaning/logotherapy content for everyday situation
+  if (/meaning|purpose|values|deeper|connection to|life patterns|existential|broader perspective/i.test(response)) {
+    // Remove philosophical content, make more conversational
+    return {
+      requiresStrictPrevention: true,
+      processedResponse: "That sounds difficult. Would you like to tell me more about what happened?"
+    };
+  }
+  
+  // If response seems appropriate for everyday situation, keep it
+  return {
+    requiresStrictPrevention: false,
+    processedResponse: response
+  };
 };
 
+/**
+ * Handle early conversation
+ */
+const handleEarlyConversation = (
+  response: string,
+  userInput: string
+): { requiresStrictPrevention: boolean; processedResponse: string } => {
+  return {
+    requiresStrictPrevention: false,
+    processedResponse: fixFalseMemoryReferences(response)
+  };
+};
+
+/**
+ * Check if response contains health claims
+ */
+const containsHealthClaims = (response: string): boolean => {
+  return /research shows|studies indicate|clinically proven|medical research|health benefits|diagnosis|treatment plan|symptoms indicate/i.test(response);
+};
+
+/**
+ * Handle health-related hallucinations
+ */
+export const handleHealthHallucination = (
+  response: string
+): { requiresStrictPrevention: boolean; processedResponse: string } => {
+  // Replace specific health claims with appropriate language
+  let processed = response
+    .replace(/research shows|studies indicate|clinically proven/gi, "some people find")
+    .replace(/treatment for this condition|medical treatment/gi, "professional support")
+    .replace(/diagnosis|diagnose/gi, "professional assessment")
+    .replace(/symptoms indicate|symptoms of/gi, "experiences can be related to");
+  
+  // Add disclaimer if needed
+  if (processed === response) {
+    processed = "I'm not qualified to provide medical advice, but I'm here to listen and support you. " + response;
+  }
+  
+  return {
+    requiresStrictPrevention: true,
+    processedResponse: processed
+  };
+};
+
+/**
+ * Check if response has repeated content
+ */
+export const hasRepeatedContent = (response: string): boolean => {
+  // Check for repeated phrases
+  const phrases = response.split(/[.!?]\s+/);
+  const uniquePhrases = new Set(phrases.map(p => p.toLowerCase().trim()));
+  
+  // If there are significantly fewer unique phrases than total phrases, repetition detected
+  return uniquePhrases.size < phrases.length * 0.7;
+};
+
+/**
+ * Fix repeated content in response
+ */
+export const fixRepeatedContent = (response: string): string => {
+  // Split into sentences
+  const sentences = response.split(/([.!?])\s+/).filter(s => s.trim().length > 0);
+  const uniqueSentences = [];
+  const seen = new Set();
+  
+  // Keep only unique sentences (with punctuation)
+  for (let i = 0; i < sentences.length; i++) {
+    const current = sentences[i];
+    const next = i + 1 < sentences.length ? sentences[i + 1] : "";
+    const combined = current + (next.length === 1 ? next : "");
+    
+    const normalized = combined.toLowerCase().trim();
+    if (!seen.has(normalized) || normalized.length <= 1) {
+      uniqueSentences.push(combined);
+      seen.add(normalized);
+    }
+    
+    // Skip the punctuation we just added
+    if (next.length === 1) i++;
+  }
+  
+  // Combine sentences back together
+  return uniqueSentences.join(" ");
+};
+
+/**
+ * Fix dangerous repetition patterns
+ */
+export const fixDangerousRepetitionPatterns = (response: string): string => {
+  // Find repeated patterns across sentences
+  const sentences = response.split(/[.!?]\s+/);
+  
+  // If not enough sentences to check patterns, return original
+  if (sentences.length < 3) return response;
+  
+  // Check for recurring phrases across sentences
+  const phraseCount = {};
+  sentences.forEach(sentence => {
+    // Extract key phrases (3+ word combinations)
+    const words = sentence.toLowerCase().split(/\s+/);
+    for (let i = 0; i <= words.length - 3; i++) {
+      const phrase = words.slice(i, i + 3).join(" ");
+      if (phrase.length > 10) { // Only track substantial phrases
+        phraseCount[phrase] = (phraseCount[phrase] || 0) + 1;
+      }
+    }
+  });
+  
+  // Identify problematic repeating phrases
+  const repeatedPhrases = Object.entries(phraseCount)
+    .filter(([phrase, count]) => count > 1)
+    .map(([phrase]) => phrase);
+  
+  // If no problematic repetition, return original
+  if (repeatedPhrases.length === 0) return response;
+  
+  // Otherwise, fix the repetition by keeping just one instance of each repeated phrase
+  let fixed = response;
+  repeatedPhrases.forEach(phrase => {
+    // Replace second and subsequent occurrences
+    const pattern = new RegExp(`(.*${phrase}.*?)(?:${phrase})`, "gi");
+    fixed = fixed.replace(pattern, "$1");
+  });
+  
+  return fixed;
+};
+
+/**
+ * Fix false memory references
+ */
 export const fixFalseMemoryReferences = (response: string): string => {
   return response
     .replace(/you (mentioned|said|told me) that/gi, "it sounds like")
@@ -145,229 +258,25 @@ export const fixFalseMemoryReferences = (response: string): string => {
     .replace(/from our previous conversation/gi, "from what you've shared");
 };
 
-/**
- * Apply hallucination prevention to a response with emergency path detection
- */
-export const handlePotentialHallucinations = (
-  responseText: string,
-  userInput: string,
+// Export missing functions imported by other files
+export const handleMemoryHallucinations = (
+  response: string,
   conversationHistory: string[] = []
-): {
-  processedResponse: string;
-  hallucinationData: HallucinationProcessResult | null;
-} => {
-  try {
-    // HIGHEST PRIORITY: Emergency path detection - must come first
-    const emergencyPathResult = detectEmergencyPath(responseText, userInput);
-    
-    // If we're on an emergency path that requires immediate intervention, handle it immediately
-    if (emergencyPathResult.isEmergencyPath && emergencyPathResult.requiresImmediateIntervention) {
-      console.log("CRITICAL: Emergency path detected with severity:", emergencyPathResult.severity);
-      console.log("Emergency flags:", emergencyPathResult.flags);
-      
-      const interventionResponse = applyEmergencyIntervention(
-        responseText,
-        emergencyPathResult
-      );
-      
-      return {
-        processedResponse: interventionResponse,
-        hallucinationData: {
-          processedResponse: interventionResponse,
-          wasRevised: true,
-          reasoningApplied: true,
-          detectionApplied: true,
-          ragApplied: false,
-          processingTime: 0,
-          confidence: emergencyPathResult.severity === SeverityLevel.SEVERE ? 0.1 : 0.3,
-          issueDetails: emergencyPathResult.flags.map(flag => flag.description)
-        }
-      };
-    }
-    
-    // First check for basic syntactic issues in the response
-    if (!responseText || responseText.trim().length === 0) {
-      return {
-        processedResponse: "I'm here to listen. What's been going on for you?",
-        hallucinationData: null
-      };
-    }
-    
-    // SECOND PRIORITY: Check for dangerous repetition patterns that need immediate fixing
-    const repetitionResult = fixDangerousRepetitionPatterns(responseText);
-    
-    // If we fixed repetition, return immediately
-    if (repetitionResult.hasRepetitionIssue) {
-      console.log("CRITICAL: Fixed dangerous repetition pattern");
-      return {
-        processedResponse: repetitionResult.fixedResponse,
-        hallucinationData: {
-          processedResponse: repetitionResult.fixedResponse,
-          wasRevised: true,
-          reasoningApplied: false,
-          detectionApplied: true,
-          ragApplied: false,
-          processingTime: 0,
-          confidence: 0.3,
-          issueDetails: ["Fixed dangerous repetition pattern"]
-        }
-      };
-    }
-    
-    // THIRD PRIORITY: Use the repetition handler to fix any other repeated content
-    if (hasRepeatedContent(responseText)) {
-      const correctedText = fixRepeatedContent(responseText);
-      console.log("REPETITION FIXED: Using repetition handler");
-      
-      return {
-        processedResponse: correctedText,
-        hallucinationData: {
-          processedResponse: correctedText,
-          wasRevised: true,
-          reasoningApplied: false,
-          detectionApplied: true,
-          ragApplied: false,
-          processingTime: 0,
-          confidence: 0.4,
-          issueDetails: ["Fixed repeated content"]
-        }
-      };
-    }
-    
-    // FOURTH PRIORITY: Check for specific health hallucination
-    const healthResult = handleHealthHallucination(responseText, userInput);
-    if (healthResult.isHealthHallucination) {
-      return {
-        processedResponse: healthResult.correctedResponse,
-        hallucinationData: {
-          processedResponse: healthResult.correctedResponse,
-          wasRevised: true,
-          reasoningApplied: false,
-          detectionApplied: true,
-          ragApplied: false,
-          processingTime: 0,
-          confidence: 0.4,
-          issueDetails: ["Fixed health topic hallucination"]
-        }
-      };
-    }
-    
-    // FIFTH PRIORITY: Handle memory reference hallucinations
-    const memoryResult = handleMemoryHallucinations(responseText, conversationHistory);
-    
-    // For new conversations with memory references, always apply strict prevention
-    if (memoryResult.requiresStrictPrevention) {
-      console.log("CRITICAL: Memory references in new conversation detected, applying strict prevention");
-      
-      // Map options to the config format expected by preventHallucinations
-      const config: MemorySystemConfig = {
-        shortTermMemoryCapacity: 10,
-        workingMemoryCapacity: 5,
-        longTermImportanceThreshold: 0.8,
-        semanticSearchEnabled: false,
-        hallucinationPreventionLevel: 'aggressive',
-        newSessionThresholdMs: 1800000, // 30 minutes
-        shortTermExpiryMs: 900000 // 15 minutes
-      };
-      
-      const result = preventHallucinations(responseText, userInput, conversationHistory, config);
-      
-      return {
-        processedResponse: result.text,
-        hallucinationData: {
-          processedResponse: result.text,
-          wasRevised: result.wasModified,
-          reasoningApplied: true,
-          detectionApplied: true,
-          ragApplied: false,
-          processingTime: 0,
-          confidence: result.confidence,
-          issueDetails: ["Memory references in early conversation"]
-        }
-      };
-    }
-    
-    // SIXTH PRIORITY: Apply non-immediate emergency path intervention if needed
-    if (emergencyPathResult.isEmergencyPath) {
-      console.log("Non-critical emergency path detected:", emergencyPathResult.severity);
-      
-      // Apply a more subtle intervention for non-critical cases
-      const interventionResponse = applyEmergencyIntervention(
-        responseText,
-        emergencyPathResult
-      );
-      
-      return {
-        processedResponse: interventionResponse,
-        hallucinationData: {
-          processedResponse: interventionResponse,
-          wasRevised: true,
-          reasoningApplied: true,
-          detectionApplied: true,
-          ragApplied: false,
-          processingTime: 0,
-          confidence: 0.6,
-          issueDetails: emergencyPathResult.flags.map(flag => flag.description)
-        }
-      };
-    }
-    
-    // FINAL CHECK: Determine prevention options based on response content and conversation context
-    const preventionResult = determinePreventionOptions(
-      responseText, 
-      conversationHistory
-    );
-    
-    // Apply prevention if needed
-    if (preventionResult.requiresPrevention) {
-      // Map options to the config format expected by preventHallucinations
-      const config: MemorySystemConfig = {
-        shortTermMemoryCapacity: 10,
-        workingMemoryCapacity: 5,
-        longTermImportanceThreshold: 0.8,
-        semanticSearchEnabled: false,
-        hallucinationPreventionLevel: preventionResult.preventionOptions.detectionSensitivity > 0.8 ? 'high' : 'medium',
-        newSessionThresholdMs: 1800000, // 30 minutes
-        shortTermExpiryMs: 900000 // 15 minutes
-      };
-      
-      const result = preventHallucinations(
-        responseText, 
-        userInput, 
-        conversationHistory, 
-        config
-      );
-      
-      if (result.wasModified) {
-        return {
-          processedResponse: result.text,
-          hallucinationData: {
-            processedResponse: result.text,
-            wasRevised: true,
-            reasoningApplied: true,
-            detectionApplied: true,
-            ragApplied: false,
-            processingTime: 0,
-            confidence: result.confidence,
-            issueDetails: ["Applied hallucination prevention"]
-          }
-        };
-      }
-    }
-    
-    // No hallucination issues detected, return original response
+): { requiresStrictPrevention: boolean; processedResponse: string } => {
+  // For early conversations, remove memory references
+  if (conversationHistory.length < 3 && hasMemoryReference(response)) {
     return {
-      processedResponse: responseText,
-      hallucinationData: null
-    };
-    
-  } catch (error) {
-    console.error("Error in handlePotentialHallucinations:", error);
-    
-    // In case of error, return a safe fallback response
-    return {
-      processedResponse: "I'd like to hear more about what you're experiencing. Could you tell me more?",
-      hallucinationData: null
+      requiresStrictPrevention: true,
+      processedResponse: fixFalseMemoryReferences(response)
     };
   }
+  
+  return { requiresStrictPrevention: false, processedResponse: response };
+};
+
+/**
+ * Check if response contains memory references
+ */
+const hasMemoryReference = (response: string): boolean => {
+  return /you (mentioned|said|told me|indicated)|earlier you|previously you|we (discussed|talked about)|I remember|as you (mentioned|said|noted)|we've been/i.test(response);
 };

@@ -18,6 +18,7 @@ import {
 import { correctGrammar } from './grammarCorrection';
 import { selectResponseApproach, adjustApproachForConversationFlow } from './approachSelector';
 import { getRogerPerspectivePhrase } from '../personalityHelpers';
+import { isIntroduction, isSmallTalk, isPersonalSharing } from '../../masterRules';
 
 /**
  * Process a response through the core rules system
@@ -54,6 +55,11 @@ export const processCore = (
       /what\?|all|that's all|just happened|it was just|how does.*reflect|are you insinuating|not that deep|too much|simple|regular|come on|get real/i.test(msg)
     );
     
+    // Check if this is introduction, small talk or personal sharing using master rules
+    const isIntroductionContext = isIntroduction(userInput);
+    const isSmallTalkContext = isSmallTalk(userInput);
+    const isPersonalSharingContext = isPersonalSharing(userInput);
+    
     // Add Roger's personality perspective to appropriate responses - but NOT for everyday situations
     if (!isEverydaySituation && !resistanceToDeeperMeaning && Math.random() < 0.3) {
       const personalityPhrase = getRogerPerspectivePhrase(userInput, messageCount);
@@ -63,10 +69,12 @@ export const processCore = (
     }
     
     // Apply logotherapy integration ONLY if appropriate - now much more restrictive
-    if (approach.logotherapyStrength > 0.4 && !isEverydaySituation && !resistanceToDeeperMeaning) {
+    if (approach.logotherapyStrength > 0.4 && !isEverydaySituation && !resistanceToDeeperMeaning && 
+        !isIntroductionContext && !isSmallTalkContext) {
       console.log("APPLYING LOGOTHERAPY: Appropriate context for meaning-based approach");
       processedResponse = handleLogotherapyIntegration(processedResponse, userInput, conversationHistory);
-    } else if (isEverydaySituation || resistanceToDeeperMeaning || approach.logotherapyStrength < 0.1) {
+    } else if (isEverydaySituation || resistanceToDeeperMeaning || approach.logotherapyStrength < 0.1 || 
+               isIntroductionContext || isSmallTalkContext) {
       // For everyday situations or when resistance detected, use ZERO logotherapy content
       console.log("EVERYDAY SITUATION OR RESISTANCE DETECTED: Completely skipping logotherapy integration");
       // No logotherapy integration whatsoever for these cases
@@ -85,7 +93,7 @@ export const processCore = (
     
     // Add personality variation based on the selected approach
     // For everyday social situations, use maximum spontaneity and creativity
-    if (isEverydaySituation) {
+    if (isEverydaySituation || isSmallTalkContext) {
       console.log("EVERYDAY SITUATION: Using maximum spontaneity and conversational tone");
       processedResponse = addResponseVariety(
         processedResponse,

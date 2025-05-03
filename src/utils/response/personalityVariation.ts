@@ -14,6 +14,7 @@ import {
 } from './spontaneityGenerator';
 
 import { enhanceWithMeaningPerspective } from '../logotherapy/logotherapyIntegration';
+import { getRogerPersonalityInsight } from '../reflection/rogerPersonality';
 
 /**
  * Add variety to Roger's responses to prevent repetitive patterns
@@ -75,9 +76,19 @@ export const addResponseVariety = (
     // IMPORTANT: Only add meaning perspective for appropriate situations
     // Check if this is a casual/everyday situation
     const isCasualSituation = /spill(ed)?|embarrass|awkward|party|bar|drink|mess up|trip(ped)?|fall|fell|stumble|class|teacher|student|presentation/i.test(userInput.toLowerCase());
+    const resistanceToDeeperMeaning = /what\?|all|that's all|just happened|it was just|how does.*reflect|are you insinuating|not that deep|too much|simple|regular|come on|get real/i.test(userInput.toLowerCase());
     
-    if (!isCasualSituation && messageCount > 3) {
-      // Only apply meaning perspective to deeper conversations after initial exchange
+    // Add Roger's personality insight if appropriate and hasn't been added already
+    if (!isCasualSituation && !resistanceToDeeperMeaning && messageCount > 3 && Math.random() > 0.7) {
+      const personalityInsight = getRogerPersonalityInsight(userInput, '', messageCount > 30);
+      if (personalityInsight && !enhancedResponse.includes(personalityInsight)) {
+        enhancedResponse += personalityInsight;
+      }
+    }
+    
+    // Only apply meaning perspective to deeper conversations after initial exchange
+    // AND only when not in casual situations AND when no resistance detected
+    if (!isCasualSituation && !resistanceToDeeperMeaning && messageCount > 3) {
       enhancedResponse = enhanceWithMeaningPerspective(enhancedResponse, userInput);
     }
     
@@ -111,6 +122,11 @@ const selectAppropriatePersonality = (userInput: string): PersonalityMode => {
     return 'meaning-focused';
   }
   
+  // For Cleveland or Ohio references, use warm personality
+  if (/cleveland|ohio|midwest|cavs|browns|guardians/i.test(input)) {
+    return 'warm';
+  }
+  
   // Default to a random personality
   return getRandomPersonality();
 };
@@ -129,24 +145,25 @@ export const createPersonalityResponse = (
   userInput: string
 ): string => {
   try {
+    // Check if casual situation first
+    const isCasualSituation = /spill(ed)?|embarrass|awkward|party|bar|drink|mess up|trip(ped)?|fall|fell|stumble|class|teacher|student|presentation/i.test(userInput.toLowerCase());
+    
     // Generate a response with the specific personality
     const personalityResponse = generateEnhancedResponse(
       responseText,
       [],
-      75, // Higher spontaneity 
-      70, // Higher creativity
+      isCasualSituation ? 90 : 75, // Higher spontaneity for casual situations
+      isCasualSituation ? 85 : 70, // Higher creativity for casual situations
       personalityMode
     );
     
     // For casual situations, skip meaning enhancements
-    const isCasualSituation = /spill(ed)?|embarrass|awkward|party|bar|drink|mess up|trip(ped)?|fall|fell|stumble|class|teacher|student|presentation/i.test(userInput.toLowerCase());
-    
-    if (!isCasualSituation) {
-      // Only apply meaning perspective to deeper conversations
-      return enhanceWithMeaningPerspective(personalityResponse, userInput);
+    if (isCasualSituation) {
+      return personalityResponse;
     }
     
-    return personalityResponse;
+    // Only apply meaning perspective to deeper conversations
+    return enhanceWithMeaningPerspective(personalityResponse, userInput);
   } catch (error) {
     console.error('Error creating personality response:', error);
     return responseText;

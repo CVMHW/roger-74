@@ -8,6 +8,7 @@ import { enhanceResponse } from './responseEnhancer';
 import { detectPatterns } from './patternDetection';
 import { useFeedbackLoopHandler } from '../../response/feedbackLoopHandler';
 import { checkAllRules } from '../../../utils/rulesEnforcement/rulesEnforcer';
+import { isSmallTalk, isIntroduction, isPersonalSharing } from '../../../utils/masterRules';
 
 /**
  * Enhanced process user message with pattern-matching NLP capabilities,
@@ -51,6 +52,14 @@ export const processUserMessage = async (
     
     // Detect patterns for context-aware responses
     const patternResult = await detectPatterns(userInput);
+    
+    // Check for social situations using masterRules
+    const isSmallTalkContext = isSmallTalk(userInput);
+    const isIntroductionContext = isIntroduction(userInput);
+    const isPersonalSharingContext = isPersonalSharing(userInput);
+    
+    // Check if this is an everyday situation
+    const isEverydaySituation = /trip(ped)?|spill(ed)?|embarrass(ing|ed)?|awkward|class|teacher|student|bar|drink|fall|fell|stumble|social|party|date/i.test(userInput);
     
     // If this is the first substantive message, ensure we don't ask a redundant question
     if (isContentfulFirstMessage && patternResult.enhancedResponse) {
@@ -107,11 +116,18 @@ export const processUserMessage = async (
     );
     
     // Enhance the response with memory rules, master rules, and chat log review
+    // Pass information about message context for better response generation
     const finalResponseText = enhanceResponse(
       response.text,
       userInput,
       messageCount,
-      conversationHistory
+      conversationHistory,
+      { 
+        isEverydaySituation,
+        isSmallTalkContext,
+        isIntroductionContext,
+        isPersonalSharingContext
+      }
     );
     
     // Record to memory systems
@@ -129,7 +145,7 @@ export const processUserMessage = async (
     
     // Return a fallback response if an error occurs
     return Promise.resolve(createMessage(
-      "I remember what you've shared with me. Could you tell me more about what's been happening?", 
+      "I'm listening. Could you tell me more about what's been happening?", 
       'roger'
     ));
   }
