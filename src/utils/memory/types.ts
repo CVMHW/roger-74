@@ -1,4 +1,3 @@
-
 /**
  * Memory system types
  */

@@ -18,7 +18,8 @@ export type PersonalityMode =
   'gentle' |
   'grounded' |
   'existential' |  // Added for logotherapy integration
-  'meaning-focused'; // Added for logotherapy integration
+  'meaning-focused' | // Added for logotherapy integration
+  'warm-social';  // Added for social situations
 
 /**
  * Returns a random personality mode to vary response styles
@@ -27,7 +28,8 @@ export const getRandomPersonality = (): PersonalityMode => {
   const personalities: PersonalityMode[] = [
     'curious', 'empathetic', 'reflective', 'direct', 
     'analytical', 'warm', 'thoughtful', 'conversational',
-    'gentle', 'grounded', 'existential', 'meaning-focused'
+    'gentle', 'grounded', 'existential', 'meaning-focused',
+    'warm-social'
   ];
   
   return personalities[Math.floor(Math.random() * personalities.length)];
@@ -136,6 +138,14 @@ export const getSentenceStarters = (mode: PersonalityMode): string[] => {
         "Looking at how this connects to your values",
         "Considering how this situation relates to your life purpose"
       ];
+    case 'warm-social':
+      return [
+        "I get that", 
+        "That kind of situation", 
+        "Social moments like that", 
+        "Those interactions can be",
+        "In the moment that probably felt"
+      ];
     default:
       return [
         "I'm thinking", 
@@ -219,6 +229,11 @@ export const getTransitionPhrases = (mode: PersonalityMode): string[] => {
       "Another way to find meaning here might be", 
       "We could also consider how this connects to what you value most", 
       "Another aspect worth exploring is how this aligns with your purpose"
+    ],
+    'warm-social': [
+      "On a different note", 
+      "Something else about these situations", 
+      "What's also interesting"
     ]
   };
   
@@ -300,6 +315,11 @@ export const getClosingPhrases = (mode: PersonalityMode): string[] => {
       "What might this reveal about what truly matters to you?",
       "How might this experience be part of your larger life purpose?",
       "How does this connect to the meaning you're seeking in your life?"
+    ],
+    'warm-social': [
+      "What's something you'd like to share about these social moments?",
+      "How do these social interactions make you feel?",
+      "What's the most important thing you learned from these experiences?"
     ]
   };
   
@@ -368,6 +388,10 @@ export const getPersonalTouches = (mode: PersonalityMode): string[] => {
     'meaning-focused': [
       "I've found in my own life that these moments often reveal what matters most to us.",
       "I've noticed how these types of experiences can become turning points in our search for meaning."
+    ],
+    'warm-social': [
+      "I've spilled an entire drink at a party once.",
+      "I once tripped walking into a restaurant on a first date."
     ]
   };
   
@@ -459,6 +483,8 @@ export const generateSpontaneousPerspective = (
       return "These moments often invite us to reflect on what truly matters in our lives and what gives us meaning.";
     case 'meaning-focused':
       return "Even challenging experiences can reveal something meaningful about our values and what we care about most.";
+    case 'warm-social':
+      return "I get that, and these social moments can be really interesting. What do you think about them?";
     default:
       return "Our reactions to these situations often tell us something important about ourselves.";
   }

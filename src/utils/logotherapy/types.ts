@@ -28,4 +28,6 @@ export type PersonalityMode =
   | 'gentle' 
   | 'grounded' 
   | 'existential'
-  | 'meaning-focused';
+  | 'meaning-focused'
+  | 'warm-social'; // Added this missing personality type
+
