@@ -7,7 +7,7 @@
  */
 
 import { UNIVERSAL_LAW_MEANING_PURPOSE } from '../../../masterRules/universalLaws';
-import { getMeaningfulMemories } from '../../../memory/memoryBank';
+import { retrieveRelevantMemories } from '../../../memory/memoryBank';
 
 /**
  * Check for common logotherapy-related hallucinations
@@ -37,7 +37,7 @@ export const checkLogotherapyHallucinations = (
   const hasExperienceHallucination = fabricatedExperienceClaim.test(responseText);
   
   // Get actual meaningful memories from the memory system
-  const meaningfulMemories = getMeaningfulMemories(userInput, 3);
+  const meaningfulMemories = getMeaningfulMemoriesLocal(userInput, 3);
   
   // If we have hallucinations, correct them
   if (hasValueHallucination || hasMeaningSourceHallucination || hasExperienceHallucination) {
@@ -85,11 +85,28 @@ export const checkLogotherapyHallucinations = (
 };
 
 /**
- * Get meaningful memories from the MemoryBank
- * Placeholder function - in a real implementation, this would query the memory system
+ * Get meaningful memories from the MemoryBank - local implementation
+ * This is kept local to this file to avoid conflicts
  */
-export const getMeaningfulMemories = (userInput: string, count: number = 3): any[] => {
-  // This would normally connect to the memory system
-  // For now, return an empty array as a placeholder
-  return [];
+const getMeaningfulMemoriesLocal = (userInput: string, count: number = 3): any[] => {
+  try {
+    // Try to get relevant memories from the memory bank
+    const memories = retrieveRelevantMemories(userInput);
+    
+    // Filter for potentially meaningful memories
+    const meaningfulMemories = memories.filter(memory => {
+      const content = memory.content.toLowerCase();
+      return content.includes('meaning') || 
+             content.includes('purpose') || 
+             content.includes('value') ||
+             content.includes('important') ||
+             content.includes('significant') ||
+             content.includes('care about');
+    });
+    
+    return meaningfulMemories.slice(0, count);
+  } catch (error) {
+    console.error('Error retrieving meaningful memories:', error);
+    return [];
+  }
 };

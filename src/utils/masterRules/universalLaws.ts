@@ -1,4 +1,3 @@
-
 /**
  * Universal Laws - Highest priority rules that govern Roger's behavior
  * These laws take precedence over all other functionality and cannot be overridden
@@ -148,7 +147,6 @@ export const enforceUniversalLaws = (
 ): string => {
   // Import necessary functions
   const { addResponseVariety } = require('../response/personalityVariation');
-  const { enhanceWithLogotherapyPerspective } = require('../logotherapy/logotherapyIntegration');
   
   let processedResponse = response;
   

@@ -1,3 +1,4 @@
+
 /**
  * Logotherapy Integration Module
  * 
@@ -11,6 +12,20 @@ import { getContextualMemory } from '../nlpProcessor';
 import { getFiveResponseMemory } from '../memory/fiveResponseMemory';
 import { retrieveRelevantMemories } from '../memory/memoryBank';
 import { UNIVERSAL_LAW_MEMORY } from '../masterRules/universalLaws';
+
+// Interface for memory entries to fix TypeScript errors
+interface MemoryEntry {
+  content: string;
+  type: string;
+  timestamp: number;
+  importance: number;
+}
+
+interface MessageEntry {
+  sender: string;
+  content: string;
+  timestamp?: number;
+}
 
 /**
  * Integrate logotherapy into the adaptive response system
@@ -48,7 +63,7 @@ const leverageMemorySystems = (userInput: string): string[] => {
   
   try {
     // Check FiveResponseMemory for recent context
-    const fiveResponseMemory = getFiveResponseMemory();
+    const fiveResponseMemory = getFiveResponseMemory() as MessageEntry[];
     if (fiveResponseMemory.length > 0) {
       // Extract relevant patient statements from 5ResponseMemory
       const patientStatements = fiveResponseMemory
@@ -257,6 +272,9 @@ export const enhanceWithMeaningPerspective = (
     return `${beginning} ${enhancement} ${end}`;
   }
 };
+
+// Export this function explicitly for use in universalLaws.ts
+export const enhanceWithLogotherapyPerspective = enhanceWithMeaningPerspective;
 
 /**
  * Check if a response already has meaning-oriented language

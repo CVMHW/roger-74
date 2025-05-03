@@ -1,3 +1,4 @@
+
 /**
  * Logotherapy Integration for Response Processor
  * 
@@ -17,6 +18,13 @@ import {
   EXISTENTIAL_CONCEPTS 
 } from '../../masterRules/logotherapyLaws';
 import { UNIVERSAL_LAW_MEANING_PURPOSE } from '../../masterRules/universalLaws';
+
+// Define MessageEntry interface for FiveResponseMemory
+interface MessageEntry {
+  sender: string;
+  content: string;
+  timestamp?: number;
+}
 
 /**
  * Handle integration of logotherapy principles into responses
@@ -81,7 +89,7 @@ const determineLogotherapyPathway = (
   const lowerInput = userInput.toLowerCase();
   
   // Check recent conversation history for relevant themes
-  const recentHistory = getFiveResponseMemory();
+  const recentHistory = getFiveResponseMemory() as MessageEntry[];
   const recentPatientMessages = recentHistory
     .filter(msg => msg.sender === 'patient')
     .map(msg => msg.content.toLowerCase());
