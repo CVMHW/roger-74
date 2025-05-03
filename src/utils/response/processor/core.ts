@@ -16,7 +16,7 @@ import {
   generateSpontaneousResponse
 } from '../personalityVariation';
 import { correctGrammar } from './grammarCorrection';
-import { selectResponseApproach } from './approachSelector';
+import { selectResponseApproach, adjustApproachForConversationFlow } from './approachSelector';
 
 /**
  * Process a response through the core rules system
@@ -32,7 +32,9 @@ export const processCore = (
     
     // FIRST: Select the appropriate approach based on context
     // This determines how heavily to apply different aspects of Roger's training
-    const approach = selectResponseApproach(userInput, conversationHistory);
+    const initialApproach = selectResponseApproach(userInput, conversationHistory);
+    const approach = adjustApproachForConversationFlow(initialApproach, conversationHistory, messageCount);
+    
     console.log("Selected approach:", approach);
     
     let processedResponse = response;
@@ -44,7 +46,8 @@ export const processCore = (
       conversationHistory
     });
     
-    // Apply logotherapy integration - with strength based on selected approach
+    // Apply logotherapy integration ONLY if the approach strength warrants it
+    // This is key - don't apply logotherapy to everyday situations
     if (approach.logotherapyStrength > 0.3) {
       processedResponse = handleLogotherapyIntegration(processedResponse, userInput, conversationHistory);
     }
@@ -80,7 +83,7 @@ export const processCore = (
       // Apply unconditional rules as minimal safe processing
       const basicProcessed = applyUnconditionalRules(response, userInput, messageCount);
       // Apply grammar correction, but don't limit length in error cases
-      return correctGrammar(basicProcessed);
+      return correctGrammar(basicProcessed, userInput);
     } catch (nestedError) {
       console.error('Critical failure in response processing:', nestedError);
       return response; // Return original response if all processing fails

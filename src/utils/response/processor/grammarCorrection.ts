@@ -1,3 +1,4 @@
+
 /**
  * Grammar Correction System
  * 
@@ -20,29 +21,40 @@ export const correctGrammar = (response: string, userInput?: string): string => 
   
   let correctedResponse = response;
   
-  // Remove duplicated sentence starters and awkward transitions
+  // Remove duplicated sentence starters and awkward transitions - this is now more aggressive
   const duplicateStarters = [
-    /based on what you('re| are) sharing right now,?\s*/i,
-    /from what you('ve| have) shared,?\s*/i,
-    /looking at how this connects to your values,?\s*/i,
-    /when we look at what truly matters here,?\s*/i,
-    /what('s| is) also important,?\s*/i,
-    /related to this,?\s*/i,
-    /additionally,?\s*/i,
-    /another perspective is how this\s*/i,
-    /maybe there's a way\s*/i
+    /Based on what you('re| are) sharing right now,?\s*/i,
+    /From what you('ve| have) shared,?\s*/i,
+    /Looking at how this connects to your values,?\s*/i,
+    /When we look at what truly matters here,?\s*/i,
+    /What('s| is) also important,?\s*/i,
+    /Related to this,?\s*/i,
+    /Additionally,?\s*/i,
+    /Another perspective is how this\s*/i,
+    /Maybe there's a way\s*/i,
+    /Considering how this situation relates to your life purpose\s*/i,
+    /We could also consider\s*/i,
   ];
   
-  // Only keep one starter if multiple are present
-  let hasRemovedStarter = false;
+  // Find the first starter (if any) and remove all others
+  let foundFirstStarter = false;
   for (const pattern of duplicateStarters) {
-    if (pattern.test(correctedResponse) && !hasRemovedStarter) {
-      // Keep the first one we find
-      hasRemovedStarter = true;
-    } else if (pattern.test(correctedResponse)) {
-      // Remove additional starters
-      correctedResponse = correctedResponse.replace(pattern, "");
+    if (pattern.test(correctedResponse)) {
+      if (!foundFirstStarter) {
+        foundFirstStarter = true;
+      } else {
+        // Remove all additional starters
+        correctedResponse = correctedResponse.replace(pattern, "");
+      }
     }
+  }
+  
+  // If we have any of these starters at the beginning, let's remove them entirely
+  // for a more direct approach, especially with short messages
+  if (userInput && userInput.split(/\s+/).length < 20) {
+    correctedResponse = duplicateStarters.reduce((result, pattern) => {
+      return result.replace(pattern, "");
+    }, correctedResponse);
   }
   
   // Clean up sentence structure awkwardness
@@ -109,7 +121,7 @@ export const correctGrammar = (response: string, userInput?: string): string => 
 
 /**
  * Adjusts response length to be proportional to user input
- * Aims for a ratio of approximately 1.2-2.5x the user's message length
+ * Aims for a ratio of approximately 1.2-2.0x the user's message length
  * for normal messages, with exceptions for critical content
  */
 const adjustResponseLength = (response: string, userInput: string): string => {
@@ -121,9 +133,10 @@ const adjustResponseLength = (response: string, userInput: string): string => {
   const userWords = userInput.split(/\s+/).filter(Boolean).length;
   const responseWords = response.split(/\s+/).filter(Boolean).length;
   
-  // Target range: 1.2-2.5x user input length, with minimum of 5-10 words
+  // Target range: 1.2-2.0x user input length, with minimum of 5-10 words
+  // This is tighter than before to ensure more concise responses
   const minWords = Math.max(5, Math.round(userWords * 1.2));
-  const maxWords = Math.max(10, Math.round(userWords * 2.5));
+  const maxWords = Math.max(10, Math.round(userWords * 2.0));
   
   // If response is already in appropriate range, return as is
   if (responseWords >= minWords && responseWords <= maxWords) {
@@ -142,6 +155,7 @@ const adjustResponseLength = (response: string, userInput: string): string => {
 
 /**
  * Shortens a response to the target word count while keeping it coherent
+ * This version is more aggressive about shortening to match user brevity
  */
 const shortenResponse = (response: string, targetWordCount: number): string => {
   const sentences = response.match(/[^.!?]+[.!?]+/g) || [];

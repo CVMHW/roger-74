@@ -12,6 +12,7 @@ import { UNIVERSAL_LAW_MEANING_PURPOSE } from '../../../masterRules/universalLaw
 
 /**
  * Handle integration of logotherapy principles into responses
+ * Modified to be more appropriate for everyday conversations
  */
 export const handleLogotherapyIntegration = (
   response: string,
@@ -23,6 +24,20 @@ export const handleLogotherapyIntegration = (
   try {
     // Check if the response already has meaning-oriented content
     if (hasMeaningOrientation(response)) {
+      return response;
+    }
+    
+    // Check for resistance to existential themes in conversation history
+    const hasExistentialResistance = conversationHistory.some(msg => 
+      /just a (simple|regular)|come on|i('m| am) just|get real|not that deep|too much/i.test(msg)
+    );
+    
+    // For everyday situations like spilling a drink, skip heavy meaning stuff
+    const isEverydaySituation = /spill(ed)?|embarrass|awkward|party|bar|drink|mess up/i.test(userInput.toLowerCase());
+    
+    // If user is resistant or we're dealing with everyday stuff, use minimal meaning perspective
+    if (hasExistentialResistance || isEverydaySituation) {
+      // For these situations, skip meaning integration entirely
       return response;
     }
     
@@ -39,7 +54,12 @@ export const handleLogotherapyIntegration = (
       return integrateLogotherapyResponse(userInput, response);
     }
     
-    // Otherwise, use subtle meaning enhancement
+    // For everything else, use very subtle meaning enhancement or none at all
+    // For short inputs, skip meaning enhancement entirely
+    if (userInput.split(/\s+/).length <= 15) {
+      return response;
+    }
+    
     return enhanceWithMeaningPerspective(response, userInput);
     
   } catch (error) {

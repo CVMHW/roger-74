@@ -20,7 +20,7 @@ import { enhanceWithMeaningPerspective } from '../logotherapy/logotherapyIntegra
  * 
  * This function ensures responses have natural variation, spontaneity,
  * and authentic personality while incorporating meaning and purpose
- * as a universal principle.
+ * as appropriate for the context.
  * 
  * @param responseText Base response to enhance
  * @param userInput User's input to consider for context
@@ -38,14 +38,8 @@ export const addResponseVariety = (
   try {
     console.log("Adding personality variation and spontaneity to response");
     
-    // Select a personality mode, favoring existential modes occasionally
-    let personalityMode: PersonalityMode = getRandomPersonality();
-    
-    // Increase chance of meaning-focused modes
-    const shouldUseExistentialMode = Math.random() < 0.25; // 25% chance
-    if (shouldUseExistentialMode) {
-      personalityMode = Math.random() < 0.5 ? 'existential' : 'meaning-focused';
-    }
+    // Select a personality mode based on user input content
+    let personalityMode: PersonalityMode = selectAppropriatePersonality(userInput);
     
     console.log(`Selected personality mode: ${personalityMode}`);
     
@@ -78,16 +72,47 @@ export const addResponseVariety = (
       console.log("Enhanced response with moderate spontaneity");
     }
     
-    // UNIVERSAL LAW: Ensure meaning perspective is included
-    const finalResponse = enhanceWithMeaningPerspective(enhancedResponse, userInput);
+    // IMPORTANT: Only add meaning perspective for appropriate situations
+    // Check if this is a casual/everyday situation
+    const isCasualSituation = /spill(ed)?|embarrass|awkward|party|bar|drink|mess up/i.test(userInput.toLowerCase());
     
-    return finalResponse;
+    if (!isCasualSituation && messageCount > 3) {
+      // Only apply meaning perspective to deeper conversations after initial exchange
+      enhancedResponse = enhanceWithMeaningPerspective(enhancedResponse, userInput);
+    }
+    
+    return enhancedResponse;
   } catch (error) {
     console.error('Error in addResponseVariety:', error);
     
     // Ensure we always return at least the original response if there's an error
     return responseText;
   }
+};
+
+/**
+ * Select appropriate personality based on user input content
+ */
+const selectAppropriatePersonality = (userInput: string): PersonalityMode => {
+  const input = userInput.toLowerCase();
+  
+  // For casual/social situations, use warm-social personality
+  if (/spill(ed)?|embarrass|awkward|party|bar|drink|girl|guy|cute|dating/i.test(input)) {
+    return 'warm-social';
+  }
+  
+  // For emotional content, use empathetic
+  if (/sad|angry|upset|hurt|feel|emotion|pain/i.test(input)) {
+    return 'empathetic';
+  }
+  
+  // For deeper existential questions, use meaning-focused
+  if (/meaning|purpose|life|exist|why am i|why are we|point of/i.test(input)) {
+    return 'meaning-focused';
+  }
+  
+  // Default to a random personality
+  return getRandomPersonality();
 };
 
 /**
@@ -113,8 +138,15 @@ export const createPersonalityResponse = (
       personalityMode
     );
     
-    // UNIVERSAL LAW: Ensure meaning perspective is included
-    return enhanceWithMeaningPerspective(personalityResponse, userInput);
+    // For casual situations, skip meaning enhancements
+    const isCasualSituation = /spill(ed)?|embarrass|awkward|party|bar|drink|mess up/i.test(userInput.toLowerCase());
+    
+    if (!isCasualSituation) {
+      // Only apply meaning perspective to deeper conversations
+      return enhanceWithMeaningPerspective(personalityResponse, userInput);
+    }
+    
+    return personalityResponse;
   } catch (error) {
     console.error('Error creating personality response:', error);
     return responseText;

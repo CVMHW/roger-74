@@ -44,21 +44,21 @@ export const selectResponseApproach = (
     };
   }
   
-  // Detect everyday frustrations
+  // Detect everyday frustrations and embarrassments - prioritize this for social stories
   if (/spill(ed)?|embarrass(ed|ing)?|awkward|screw(ed)? up|mistake|mess(ed)? up/i.test(input)) {
     return {
-      logotherapyStrength: 0.2, // Little meaning focus for everyday issues
-      spontaneityLevel: 70,     // Higher spontaneity
-      creativityLevel: 65,      // Moderate creativity
+      logotherapyStrength: 0.1, // Very low meaning focus for everyday issues
+      spontaneityLevel: 80,     // Higher spontaneity
+      creativityLevel: 70,      // Higher creativity
       type: 'everydayFrustration'
     };
   }
   
   // Detect cultural/class references
-  if (/college|education|class|worker|labor|job|social class|rich|poor|privilege/i.test(input)) {
+  if (/college|education|class|worker|labor|job|social class|rich|poor|privilege|construction/i.test(input)) {
     return {
-      logotherapyStrength: 0.3, // Moderate meaning focus
-      spontaneityLevel: 60,     // Moderate spontaneity
+      logotherapyStrength: 0.2, // Lower meaning focus
+      spontaneityLevel: 70,     // Higher spontaneity
       creativityLevel: 65,      // Moderate creativity
       type: 'cultural'
     };
@@ -77,7 +77,7 @@ export const selectResponseApproach = (
   // Detect explicit existential/meaning questions
   if (/meaning|purpose|life|exist|why am i|why are we|point of|reason for/i.test(input)) {
     return {
-      logotherapyStrength: 0.9, // Very high meaning focus
+      logotherapyStrength: 0.8, // High meaning focus, but not overwhelming
       spontaneityLevel: 50,     // Moderate spontaneity
       creativityLevel: 60,      // Moderate-high creativity
       type: 'existential'
@@ -87,10 +87,20 @@ export const selectResponseApproach = (
   // Detect practical problems
   if (/how (do|can|should) i|what should i do|steps to|way to|help me/i.test(input)) {
     return {
-      logotherapyStrength: 0.4, // Moderate meaning focus
+      logotherapyStrength: 0.3, // Lower meaning focus
       spontaneityLevel: 60,     // Moderate spontaneity
       creativityLevel: 55,      // Moderate creativity
       type: 'practical'
+    };
+  }
+  
+  // Look for casual social interactions that may not fit other categories
+  if (/bar|drink|party|date|dating|girl|guy|cute|talk to/i.test(input)) {
+    return {
+      logotherapyStrength: 0.1, // Very low meaning focus
+      spontaneityLevel: 85,     // Very high spontaneity
+      creativityLevel: 80,      // High creativity
+      type: 'smalltalk'
     };
   }
   
@@ -102,7 +112,7 @@ export const selectResponseApproach = (
     
     if (['sad', 'depressed', 'grieving'].includes(primaryEmotion)) {
       return {
-        logotherapyStrength: 0.6, // Higher meaning focus for sadness
+        logotherapyStrength: 0.5, // Moderate meaning focus for sadness (not too high)
         spontaneityLevel: 45,     // Lower spontaneity for serious emotion
         creativityLevel: 50,      // Moderate creativity
         type: 'rogerian'
@@ -111,7 +121,7 @@ export const selectResponseApproach = (
     
     if (['anxious', 'scared', 'worried'].includes(primaryEmotion)) {
       return {
-        logotherapyStrength: 0.5, // Moderate meaning focus
+        logotherapyStrength: 0.3, // Lower meaning focus for anxiety
         spontaneityLevel: 40,     // Lower spontaneity for anxiety
         creativityLevel: 45,      // Lower creativity
         type: 'rogerian'
@@ -120,8 +130,8 @@ export const selectResponseApproach = (
     
     if (['angry', 'frustrated', 'irritated'].includes(primaryEmotion)) {
       return {
-        logotherapyStrength: 0.3, // Lower meaning focus for anger
-        spontaneityLevel: 50,     // Moderate spontaneity
+        logotherapyStrength: 0.2, // Lower meaning focus for anger
+        spontaneityLevel: 60,     // Moderate spontaneity
         creativityLevel: 55,      // Moderate creativity
         type: 'rogerian'
       };
@@ -130,15 +140,15 @@ export const selectResponseApproach = (
   
   // Default balanced approach
   return {
-    logotherapyStrength: 0.4, // Moderate meaning focus
-    spontaneityLevel: 60,     // Moderate spontaneity
+    logotherapyStrength: 0.3, // Lower default meaning focus
+    spontaneityLevel: 65,     // Slightly higher spontaneity
     creativityLevel: 60,      // Moderate creativity
     type: 'rogerian'
   };
 };
 
 /**
- * Adjust approach based on conversation progression
+ * Adjust approach based on conversation progression and message content
  */
 export const adjustApproachForConversationFlow = (
   approach: ResponseApproach,
@@ -149,19 +159,30 @@ export const adjustApproachForConversationFlow = (
   
   // Early in conversation - more conventional
   if (messageCount < 3) {
-    adjustedApproach.logotherapyStrength = Math.min(adjustedApproach.logotherapyStrength, 0.3);
-    adjustedApproach.spontaneityLevel = Math.min(adjustedApproach.spontaneityLevel, 50);
+    adjustedApproach.logotherapyStrength = Math.min(adjustedApproach.logotherapyStrength, 0.2);
+    adjustedApproach.spontaneityLevel = Math.min(adjustedApproach.spontaneityLevel, 70);
   }
   
   // Multiple short user responses may indicate disengagement
   const hasMultipleShortResponses = conversationHistory
     .slice(-3)
-    .filter(msg => msg.split(/\s+/).length < 5)
+    .filter(msg => msg.split(/\s+/).length < 7)
     .length >= 2;
   
   if (hasMultipleShortResponses) {
-    adjustedApproach.logotherapyStrength = Math.min(adjustedApproach.logotherapyStrength, 0.2);
-    adjustedApproach.spontaneityLevel = Math.min(70, adjustedApproach.spontaneityLevel + 10);
+    adjustedApproach.logotherapyStrength = Math.min(adjustedApproach.logotherapyStrength, 0.1);
+    adjustedApproach.spontaneityLevel = Math.min(80, adjustedApproach.spontaneityLevel + 15);
+  }
+  
+  // Detect resistance to existential approaches
+  const hasExistentialResistance = conversationHistory.some(msg => 
+    /just a (simple|regular)|come on|i('m| am) just|get real|not that deep|too much/i.test(msg)
+  );
+  
+  if (hasExistentialResistance) {
+    // Dramatically reduce existential/meaning focus
+    adjustedApproach.logotherapyStrength = Math.min(adjustedApproach.logotherapyStrength, 0.1);
+    adjustedApproach.spontaneityLevel = Math.min(85, adjustedApproach.spontaneityLevel + 20);
   }
   
   return adjustedApproach;
