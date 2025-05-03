@@ -27,9 +27,27 @@ export const detectHallucinations = (
   const flags = [];
   let confidenceScore = 1.0; // Start with high confidence
   
-  // CRITICAL: First specifically check for "we've been focusing on health" hallucination
+  // CRITICAL: First specifically check for repetition patterns like "I hear you're dealing with I hear you're dealing with"
+  const repetitionPatterns = [
+    /I hear (you'?re|you are) dealing with I hear (you'?re|you are) dealing with/i,
+    /I remember (you|your|we) I remember (you|your|we)/i,
+    /you (mentioned|said|told me) you (mentioned|said|told me)/i
+  ];
+  
+  for (const pattern of repetitionPatterns) {
+    if (pattern.test(responseText)) {
+      flags.push({
+        type: 'repetition',
+        severity: 'high',
+        description: 'Repeated phrases in response indicating model confusion'
+      });
+      confidenceScore -= 0.7; // Heavy penalty for dangerous repetition
+    }
+  }
+  
+  // CRITICAL: Check for "we've been focusing on health" hallucination
   // This is a special case that's occurring frequently
-  if (/we've been focusing on health/i.test(responseText) && 
+  if (/we've been focusing on health|dealing with health|focusing on health/i.test(responseText) && 
       !conversationHistory.some(msg => /health|medical|doctor|sick|ill|wellness/i.test(msg))) {
     flags.push({
       type: 'false_continuity',

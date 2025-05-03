@@ -24,7 +24,7 @@ export const detectPatterns = async (userInput: string): Promise<{
     
     // Extract topics from the current message
     const currentTopics = feelingResult.topics || [];
-    const currentFeelings = feelingResult.detectedFeelings || [];
+    const currentFeelings = feelingResult.feelings || []; // Fixed property name
     
     // For initial messages, create a response based on current input only
     if (currentTopics.length > 0 || currentFeelings.length > 0) {
@@ -95,7 +95,7 @@ export const detectPatterns = async (userInput: string): Promise<{
         if (enhancedResponse) {
           enhancedResponse += "I also notice we've been talking about ";
         } else {
-          enhancedResponse = "I remember we've been focusing on ";
+          enhancedResponse = "I notice we've been focusing on ";
         }
         enhancedResponse += `${dominantTopics.join(", ")}. `;
       }

@@ -20,6 +20,51 @@ export const handlePotentialHallucinations = (
   hallucinationData: HallucinationProcessResult | null;
 } => {
   try {
+    // First check for dangerous repetition patterns like "I hear you're dealing with I hear you're dealing with"
+    const repetitionPatterns = [
+      {
+        pattern: /(I hear (you'?re|you are) dealing with) I hear (you'?re|you are) dealing with/i,
+        replacement: '$1'
+      },
+      {
+        pattern: /(I remember (you|your|we)) I remember (you|your|we)/i,
+        replacement: '$1'
+      },
+      {
+        pattern: /(you (mentioned|said|told me)) you (mentioned|said|told me)/i,
+        replacement: '$1'
+      }
+    ];
+    
+    let fixedResponse = responseText;
+    let hasRepetitionIssue = false;
+    
+    // Apply repetition fixes immediately
+    for (const { pattern, replacement } of repetitionPatterns) {
+      if (pattern.test(fixedResponse)) {
+        console.warn("REPETITION DETECTED: Fixing repeated phrases");
+        fixedResponse = fixedResponse.replace(pattern, replacement);
+        hasRepetitionIssue = true;
+      }
+    }
+    
+    // If we fixed repetition, return immediately
+    if (hasRepetitionIssue) {
+      return {
+        processedResponse: fixedResponse,
+        hallucinationData: {
+          processedResponse: fixedResponse,
+          wasRevised: true,
+          reasoningApplied: false,
+          detectionApplied: true,
+          ragApplied: false,
+          processingTime: 0,
+          confidence: 0.3,
+          issueDetails: ["Fixed dangerous repetition pattern"]
+        }
+      };
+    }
+    
     // Track if we have a potential memory reference
     const containsMemoryReference = /I remember|you mentioned|you told me|you said|earlier you|previously you|we talked about|we discussed|we've been|you shared|as I recall/i.test(responseText);
     
@@ -47,13 +92,41 @@ export const handlePotentialHallucinations = (
       };
     }
     
+    // Check for the "health" hallucination specifically
+    const healthHallucinationPattern = /dealing with health|focusing on health|talking about health/i;
+    if (healthHallucinationPattern.test(responseText) && 
+        !conversationHistory.some(msg => /health|medical|doctor|sick|ill|wellness/i.test(msg))) {
+      
+      console.log("SPECIFIC HEALTH HALLUCINATION DETECTED: Fixing directly");
+      
+      // Direct fix for the health hallucination
+      const correctedResponse = responseText.replace(
+        healthHallucinationPattern,
+        "dealing with this situation"
+      );
+      
+      return {
+        processedResponse: correctedResponse,
+        hallucinationData: {
+          processedResponse: correctedResponse,
+          wasRevised: true,
+          reasoningApplied: false,
+          detectionApplied: true,
+          ragApplied: false,
+          processingTime: 0,
+          confidence: 0.4,
+          issueDetails: ["Fixed health topic hallucination"]
+        }
+      };
+    }
+    
     // For responses with potential repetition, apply special prevention focused on repetition
     if (detectRepeatedPhrases(responseText)) {
       console.log("REPETITION DETECTED: Applying specialized repetition correction");
       
       // Use options focused on repetition detection
       const hallucinationResult = preventHallucinations(responseText, userInput, conversationHistory, {
-        detectionSensitivity: 0.8,
+        detectionSensitivity: 0.9,
         enableReasoning: false,
         enableRAG: false,
         enableTokenLevelDetection: false,
@@ -73,7 +146,7 @@ export const handlePotentialHallucinations = (
         enableReasoning: true,
         enableRAG: true,
         enableDetection: true,
-        detectionSensitivity: 0.65,
+        detectionSensitivity: 0.75,
         reasoningThreshold: 0.7,
         enableTokenLevelDetection: true
       };
@@ -92,7 +165,7 @@ export const handlePotentialHallucinations = (
       enableReasoning: false,
       enableRAG: false,
       enableDetection: true,
-      detectionSensitivity: 0.4,
+      detectionSensitivity: 0.5,
       enableTokenLevelDetection: false
     });
     

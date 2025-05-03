@@ -37,22 +37,69 @@ export const checkAndFixHallucinations = (
   // If this is a new conversation, be VERY cautious about memory claims
   const isNewConversation = conversationHistory.length <= 2;
   
-  // Run full detection
-  const hallucinationCheck = detectHallucinations(responseText, userInput, conversationHistory);
+  // First check for repetition patterns that need immediate fixing
+  const repetitionPatterns = [
+    {
+      pattern: /(I hear (you'?re|you are) dealing with) I hear (you'?re|you are) dealing with/i,
+      replacement: '$1'
+    },
+    {
+      pattern: /(I remember (you|your|we)) I remember (you|your|we)/i,
+      replacement: '$1'
+    },
+    {
+      pattern: /(you (mentioned|said|told me)) you (mentioned|said|told me)/i,
+      replacement: '$1'
+    }
+  ];
   
-  // In new conversations, be extra strict about hallucinations
-  const hallucinationThreshold = isNewConversation ? 0.7 : 0.6;
+  let fixedResponse = responseText;
+  let hasRepetitionIssue = false;
+  
+  // Apply repetition fixes first
+  for (const { pattern, replacement } of repetitionPatterns) {
+    if (pattern.test(fixedResponse)) {
+      console.warn("REPETITION DETECTED: Fixing repeated phrases");
+      fixedResponse = fixedResponse.replace(pattern, replacement);
+      hasRepetitionIssue = true;
+    }
+  }
+  
+  // If we already fixed repetition, return the result
+  if (hasRepetitionIssue) {
+    return {
+      correctedResponse: fixedResponse,
+      wasHallucination: true,
+      hallucinationDetails: {
+        content: responseText,
+        confidenceScore: 0.3,
+        hallucination: true,
+        flags: [{
+          type: 'repetition',
+          severity: 'high',
+          description: 'Repeated phrases in response indicating model confusion'
+        }]
+      }
+    };
+  }
   
   // CRITICAL: Detect and fix false memory references like "we've been focusing on"
   const falseContinuityPattern = /(?:we've been focusing on|we've been discussing|we've been talking about|as we discussed|we were discussing|we talked about earlier) (?:your|the|about|how|what|why)?\s*([a-zA-Z\s]+)/gi;
+  const healthTopicPattern = /dealing with health|focusing on health|talking about health/i;
   
-  if (falseContinuityPattern.test(responseText) && isNewConversation) {
+  if ((falseContinuityPattern.test(responseText) || healthTopicPattern.test(responseText)) && isNewConversation) {
     console.warn("FALSE CONTINUITY DETECTED: New conversation with false continuity claim");
     
     // Replace the false memory reference
-    const correctedResponse = responseText.replace(
+    let correctedResponse = responseText.replace(
       falseContinuityPattern,
       "I hear you're dealing with $1"
+    );
+    
+    // Also fix specific health hallucination
+    correctedResponse = correctedResponse.replace(
+      healthTopicPattern,
+      "dealing with this situation"
     );
     
     return {
@@ -70,6 +117,12 @@ export const checkAndFixHallucinations = (
       }
     };
   }
+  
+  // Run full detection
+  const hallucinationCheck = detectHallucinations(responseText, userInput, conversationHistory);
+  
+  // In new conversations, be extra strict about hallucinations
+  const hallucinationThreshold = isNewConversation ? 0.7 : 0.6;
   
   if (hallucinationCheck.hallucination || 
       hallucinationCheck.confidenceScore < hallucinationThreshold ||
