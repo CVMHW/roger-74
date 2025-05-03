@@ -5,10 +5,14 @@
  * This module provides a comprehensive review of the entire chat log
  * before each response to ensure continuity, understanding, and adherence
  * to patient needs and concerns.
+ * 
+ * ENHANCED: Now integrated with advanced MemoryBank architecture
  */
 
 import { recordToMemory, getAllMemory } from '../nlpProcessor';
 import { addToFiveResponseMemory } from '../memory/fiveResponseMemory';
+import { addToMemoryBank, retrieveRelevantMemories } from '../memory/memoryBank';
+import { processWithMultiHeadAttention } from '../memory/multiHeadAttention';
 
 /**
  * Process a response through comprehensive chat log review
@@ -32,15 +36,21 @@ export const processThroughChatLogReview = (
       return proposedResponse;
     }
     
-    // Step 1: Identify key topics from conversation history
-    const keyTopics = identifyKeyTopics(conversationHistory);
+    // Step 1: Process with multi-head attention for comprehensive context
+    const attentionResults = processWithMultiHeadAttention(
+      currentUserInput,
+      conversationHistory
+    );
+    
+    // Step 2: Identify key topics from attention results
+    const keyTopics = attentionResults.dominantTopics;
     console.log("TERTIARY SAFEGUARD: Identified key topics:", keyTopics);
     
-    // Step 2: Detect any unaddressed concerns from previous messages
+    // Step 3: Detect any unaddressed concerns from previous messages
     const unaddressedConcerns = detectUnaddressedConcerns(conversationHistory);
     console.log("TERTIARY SAFEGUARD: Unaddressed concerns:", unaddressedConcerns);
     
-    // Step 3: Check for potential misunderstandings
+    // Step 4: Check for potential misunderstandings
     const potentialMisunderstandings = identifyPotentialMisunderstandings(
       conversationHistory,
       currentUserInput,
@@ -48,7 +58,16 @@ export const processThroughChatLogReview = (
     );
     console.log("TERTIARY SAFEGUARD: Potential misunderstandings:", potentialMisunderstandings);
     
-    // Step 4: Enhance response based on findings
+    // Step 5: Retrieve relevant memories from MemoryBank
+    const relevantMemories = retrieveRelevantMemories(
+      currentUserInput,
+      keyTopics,
+      attentionResults.emotionalContext
+    );
+    console.log("TERTIARY SAFEGUARD: Retrieved relevant memories:", 
+      relevantMemories.length > 0 ? "Yes" : "None");
+    
+    // Step 6: Enhance response based on findings
     let enhancedResponse = proposedResponse;
     
     // Add acknowledgment of unaddressed concerns if needed
@@ -84,11 +103,29 @@ export const processThroughChatLogReview = (
       enhancedResponse = continuityPhrase + enhancedResponse;
     }
     
-    // Record the enhancement to both memory systems
+    // Ensure memory reference if none exists yet
+    if (!enhancedResponse.toLowerCase().includes("remember") && 
+        !enhancedResponse.toLowerCase().includes("mentioned") &&
+        !enhancedResponse.toLowerCase().includes("earlier") &&
+        relevantMemories.length > 0) {
+      
+      const memoryRef = relevantMemories[0];
+      const memoryPhrase = `I remember you mentioned "${memoryRef.content.substring(0, 20)}..." `;
+      enhancedResponse = memoryPhrase + enhancedResponse;
+    }
+    
+    // Record the enhancement to all memory systems
     if (enhancedResponse !== proposedResponse) {
       console.log("TERTIARY SAFEGUARD: Enhanced response based on chat log review");
       recordToMemory(currentUserInput, enhancedResponse);
       addToFiveResponseMemory('roger', enhancedResponse);
+      addToMemoryBank(
+        enhancedResponse, 
+        'roger', 
+        attentionResults.emotionalContext, 
+        attentionResults.dominantTopics,
+        0.8 // High importance for enhanced responses
+      );
     }
     
     return enhancedResponse;

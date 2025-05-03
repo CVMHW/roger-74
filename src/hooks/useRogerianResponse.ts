@@ -1,13 +1,18 @@
 
 /**
  * This file serves as a configuration entry point for the Rogerian response system.
- * It now incorporates TRIPLE MEMORY PROTECTION with:
+ * It now incorporates QUAD MEMORY PROTECTION with:
  * 1. Primary NLP memory system
  * 2. 5ResponseMemory backup system
  * 3. Comprehensive chat log review (tertiary safeguard)
+ * 4. Advanced MemoryBank with multi-head attention (LM2-inspired)
  */
 
 import useRogerianResponse from './rogerianResponse';
+import { initializeMemoryBank } from '../utils/memory/memoryBank';
 
-// Export the hook with the new tertiary safeguard that ensures complete chat log review
+// Initialize the advanced MemoryBank system
+initializeMemoryBank();
+
+// Export the hook with all memory safeguards
 export default useRogerianResponse;

@@ -12,6 +12,9 @@ import { getContextualMemory } from '../nlpProcessor';
 import { applyMemoryRules } from '../rulesEnforcement/memoryEnforcer';
 import { checkAllRules } from '../rulesEnforcement/rulesEnforcer';
 import { addToFiveResponseMemory, getLastPatientMessage, getFiveResponseMemory, verifyFiveResponseMemorySystem } from '../memory/fiveResponseMemory';
+import { processThroughChatLogReview } from './chatLogReviewer';
+import { addToMemoryBank, retrieveRelevantMemories } from '../memory/memoryBank';
+import { processWithMultiHeadAttention } from '../memory/multiHeadAttention';
 
 /**
  * Process any response through the MasterRules system
@@ -30,7 +33,7 @@ export const processResponseThroughMasterRules = (
   try {
     console.log("MASTER RULES: Beginning response processing");
     
-    // CRITICAL: First verify the 5ResponseMemory system is operational
+    // CRITICAL: First verify that all memory systems are operational
     const fiveResponseMemoryOperational = verifyFiveResponseMemorySystem();
     if (!fiveResponseMemoryOperational) {
       console.error("CRITICAL: 5ResponseMemory system failure detected");
@@ -38,6 +41,18 @@ export const processResponseThroughMasterRules = (
     
     // MANDATORY: Check all system rules first
     checkAllRules();
+    
+    // CRITICAL: Process input through multi-head attention system
+    const attentionResults = processWithMultiHeadAttention(userInput, conversationHistory);
+    
+    // CRITICAL: Record to MemoryBank system - most advanced memory system
+    addToMemoryBank(
+      userInput, 
+      'patient', 
+      attentionResults.emotionalContext,
+      attentionResults.dominantTopics,
+      0.8 // High importance for user inputs
+    );
     
     // CRITICAL: Record to 5ResponseMemory system - redundant protection
     addToFiveResponseMemory('patient', userInput);
@@ -68,11 +83,33 @@ export const processResponseThroughMasterRules = (
       conversationHistory
     );
     
-    // FINAL CHECK: Verify response meets all requirements through both systems
-    const primaryMemoryCheck = verifyMemoryUtilization(userInput, enhancedResponse, conversationHistory);
+    // NEW: Apply MemoryBank enhancement for deeper personalization
+    const memoryBankEnhancedResponse = enhanceWithMemoryBank(
+      enhancedResponse,
+      userInput,
+      attentionResults.relevantMemories,
+      conversationHistory
+    );
     
-    // CRITICAL: Record final response to 5ResponseMemory system
-    addToFiveResponseMemory('roger', enhancedResponse);
+    // TERTIARY SAFEGUARD: Process through comprehensive chat log review
+    const reviewedResponse = processThroughChatLogReview(
+      memoryBankEnhancedResponse,
+      userInput,
+      conversationHistory
+    );
+    
+    // FINAL CHECK: Verify response meets all requirements through all systems
+    const primaryMemoryCheck = verifyMemoryUtilization(userInput, reviewedResponse, conversationHistory);
+    
+    // CRITICAL: Record final response to all memory systems
+    addToMemoryBank(
+      reviewedResponse, 
+      'roger', 
+      attentionResults.emotionalContext,
+      attentionResults.dominantTopics,
+      0.7 // Good importance for roger responses
+    );
+    addToFiveResponseMemory('roger', reviewedResponse);
     
     // BACKUP CHECK: Use 5ResponseMemory as a verification system
     const fiveMemory = getFiveResponseMemory();
@@ -81,21 +118,29 @@ export const processResponseThroughMasterRules = (
     if (!primaryMemoryCheck) {
       console.error("CRITICAL ERROR: Final response fails primary memory verification");
       
-      // Last-resort fix - add explicit memory reference using either system
-      // First try 5ResponseMemory as it's our redundant system
+      // Last-resort fix - add explicit memory reference using the best available system
+      const relevantMemories = retrieveRelevantMemories(userInput);
+      
+      if (relevantMemories.length > 0) {
+        // Use the most relevant memory from MemoryBank
+        const topMemory = relevantMemories[0];
+        return `I remember you mentioned "${topMemory.content.substring(0, 30)}..." ${reviewedResponse}`;
+      } 
+      
+      // Try 5ResponseMemory next
       if (hasFiveResponseMemory) {
         const lastPatientMsg = getLastPatientMessage();
         if (lastPatientMsg) {
-          return `I remember you mentioned ${lastPatientMsg.substring(0, 20)}... ${enhancedResponse}`;
+          return `I remember you mentioned ${lastPatientMsg.substring(0, 20)}... ${reviewedResponse}`;
         }
       }
       
       // Fallback to primary memory system
       const memory = getContextualMemory(userInput);
-      return `I remember you mentioned ${memory.dominantTopics[0] || 'your concerns'} earlier. ${enhancedResponse}`;
+      return `I remember you mentioned ${memory.dominantTopics[0] || 'your concerns'} earlier. ${reviewedResponse}`;
     }
     
-    return enhancedResponse;
+    return reviewedResponse;
   } catch (error) {
     console.error('Error in processing response through master rules:', error);
     
@@ -107,13 +152,23 @@ export const processResponseThroughMasterRules = (
       // CRITICAL: Use 5ResponseMemory as backup even in error case
       addToFiveResponseMemory('patient', userInput);
       addToFiveResponseMemory('roger', response);
+      
+      // CRITICAL: Use MemoryBank as backup even in error case
+      addToMemoryBank(userInput, 'patient');
+      addToMemoryBank(response, 'roger');
     } catch (memoryError) {
       console.error('Failed to enforce memory rule during error recovery:', memoryError);
     }
     
-    // Double-redundant error recovery using both memory systems
+    // Triple-redundant error recovery using all memory systems
     try {
-      // Try to get memory from 5ResponseMemory system first (our most robust backup)
+      // Try to get memory from most advanced system first (MemoryBank)
+      const relevantMemories = retrieveRelevantMemories(userInput);
+      if (relevantMemories.length > 0) {
+        return `I remember what you said about "${relevantMemories[0].content.substring(0, 20)}..." ${response}`;
+      }
+      
+      // Try to get memory from 5ResponseMemory system next
       const lastPatientMessage = getLastPatientMessage();
       if (lastPatientMessage) {
         return `I remember what you said about "${lastPatientMessage.substring(0, 20)}..." ${response}`;
@@ -125,13 +180,48 @@ export const processResponseThroughMasterRules = (
         return `I remember what you've shared about ${memory.dominantTopics[0]}. ${response}`;
       }
       
-      // Ultimate fallback if both systems fail to provide context
+      // Ultimate fallback if all systems fail to provide context
       return `I remember what you've told me. ${response}`;
     } catch (finalError) {
       console.error('Critical failure in error recovery:', finalError);
       // Return original response with basic memory reference if all else fails
       return `I remember what you've told me. ${response}`;
     }
+  }
+};
+
+/**
+ * Enhance response using the advanced MemoryBank system
+ */
+const enhanceWithMemoryBank = (
+  response: string,
+  userInput: string,
+  relevantMemories: any[],
+  conversationHistory: string[] = []
+): string => {
+  try {
+    console.log("MEMORYBANK: Enhancing response with memory bank data");
+    
+    // Check if response already references memory adequately
+    if (verifyMemoryUtilization(userInput, response, conversationHistory)) {
+      return response;
+    }
+    
+    // If we have relevant memories, use them to enhance the response
+    if (relevantMemories.length > 0) {
+      const memory = relevantMemories[0];
+      
+      // Don't repeat the exact same memory reference if it's already in the response
+      if (!response.includes(memory.content.substring(0, 15))) {
+        const memoryPhrase = `I remember you mentioned ${memory.content.substring(0, 30)}... `;
+        return memoryPhrase + response;
+      }
+    }
+    
+    return response;
+  } catch (error) {
+    console.error('Error enhancing response with MemoryBank:', error);
+    return response;
   }
 };
 
@@ -146,12 +236,17 @@ export const enhanceResponseWithMemory = (
   try {
     console.log("APPLYING MEMORY ENHANCEMENT");
     
-    // CRITICAL: Always record to 5ResponseMemory for redundancy
+    // CRITICAL: Process through multi-head attention
+    const attentionResults = processWithMultiHeadAttention(userInput, conversationHistory);
+    
+    // CRITICAL: Always record to all memory systems for redundancy
+    addToMemoryBank(userInput, 'patient', attentionResults.emotionalContext, attentionResults.dominantTopics);
     addToFiveResponseMemory('patient', userInput);
     
     // Check if response already references memory
     if (verifyMemoryUtilization(userInput, response, conversationHistory)) {
-      // Still record the response to 5ResponseMemory
+      // Still record the response to all memory systems
+      addToMemoryBank(response, 'roger', attentionResults.emotionalContext, attentionResults.dominantTopics);
       addToFiveResponseMemory('roger', response);
       return response;
     }
@@ -159,18 +254,20 @@ export const enhanceResponseWithMemory = (
     // Apply full memory rules
     const enhancedResponse = applyMemoryRules(response, userInput, conversationHistory);
     
-    // CRITICAL: Record enhanced response to 5ResponseMemory
+    // CRITICAL: Record enhanced response to all memory systems
+    addToMemoryBank(enhancedResponse, 'roger', attentionResults.emotionalContext, attentionResults.dominantTopics);
     addToFiveResponseMemory('roger', enhancedResponse);
     
     return enhancedResponse;
   } catch (error) {
     console.error('Error enhancing response with memory:', error);
     
-    // CRITICAL: Even in error case, ensure 5ResponseMemory recording
+    // CRITICAL: Even in error case, ensure memory recording
     try {
       addToFiveResponseMemory('roger', response);
+      addToMemoryBank(response, 'roger');
     } catch (memoryError) {
-      console.error('Critical failure in 5ResponseMemory:', memoryError);
+      console.error('Critical failure in memory systems:', memoryError);
     }
     
     return response;
