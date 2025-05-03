@@ -107,6 +107,7 @@ export const processUserMessage = async (
       updateStage
     };
     
+    // Here's the fix - pass the props object instead of just userInput
     const response = await processMessage(messageProcessorProps);
     
     // Enhance the response with memory rules, master rules, and chat log review
