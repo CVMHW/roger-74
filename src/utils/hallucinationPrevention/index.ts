@@ -21,8 +21,8 @@ import {
   HallucinationProcessResult
 } from '../../types/hallucinationPrevention';
 
-// Export the needed types
-export { HallucinationProcessResult };
+// Export the needed types - using "export type" syntax for proper TypeScript isolatedModules support
+export type { HallucinationProcessResult };
 
 const DEFAULT_OPTIONS: HallucinationPreventionOptions = {
   enableReasoning: true,

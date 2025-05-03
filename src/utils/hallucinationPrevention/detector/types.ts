@@ -17,4 +17,5 @@ export interface QuickCheckResult {
   hasRepeatedSentences?: boolean;
 }
 
-export { HallucinationCheck, HallucinationFlag };
+// Need to use "export type" when re-exporting types with isolatedModules enabled
+export type { HallucinationCheck, HallucinationFlag };
