@@ -44,12 +44,13 @@ export const selectResponseApproach = (
     };
   }
   
-  // IMPROVED: Better detection for everyday embarrassments and social situations
+  // CRITICAL: Better detection for everyday embarrassments and social situations
+  // This is now a top priority check to ensure these situations NEVER get logotherapy treatment
   if (/spill(ed)?|trip(ped)?|embarrass(ed|ing)?|awkward|screw(ed)? up|mistake|mess(ed)? up|class|teacher|student|presentation/i.test(input)) {
     return {
-      logotherapyStrength: 0.05, // VERY low meaning focus for everyday issues
-      spontaneityLevel: 85,      // Much higher spontaneity
-      creativityLevel: 80,       // Higher creativity
+      logotherapyStrength: 0, // NO meaning focus for everyday issues - zeroed out completely
+      spontaneityLevel: 90,   // Very high spontaneity for natural conversation
+      creativityLevel: 85,    // Higher creativity for engaging responses
       type: 'everydayFrustration'
     };
   }
@@ -97,9 +98,9 @@ export const selectResponseApproach = (
   // Look for casual social interactions that may not fit other categories
   if (/bar|drink|party|date|dating|girl|guy|cute|talk to/i.test(input)) {
     return {
-      logotherapyStrength: 0.1, // Very low meaning focus
-      spontaneityLevel: 85,     // Very high spontaneity
-      creativityLevel: 80,      // High creativity
+      logotherapyStrength: 0,   // NO meaning focus for social situations
+      spontaneityLevel: 90,     // Very high spontaneity
+      creativityLevel: 85,      // High creativity
       type: 'smalltalk'
     };
   }
@@ -137,12 +138,12 @@ export const selectResponseApproach = (
       };
     }
     
-    // Handle embarrassment specifically
+    // Handle embarrassment specifically - CRITICAL: Zero out logotherapy for embarrassment
     if (['embarrassed', 'awkward', 'uncomfortable'].includes(primaryEmotion)) {
       return {
-        logotherapyStrength: 0.05, // Very low meaning focus
-        spontaneityLevel: 85,      // Very high spontaneity
-        creativityLevel: 80,       // High creativity 
+        logotherapyStrength: 0,   // NO meaning focus for embarrassment
+        spontaneityLevel: 90,     // Very high spontaneity
+        creativityLevel: 85,      // High creativity 
         type: 'everydayFrustration'
       };
     }
@@ -184,21 +185,19 @@ export const adjustApproachForConversationFlow = (
     adjustedApproach.spontaneityLevel = Math.min(80, adjustedApproach.spontaneityLevel + 15);
   }
   
-  // IMPROVED: Detect resistance to existential/meaning approaches
+  // CRITICAL: Better detection of resistance to existential/meaning approaches
   const hasExistentialResistance = conversationHistory.some(msg => 
-    /just a (simple|regular)|come on|i('m| am) just|get real|not that deep|too much|what\?|all that happened|how does.*reflect on|are you insinuating/i.test(msg)
+    /just a (simple|regular)|come on|i('m| am) just|get real|not that deep|too much|what\?|all that happened|how does.*reflect|are you insinuating|what\? all|that's all|just happened|it was just/i.test(msg)
   );
   
   if (hasExistentialResistance) {
-    // Dramatically reduce existential/meaning focus
-    console.log("DETECTED RESISTANCE TO EXISTENTIAL APPROACH: Reducing logotherapy strength");
-    adjustedApproach.logotherapyStrength = 0.01; // Almost eliminate meaning/logotherapy content
-    adjustedApproach.spontaneityLevel = Math.min(90, adjustedApproach.spontaneityLevel + 20);
+    // IMMEDIATELY eliminate logotherapy when detected resistance
+    console.log("DETECTED RESISTANCE TO EXISTENTIAL APPROACH: Eliminating logotherapy completely");
+    adjustedApproach.logotherapyStrength = 0; // ZERO out meaning/logotherapy content completely
+    adjustedApproach.spontaneityLevel = Math.min(95, adjustedApproach.spontaneityLevel + 25);
     
-    // If user seems frustrated with meaning-based responses, force to everydayFrustration type
-    if (approach.type === 'existential' || approach.type === 'rogerian') {
-      adjustedApproach.type = 'everydayFrustration';
-    }
+    // Force to everydayFrustration type when resistance detected
+    adjustedApproach.type = 'everydayFrustration';
   }
   
   return adjustedApproach;

@@ -6,7 +6,21 @@
  * in a subtle, conversational manner
  */
 
-import { PersonalityMode } from '../response/personalityVariation';
+// Import the PersonalityMode type directly rather than from personalityVariation
+export type PersonalityMode = 
+  'curious' | 
+  'empathetic' | 
+  'reflective' | 
+  'direct' | 
+  'analytical' | 
+  'warm' | 
+  'thoughtful' | 
+  'conversational' | 
+  'gentle' | 
+  'grounded' | 
+  'existential' |
+  'meaning-focused' |
+  'warm-social';
 
 /**
  * Transitions for different personality modes
@@ -97,4 +111,12 @@ export const getMeaningFocusedTransition = (): string => {
     ...transitionsForMode['meaning-focused']
   ];
   return meaningTransitions[Math.floor(Math.random() * meaningTransitions.length)];
+};
+
+/**
+ * Get transitions for logotherapy integration
+ * Exported for compatibility with response-blending.ts
+ */
+export const getLogotherapyTransitions = (mode: PersonalityMode): string[] => {
+  return transitionsForMode[mode] || transitionsForMode.conversational;
 };

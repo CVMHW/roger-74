@@ -46,16 +46,21 @@ export const processCore = (
       conversationHistory
     });
     
-    // IMPORTANT: For everyday social situations, skip or minimal logotherapy
-    const isEverydaySituation = /trip(ped)?|spill(ed)?|embarrass(ing|ed)|awkward|class|teacher|student|bar|drink/i.test(userInput);
+    // CRITICAL: Check for social situations, embarrassment, or everyday issues
+    // These patterns indicate cases where logotherapy should NOT be applied
+    const isEverydaySituation = /trip(ped)?|spill(ed)?|embarrass(ing|ed)?|awkward|class|teacher|student|bar|drink/i.test(userInput);
+    const resistanceToDeeperMeaning = conversationHistory.some(msg => 
+      /what\? all|that's all|just happened|it was just|how does.*reflect|are you insinuating/i.test(msg)
+    );
     
-    // Apply logotherapy integration ONLY if the approach strength warrants it
-    // AND it's not an everyday social situation
-    if (approach.logotherapyStrength > 0.3 && !isEverydaySituation) {
+    // Apply logotherapy integration ONLY if appropriate - now much more restrictive
+    if (approach.logotherapyStrength > 0.4 && !isEverydaySituation && !resistanceToDeeperMeaning) {
+      console.log("APPLYING LOGOTHERAPY: Appropriate context for meaning-based approach");
       processedResponse = handleLogotherapyIntegration(processedResponse, userInput, conversationHistory);
-    } else if (isEverydaySituation && approach.logotherapyStrength > 0.1) {
-      // For everyday situations, use only very light meaning-focused language if at all
-      console.log("EVERYDAY SITUATION: Minimizing logotherapy integration");
+    } else if (isEverydaySituation || resistanceToDeeperMeaning || approach.logotherapyStrength < 0.1) {
+      // For everyday situations or when resistance detected, use ZERO logotherapy content
+      console.log("EVERYDAY SITUATION OR RESISTANCE DETECTED: Completely skipping logotherapy integration");
+      // No logotherapy integration whatsoever for these cases
     }
     
     // Apply all response rules
@@ -70,22 +75,23 @@ export const processCore = (
     const patternResult = detectConversationPatterns(processedResponse, conversationHistory);
     
     // Add personality variation based on the selected approach
-    // For everyday social situations, boost spontaneity and creativity
+    // For everyday social situations, use maximum spontaneity and creativity
     if (isEverydaySituation) {
+      console.log("EVERYDAY SITUATION: Using maximum spontaneity and conversational tone");
       processedResponse = addResponseVariety(
         processedResponse,
         userInput,
         messageCount,
-        Math.min(90, approach.spontaneityLevel + 15),  // Boost spontaneity for social situations
-        Math.min(85, approach.creativityLevel + 15)    // Boost creativity for social situations
+        95,  // Near-maximum spontaneity for social situations
+        90   // Very high creativity for social situations
       );
     } else {
       processedResponse = addResponseVariety(
         processedResponse,
         userInput,
         messageCount,
-        approach.spontaneityLevel,  // Dynamic spontaneity level
-        approach.creativityLevel    // Dynamic creativity level
+        approach.spontaneityLevel,
+        approach.creativityLevel
       );
     }
     
