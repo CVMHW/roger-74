@@ -27,6 +27,18 @@ export const detectHallucinations = (
   const flags = [];
   let confidenceScore = 1.0; // Start with high confidence
   
+  // CRITICAL: First specifically check for "we've been focusing on health" hallucination
+  // This is a special case that's occurring frequently
+  if (/we've been focusing on health/i.test(responseText) && 
+      !conversationHistory.some(msg => /health|medical|doctor|sick|ill|wellness/i.test(msg))) {
+    flags.push({
+      type: 'false_continuity',
+      severity: 'high',
+      description: 'False reference to discussing health topics that were not mentioned'
+    });
+    confidenceScore -= 0.6; // Heavy penalty for this specific hallucination
+  }
+  
   // Check for memory references without actual memory
   const memoryFlags = detectFalseMemoryReferences(responseText, userInput, conversationHistory);
   flags.push(...memoryFlags);
@@ -61,6 +73,19 @@ export const detectHallucinations = (
   
   // Reduce confidence based on repetition flags (very important)
   confidenceScore -= repetitionFlags.length * 0.35;
+  
+  // Extra check for hallucinations in short conversations
+  if (conversationHistory.length <= 2) {
+    // In new conversations, any reference to previous discussions is a hallucination
+    if (/we've been|we discussed|as I mentioned|you told me|you said|you mentioned|I remember|earlier you said|previously/i.test(responseText)) {
+      flags.push({
+        type: 'false_continuity',
+        severity: 'high',
+        description: 'False reference to previous conversation in a new chat'
+      });
+      confidenceScore -= 0.4;
+    }
+  }
   
   // Bound confidence between 0 and 1
   confidenceScore = Math.max(0, Math.min(1, confidenceScore));

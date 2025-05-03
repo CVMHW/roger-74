@@ -96,8 +96,7 @@ export const processUserMessage = async (
       return emotionalResponse;
     }
     
-    // Fix: Check if processMessage accepts a props object or individual arguments
-    // Looking at the error, we need to pass individual arguments
+    // We need to pass all 7 arguments separately to the processMessage function
     const response = await processMessage(
       userInput,
       detectConcerns,

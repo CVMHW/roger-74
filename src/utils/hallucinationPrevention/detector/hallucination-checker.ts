@@ -1,3 +1,4 @@
+
 /**
  * Hallucination checking and fixing functionality
  */
@@ -41,6 +42,34 @@ export const checkAndFixHallucinations = (
   
   // In new conversations, be extra strict about hallucinations
   const hallucinationThreshold = isNewConversation ? 0.7 : 0.6;
+  
+  // CRITICAL: Detect and fix false memory references like "we've been focusing on"
+  const falseContinuityPattern = /(?:we've been focusing on|we've been discussing|we've been talking about|as we discussed|we were discussing|we talked about earlier) (?:your|the|about|how|what|why)?\s*([a-zA-Z\s]+)/gi;
+  
+  if (falseContinuityPattern.test(responseText) && isNewConversation) {
+    console.warn("FALSE CONTINUITY DETECTED: New conversation with false continuity claim");
+    
+    // Replace the false memory reference
+    const correctedResponse = responseText.replace(
+      falseContinuityPattern,
+      "I hear you're dealing with $1"
+    );
+    
+    return {
+      correctedResponse,
+      wasHallucination: true,
+      hallucinationDetails: {
+        content: responseText,
+        confidenceScore: 0.2,
+        hallucination: true,
+        flags: [{
+          type: 'false_continuity',
+          severity: 'high',
+          description: 'False continuity claim in new conversation'
+        }]
+      }
+    };
+  }
   
   if (hallucinationCheck.hallucination || 
       hallucinationCheck.confidenceScore < hallucinationThreshold ||
