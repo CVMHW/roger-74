@@ -20,3 +20,6 @@ export * from './utils';
 
 // Export from previous implementations
 export { applyEarlyConversationRAG } from './earlyConversation';
+
+// Export the new emergency path detection system
+export * from '../emergencyPathDetection';

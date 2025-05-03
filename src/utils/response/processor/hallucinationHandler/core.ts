@@ -10,9 +10,11 @@ import { fixDangerousRepetitionPatterns } from './patternFixer';
 import { handleMemoryHallucinations } from './memoryHandler';
 import { determinePreventionOptions } from './preventionOptions';
 import { handleHealthHallucination, hasRepeatedContent, fixRepeatedContent } from './specialCases';
+import { detectEmergencyPath, applyEmergencyIntervention } from '../emergencyPathDetection';
+import { SeverityLevel } from '../emergencyPathDetection/types';
 
 /**
- * Apply hallucination prevention to a response
+ * Apply hallucination prevention to a response with emergency path detection
  */
 export const handlePotentialHallucinations = (
   responseText: string,
@@ -23,6 +25,35 @@ export const handlePotentialHallucinations = (
   hallucinationData: HallucinationProcessResult | null;
 } => {
   try {
+    // HIGHEST PRIORITY: Emergency path detection - must come first
+    const emergencyPathResult = detectEmergencyPath(responseText, userInput, conversationHistory);
+    
+    // If we're on an emergency path that requires immediate intervention, handle it immediately
+    if (emergencyPathResult.isEmergencyPath && emergencyPathResult.requiresImmediateIntervention) {
+      console.log("CRITICAL: Emergency path detected with severity:", emergencyPathResult.severity);
+      console.log("Emergency flags:", emergencyPathResult.flags);
+      
+      const interventionResponse = applyEmergencyIntervention(
+        responseText,
+        emergencyPathResult,
+        userInput
+      );
+      
+      return {
+        processedResponse: interventionResponse,
+        hallucinationData: {
+          processedResponse: interventionResponse,
+          wasRevised: true,
+          reasoningApplied: true,
+          detectionApplied: true,
+          ragApplied: false,
+          processingTime: 0,
+          confidence: emergencyPathResult.severity === SeverityLevel.SEVERE ? 0.1 : 0.3,
+          issueDetails: emergencyPathResult.flags.map(flag => flag.description)
+        }
+      };
+    }
+    
     // First check for basic syntactic issues in the response
     if (!responseText || responseText.trim().length === 0) {
       return {
@@ -31,7 +62,7 @@ export const handlePotentialHallucinations = (
       };
     }
     
-    // HIGHEST PRIORITY: Check for dangerous repetition patterns that need immediate fixing
+    // SECOND PRIORITY: Check for dangerous repetition patterns that need immediate fixing
     // Example: "I hear you're dealing with I hear you're dealing with"
     const { fixedResponse, hasRepetitionIssue } = fixDangerousRepetitionPatterns(responseText);
     
@@ -53,7 +84,7 @@ export const handlePotentialHallucinations = (
       };
     }
     
-    // SECOND PRIORITY: Use the repetition handler to fix any other repeated content
+    // THIRD PRIORITY: Use the repetition handler to fix any other repeated content
     if (hasRepeatedContent(responseText)) {
       const correctedText = fixRepeatedContent(responseText);
       console.log("REPETITION FIXED: Using repetition handler");
@@ -73,7 +104,7 @@ export const handlePotentialHallucinations = (
       };
     }
     
-    // THIRD PRIORITY: Check for specific health hallucination
+    // FOURTH PRIORITY: Check for specific health hallucination
     const healthHallucinationResult = handleHealthHallucination(responseText, conversationHistory);
     if (healthHallucinationResult.isHealthHallucination) {
       return {
@@ -91,7 +122,7 @@ export const handlePotentialHallucinations = (
       };
     }
     
-    // FOURTH PRIORITY: Handle memory reference hallucinations
+    // FIFTH PRIORITY: Handle memory reference hallucinations
     const memoryResult = handleMemoryHallucinations(responseText, conversationHistory);
     
     // For new conversations with memory references, always apply strict prevention
@@ -113,6 +144,32 @@ export const handlePotentialHallucinations = (
       return {
         processedResponse: hallucinationResult.processedResponse,
         hallucinationData: hallucinationResult
+      };
+    }
+    
+    // SIXTH PRIORITY: Apply non-immediate emergency path intervention if needed
+    if (emergencyPathResult.isEmergencyPath) {
+      console.log("Non-critical emergency path detected:", emergencyPathResult.severity);
+      
+      // Apply a more subtle intervention for non-critical cases
+      const interventionResponse = applyEmergencyIntervention(
+        responseText,
+        emergencyPathResult,
+        userInput
+      );
+      
+      return {
+        processedResponse: interventionResponse,
+        hallucinationData: {
+          processedResponse: interventionResponse,
+          wasRevised: true,
+          reasoningApplied: true,
+          detectionApplied: true,
+          ragApplied: false,
+          processingTime: 0,
+          confidence: 0.6,
+          issueDetails: emergencyPathResult.flags.map(flag => flag.description)
+        }
       };
     }
     
