@@ -26,3 +26,15 @@ export const calculateSimilarity = (str1: string, str2: string): number => {
   
   return matches / Math.max(words1.length, words2.length);
 };
+
+/**
+ * Check if word is a common function word to filter out
+ */
+export const isCommonWord = (word: string): boolean => {
+  const commonWords = ["the", "a", "an", "in", "on", "at", "for", "to", "with", "by", "and", "or", "but",
+    "is", "are", "was", "were", "be", "been", "have", "has", "had", "do", "does", "did", 
+    "will", "would", "can", "could", "may", "might", "must", "should", "i", "you", "he", "she", "it",
+    "we", "they", "me", "him", "her", "us", "them"];
+  
+  return commonWords.includes(word.toLowerCase());
+};

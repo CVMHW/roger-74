@@ -24,7 +24,8 @@ export const determinePreventionOptions = (
     enableRAG: false,
     enableDetection: true,
     detectionSensitivity: 0.65,
-    enableTokenLevelDetection: true
+    enableTokenLevelDetection: true,
+    reasoningThreshold: 0.7 // Added the required property
   };
 
   let requiresPrevention = false;
@@ -42,6 +43,7 @@ export const determinePreventionOptions = (
     preventionOptions.enableRAG = false;
     preventionOptions.enableTokenLevelDetection = true;
     preventionOptions.enableReranking = true;
+    preventionOptions.reasoningThreshold = 0.8; // Adjusted for repetition cases
     
     requiresPrevention = true;
     return { preventionOptions, requiresPrevention };
