@@ -29,8 +29,11 @@ export const handleLogotherapyHallucinations = (
     // Check for false attributions to specific philosophers
     const hasPhilosopherAttribution = checkPhilosopherAttribution(response, userInput);
     
+    // NEW: Check for incorrect emotional state identification
+    const hasEmotionMisidentification = checkEmotionMisidentification(response, userInput);
+    
     // If no issues detected, return original
-    if (!hasFalsePastReference && !hasPhilosophicalHallucination && !hasPhilosopherAttribution) {
+    if (!hasFalsePastReference && !hasPhilosophicalHallucination && !hasPhilosopherAttribution && !hasEmotionMisidentification) {
       return {
         processedResponse: response,
         wasHallucinationDetected: false
@@ -52,6 +55,10 @@ export const handleLogotherapyHallucinations = (
       fixedResponse = fixPhilosopherAttributions(fixedResponse);
     }
     
+    if (hasEmotionMisidentification) {
+      fixedResponse = fixEmotionMisidentification(fixedResponse, userInput);
+    }
+    
     return {
       processedResponse: fixedResponse,
       wasHallucinationDetected: true
@@ -64,6 +71,62 @@ export const handleLogotherapyHallucinations = (
       wasHallucinationDetected: false
     };
   }
+};
+
+/**
+ * NEW: Check for emotion misidentification in responses
+ * Especially checks for "neutral" identification when negative emotions are present
+ */
+const checkEmotionMisidentification = (
+  response: string,
+  userInput: string
+): boolean => {
+  // Check if response claims user is feeling neutral
+  const claimsNeutral = /you('re| are) feeling neutral/i.test(response);
+  
+  if (!claimsNeutral) {
+    return false;
+  }
+  
+  // Check for negative emotion indicators in user input
+  const negativeEmotionPatterns = [
+    /rough|tough|bad|difficult|hard|stressful|awful|terrible|worst|annoying/i,
+    /embarrass(ing|ed)?|awkward|uncomfortable|cringe/i,
+    /spill(ed)?|accident|mess(ed up)?|mistake/i,
+    /sad|upset|depress(ed|ing)|down|blue|low|lonely/i,
+    /anxious|nervous|worr(ied|y)|stress(ed|ful)/i,
+    /frustrat(ed|ing)|annoy(ed|ing)|angry|mad|piss(ed)?|irritat(ed|ing)/i
+  ];
+  
+  // If input mentions any negative emotions but response claims neutral, it's a misidentification
+  return negativeEmotionPatterns.some(pattern => pattern.test(userInput));
+};
+
+/**
+ * NEW: Fix emotion misidentification in responses
+ */
+const fixEmotionMisidentification = (
+  response: string,
+  userInput: string
+): string => {
+  // For social situations and embarrassment
+  if (/spill(ed)?|embarrass(ing|ed)?|awkward|mess(ed)?( up)?|accident/i.test(userInput)) {
+    return response
+      .replace(/you('re| are) feeling neutral/i, "that sounds embarrassing")
+      .replace(/Would you like to tell me more about what happened\?/i, "Those kinds of moments can feel really uncomfortable. How are you feeling about it now?");
+  }
+  
+  // For rough/tough day mentions
+  if (/rough|tough|hard|difficult|bad day/i.test(userInput)) {
+    return response
+      .replace(/you('re| are) feeling neutral/i, "you've had a rough day")
+      .replace(/Would you like to tell me more about what happened\?/i, "Those kinds of days can be draining. What was the most challenging part of your day?");
+  }
+  
+  // For other negative emotions
+  return response
+    .replace(/you('re| are) feeling neutral/i, "that sounds challenging")
+    .replace(/Would you like to tell me more about what happened\?/i, "Can you tell me more about how that made you feel?");
 };
 
 /**
