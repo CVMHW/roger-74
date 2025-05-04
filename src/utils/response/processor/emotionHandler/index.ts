@@ -7,7 +7,8 @@
 
 export { 
   checkEmotionMisidentification,
-  fixEmotionMisidentification
+  fixEmotionMisidentification,
+  addHumanTouch
 } from './emotionMisidentificationHandler';
 
 // Export additional emotion-related handlers as needed

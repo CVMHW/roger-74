@@ -16,7 +16,7 @@ import { handlePotentialHallucinations } from './hallucinationHandler';
 import { correctGrammar } from './grammarCorrection';
 import { selectResponseApproach, adjustApproachForConversationFlow } from './approachSelector';
 import { enhanceWithStressorAwareness } from './stressorEnhancement';
-import { checkEmotionMisidentification, fixEmotionMisidentification } from './emotionHandler';
+import { checkEmotionMisidentification, fixEmotionMisidentification, addHumanTouch } from './emotionHandler';
 
 /**
  * Process a response through all enhancement systems
@@ -41,12 +41,16 @@ export const processCompleteResponse = (
     // 1. First apply core processing (universal rules)
     let processedResponse = processCore(responseText, userInput, messageCount, conversationHistory);
     
-    // 2. Check and fix emotion misidentification (NEW)
+    // 2. Check and fix emotion misidentification - Make this a TOP PRIORITY
     if (checkEmotionMisidentification(processedResponse, userInput)) {
       processedResponse = fixEmotionMisidentification(processedResponse, userInput);
+      console.log("Fixed emotion misidentification");
     }
     
-    // 3. Apply logotherapy integration based on approach strength
+    // 3. Add human touches to make Roger more natural and less robotic
+    processedResponse = addHumanTouch(processedResponse, userInput);
+    
+    // 4. Apply logotherapy integration based on approach strength
     if (approach.logotherapyStrength > 0.2) {
       processedResponse = handleLogotherapyIntegration(
         processedResponse, 
@@ -55,30 +59,30 @@ export const processCompleteResponse = (
       );
     }
     
-    // 4. Apply memory enhancement
+    // 5. Apply memory enhancement
     processedResponse = enhanceResponseWithMemory({
       response: processedResponse,
       userInput,
       conversationHistory
     });
     
-    // 5. Enhance with stressor awareness if applicable
+    // 6. Enhance with stressor awareness if applicable
     processedResponse = enhanceWithStressorAwareness(
       processedResponse,
       userInput
     );
     
-    // 6. Apply conversation stage processing (special handling for early conversations)
+    // 7. Apply conversation stage processing (special handling for early conversations)
     processedResponse = applyConversationStageProcessing(
       processedResponse, 
       userInput,
       isEarlyConversation
     );
     
-    // 7. Apply hallucination prevention as final safety
+    // 8. Apply hallucination prevention as final safety
     processedResponse = processResponse(processedResponse, userInput, conversationHistory);
     
-    // 8. Apply grammar correction with user input for length adjustment
+    // 9. Apply grammar correction with user input for length adjustment
     processedResponse = correctGrammar(processedResponse, userInput);
     
     // Record final response to memory systems
