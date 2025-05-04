@@ -16,7 +16,13 @@ import { handlePotentialHallucinations } from './hallucinationHandler';
 import { correctGrammar } from './grammarCorrection';
 import { selectResponseApproach, adjustApproachForConversationFlow } from './approachSelector';
 import { enhanceWithStressorAwareness } from './stressorEnhancement';
-import { checkEmotionMisidentification, fixEmotionMisidentification, addHumanTouch } from './emotionHandler';
+import { 
+  checkEmotionMisidentification, 
+  fixEmotionMisidentification, 
+  addHumanTouch, 
+  detectEverydaySituation,
+  generateEverydayFrustrationResponse
+} from './emotionHandler';
 
 /**
  * Process a response through all enhancement systems
@@ -37,6 +43,17 @@ export const processCompleteResponse = (
     const approach = adjustApproachForConversationFlow(initialApproach, conversationHistory, messageCount);
     
     console.log("Using approach:", approach);
+    
+    // Check for everyday situations first - HIGH PRIORITY
+    const situationInfo = detectEverydaySituation(userInput);
+    if (situationInfo.isEverydaySituation) {
+      // For everyday situations, use specialized handling
+      const everydayResponse = generateEverydayFrustrationResponse(situationInfo);
+      if (everydayResponse) {
+        console.log("Using everyday situation response");
+        return everydayResponse;
+      }
+    }
     
     // 1. First apply core processing (universal rules)
     let processedResponse = processCore(responseText, userInput, messageCount, conversationHistory);

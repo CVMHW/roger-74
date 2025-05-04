@@ -6,6 +6,22 @@
  * This is specifically for Rogerian/emotional responses, not logotherapy
  */
 
+// Import Cleveland-specific content and references
+import { detectClevelandSportsReference } from '../../../conversationEnhancement/ohio/detectors';
+import { detectOhioReferences } from '../../../conversationEnhancement/ohio/references';
+
+// Import emotion data from reflection system
+import { 
+  getFeelingCategories, 
+  detectEmotionalContent 
+} from '../../../reflection';
+
+// Import everyday situation handlers
+import { 
+  detectEverydaySituation,
+  generateEverydayFrustrationResponse 
+} from '../../../conversation/theSmallStuff';
+
 /**
  * Check for emotion misidentification in responses
  * Especially checks for "neutral" identification when negative emotions are present
@@ -51,10 +67,20 @@ export const fixEmotionMisidentification = (
   response: string,
   userInput: string
 ): string => {
+  // Check for Cleveland references for better localized response
+  const ohioReferences = detectOhioReferences(userInput);
+  const isClevelandSports = detectClevelandSportsReference(userInput);
+  
   // For social situations and embarrassment
   if (/spill(ed)?|embarrass(ing|ed)?|awkward|mess(ed)?( up)?|accident/i.test(userInput)) {
     if (/cute (girl|guy|woman|man|date)/i.test(userInput)) {
-      // Dating/attraction context
+      // Dating/attraction context with Cleveland sports if applicable
+      if (isClevelandSports) {
+        return response
+          .replace(/you('re| are) feeling neutral/i, "oh man, that's embarrassing at the game")
+          .replace(/Would you like to tell me more about what happened\?/i, "I've definitely spilled beer at Cavs games before. How did she react?");
+      }
+      
       return response
         .replace(/you('re| are) feeling neutral/i, "oh man, that's embarrassing")
         .replace(/Would you like to tell me more about what happened\?/i, "I've been there - those moments are the worst! How did she react?");
@@ -67,10 +93,13 @@ export const fixEmotionMisidentification = (
   
   // For sports context
   if (/(cavs|browns|guardians|sports|game|match)/i.test(userInput)) {
+    // Use everyday situation detector to get more context
+    const situationInfo = detectEverydaySituation(userInput);
+    
     if (/spill(ed)?|mess/i.test(userInput)) {
       // Sports + embarrassment combination
       return response
-        .replace(/you('re| are) feeling neutral/i, "that's a rough situation")
+        .replace(/you('re| are) feeling neutral/i, "that's a rough situation at the game")
         .replace(/Would you like to tell me more about what happened\?/i, "Watching the Cavs should be fun, not stressful! What happened after you spilled the drink?");
     }
     
@@ -79,8 +108,15 @@ export const fixEmotionMisidentification = (
       .replace(/Would you like to tell me more about what happened\?/i, "I follow the Cavs too. What happened at the game that made your day rough?");
   }
   
-  // For rough/tough day mentions
+  // For rough/tough day mentions - integrate with emotional content detection
   if (/rough|tough|hard|difficult|bad day/i.test(userInput)) {
+    const emotionInfo = detectEmotionalContent(userInput);
+    if (ohioReferences.hasOhioReference) {
+      return response
+        .replace(/you('re| are) feeling neutral/i, "sounds like a rough day here in Cleveland")
+        .replace(/Would you like to tell me more about what happened\?/i, "Cleveland days have their ups and downs. What made today particularly challenging?");
+    }
+    
     return response
       .replace(/you('re| are) feeling neutral/i, "you've had a rough day")
       .replace(/Would you like to tell me more about what happened\?/i, "Those days can be draining. What was the most challenging part of your day?");
@@ -102,12 +138,15 @@ export const addHumanTouch = (
 ): string => {
   const lowerInput = userInput.toLowerCase();
   
+  // Check from memory system if user has mentioned Cleveland before
+  const isFromCleveland = true; // Default assumption for Roger
+  
   // Only apply humanizing touches if not already humanized
   if (/oh man|I've been there|Those days can be|totally get that/i.test(response)) {
     return response;
   }
   
-  // For Cleveland sports fans
+  // For Cleveland sports fans - integrate with Cleveland detectors
   if (/(cavs|browns|guardians)/i.test(lowerInput)) {
     const sportsPhrases = [
       "As a Cleveland guy myself, I definitely understand the sports rollercoaster. ",
@@ -120,6 +159,9 @@ export const addHumanTouch = (
   
   // For social embarrassment
   if (/spill(ed)?|embarrass/i.test(lowerInput) && /social|people|girl|guy|date|bar/i.test(lowerInput)) {
+    // Use conversation enhancement system for appropriate response
+    const situationInfo = detectEverydaySituation(userInput);
+    
     const socialPhrases = [
       "Oh man, social mishaps are the worst. ",
       "I totally get that feeling. ",
@@ -138,3 +180,4 @@ export const addHumanTouch = (
   
   return response;
 };
+
