@@ -1,6 +1,8 @@
 
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
 import { detectMildSomaticComplaints, detectSimpleNegativeState } from '../../utils/conversationalUtils';
+// Import the new eating pattern detector
+import { detectEatingDisorderConcerns } from '../../utils/conversation/specializedDetection/eatingPatternDetector';
 
 export const useConcernDetection = () => {
   const detectConcerns = (userInput: string): ConcernType => {
@@ -18,6 +20,13 @@ export const useConcernDetection = () => {
     if (/crisis|emergency|urgent|need help now|immediate danger|threat|safety risk/i.test(lowerInput)) {
       console.log("CRITICAL: Detected crisis concern in message:", lowerInput);
       return 'crisis';
+    }
+    
+    // NEW: Enhanced eating disorder detection using our specialized system
+    const edResult = detectEatingDisorderConcerns(userInput);
+    if (edResult.isEatingDisorderConcern && (edResult.riskLevel === 'high' || edResult.riskLevel === 'moderate')) {
+      console.log(`DETECTED EATING DISORDER CONCERN (${edResult.riskLevel}) with phrases:`, edResult.matchedPhrases);
+      return 'eating-disorder';
     }
     
     // First check for explicit feelings related to waiting/appointments
@@ -90,8 +99,9 @@ export const useConcernDetection = () => {
       return 'mental-health';
     }
     
-    // Check for eating disorders
-    if (/eating disorder|anorexia|bulimia|binge|purge|starv|don'?t eat|body image|weight concern/.test(lowerInput)) {
+    // LOW-PRIORITY: Check for mild/low-risk eating concerns (after the dedicated system check)
+    if (/eating disorder|binge|purge|starv|don'?t eat|body image|weight concern/i.test(lowerInput) && 
+        !edResult.isEatingDisorderConcern) {
       return 'eating-disorder';
     }
     

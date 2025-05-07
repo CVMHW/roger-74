@@ -15,7 +15,6 @@ import { handleLogotherapyIntegration } from './logotherapy/integrationHandler';
 import { handlePotentialHallucinations } from './hallucinationHandler';
 import { correctGrammar } from './grammarCorrection';
 import { selectResponseApproach, adjustApproachForConversationFlow } from './approachSelector';
-import { enhanceWithStressorAwareness } from './stressorEnhancement';
 import { 
   checkEmotionMisidentification, 
   fixEmotionMisidentification, 
@@ -25,6 +24,9 @@ import {
 } from './emotionHandler';
 import { detectHarmfulRepetitions, fixHarmfulRepetitions } from './repetitionPrevention';
 import { isResponseRisky, shouldDeleteResponse } from './responseRiskAssessment';
+// Import the new eating pattern handler
+import { handleEatingPatterns } from '../handlers/eatingPatternHandler';
+import { needsSpecializedEatingResponseHandling } from '../handlers/eatingPatternHandler';
 
 /**
  * Process a response through all enhancement systems
@@ -52,7 +54,19 @@ export const processCompleteResponse = (
       return generateSafeAlternativeResponse(userInput, approach);
     }
     
-    // Check for everyday situations first - HIGH PRIORITY
+    // NEW: Check for specialized eating disorder content first
+    // This happens before everyday situations to catch serious health concerns
+    if (needsSpecializedEatingResponseHandling(userInput)) {
+      const eatingResponse = handleEatingPatterns(userInput);
+      if (eatingResponse) {
+        console.log("Using specialized eating disorder response");
+        // Record to memory systems with high priority
+        recordPatientContentToMemorySystems(userInput, { isEatingDisorderConcern: true }, null, 0.9);
+        return eatingResponse;
+      }
+    }
+    
+    // Check for everyday situations next
     const situationInfo = detectEverydaySituation(userInput);
     if (situationInfo && situationInfo.isFrustration) {
       // For everyday situations, use specialized handling
@@ -85,7 +99,18 @@ export const processCompleteResponse = (
       processedResponse = fixHarmfulRepetitions(processedResponse);
     }
     
-    // 5. Apply logotherapy integration based on approach strength
+    // 5. NEW: Check for food/eating related content that wasn't caught earlier
+    // This handles less severe cases or ambiguous mentions
+    if (/food|eat|diet|meal|weight|body|calories/i.test(userInput)) {
+      const eatingResponse = handleEatingPatterns(userInput);
+      if (eatingResponse) {
+        // Blend the eating response with the processed response for a more comprehensive answer
+        // This is for cases that didn't meet the threshold for full specialized handling
+        processedResponse = `${eatingResponse} ${processedResponse}`;
+      }
+    }
+    
+    // 6. Apply logotherapy integration based on approach strength
     if (approach.logotherapyStrength > 0.2) {
       processedResponse = handleLogotherapyIntegration(
         processedResponse, 
@@ -94,27 +119,27 @@ export const processCompleteResponse = (
       );
     }
     
-    // 6. Apply memory enhancement - NOW WITH STRONGER MEMORY INTEGRATION
+    // 7. Apply memory enhancement - NOW WITH STRONGER MEMORY INTEGRATION
     processedResponse = enhanceResponseWithMemory({
       response: processedResponse,
       userInput,
       conversationHistory
     });
     
-    // 7. Enhance with stressor awareness if applicable
+    // 8. Enhance with stressor awareness if applicable
     processedResponse = enhanceWithStressorAwareness(
       processedResponse,
       userInput
     );
     
-    // 8. Apply conversation stage processing (special handling for early conversations)
+    // 9. Apply conversation stage processing (special handling for early conversations)
     processedResponse = applyConversationStageProcessing(
       processedResponse, 
       userInput,
       isEarlyConversation
     );
     
-    // 9. Apply hallucination prevention as final safety
+    // 10. Apply hallucination prevention as final safety
     const hallucinationResult = handlePotentialHallucinations(
       processedResponse,
       userInput,
@@ -124,13 +149,13 @@ export const processCompleteResponse = (
     // Extract the processed response from the result object
     processedResponse = hallucinationResult.processedResponse;
     
-    // 10. Apply grammar correction with user input for length adjustment
+    // 11. Apply grammar correction with user input for length adjustment
     processedResponse = correctGrammar(processedResponse, userInput);
     
-    // 11. Final check for redundant phrases - ANTI-REPETITION FILTER
+    // 12. Final check for redundant phrases - ANTI-REPETITION FILTER
     processedResponse = eliminateRedundantPhrases(processedResponse);
     
-    // 12. NEW: FINAL RISK ASSESSMENT
+    // 13. NEW: FINAL RISK ASSESSMENT
     if (isResponseRisky(processedResponse)) {
       console.log("HIGH RISK RESPONSE DETECTED - REPLACING WITH SAFE ALTERNATIVE");
       return generateSafeAlternativeResponse(userInput, approach);
