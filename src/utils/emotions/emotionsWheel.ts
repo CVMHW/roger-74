@@ -266,7 +266,7 @@ export const emotionsWheel: Record<string, EmotionEntry> = {
     color: '#E5D4C0' 
   },
   'surprised_confused': { 
-    name: 'confused', 
+    name: 'surprised_confused', 
     synonyms: ['puzzled', 'perplexed', 'bewildered'], 
     intensity: 'medium', 
     category: 'surprised', 
