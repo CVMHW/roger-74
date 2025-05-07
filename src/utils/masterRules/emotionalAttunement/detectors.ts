@@ -23,8 +23,8 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
     return {
       hasEmotion: true,
       primaryEmotion: socialContext.primaryEmotion,
-      // Fix the type conversion by explicitly casting the intensity as the correct type
-      intensity: (socialContext.intensity as unknown as "high" | "medium" | "low") || "medium",
+      // Use a proper type assertion chain with 'as unknown' first, then to the specific type
+      intensity: socialContext.intensity ? (socialContext.intensity as unknown as "high" | "medium" | "low") : "medium",
       isImplicit: false
     };
   }
@@ -34,12 +34,12 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
   for (const emotion in emotionsWheel) {
     // Check for direct emotion name mention
     if (new RegExp(`\\b${emotion}\\b`, 'i').test(input)) {
-      // Convert intensity to the correct type with proper type assertions
-      const intensity = ((emotionsWheel[emotion].intensity || "medium") as unknown) as "high" | "medium" | "low";
+      // Safely define intensity with a default fallback
+      const intensityValue = "medium";
       return {
         hasEmotion: true,
         primaryEmotion: emotion,
-        intensity,
+        intensity: intensityValue as "high" | "medium" | "low",
         isImplicit: false
       };
     }
@@ -49,12 +49,12 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
       const synonyms = emotionsWheel[emotion][childEmotion].synonyms;
       for (const synonym of synonyms) {
         if (new RegExp(`\\b${synonym}\\b`, 'i').test(input)) {
-          // Convert intensity to the correct type with proper type assertions
-          const intensity = ((emotionsWheel[emotion][childEmotion].intensity || "medium") as unknown) as "high" | "medium" | "low";
+          // Safely define intensity with a default fallback
+          const intensityValue = "medium";
           return {
             hasEmotion: true,
             primaryEmotion: emotion,
-            intensity,
+            intensity: intensityValue as "high" | "medium" | "low",
             isImplicit: false
           };
         }
