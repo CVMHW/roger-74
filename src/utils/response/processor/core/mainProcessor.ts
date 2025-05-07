@@ -25,9 +25,9 @@ export function processCompleteResponse(
     
     // Step 1: Initial strict mathematical verification
     const verification = verifyResponseMathematically(responseText, userInput);
-    if (verification.shouldPrevent) {
+    if (verification.shouldRollback) {
       console.log("PROCESSOR: Verification failed, generating fallback");
-      return verification.fallbackResponse || "I'm here to listen. Could you tell me more about what's going on?";
+      return generateFallbackResponse(userInput);
     }
     
     // Extract emotions from user input for context-aware processing
@@ -52,9 +52,9 @@ export function processCompleteResponse(
     
     // Step 14: Final strict mathematical verification
     const finalVerification = verifyResponseMathematically(responseText, userInput);
-    if (finalVerification.shouldPrevent) {
+    if (finalVerification.shouldRollback) {
       console.log("PROCESSOR: Final verification failed, generating fallback");
-      return finalVerification.fallbackResponse || "I understand. Would you like to tell me more about what's been happening?";
+      return generateFallbackResponse(userInput);
     }
     
     console.log("PROCESSOR: Response processing complete");
@@ -63,4 +63,23 @@ export function processCompleteResponse(
     console.error("Error in processCompleteResponse:", error);
     return responseText;
   }
+}
+
+/**
+ * Generate a fallback response when verification fails
+ * @param userInput User's original message
+ * @returns Fallback response
+ */
+function generateFallbackResponse(userInput: string): string {
+  const fallbackResponses = [
+    "I hear what you're sharing. Would you mind telling me more about how that's been affecting you?",
+    "That sounds important. Could you share more about your experience so I can better understand?",
+    "I'd like to hear more about that. What aspects of this have been most challenging for you?",
+    "Thank you for sharing that with me. What would be most helpful to focus on right now?"
+  ];
+  
+  // Choose a fallback response based on characters in the user input (deterministic)
+  const responseIndex = userInput.length % fallbackResponses.length;
+  
+  return fallbackResponses[responseIndex];
 }

@@ -1,69 +1,34 @@
 
 /**
- * Master Rules for Roger's response system
+ * Master Rules System
  * 
- * Contains high-priority detection functions and rules that govern
- * Roger's behavior and responses
+ * Central export file for all master rule systems
  */
 
-// Export existing functions (maintaining backward compatibility)
+// Re-export from sub-modules
+export * from './masterRules/emotionalAttunement';
 
 /**
- * Detect if message contains suicidal ideation or self-harm indicators
+ * Calculate the minimum response time based on message complexity and emotional weight
+ * Implements response delay timing to ensure thoughtful responses
+ * 
+ * @param complexity Message complexity score (0-9)
+ * @param emotionalWeight Emotional weight score (0-9) 
+ * @returns Response time in milliseconds
  */
-export const isSuicidalIdeation = (text: string): boolean => {
-  const suicidalPatterns = [
-    /suicid(e|al)/i,
-    /kill (myself|me)/i,
-    /end (my|this) life/i,
-    /don'?t want to (live|be here|exist)/i,
-    /want to die/i,
-    /hurt(ing)? myself/i,
-    /self.?harm/i,
-    /no reason to live/i,
-    /everyone would be better off without me/i
-  ];
-
-  return suicidalPatterns.some(pattern => pattern.test(text));
-};
-
-/**
- * Detect if message is requesting medical advice
- */
-export const isDirectMedicalAdvice = (text: string): boolean => {
-  const medicalAdvicePatterns = [
-    /should I take (medication|medicine|drug|pill)/i,
-    /what (medication|medicine|drug|pill) should/i,
-    /medical advice/i,
-    /diagnosis/i,
-    /prescribe/i,
-    /medical (condition|problem|issue)/i,
-    /medical (treatment|intervention)/i
-  ];
-
-  return medicalAdvicePatterns.some(pattern => pattern.test(text));
-};
-
-/**
- * Calculate minimum response time based on complexity and emotional weight
- * Used by response time calculation system
- */
-export const calculateMinimumResponseTime = (
-  estimatedComplexity: number,
-  estimatedEmotionalWeight: number
-): number => {
-  // Base time is higher for complex or emotional messages
-  const baseTime = 500; // 500ms base
+export const calculateMinimumResponseTime = (complexity: number, emotionalWeight: number): number => {
+  // Base response time (500ms)
+  const baseTime = 500;
   
-  // Add time based on complexity (0-9 scale)
-  const complexityFactor = Math.min(estimatedComplexity, 9) * 150;
+  // Add time based on complexity (100-900ms)
+  const complexityTime = complexity * 100;
   
-  // Add time based on emotional weight (0-9 scale)
-  const emotionalFactor = Math.min(estimatedEmotionalWeight, 9) * 100;
+  // Add time based on emotional weight (100-900ms)
+  const emotionalTime = emotionalWeight * 100;
   
-  // Calculate minimum response time
-  return baseTime + complexityFactor + emotionalFactor;
+  // Add a small random factor for natural variation (0-200ms)
+  const randomFactor = Math.floor(Math.random() * 200);
+  
+  // Calculate total response time
+  return baseTime + complexityTime + emotionalTime + randomFactor;
 };
-
-// Re-export existing detection functions - using correct path
-export { isSmallTalk, isIntroduction, isPersonalSharing } from './masterRules/detection/topicDetection';

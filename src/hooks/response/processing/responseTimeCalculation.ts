@@ -27,6 +27,16 @@ export const calculateResponseTime = (userInput: string): number => {
 };
 
 /**
+ * Alias for calculateResponseTime to maintain backward compatibility
+ * @param userInput User message text
+ * @param concernType Optional concern type information
+ * @returns Delay time in milliseconds
+ */
+export const calculateMessageResponseTime = (userInput: string, concernType?: any): number => {
+  return calculateResponseTime(userInput);
+};
+
+/**
  * Calculate complexity score based on message characteristics
  * @param text User message
  * @returns Complexity score (0-9)
