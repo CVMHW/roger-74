@@ -10,7 +10,7 @@ import { verifyFiveResponseMemorySystem } from '../../memory/fiveResponseMemory'
 /**
  * Validates the quality of a response before delivery
  */
-export const validateResponseQuality = (
+export const validateResponse = (
   responseText: string,
   userInput: string,
   conversationHistory: string[] = []
