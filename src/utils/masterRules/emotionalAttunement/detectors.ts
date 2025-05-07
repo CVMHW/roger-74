@@ -1,4 +1,3 @@
-
 /**
  * Detectors for emotional content and everyday situations
  * Enhanced with the comprehensive emotions wheel
@@ -23,7 +22,7 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
     return {
       hasEmotion: true,
       primaryEmotion: socialContext.primaryEmotion,
-      intensity: socialContext.intensity || "medium",
+      intensity: socialContext.intensity || "medium", // Ensure we have a valid intensity value
       isImplicit: false
     };
   }
@@ -59,18 +58,18 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
   
   // Check for implicit emotional content through situations
   const implicitEmotionPatterns = [
-    { situation: /(lost|died|passed away|death|funeral)/i, emotion: 'sad', intensity: 'medium' },
-    { situation: /(broke up|divorce|separated|left me|ending relationship)/i, emotion: 'sad', intensity: 'medium' },
-    { situation: /(fired|laid off|unemployed|lost job|can't find work)/i, emotion: 'sad', intensity: 'medium' },
-    { situation: /(test|exam|interview|presentation|deadline|meeting)/i, emotion: 'anxious', intensity: 'medium' },
-    { situation: /(fight|argument|disagreement|conflict|confrontation)/i, emotion: 'angry', intensity: 'medium' },
-    { situation: /(promotion|succeeded|accomplished|achieved|won|graduated)/i, emotion: 'happy', intensity: 'medium' },
-    { situation: /(mistake|error|forgot|failed to|didn't mean to|accident)/i, emotion: 'embarrassed', intensity: 'medium' },
-    { situation: /(spill|mess|dropped|broke something)/i, emotion: 'embarrassed', intensity: 'medium' },
+    { situation: /(lost|died|passed away|death|funeral)/i, emotion: 'sad', intensity: 'medium' as const },
+    { situation: /(broke up|divorce|separated|left me|ending relationship)/i, emotion: 'sad', intensity: 'medium' as const },
+    { situation: /(fired|laid off|unemployed|lost job|can't find work)/i, emotion: 'sad', intensity: 'medium' as const },
+    { situation: /(test|exam|interview|presentation|deadline|meeting)/i, emotion: 'anxious', intensity: 'medium' as const },
+    { situation: /(fight|argument|disagreement|conflict|confrontation)/i, emotion: 'angry', intensity: 'medium' as const },
+    { situation: /(promotion|succeeded|accomplished|achieved|won|graduated)/i, emotion: 'happy', intensity: 'medium' as const },
+    { situation: /(mistake|error|forgot|failed to|didn't mean to|accident)/i, emotion: 'embarrassed', intensity: 'medium' as const },
+    { situation: /(spill|mess|dropped|broke something)/i, emotion: 'embarrassed', intensity: 'medium' as const },
     // New patterns for temporal descriptions that often have meaning implications
-    { situation: /(terrible|awful|horrible|rough) (day|night|week|morning|evening)/i, emotion: 'sad', intensity: 'high' },
-    { situation: /(bad|rough|tough) (day|night|week|morning|evening)/i, emotion: 'sad', intensity: 'medium' },
-    { situation: /(great|amazing|wonderful) (day|night|week|morning|evening)/i, emotion: 'happy', intensity: 'high' }
+    { situation: /(terrible|awful|horrible|rough) (day|night|week|morning|evening)/i, emotion: 'sad', intensity: 'high' as const },
+    { situation: /(bad|rough|tough) (day|night|week|morning|evening)/i, emotion: 'sad', intensity: 'medium' as const },
+    { situation: /(great|amazing|wonderful) (day|night|week|morning|evening)/i, emotion: 'happy', intensity: 'high' as const }
   ];
   
   for (const pattern of implicitEmotionPatterns) {
