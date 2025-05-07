@@ -1,4 +1,3 @@
-
 /**
  * Detectors for emotional content and everyday situations
  * Enhanced with the comprehensive emotions wheel
@@ -23,7 +22,8 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
     return {
       hasEmotion: true,
       primaryEmotion: socialContext.primaryEmotion,
-      intensity: socialContext.intensity as "high" | "medium" | "low",
+      // Fix the type conversion by explicitly casting the intensity as the correct type
+      intensity: (socialContext.intensity as "high" | "medium" | "low") || "medium",
       isImplicit: false
     };
   }
