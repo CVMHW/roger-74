@@ -23,6 +23,9 @@ export { determinePreventionOptions } from './preventionOptions';
 // Export special cases handlers
 export * from './utils';
 
+// Export repetition detection functionality (new)
+export * from './repetition';
+
 // Export the early conversation functionality
 export * from '../../earlyConversation';
 

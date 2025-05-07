@@ -1,4 +1,3 @@
-
 /**
  * Hallucination Handler
  * 
@@ -8,6 +7,7 @@
 import { detectHallucinations } from '../../memory/hallucination/detectorV2';
 import { detectClevelandContent } from '../../cleveland/clevelandDetectors';
 import { enhanceResponseWithClevelandPerspective } from '../../cleveland/clevelandResponses';
+import { detectRepeatedPhrases } from './hallucinationHandler/repetition';
 
 /**
  * Checks and corrects potential hallucinations in a response
