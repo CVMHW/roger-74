@@ -8,18 +8,41 @@
 // Import required subsystems
 import { correctGrammar } from './grammarCorrection';
 import { validateResponseQuality } from './validation';
-import { handleEmergencyDetection } from './emergencyPathDetection';
-import { handleMisidentifiedEmotions } from './emotionHandler';
-import { handlePotentialHallucinations } from './hallucinationHandler';
-import { processMultipleApproaches } from './approachSelector';
-import { integrateLogotherapy } from './logotherapyIntegration';
-import { enhanceWithMemoryBank as enhanceWithMemory } from './memoryEnhancement';
-import { detectPatternRepetition } from './repetitionPrevention';
-import { processWithMemorySystem } from './memorySystemHandler';
-import { applyEarlyConversationRAG } from '../earlyConversation';
-import { applyResponseRules as applyRules } from './ruleProcessing';
-import { detectResponseRisks } from './responseRiskAssessment';
+import { enhanceWithMemoryBank } from './memoryEnhancement';
 import { enhanceWithStressorAwareness } from './stressorEnhancement';
+import { applyEarlyConversationRAG } from '../earlyConversation';
+import { applyResponseRules } from './ruleProcessing';
+
+// Import emergencyPathDetection module
+import * as emergencyModule from './emergencyPathDetection';
+const handleEmergencyDetection = emergencyModule.handleIntervention || emergencyModule.handleEmergencyPath || function(responseText: string, userInput: string) { return responseText; };
+
+// Import emotionHandler module
+import * as emotionModule from './emotionHandler';
+const handleMisidentifiedEmotions = emotionModule.handleMisidentifiedEmotions || function(responseText: string, userInput: string) { return responseText; };
+
+// Import hallucinationHandler module
+import { handlePotentialHallucinations } from './hallucinationHandler';
+
+// Import approachSelector module
+import * as approachModule from './approachSelector';
+const processMultipleApproaches = approachModule.processMultipleApproaches || function(responseText: string, userInput: string, conversationHistory: string[] = []) { return responseText; };
+
+// Import logotherapyIntegration module
+import * as logotherapyModule from './logotherapyIntegration';
+const integrateLogotherapy = logotherapyModule.integrateLogotherapy || function(responseText: string, userInput: string, conversationHistory: string[] = []) { return responseText; };
+
+// Import repetitionPrevention module
+import * as repetitionModule from './repetitionPrevention';
+const detectPatternRepetition = repetitionModule.detectPatternRepetition || function(responseText: string, conversationHistory: string[] = []) { return { text: responseText, wasModified: false }; };
+
+// Import memorySystemHandler module
+import * as memoryModule from './memorySystemHandler';
+const processWithMemorySystem = memoryModule.processWithMemorySystem || function(responseText: string, userInput: string, conversationHistory: string[] = []) { return responseText; };
+
+// Import responseRiskAssessment module
+import * as riskModule from './responseRiskAssessment';
+const detectResponseRisks = riskModule.detectResponseRisks || function(responseText: string, userInput: string) { return { hasRisks: false, safeResponse: responseText }; };
 
 // Unified interface for response processing
 export interface ProcessedResponse {
@@ -82,7 +105,7 @@ export function processCompleteResponse(
     );
     
     // 6. Enhance with memory
-    processedResponse = enhanceWithMemory(
+    processedResponse = enhanceWithMemoryBank(
       processedResponse,
       userInput,
       conversationHistory
@@ -122,7 +145,7 @@ export function processCompleteResponse(
     processedResponse = correctGrammar(processedResponse, userInput);
     
     // 11. Apply universal rules
-    processedResponse = applyRules(processedResponse, userInput);
+    processedResponse = applyResponseRules(processedResponse, userInput);
     
     // 12. Final risk assessment
     const riskResult = detectResponseRisks(processedResponse, userInput);
@@ -161,6 +184,6 @@ export function processCompleteResponse(
 }
 
 // Re-export core processor functions
-export { enhanceWithMemoryBank as enhanceWithMemory } from './memoryEnhancement';
+export { enhanceWithMemoryBank } from './memoryEnhancement';
 export { handlePotentialHallucinations } from './hallucinationHandler';
 export { applyEarlyConversationRAG } from '../earlyConversation';

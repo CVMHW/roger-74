@@ -6,7 +6,7 @@
  */
 
 import { detectStressors } from '../../stressors/stressorDetection';
-import { getStressorResponse } from '../../stressors/stressorResponses';
+import { generateStressorResponse } from '../../stressors/stressorResponses';
 import { DetectedStressor } from '../../stressors/stressorTypes';
 
 /**
@@ -28,7 +28,7 @@ export const enhanceWithStressorAwareness = (
   }
   
   // Detect potential stressors in the user input
-  const detectedStressors = detectStressors(userInput, conversationHistory);
+  const detectedStressors = detectStressors(userInput);
   
   // If no significant stressors detected, return original response
   if (!detectedStressors || detectedStressors.length === 0) {
@@ -37,21 +37,22 @@ export const enhanceWithStressorAwareness = (
   
   // Get the highest priority stressor
   const primaryStressor = detectedStressors.sort((a, b) => 
-    (b.confidenceScore || 0) - (a.confidenceScore || 0)
+    (b.confidence || 0) - (a.confidence || 0)
   )[0];
   
   // Skip enhancement if confidence is low
-  if (primaryStressor.confidenceScore && primaryStressor.confidenceScore < 0.6) {
+  if (primaryStressor.confidence && primaryStressor.confidence < 0.6) {
     return responseText;
   }
   
   // Check if the original response already addresses the stressor
-  if (primaryStressor.keyword && responseText.toLowerCase().includes(primaryStressor.keyword.toLowerCase())) {
+  if (primaryStressor.keywords && primaryStressor.keywords.length > 0 && 
+      responseText.toLowerCase().includes(primaryStressor.keywords[0].toLowerCase())) {
     return responseText;
   }
   
   // Get a suitable response enhancement for this stressor
-  const stressorResponse = getStressorResponse(primaryStressor.category || 'general', userInput);
+  const stressorResponse = generateStressorResponse(primaryStressor, userInput);
   
   // If we have a relevant stressor response, integrate it
   if (stressorResponse) {

@@ -37,7 +37,7 @@ export const enhanceStressorAwareness = (
     
     // For short responses, consider adding stressor acknowledgment
     if (responseText.length < 120 && stressors.length > 0) {
-      return `${responseText} I notice you're dealing with some stressors around ${stressors[0].type}. How has that been affecting you?`;
+      return `${responseText} I notice you're dealing with some stressors around ${stressors[0].stressor.category}. How has that been affecting you?`;
     }
     
     // For longer responses, don't modify if already substantial
