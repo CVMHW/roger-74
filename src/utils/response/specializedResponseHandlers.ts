@@ -13,11 +13,22 @@ import {
   createOhioContextResponse
 } from './handlers';
 
+// Export eating pattern handlers
+import {
+  handleEatingPatterns,
+  enhanceEatingDisorderResponse,
+  needsSpecializedEatingResponseHandling
+} from './handlers/eatingPatternHandler';
+
 export {
   createSadnessResponse,
   createDefensiveReactionResponse,
   createWeatherRelatedResponse,
   createTraumaResponseMessage,
   createMildGamblingResponse,
-  createOhioContextResponse
+  createOhioContextResponse,
+  // Export eating pattern handlers
+  handleEatingPatterns,
+  enhanceEatingDisorderResponse,
+  needsSpecializedEatingResponseHandling
 };

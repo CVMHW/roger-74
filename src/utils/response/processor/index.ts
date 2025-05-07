@@ -2,144 +2,112 @@
 /**
  * Response Processor
  * 
- * Central module for processing responses before sending to the user
- * Integrates memory, hallucination prevention, and logotherapy
+ * Unified system for processing responses through all handlers
  */
 
-import { processResponse } from '../../memory/memoryController';
-import { processCore } from './core';
-import { applyConversationStageProcessing, determineConversationStage } from './conversationStageHandler';
-import { enhanceResponseWithMemory } from './memoryEnhancement';
-import { recordToMemorySystems, recordPatientContentToMemorySystems } from './memorySystemHandler';
-import { handleLogotherapyIntegration } from './logotherapy/integrationHandler';
-import { handlePotentialHallucinations } from './hallucinationHandler';
+// Import required subsystems
 import { correctGrammar } from './grammarCorrection';
-import { selectResponseApproach, adjustApproachForConversationFlow } from './approachSelector';
-import { 
-  checkEmotionMisidentification, 
-  fixEmotionMisidentification, 
-  addHumanTouch, 
-  detectEverydaySituation,
-  generateEverydayFrustrationResponse
-} from './emotionHandler';
-import { detectHarmfulRepetitions, fixHarmfulRepetitions } from './repetitionPrevention';
-import { isResponseRisky, shouldDeleteResponse } from './responseRiskAssessment';
-// Import the new eating pattern handler
-import { handleEatingPatterns } from '../handlers/eatingPatternHandler';
-import { needsSpecializedEatingResponseHandling } from '../handlers/eatingPatternHandler';
+import { validateResponseQuality } from './validation';
+import { handleEmergencyDetection } from './emergencyPathDetection';
+import { handleMisidentifiedEmotions } from './emotionHandler';
+import { handlePotentialHallucinations } from './hallucinationHandler';
+import { processMultipleApproaches } from './approachSelector';
+import { integrateLogotherapy } from './logotherapyIntegration';
+import { enhanceWithMemory } from './memoryEnhancement';
+import { detectPatternRepetition } from './repetitionPrevention';
+import { processWithMemorySystem } from './memorySystemHandler';
+import { processEarlyConversation } from '../earlyConversation';
+import { applyRules } from './ruleProcessing';
+import { detectResponseRisks } from './responseRiskAssessment';
+import { enhanceStressorAwareness } from './stressorEnhancement';
+
+// Unified interface for response processing
+export interface ProcessedResponse {
+  text: string;
+  wasModified: boolean;
+  reason?: string;
+}
 
 /**
- * Process a response through all enhancement systems
+ * Process a complete response through all our enhancement systems
+ * @param responseText Original response text
+ * @param userInput User's input that triggered the response
+ * @param conversationHistory Array of previous messages
+ * @returns Enhanced response text
  */
-export const processCompleteResponse = (
+export function processCompleteResponse(
   responseText: string,
   userInput: string,
   conversationHistory: string[] = []
-): string => {
+): string {
   try {
-    console.log("RESPONSE PROCESSOR: Starting complete response processing");
+    // Start with the original response
+    let processedResponse = responseText;
     
-    // Get conversation stage
-    const { isEarlyConversation, messageCount } = determineConversationStage();
+    // Store modification reason if needed
+    let modificationReason = '';
     
-    // Select appropriate response approach based on content and context
-    const initialApproach = selectResponseApproach(userInput, conversationHistory);
-    const approach = adjustApproachForConversationFlow(initialApproach, conversationHistory, messageCount);
-    
-    console.log("Using approach:", approach);
-    
-    // RISK ASSESSMENT - NEW: Early check for clearly problematic responses
-    if (responseText && shouldDeleteResponse(responseText, userInput)) {
-      console.log("CRITICAL: Response deleted due to high risk assessment");
-      return generateSafeAlternativeResponse(userInput, approach);
-    }
-    
-    // NEW: Check for specialized eating disorder content first
-    // This happens before everyday situations to catch serious health concerns
-    if (needsSpecializedEatingResponseHandling(userInput)) {
-      const eatingResponse = handleEatingPatterns(userInput);
-      if (eatingResponse) {
-        console.log("Using specialized eating disorder response");
-        // Record to memory systems with high priority
-        recordPatientContentToMemorySystems(userInput, { isEatingDisorderConcern: true }, null, 0.9);
-        return eatingResponse;
-      }
-    }
-    
-    // Check for everyday situations next
-    const situationInfo = detectEverydaySituation(userInput);
-    if (situationInfo && situationInfo.isFrustration) {
-      // For everyday situations, use specialized handling
-      const everydayResponse = generateEverydayFrustrationResponse(situationInfo, userInput);
-      if (everydayResponse) {
-        console.log("Using everyday situation response");
-        // Record to memory systems with high priority
-        recordPatientContentToMemorySystems(userInput, { isEverydaySituation: true }, null, 0.9);
-        return everydayResponse;
-      }
-    }
-    
-    // 1. First apply core processing (universal rules)
-    let processedResponse = processCore(responseText, userInput, messageCount, conversationHistory);
-    
-    // 2. Check and fix emotion misidentification - Make this a TOP PRIORITY
-    if (checkEmotionMisidentification(processedResponse, userInput)) {
-      processedResponse = fixEmotionMisidentification(processedResponse, userInput);
-      console.log("Fixed emotion misidentification");
-    }
-    
-    // 3. Add human touches to make Roger more natural and less robotic
-    processedResponse = addHumanTouch(processedResponse, userInput);
-    
-    // 4. INTEGRATED REPETITION CHECK - NEW EARLIER PLACEMENT
-    // Check for repetitions before other enhancements to catch basic issues early
-    const repetitionCheck = detectHarmfulRepetitions(processedResponse);
-    if (repetitionCheck.hasRepetition) {
-      console.log(`DETECTED HARMFUL REPETITION (score: ${repetitionCheck.repetitionScore})`);
-      processedResponse = fixHarmfulRepetitions(processedResponse);
-    }
-    
-    // 5. NEW: Check for food/eating related content that wasn't caught earlier
-    // This handles less severe cases or ambiguous mentions
-    if (/food|eat|diet|meal|weight|body|calories/i.test(userInput)) {
-      const eatingResponse = handleEatingPatterns(userInput);
-      if (eatingResponse) {
-        // Blend the eating response with the processed response for a more comprehensive answer
-        // This is for cases that didn't meet the threshold for full specialized handling
-        processedResponse = `${eatingResponse} ${processedResponse}`;
-      }
-    }
-    
-    // 6. Apply logotherapy integration based on approach strength
-    if (approach.logotherapyStrength > 0.2) {
-      processedResponse = handleLogotherapyIntegration(
-        processedResponse, 
-        userInput, 
+    // 1. First apply early conversation handling if applicable
+    if (conversationHistory.length <= 3) {
+      processedResponse = processEarlyConversation(
+        processedResponse,
+        userInput,
         conversationHistory
       );
     }
     
-    // 7. Apply memory enhancement - NOW WITH STRONGER MEMORY INTEGRATION
-    processedResponse = enhanceResponseWithMemory({
-      response: processedResponse,
-      userInput,
-      conversationHistory
-    });
-    
-    // 8. Enhance with stressor awareness if applicable
-    processedResponse = enhanceWithStressorAwareness(
+    // 2. Apply emergency detection and handling
+    processedResponse = handleEmergencyDetection(
       processedResponse,
       userInput
     );
     
-    // 9. Apply conversation stage processing (special handling for early conversations)
-    processedResponse = applyConversationStageProcessing(
-      processedResponse, 
-      userInput,
-      isEarlyConversation
+    // 3. Check for misidentified emotions
+    processedResponse = handleMisidentifiedEmotions(
+      processedResponse,
+      userInput
     );
     
-    // 10. Apply hallucination prevention as final safety
+    // 4. Apply multiple therapeutic approaches
+    processedResponse = processMultipleApproaches(
+      processedResponse,
+      userInput,
+      conversationHistory
+    );
+    
+    // 5. Integrate logotherapy when appropriate
+    processedResponse = integrateLogotherapy(
+      processedResponse,
+      userInput,
+      conversationHistory
+    );
+    
+    // 6. Enhance with memory
+    processedResponse = enhanceWithMemory(
+      processedResponse,
+      userInput,
+      conversationHistory
+    );
+    
+    // 7. Detect and prevent repetition patterns
+    const repetitionResult = detectPatternRepetition(
+      processedResponse,
+      conversationHistory
+    );
+    
+    if (repetitionResult.wasModified) {
+      processedResponse = repetitionResult.text;
+      modificationReason = 'Repetition prevented';
+    }
+    
+    // 8. Process with memory system
+    processedResponse = processWithMemorySystem(
+      processedResponse,
+      userInput,
+      conversationHistory
+    );
+    
+    // 9. Apply hallucination prevention as final safety
     const hallucinationResult = handlePotentialHallucinations(
       processedResponse,
       userInput,
@@ -149,120 +117,49 @@ export const processCompleteResponse = (
     // Extract the processed response from the result object
     processedResponse = hallucinationResult.processedResponse;
     
-    // 11. Apply grammar correction with user input for length adjustment
+    // 10. Apply grammar correction with user input for length adjustment
     processedResponse = correctGrammar(processedResponse, userInput);
     
-    // 12. Final check for redundant phrases - ANTI-REPETITION FILTER
-    processedResponse = eliminateRedundantPhrases(processedResponse);
+    // 11. Apply universal rules
+    processedResponse = applyRules(processedResponse, userInput);
     
-    // 13. NEW: FINAL RISK ASSESSMENT
-    if (isResponseRisky(processedResponse)) {
-      console.log("HIGH RISK RESPONSE DETECTED - REPLACING WITH SAFE ALTERNATIVE");
-      return generateSafeAlternativeResponse(userInput, approach);
+    // 12. Final risk assessment
+    const riskResult = detectResponseRisks(processedResponse, userInput);
+    if (riskResult.hasRisks) {
+      // Modify response if risks detected
+      processedResponse = riskResult.safeResponse;
     }
     
-    // Record final response to memory systems
-    recordToMemorySystems(processedResponse, undefined, undefined, 0.8);
+    // 13. Enhance with stressor awareness if applicable
+    processedResponse = enhanceStressorAwareness(
+      processedResponse,
+      userInput,
+      conversationHistory
+    );
+    
+    // 14. Final validation of quality
+    const validationResult = validateResponseQuality(
+      processedResponse,
+      userInput,
+      conversationHistory
+    );
+    
+    if (!validationResult.isValid) {
+      console.error("Response validation failed:", validationResult.reason);
+      // Use fallback for invalid response
+      processedResponse = "I understand you're going through something important. Could you share more about what's on your mind?";
+    }
     
     return processedResponse;
     
   } catch (error) {
-    console.error("RESPONSE PROCESSOR: Error in processing", error);
-    
-    // Fallback: Return a safe generic response instead of the original
-    return "I'd like to understand more about what you're experiencing. Could you share a bit more?";
+    console.error("Error in processCompleteResponse:", error);
+    // Return safe fallback
+    return "I'm here to listen and support you. Could you tell me more about what's going on?";
   }
-};
+}
 
-/**
- * Generate a safe alternative response when a risky response is detected
- * or when self-deletion occurs
- */
-const generateSafeAlternativeResponse = (userInput: string, approach: any): string => {
-  // Create a set of safe alternative responses
-  const safeResponses = [
-    "I'd like to understand more about what you're experiencing. Could you tell me more?",
-    "What matters most to you about this situation?",
-    "I'm here to listen. What would be most helpful to focus on right now?",
-    "What aspect of this would you like to explore further?",
-    "I'd like to hear more about your perspective on this."
-  ];
-  
-  // Select a response based on input length for some variety
-  const index = Math.abs(userInput.length % safeResponses.length);
-  return safeResponses[index];
-};
-
-/**
- * Advanced repetition elimination system using computational linguistics
- * Eliminates redundant phrases and similar greetings that cause Roger to sound robotic
- */
-const eliminateRedundantPhrases = (response: string): string => {
-  let processedResponse = response;
-  
-  // List of common repetitive prefixes to detect and eliminate duplicates
-  const commonPhrases = [
-    "Based on what you're sharing",
-    "From what you've shared",
-    "I hear what you're sharing",
-    "I understand that",
-    "It sounds like",
-    "I hear you're feeling",
-    "I notice that you're",
-    "You mentioned that"
-  ];
-  
-  // Check for multiple occurrences of the same phrase
-  for (const phrase of commonPhrases) {
-    // Count occurrences
-    const regex = new RegExp(phrase, 'gi');
-    const matches = processedResponse.match(regex);
-    
-    if (matches && matches.length > 1) {
-      // Keep only the first occurrence
-      let firstOccurrence = true;
-      processedResponse = processedResponse.replace(regex, (match) => {
-        if (firstOccurrence) {
-          firstOccurrence = false;
-          return match;
-        }
-        return ""; // Remove subsequent occurrences
-      });
-    }
-  }
-  
-  // Check for patterns like "Based on X, Based on X" or "I hear X, I hear X"
-  const repetitionPatterns = [
-    /(Based on[^,.!?]+),\s*(Based on)/gi,
-    /(From what[^,.!?]+),\s*(From what)/gi,
-    /(I hear[^,.!?]+),\s*(I hear)/gi,
-    /(It sounds like[^,.!?]+),\s*(It sounds like)/gi
-  ];
-  
-  for (const pattern of repetitionPatterns) {
-    processedResponse = processedResponse.replace(pattern, '$1'); // Keep only first phrase
-  }
-  
-  // Replace adjacent duplicate phrases (with no separator between them)
-  processedResponse = processedResponse.replace(/(Based on what you're sharing)\s*\1/gi, '$1');
-  processedResponse = processedResponse.replace(/(From what you've shared)\s*\1/gi, '$1');
-  processedResponse = processedResponse.replace(/(I hear what you're sharing)\s*\1/gi, '$1');
-  
-  // Trim extra spaces that might be left after removing phrases
-  processedResponse = processedResponse.replace(/\s{2,}/g, ' ').trim();
-  
-  // Add final sentence if response became too short after removing repetitions
-  if (processedResponse.length < 20) {
-    processedResponse += " What would be most helpful to discuss right now?";
-  }
-  
-  return processedResponse;
-};
-
-// Export for backward compatibility
-export const processResponseThroughMasterRules = processCompleteResponse;
-
-// Re-export important components for direct access
-export { recordToMemorySystems } from './memorySystemHandler';
-export { enhanceResponseWithMemory } from './memoryEnhancement';
-export { applyResponseRules } from './ruleProcessing';
+// Re-export core processor functions
+export { enhanceWithMemory } from './memoryEnhancement';
+export { handlePotentialHallucinations } from './hallucinationHandler';
+export { processEarlyConversation } from '../earlyConversation';

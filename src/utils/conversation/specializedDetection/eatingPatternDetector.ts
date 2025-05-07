@@ -1,3 +1,4 @@
+
 /**
  * Eating Pattern Detector
  * 
@@ -65,6 +66,29 @@ const foodSmallTalkPatterns = [
   /gluten[- ]free|dairy[- ]free|nut[- ]free/i
 ];
 
+// Cleveland-specific food contexts
+const clevelandFoodContexts = [
+  /west side market/i,
+  /little italy/i,
+  /tremont/i, 
+  /ohio city/i,
+  /pierogi/i,
+  /polish food/i,
+  /corned beef/i,
+  /slyman'?s/i,
+  /great lakes brewing/i,
+  /mitchell'?s ice cream/i,
+  /melt/i,
+  /cleveland food/i,
+  /lakewood restaurant/i,
+  /barrio/i,
+  /sokolowski'?s/i,
+  /tommy'?s/i,
+  /hot sauce williams/i,
+  /lido lounge/i,
+  /east 4th/i
+];
+
 // Context markers that increase concern level
 const contextualRiskMarkers = [
   /always|every day|constantly|never/i, // Absolutist language
@@ -122,14 +146,21 @@ export const detectEatingDisorderConcerns = (userInput: string): {
     }
   }
   
-  // Check if this is likely just food small talk
-  let isLikelySmallTalk = foodSmallTalkPatterns.some(pattern => pattern.test(normalizedInput));
+  // Check if this is likely just food small talk, especially Cleveland-related
+  const isGeneralFoodSmallTalk = foodSmallTalkPatterns.some(pattern => pattern.test(normalizedInput));
+  const isClevelandFoodTalk = clevelandFoodContexts.some(pattern => pattern.test(normalizedInput));
+  let isLikelySmallTalk = isGeneralFoodSmallTalk || isClevelandFoodTalk;
   
   // If there are ED phrases but also small talk patterns, resolve the ambiguity
-  // by looking at the overall emotional tone and context
+  // Special handling for Cleveland food contexts - be more cautious about flagging these as concerns
   if (matchCount > 0 && isLikelySmallTalk) {
-    // If there are multiple ED signals or context markers, it's not just small talk
-    isLikelySmallTalk = matchCount < 1.5 && contextMarkers.length === 0;
+    if (isClevelandFoodTalk) {
+      // For Cleveland food talk, require stronger evidence of ED concerns
+      isLikelySmallTalk = matchCount < 2.5 || contextMarkers.length === 0;
+    } else {
+      // For general food small talk, use normal threshold
+      isLikelySmallTalk = matchCount < 1.5 && contextMarkers.length === 0;
+    }
   }
   
   // Determine risk level based on matches and context
@@ -140,6 +171,16 @@ export const detectEatingDisorderConcerns = (userInput: string): {
     riskLevel = 'moderate';
   } else if (matchCount > 0) {
     riskLevel = 'low';
+  }
+  
+  // Cleveland food context adjustment - reduce risk level for Cleveland food talk
+  // unless there's very strong evidence of an eating disorder
+  if (isClevelandFoodTalk && riskLevel !== 'high' && contextMarkers.length < 3) {
+    if (riskLevel === 'moderate') {
+      riskLevel = 'low';
+    } else if (riskLevel === 'low') {
+      riskLevel = 'none';
+    }
   }
   
   // If this is clearly small talk with minimal ED signals, reduce the risk level
@@ -158,12 +199,14 @@ export const detectEatingDisorderConcerns = (userInput: string): {
 
 /**
  * Detects if the user's input is primarily about food as small talk
+ * with special handling for Cleveland food contexts
  * @param userInput User's message
  * @returns Whether the message is primarily food-related small talk
  */
 export const isFoodSmallTalk = (userInput: string): {
   isSmallTalk: boolean;
   topics: string[];
+  isClevelandSpecific: boolean;
 } => {
   const normalizedInput = userInput.toLowerCase();
   const topics: string[] = [];
@@ -177,32 +220,54 @@ export const isFoodSmallTalk = (userInput: string): {
     }
   }
   
-  // Check if there are any eating disorder concerns
-  const { isEatingDisorderConcern } = detectEatingDisorderConcerns(userInput);
+  // Check if this is Cleveland-specific food talk
+  const isClevelandSpecific = clevelandFoodContexts.some(pattern => {
+    const matches = normalizedInput.match(pattern);
+    if (matches && matches.length > 0) {
+      topics.push(matches[0]);
+      smallTalkMatchCount += 0.5; // Cleveland food contexts boost small talk score
+      return true;
+    }
+    return false;
+  });
   
-  // It's food small talk if it matches patterns and doesn't raise ED concerns
-  const isSmallTalk = smallTalkMatchCount > 0 && !isEatingDisorderConcern;
+  // Check if there are any eating disorder concerns
+  const { isEatingDisorderConcern, riskLevel } = detectEatingDisorderConcerns(userInput);
+  
+  // It's food small talk if it matches patterns and doesn't raise high-level ED concerns
+  // For Cleveland food talk, we're even more lenient about classifying as small talk
+  const isSmallTalk = smallTalkMatchCount > 0 && 
+                      (!isEatingDisorderConcern || 
+                       (isClevelandSpecific && riskLevel !== 'high'));
   
   return {
     isSmallTalk,
-    topics
+    topics,
+    isClevelandSpecific
   };
 };
 
 /**
  * Generate an appropriate response for an eating disorder concern
- * based on the detected risk level
+ * based on the detected risk level, with Emily Program referrals when appropriate
  */
 export const generateEatingDisorderResponse = (
   userInput: string,
   detectionResult: ReturnType<typeof detectEatingDisorderConcerns>
 ): string => {
-  const { riskLevel, matchedPhrases } = detectionResult;
+  const { riskLevel, matchedPhrases, isLikelySmallTalk } = detectionResult;
   
+  // Don't provide ED responses for what's likely just Cleveland food talk
+  const smallTalkResult = isFoodSmallTalk(userInput);
+  if (smallTalkResult.isClevelandSpecific && isLikelySmallTalk) {
+    return generateFoodSmallTalkResponse(userInput, smallTalkResult);
+  }
+  
+  // For higher risk cases, include Emily Program referral
   if (riskLevel === 'high') {
-    return "I notice you're talking about food and body image in a way that sounds distressing. These feelings can be really difficult to navigate alone. Would it help to talk about what support might be helpful for you right now?";
+    return "I notice you're talking about food and body image in a way that sounds distressing. These feelings can be really difficult to navigate alone. The Emily Program (1-888-364-5977) specializes in supporting people with complex feelings about food and body image. Would it help to talk about what support might be helpful for you right now?";
   } else if (riskLevel === 'moderate') {
-    return "It sounds like you might be having some complicated feelings about food or body image. Those feelings are common, but they can also be challenging. What kind of support would be most helpful for you right now?";
+    return "It sounds like you might be having some complicated feelings about food or body image. Those feelings are common, but they can also be challenging. Some people find specialized support, like what The Emily Program offers, to be helpful. What kind of support would be most helpful for you right now?";
   } else if (riskLevel === 'low') {
     return "I hear you mentioning some thoughts about food and eating. How have these thoughts been affecting you lately?";
   }
@@ -213,13 +278,36 @@ export const generateEatingDisorderResponse = (
 
 /**
  * Generate a food small talk response that's appropriate and supportive
+ * with special handling for Cleveland food contexts
  */
 export const generateFoodSmallTalkResponse = (
   userInput: string,
   smallTalkResult: ReturnType<typeof isFoodSmallTalk>
 ): string => {
-  const { topics } = smallTalkResult;
+  const { topics, isClevelandSpecific } = smallTalkResult;
   
+  // Special responses for Cleveland food contexts
+  if (isClevelandSpecific) {
+    const clevelandFoodMentions = topics.filter(topic => 
+      clevelandFoodContexts.some(pattern => pattern.test(topic))
+    );
+    
+    if (clevelandFoodMentions.length > 0) {
+      if (/west side market|market/i.test(userInput)) {
+        return "The West Side Market is such a Cleveland institution! Many people find joy in exploring all the different food vendors there. What other Cleveland spots do you enjoy?";
+      } else if (/little italy|italian/i.test(userInput)) {
+        return "Little Italy has such a rich food heritage in Cleveland. The restaurants and bakeries there have been bringing people together for generations. Do you have favorite spots there?";
+      } else if (/pierogi|polish/i.test(userInput)) {
+        return "Pierogies are definitely part of Cleveland's food identity! They're a comfort food that brings back memories for many people here. Do you have other Cleveland comfort foods you enjoy?";
+      } else if (/corned beef|slyman/i.test(userInput)) {
+        return "Cleveland's corned beef sandwiches are legendary! Places like Slyman's have been serving them up for decades. What other Cleveland food traditions do you enjoy?";
+      }
+      
+      return "Cleveland has such a rich and diverse food scene that brings people together. These shared food experiences are an important part of community and connection. What other aspects of Cleveland life do you enjoy?";
+    }
+  }
+  
+  // General food small talk responses
   if (topics.length > 0) {
     // Check for specific food topics to personalize response
     if (/cook(ing|ed)|recipe|bak(ing|ed)/i.test(topics.join(' '))) {
@@ -237,6 +325,7 @@ export const generateFoodSmallTalkResponse = (
 
 /**
  * Main function to process food-related messages and determine appropriate response type
+ * with enhanced Cleveland food context awareness
  */
 export const processFoodRelatedMessage = (userInput: string): {
   responseType: 'eating_disorder' | 'food_small_talk' | 'not_food_related';
@@ -246,6 +335,21 @@ export const processFoodRelatedMessage = (userInput: string): {
   // First check if this is an eating disorder concern
   const edResult = detectEatingDisorderConcerns(userInput);
   
+  // Check for Cleveland-specific food talk
+  const smallTalkResult = isFoodSmallTalk(userInput);
+  
+  // Special handling for Cleveland food contexts - generally treat as small talk
+  // unless there's very strong evidence of an eating disorder
+  if (smallTalkResult.isClevelandSpecific && 
+      (edResult.riskLevel !== 'high' || edResult.contextMarkers.length < 2)) {
+    return {
+      responseType: 'food_small_talk',
+      riskLevel: 'none',
+      suggestedResponse: generateFoodSmallTalkResponse(userInput, smallTalkResult)
+    };
+  }
+  
+  // For non-Cleveland contexts, process normally
   if (edResult.isEatingDisorderConcern) {
     return {
       responseType: 'eating_disorder',
@@ -255,8 +359,6 @@ export const processFoodRelatedMessage = (userInput: string): {
   }
   
   // If not an ED concern, check if it's food small talk
-  const smallTalkResult = isFoodSmallTalk(userInput);
-  
   if (smallTalkResult.isSmallTalk) {
     return {
       responseType: 'food_small_talk',

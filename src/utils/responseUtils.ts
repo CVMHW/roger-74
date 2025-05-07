@@ -1,3 +1,4 @@
+
 import { handleEatingPatterns, enhanceEatingDisorderResponse } from './response/handlers/eatingPatternHandler';
 
 export const getEatingDisorderMessage = (userInput: string): string => {
@@ -7,7 +8,7 @@ export const getEatingDisorderMessage = (userInput: string): string => {
     return enhanceEatingDisorderResponse(specializedResponse, userInput);
   }
   
-  return "I notice you're mentioning some concerns about eating or body image. These thoughts can be really challenging, and they're also very common. Would it help to talk more about how these thoughts have been affecting you?";
+  return "I notice you're mentioning some concerns about eating or body image. These thoughts can be really challenging, and they're also very common. The Emily Program (1-888-364-5977) offers specialized support for these feelings. Would it help to talk more about how these thoughts have been affecting you?";
 };
 
 const getCrisisMessage = (userInput: string): string => {
@@ -112,6 +113,19 @@ const getMildPTSDResponse = (userInput: string): string => {
     }
 
     return "I hear you've been experiencing some symptoms related to a traumatic event. It's important to be gentle with yourself and allow yourself time to heal. What kind of support feels most helpful to you right now?";
+};
+
+// Helper function for de-escalation responses
+export const generateDeescalationResponse = (userInput: string): string => {
+    if (/not listen/i.test(userInput)) {
+        return "I hear that you're feeling frustrated. I want to make sure I'm really understanding what you're saying. Could we take a step back so I can listen more carefully?";
+    }
+    
+    if (/wrong/i.test(userInput)) {
+        return "I appreciate you letting me know I misunderstood. Could you help me better understand what you meant?";
+    }
+    
+    return "I want to make sure I'm understanding you correctly. Could you tell me more about what's on your mind?";
 };
 
 export {
