@@ -35,6 +35,9 @@ export {
   handleSuicidalIdeation
 };
 
+// Export response time calculation function
+export { calculateMinimumResponseTime } from '../masterRules';
+
 // Export response approach selection system
 export { selectResponseApproach, adjustApproachForConversationFlow } from '../response/processor/approachSelector';
 

@@ -44,5 +44,26 @@ export const isDirectMedicalAdvice = (text: string): boolean => {
   return medicalAdvicePatterns.some(pattern => pattern.test(text));
 };
 
+/**
+ * Calculate minimum response time based on complexity and emotional weight
+ * Used by response time calculation system
+ */
+export const calculateMinimumResponseTime = (
+  estimatedComplexity: number,
+  estimatedEmotionalWeight: number
+): number => {
+  // Base time is higher for complex or emotional messages
+  const baseTime = 500; // 500ms base
+  
+  // Add time based on complexity (0-9 scale)
+  const complexityFactor = Math.min(estimatedComplexity, 9) * 150;
+  
+  // Add time based on emotional weight (0-9 scale)
+  const emotionalFactor = Math.min(estimatedEmotionalWeight, 9) * 100;
+  
+  // Calculate minimum response time
+  return baseTime + complexityFactor + emotionalFactor;
+};
+
 // Re-export existing detection functions - using correct path
 export { isSmallTalk, isIntroduction, isPersonalSharing } from './masterRules/detection/topicDetection';
