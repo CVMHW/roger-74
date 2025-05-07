@@ -23,7 +23,8 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
     return {
       hasEmotion: true,
       primaryEmotion: socialContext.primaryEmotion,
-      intensity: socialContext.intensity || "medium", // Ensure we have a valid intensity value
+      // Fix: Ensure we cast the intensity to the correct type if it exists, or use "medium" as default
+      intensity: (socialContext.intensity as "low" | "medium" | "high") || "medium",
       isImplicit: false
     };
   }
