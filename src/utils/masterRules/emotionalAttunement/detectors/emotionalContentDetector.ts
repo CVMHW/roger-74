@@ -112,7 +112,7 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
         primaryEmotion: emotions[0], // Return the first detected emotion as primary
         intensity: "medium",
         isImplicit: false,
-        isMixed: true, // Add this flag to indicate mixed emotions
+        isMixed: true, // Now this property is defined in the interface
         secondaryEmotions: emotions.slice(1) // Include other detected emotions
       };
     }

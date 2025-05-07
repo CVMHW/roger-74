@@ -8,6 +8,8 @@ export interface EmotionInfo {
   primaryEmotion: string | null;
   intensity: 'low' | 'medium' | 'high' | null;
   isImplicit: boolean;
+  isMixed?: boolean;
+  secondaryEmotions?: string[];
 }
 
 export interface EverydaySituationInfo {
