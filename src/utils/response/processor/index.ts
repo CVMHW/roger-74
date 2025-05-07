@@ -18,7 +18,12 @@ import * as emergencyModule from './emergencyPathDetection';
 // Create a default emergency handler function that passes through the response
 const handleEmergencyDetection = (responseText: string, userInput: string) => {
   if (emergencyModule.applyEmergencyIntervention) {
-    return emergencyModule.applyEmergencyIntervention(responseText, userInput);
+    return emergencyModule.applyEmergencyIntervention(responseText, {
+      isEmergencyPath: false,
+      severity: 'LOW',
+      flags: [],
+      requiresImmediateIntervention: false
+    });
   }
   return responseText;
 };
@@ -27,8 +32,8 @@ const handleEmergencyDetection = (responseText: string, userInput: string) => {
 import * as emotionModule from './emotionHandler';
 // Create a default emotion handler function that passes through the response
 const handleMisidentifiedEmotions = (responseText: string, userInput: string) => {
-  if (emotionModule.emotionMisidentificationHandler) {
-    return emotionModule.emotionMisidentificationHandler(responseText, userInput);
+  if (emotionModule.fixEmotionMisidentification) {
+    return emotionModule.fixEmotionMisidentification(responseText, userInput);
   }
   return responseText;
 };
