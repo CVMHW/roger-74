@@ -7,19 +7,19 @@
 
 // Import required subsystems
 import { correctGrammar } from './grammarCorrection';
-import { validateResponseQuality } from './validation';
-import { handleEmergencyDetection } from './emergencyPathDetection';
-import { handleMisidentifiedEmotions } from './emotionHandler';
-import { handlePotentialHallucinations } from './hallucinationHandler';
-import { processMultipleApproaches } from './approachSelector';
-import { integrateLogotherapy } from './logotherapyIntegration';
-import { enhanceWithMemory } from './memoryEnhancement';
-import { detectPatternRepetition } from './repetitionPrevention';
-import { processWithMemorySystem } from './memorySystemHandler';
+import validateResponseQuality from './validation';
+import handleEmergencyDetection from './emergencyPathDetection';
+import handleMisidentifiedEmotions from './emotionHandler';
+import handlePotentialHallucinations from './hallucinationHandler';
+import processMultipleApproaches from './approachSelector';
+import integrateLogotherapy from './logotherapyIntegration';
+import { enhanceWithMemoryBank as enhanceWithMemory } from './memoryEnhancement';
+import detectPatternRepetition from './repetitionPrevention';
+import processWithMemorySystem from './memorySystemHandler';
 import { processEarlyConversation } from '../earlyConversation';
-import { applyRules } from './ruleProcessing';
-import { detectResponseRisks } from './responseRiskAssessment';
-import { enhanceStressorAwareness } from './stressorEnhancement';
+import applyRules from './ruleProcessing';
+import detectResponseRisks from './responseRiskAssessment';
+import { enhanceWithStressorAwareness as enhanceStressorAwareness } from './stressorEnhancement';
 
 // Unified interface for response processing
 export interface ProcessedResponse {
@@ -163,3 +163,4 @@ export function processCompleteResponse(
 export { enhanceWithMemory } from './memoryEnhancement';
 export { handlePotentialHallucinations } from './hallucinationHandler';
 export { processEarlyConversation } from '../earlyConversation';
+

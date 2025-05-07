@@ -1,3 +1,4 @@
+
 /**
  * Eating Pattern Handler
  * 
@@ -7,7 +8,7 @@
 import { 
   processFoodRelatedMessage, 
   detectEatingDisorderConcerns 
-} from '../../conversation/specializedDetection/eatingPatternDetector';
+} from '../../conversation/specializedDetection/eatingPatterns';
 import { recordToMemory } from '../../nlpProcessor';
 
 // Constants for resource referrals
