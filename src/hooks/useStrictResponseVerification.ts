@@ -1,4 +1,3 @@
-
 /**
  * Hook for strict mathematical response verification
  * 
@@ -38,12 +37,11 @@ export const useStrictResponseVerification = () => {
       
       // Use setTimeout with increased delay for more thorough processing
       setTimeout(() => {
-        // Perform verification
+        // Perform verification - updated to match function signature from strictVerification
         const result = verifyResponseMathematically(
           responseText,
           userInput,
-          conversationHistory,
-          previousResponses
+          conversationHistory
         );
         
         // Store result for later access
