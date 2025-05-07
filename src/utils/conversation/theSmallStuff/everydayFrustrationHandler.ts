@@ -5,6 +5,8 @@
  * Detects and responds to minor everyday frustrations that people commonly experience
  */
 
+import { detectHarmfulRepetitions, fixHarmfulRepetitions } from '../../response/processor/repetitionPrevention';
+
 /**
  * Detect if the user is expressing an everyday frustration
  */
@@ -88,11 +90,19 @@ export const detectEverydayFrustration = (userInput: string): {
     }
   }
   
+  // Check for eating concerns - NEW
+  if (/eat(ing)?|food|meal|diet|nutrition|weight/i.test(lowerInput)) {
+    result.isFrustration = true;
+    result.frustrationType = 'eating_concerns';
+    return result;
+  }
+  
   return result;
 };
 
 /**
  * Generate a response for everyday frustration
+ * Now with integrated repetition prevention
  */
 export const generateEverydayFrustrationResponse = (
   frustration: { isFrustration: boolean; frustrationType: string },
@@ -102,6 +112,8 @@ export const generateEverydayFrustrationResponse = (
     return '';
   }
   
+  let response = '';
+  
   // Check for Cleveland-specific context
   const isClevelandContext = /cleveland|ohio|cavs|browns|guardians|indians|cle/i.test(userInput);
   
@@ -109,54 +121,82 @@ export const generateEverydayFrustrationResponse = (
     case 'social_embarrassment': {
       if (/spill(ed)?/i.test(userInput) && /drink|beer|coffee/i.test(userInput)) {
         if (/date|girl|guy|romantic/i.test(userInput)) {
-          return "Oh man, spilling a drink on a date is definitely awkward! Those moments can feel so mortifying in the moment. Did they handle it okay? Sometimes these embarrassing moments can actually become funny stories later.";
+          response = "Oh man, spilling a drink on a date is definitely awkward! Those moments can feel so mortifying in the moment. Did they handle it okay? Sometimes these embarrassing moments can actually become funny stories later.";
+        } else {
+          response = "Spilling drinks is one of those universally awkward moments we all have. It's frustrating in the moment for sure. What happened after you spilled it?";
         }
-        return "Spilling drinks is one of those universally awkward moments we all have. It's frustrating in the moment for sure. What happened after you spilled it?";
+        break;
       }
       
       if (/trip(ped)?|fall|fell/i.test(userInput)) {
-        return "Tripping in public can feel so embarrassing in the moment. I've definitely been there - that split second feels like it's happening in slow motion, right? Did anyone help you out?";
+        response = "Tripping in public can feel so embarrassing in the moment. I've definitely been there - that split second feels like it's happening in slow motion, right? Did anyone help you out?";
+        break;
       }
       
-      return "Those socially awkward moments can really stick with us, even though everyone has them. What's bothering you most about what happened?";
+      response = "Those socially awkward moments can really stick with us, even though everyone has them. What's bothering you most about what happened?";
+      break;
     }
     
     case 'work_stress': {
-      return "Work stress can really follow you around even after hours. Sounds like this has been weighing on you. What aspect of the situation is creating the most pressure right now?";
+      response = "Work stress can really follow you around even after hours. Sounds like this has been weighing on you. What aspect of the situation is creating the most pressure right now?";
+      break;
     }
     
     case 'tech_problem': {
-      return "Tech issues can be incredibly frustrating, especially when you're trying to get something done. Those moments when technology doesn't cooperate can really test our patience. What have you tried so far?";
+      response = "Tech issues can be incredibly frustrating, especially when you're trying to get something done. Those moments when technology doesn't cooperate can really test our patience. What have you tried so far?";
+      break;
     }
     
     case 'lost_item': {
-      return "Losing something important is so stressful. That moment of panic when you realize it's missing is awful. Have you been able to retrace your steps at all?";
+      response = "Losing something important is so stressful. That moment of panic when you realize it's missing is awful. Have you been able to retrace your steps at all?";
+      break;
     }
     
     case 'weather_frustration': {
       if (isClevelandContext) {
-        return "Cleveland weather can be especially unpredictable! One minute it's sunny, the next you need an umbrella. How has the weather affected your plans?";
+        response = "Cleveland weather can be especially unpredictable! One minute it's sunny, the next you need an umbrella. How has the weather affected your plans?";
+      } else {
+        response = "Weather changing plans is always frustrating, especially when you were looking forward to something. What were you planning to do?";
       }
-      return "Weather changing plans is always frustrating, especially when you were looking forward to something. What were you planning to do?";
+      break;
     }
     
     case 'household_problem': {
-      return "House problems always seem to happen at the worst times. Those unexpected issues can really throw off your day. Is it something you need to get fixed right away?";
+      response = "House problems always seem to happen at the worst times. Those unexpected issues can really throw off your day. Is it something you need to get fixed right away?";
+      break;
     }
     
     case 'minor_health': {
-      return "Not feeling well can affect everything else in your day. Even small health issues can be really draining. How long have you been feeling this way?";
+      response = "Not feeling well can affect everything else in your day. Even small health issues can be really draining. How long have you been feeling this way?";
+      break;
     }
     
     case 'sports_frustration': {
       if (isClevelandContext) {
-        return "Being a Cleveland sports fan definitely has its ups and downs. Those games can really affect your mood, especially when they're close ones. What happened during the game that was most disappointing?";
+        response = "Being a Cleveland sports fan definitely has its ups and downs. Those games can really affect your mood, especially when they're close ones. What happened during the game that was most disappointing?";
+      } else {
+        response = "Sports can really connect to our emotions - the highs when they win and the lows when they lose. What about this particular game affected you?";
       }
-      return "Sports can really connect to our emotions - the highs when they win and the lows when they lose. What about this particular game affected you?";
+      break;
+    }
+    
+    case 'eating_concerns': {
+      response = "Eating concerns can be complex and affect us in multiple ways. What aspects of eating have been on your mind lately?";
+      break;
     }
     
     default: {
-      return "That sounds frustrating. Those small daily challenges can sometimes hit harder than we expect. What about this situation is bothering you the most?";
+      response = "That sounds frustrating. Those small daily challenges can sometimes hit harder than we expect. What about this situation is bothering you the most?";
+      break;
     }
   }
+  
+  // Run the response through our repetition prevention system
+  const repetitionCheck = detectHarmfulRepetitions(response);
+  if (repetitionCheck.hasRepetition) {
+    console.log("Fixing repetition in everyday frustration response");
+    response = fixHarmfulRepetitions(response);
+  }
+  
+  return response;
 };

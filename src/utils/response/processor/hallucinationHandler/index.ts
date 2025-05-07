@@ -7,25 +7,24 @@
  */
 
 // Export the main functionality
-export { handlePotentialHallucinations } from './core';
-
-// Export specialized handlers
-export { fixDangerousRepetitionPatterns } from './core';
-export { handleMemoryHallucinations } from './core';
-export { determinePreventionOptions } from './preventionOptions';
-
-// Export special cases handlers
 export { 
-  handleHealthHallucination, 
-  hasRepeatedContent, 
+  handlePotentialHallucinations,
+  handleMemoryHallucinations,
+  fixDangerousRepetitionPatterns,
+  handleHealthHallucination,
+  fixFalseMemoryReferences,
+  hasRepeatedContent,
   fixRepeatedContent
 } from './core';
 
-// Re-export from submodules
+// Export specialized handlers
+export { determinePreventionOptions } from './preventionOptions';
+
+// Export special cases handlers
 export * from './utils';
 
 // Export the early conversation functionality
-export { fixFalseMemoryReferences } from './core';
+export * from '../earlyConversation';
 
 // Export missing function for conversation stage handler
 export { applyEarlyConversationRAG } from '../../earlyConversation';
