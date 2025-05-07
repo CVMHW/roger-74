@@ -1,4 +1,3 @@
-
 /**
  * Mathematical Verification System
  * 
@@ -10,11 +9,12 @@ import { detectPatterns } from '../patternDetection/detector';
 import { responseTimingFunctions, specializedConcernPatterns } from '../patternDetection/patterns';
 import { isSuicidalIdeation, isDirectMedicalAdvice } from '../../../masterRules';
 
-// Strict verification threshold constants
-const REPETITION_THRESHOLD = 0.8;
-const MEMORY_REFERENCE_THRESHOLD = 0.6;
-const HALLUCINATION_THRESHOLD = 0.7;
-const CRITICAL_TOPIC_MULTIPLIER = 2.0;
+// Strict verification threshold constants - Adjusted to make rollbacks 25% easier
+const REPETITION_THRESHOLD = 0.6; // Was 0.8 (25% reduction)
+const MEMORY_REFERENCE_THRESHOLD = 0.45; // Was 0.6 (25% reduction)
+const HALLUCINATION_THRESHOLD = 0.525; // Was 0.7 (25% reduction)
+const CRITICAL_TOPIC_MULTIPLIER = 2.5; // Was 2.0 (25% increase in strength)
+const ROLLBACK_EASE_FACTOR = 0.75; // 25% easier rollback threshold
 
 // Response verification result type
 export interface VerificationResult {
@@ -28,6 +28,7 @@ export interface VerificationResult {
 
 /**
  * Mathematically verify response quality using strict logarithmic models
+ * Now with 25% easier rollback initiation and strengthened prevention
  */
 export function verifyResponseMathematically(
   responseText: string,
@@ -49,7 +50,8 @@ export function verifyResponseMathematically(
   const patternResult = detectPatterns(responseText, previousResponses);
   
   if (patternResult.isRepetitive) {
-    result.confidenceScore *= (1 - Math.log10(patternResult.repetitionScore + 1) / 10);
+    // Strengthen penalty by 25%
+    result.confidenceScore *= (1 - Math.log10(patternResult.repetitionScore * 1.25 + 1) / 10);
     result.detectedIssues.push(`Repetitive patterns detected (score: ${patternResult.repetitionScore.toFixed(2)})`);
     
     // Calculate logarithmic response timing delay based on repetition score
@@ -57,12 +59,14 @@ export function verifyResponseMathematically(
       calculateSimilarity(r, responseText) > 0.6
     ).length;
     
-    result.responseTiming = responseTimingFunctions.logarithmicDelay(repetitionCount);
+    // Increase delay for repetitions by 25%
+    result.responseTiming = responseTimingFunctions.logarithmicDelay(repetitionCount) * 1.25;
   }
   
   // 2. Check for false memory references
   if (conversationHistory.length < 3 && hasMemoryReference(responseText)) {
-    const penaltyFactor = Math.log10(10); // logarithmic penalty of 1.0
+    // Increase memory reference penalty by 25%
+    const penaltyFactor = Math.log10(10) * 1.25; // logarithmic penalty of 1.25
     result.confidenceScore *= (1 - penaltyFactor / 10);
     result.detectedIssues.push('False memory reference in early conversation');
   }
@@ -70,7 +74,8 @@ export function verifyResponseMathematically(
   // 3. Check for hallucination indicators
   const hallucinationScore = detectHallucinationIndicators(responseText, userInput, conversationHistory);
   if (hallucinationScore > 0) {
-    const penaltyFactor = Math.log10(hallucinationScore * 10 + 1);
+    // Increase hallucination penalty by 25%
+    const penaltyFactor = Math.log10(hallucinationScore * 12.5 + 1); // Was 10, now 12.5
     result.confidenceScore *= (1 - penaltyFactor / 10);
     result.detectedIssues.push(`Potential hallucination indicators (score: ${hallucinationScore.toFixed(2)})`);
   }
@@ -85,12 +90,16 @@ export function verifyResponseMathematically(
   
   // 5. Check for crisis situations requiring immediate intervention
   if (isSuicidalIdeation(userInput) || isDirectMedicalAdvice(userInput)) {
-    result.confidenceScore *= 0.5; // Always apply 50% penalty to ensure careful responses
+    // Increase penalty for crisis situations by 25%
+    result.confidenceScore *= 0.375; // Was 0.5, now 0.375 (25% stronger)
     result.detectedIssues.push('Crisis or medical advice situation detected');
   }
   
-  // Determine final verification status
-  result.shouldRollback = responseTimingFunctions.shouldRollback(patternResult.repetitionScore);
+  // Determine final verification status - make rollbacks 25% easier to trigger
+  // Apply the rollback ease factor
+  result.shouldRollback = responseTimingFunctions.shouldRollback(patternResult.repetitionScore * ROLLBACK_EASE_FACTOR);
+  
+  // Keep verification threshold the same but make rollbacks easier
   result.isVerified = result.confidenceScore > 0.7 && !result.shouldRollback;
   
   // Determine recommended action based on verification
@@ -219,22 +228,24 @@ function detectSpecializedConcerns(userInput: string, responseText: string): num
 
 /**
  * Calculate logarithmic delay based on response confidence
+ * Increased by 25% for more thorough processing
  */
 export function calculateResponseDelay(confidenceScore: number): number {
-  // Lower confidence = longer delay (logarithmic)
-  const baseDelay = 500; // milliseconds
-  const maxDelay = 3000; // milliseconds
+  // Lower confidence = longer delay (logarithmic) - increased by 25%
+  const baseDelay = 625; // Was 500 milliseconds
+  const maxDelay = 3750; // Was 3000 milliseconds
   
   if (confidenceScore >= 0.9) {
     return baseDelay;
   }
   
-  // Use logarithmic scale: delay increases as confidence decreases
-  return Math.min(maxDelay, baseDelay + Math.log10(1 + (1 - confidenceScore) * 10) * 1500);
+  // Use logarithmic scale with 25% stronger effect: delay increases as confidence decreases
+  return Math.min(maxDelay, baseDelay + Math.log10(1 + (1 - confidenceScore) * 12.5) * 1875); // Was 10 and 1500
 }
 
 /**
  * Determine if response should be completely prevented
+ * Prevention threshold remains unchanged - we prefer rollback over full prevention
  */
 export function shouldPreventResponse(verificationResult: VerificationResult): boolean {
   return verificationResult.suggestedAction === 'prevent';
@@ -242,14 +253,17 @@ export function shouldPreventResponse(verificationResult: VerificationResult): b
 
 /**
  * Generate a safe fallback response when verification fails
+ * Now with more thoughtful and specific fallbacks
  */
 export function generateFallbackResponse(userInput: string): string {
-  // Different fallback options based on input
+  // More thoughtful fallback options based on input
   const fallbacks = [
     "I want to make sure I respond accurately. Could you tell me more about what you're experiencing?",
     "I appreciate you sharing that with me. To better understand your situation, could you provide some additional context?",
     "Thank you for your patience. I want to be helpful - could you share a bit more about what's on your mind?",
-    "I'm listening and want to provide the most thoughtful response. Could you elaborate on what you're going through?"
+    "I'm listening and want to provide the most thoughtful response. Could you elaborate on what you're going through?",
+    "I'd like to make sure I understand correctly before responding. Could you tell me more about your situation?",
+    "To provide the most meaningful support, I'd appreciate if you could share more about what you're experiencing right now."
   ];
   
   // Select a fallback based on mathematical hash of input for consistent selection

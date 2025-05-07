@@ -4,6 +4,8 @@
  * 
  * Mathematical system that predicts, logarithmically evaluates, and prevents 
  * hallucinations, memory issues, and repetitive responses
+ * 
+ * Now with 25% easier rollback thresholds and stronger prevention mechanisms
  */
 
 export { 
