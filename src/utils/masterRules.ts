@@ -8,6 +8,7 @@
 // Re-export from sub-modules
 export * from './masterRules/emotionalAttunement';
 export * from './masterRules/detection/topicDetection';
+export * from './masterRules/integration';
 
 /**
  * Calculate the minimum response time based on message complexity and emotional weight

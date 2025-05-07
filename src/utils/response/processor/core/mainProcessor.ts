@@ -7,6 +7,7 @@
 
 import { processEmotions, extractEmotionsFromInput } from '../emotions';
 import { verifyResponseMathematically } from '../strictVerification';
+import { integratedAnalysis } from '../../../masterRules/integration';
 
 /**
  * Process a complete response through all enhancement and verification steps
@@ -23,11 +24,20 @@ export function processCompleteResponse(
   try {
     console.log("PROCESSOR: Starting response processing");
     
+    // Perform integrated analysis (connects masterRules, personality, and topic detection)
+    const integrated = integratedAnalysis(userInput, conversationHistory);
+    console.log("PROCESSOR: Integrated analysis completed", {
+      isSmallTalk: integrated.conversationalContext.isSmallTalk,
+      isPersonalSharing: integrated.conversationalContext.isPersonalSharing,
+      clevelandTopic: integrated.clevelandContext.primaryTopic?.type,
+      responseTime: integrated.timing.responseTime
+    });
+    
     // Step 1: Initial strict mathematical verification
     const verification = verifyResponseMathematically(responseText, userInput);
-    if (verification.shouldPrevent) {
+    if (verification.shouldRollback) {
       console.log("PROCESSOR: Verification failed, generating fallback");
-      return verification.fallbackResponse || generateFallbackResponse(userInput);
+      return verification.altText || generateFallbackResponse(userInput);
     }
     
     // Extract emotions from user input for context-aware processing
@@ -50,11 +60,23 @@ export function processCompleteResponse(
       }
     }
     
+    // Add personality insight if appropriate
+    if (integrated.personality.shouldIncludeInsight && integrated.personality.insight) {
+      // Find a good spot to insert the insight
+      const sentenceBreakIndex = findSentenceBreak(responseText);
+      if (sentenceBreakIndex > 0) {
+        responseText = 
+          responseText.substring(0, sentenceBreakIndex + 1) + 
+          integrated.personality.insight +
+          responseText.substring(sentenceBreakIndex + 1);
+      }
+    }
+    
     // Step 14: Final strict mathematical verification
     const finalVerification = verifyResponseMathematically(responseText, userInput);
-    if (finalVerification.shouldPrevent) {
+    if (finalVerification.shouldRollback) {
       console.log("PROCESSOR: Final verification failed, generating fallback");
-      return finalVerification.fallbackResponse || generateFallbackResponse(userInput);
+      return finalVerification.altText || generateFallbackResponse(userInput);
     }
     
     console.log("PROCESSOR: Response processing complete");
@@ -63,6 +85,30 @@ export function processCompleteResponse(
     console.error("Error in processCompleteResponse:", error);
     return responseText;
   }
+}
+
+/**
+ * Find an appropriate break between sentences to insert content
+ */
+function findSentenceBreak(text: string): number {
+  const matches = text.match(/[.!?]\s+/g);
+  if (!matches || matches.length === 0) return -1;
+  
+  // Find the position of the first sentence break
+  const firstSentence = text.search(/[.!?]\s+/);
+  
+  // If it's too early in the text, find the second sentence break
+  if (firstSentence < 30 && matches.length > 1) {
+    const secondSentenceSearchStart = firstSentence + 1;
+    const secondSentenceSearchText = text.substring(secondSentenceSearchStart);
+    const secondSentenceBreakRelative = secondSentenceSearchText.search(/[.!?]\s+/);
+    
+    if (secondSentenceBreakRelative > 0) {
+      return secondSentenceSearchStart + secondSentenceBreakRelative;
+    }
+  }
+  
+  return firstSentence;
 }
 
 /**

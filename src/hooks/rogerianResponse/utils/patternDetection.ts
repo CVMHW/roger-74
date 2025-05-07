@@ -1,5 +1,6 @@
 
 import { detectEnhancedFeelings, getPersistentFeelings, getDominantTopics } from '../../../utils/reflection/feelingDetection';
+import { integratedAnalysis } from '../../../utils/masterRules/integration';
 
 /**
  * Detects patterns in user input to create better responses
@@ -10,6 +11,9 @@ export const detectPatterns = async (userInput: string): Promise<{
   enhancedResponse: string | null;
 }> => {
   try {
+    // First perform integrated analysis (connects masterRules, personality, and topic detection)
+    const integrated = integratedAnalysis(userInput);
+    
     // Analyze message with pattern matching
     const feelingResult = await detectEnhancedFeelings(userInput);
     
@@ -45,11 +49,24 @@ export const detectPatterns = async (userInput: string): Promise<{
         }
       }
       
+      // Add Cleveland-specific context if present
+      if (integrated.clevelandContext.hasContent) {
+        const topic = integrated.clevelandContext.primaryTopic;
+        if (topic && topic.type === 'sports') {
+          enhancedResponse += "I notice you're talking about Cleveland sports. ";
+        }
+      }
+      
       // Acknowledge topics from current message
       if (currentTopics.length > 0) {
         if (!enhancedResponse) {
           enhancedResponse = `I hear you're dealing with ${currentTopics.join(", ")}. `;
         }
+      }
+      
+      // Add personality insight if appropriate
+      if (integrated.personality.shouldIncludeInsight && integrated.personality.insight) {
+        enhancedResponse += integrated.personality.insight + " ";
       }
       
       // Only for longer messages with clear content
@@ -98,6 +115,11 @@ export const detectPatterns = async (userInput: string): Promise<{
           enhancedResponse = "I notice we've been focusing on ";
         }
         enhancedResponse += `${dominantTopics.join(", ")}. `;
+      }
+      
+      // Add personality insight if appropriate
+      if (integrated.personality.shouldIncludeInsight && integrated.personality.insight) {
+        enhancedResponse += integrated.personality.insight + " ";
       }
       
       // Add appropriate follow-up question
