@@ -1,9 +1,9 @@
-
 /**
  * Generators for emotionally attuned responses
  */
 
 import { EmotionInfo, EverydaySituationInfo } from './types';
+import { detectMeaningThemes } from './detectors';
 
 /**
  * Generates emotionally attuned response based on detected emotion
@@ -65,6 +65,63 @@ export const generateEmotionallyAttunedResponse = (
 };
 
 /**
+ * Generates meaning-focused response based on user input content
+ * This creates reflections of meaning rather than just reflecting feelings
+ * @param userInput User's original message
+ * @returns Meaning-focused reflection response
+ */
+export const generateMeaningFocusedResponse = (userInput: string): string => {
+  const meaningThemes = detectMeaningThemes(userInput);
+  
+  if (!meaningThemes.hasMeaningTheme) {
+    return "";
+  }
+  
+  // Choose appropriate reflection of meaning based on detected themes
+  if (meaningThemes.conflictingValues && meaningThemes.conflictingValues.length > 0) {
+    const conflictValue = meaningThemes.conflictingValues[0];
+    
+    if (conflictValue === "work-life balance") {
+      return "It sounds like you're trying to balance what matters to you both professionally and personally. Finding that balance between work demands and personal needs can be challenging.";
+    }
+    
+    if (conflictValue === "personal desires vs. responsibilities") {
+      return "I'm hearing that you're struggling with what you want to do versus what you feel you should do. That tension between personal desires and responsibilities can be difficult to navigate.";
+    }
+    
+    return "It seems like you're dealing with some competing priorities in your life right now. That kind of internal conflict can be really challenging.";
+  }
+  
+  if (meaningThemes.themes.includes("seeking purpose")) {
+    return "It sounds like you're searching for more meaning and purpose in what you're doing. Having a sense that your actions matter seems important to you.";
+  }
+  
+  if (meaningThemes.themes.includes("questioning identity")) {
+    return "I hear you questioning your role and place in all of this. Understanding who you are in relation to these challenges seems to be a significant concern.";
+  }
+  
+  if (meaningThemes.themes.includes("aligning with values")) {
+    return "It sounds like this situation is bringing up questions about what you truly value and believe in. These moments often reveal what matters most to us.";
+  }
+  
+  if (meaningThemes.themes.includes("seeking connection")) {
+    return "I hear that meaningful connection with others is important to you. These experiences seem to highlight your need for authentic relationships.";
+  }
+  
+  if (meaningThemes.themes.includes("seeking autonomy")) {
+    return "It seems like having a sense of control and choice in your situation matters a lot to you. Being able to direct your own path appears to be a significant value.";
+  }
+  
+  if (meaningThemes.themes.includes("facing challenges")) {
+    return "I'm hearing that you're facing some significant challenges right now. These difficult moments often reveal what truly matters to us and what we're capable of.";
+  }
+  
+  // Default meaning response for other themes
+  const theme = meaningThemes.themes[0];
+  return `It seems like this situation is bringing up some important questions about ${theme} in your life. What aspects of this feel most significant to you?`;
+};
+
+/**
  * Generates practical everyday support responses
  * @param situationInfo Information about the everyday situation
  * @returns Practical support response
@@ -89,3 +146,58 @@ export const generatePracticalSupportResponse = (
     "That kind of everyday challenge can be really frustrating. How has it been affecting your day?";
 };
 
+/**
+ * Determines whether to use reflection of feeling or meaning
+ * @param userInput User's message
+ * @param emotionInfo Detected emotion information
+ * @returns The appropriate type of reflection
+ */
+export const determineReflectionType = (userInput: string, emotionInfo: EmotionInfo): 'feeling' | 'meaning' => {
+  // Check for specific indicators that meaning reflection would be better
+  const meaningIndicators = [
+    /why (am|is|are|does)/i, // Questions about reasons
+    /purpose|meaning|point|reason|understand|make sense/i, // Explicit meaning-making language
+    /value|important|matters|significance/i, // Value language
+    /struggle|conflict|dilemma|torn|between|choice/i, // Internal conflict language
+    /always|never|every time|pattern|keep|constantly|repeatedly/i, // Pattern language
+    /should|must|have to|supposed to|expected/i, // Obligation language
+    /life|existential|bigger picture/i // Existential language
+  ];
+  
+  // Check if content is simple vs complex
+  // Simple: Today was tough.
+  // Complex: I'm struggling with balancing my work and family commitments.
+  const isComplexContent = userInput.length > 20;
+  
+  // Check if message contains meaning indicators
+  const hasMeaningIndicators = meaningIndicators.some(pattern => pattern.test(userInput));
+  
+  // Check for deeper meaning themes
+  const meaningThemes = detectMeaningThemes(userInput);
+  
+  // Use reflection of meaning when:
+  // 1. Content is complex AND has meaning indicators, OR
+  // 2. Has clear meaning themes detected
+  if ((isComplexContent && hasMeaningIndicators) || meaningThemes.hasMeaningTheme) {
+    return 'meaning';
+  }
+  
+  // Default to reflection of feeling for shorter messages or when emotion is primary focus
+  return 'feeling';
+};
+
+/**
+ * Generate an appropriate response based on reflection type determination
+ * @param userInput User's message
+ * @param emotionInfo Detected emotion information
+ * @returns The most appropriate response
+ */
+export const generateAppropriateReflection = (userInput: string, emotionInfo: EmotionInfo): string => {
+  const reflectionType = determineReflectionType(userInput, emotionInfo);
+  
+  if (reflectionType === 'meaning') {
+    return generateMeaningFocusedResponse(userInput);
+  } else {
+    return generateEmotionallyAttunedResponse(emotionInfo, userInput);
+  }
+};

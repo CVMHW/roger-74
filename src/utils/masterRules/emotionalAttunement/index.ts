@@ -6,15 +6,25 @@
  * emotionally appropriate responses.
  */
 
-import { detectEmotionalContent, detectEverydaySituation } from './detectors';
-import { generateEmotionallyAttunedResponse, generatePracticalSupportResponse } from './responseGenerators';
+import { detectEmotionalContent, detectEverydaySituation, detectMeaningThemes } from './detectors';
+import { 
+  generateEmotionallyAttunedResponse, 
+  generatePracticalSupportResponse,
+  generateMeaningFocusedResponse,
+  determineReflectionType,
+  generateAppropriateReflection
+} from './responseGenerators';
 import { EmotionInfo, EverydaySituationInfo } from './types';
 
 export {
   detectEmotionalContent,
   detectEverydaySituation,
+  detectMeaningThemes,
   generateEmotionallyAttunedResponse,
-  generatePracticalSupportResponse
+  generatePracticalSupportResponse,
+  generateMeaningFocusedResponse,
+  determineReflectionType,
+  generateAppropriateReflection
 };
 
 export type {
@@ -24,6 +34,7 @@ export type {
 
 /**
  * Process user input and generate emotionally attuned response
+ * Enhanced to properly distinguish between reflection of feeling and meaning
  * @param userInput User message to analyze
  * @returns Generated response or empty string if no emotion detected
  */
@@ -32,7 +43,8 @@ export const processEmotionalInput = (userInput: string): string => {
   const emotionInfo = detectEmotionalContent(userInput);
   
   if (emotionInfo.hasEmotion) {
-    return generateEmotionallyAttunedResponse(emotionInfo, userInput);
+    // Instead of always using feeling reflection, determine appropriate reflection type
+    return generateAppropriateReflection(userInput, emotionInfo);
   }
   
   // If no strong emotion, check for everyday situations
@@ -45,4 +57,3 @@ export const processEmotionalInput = (userInput: string): string => {
   // No specific emotional content detected
   return "";
 };
-
