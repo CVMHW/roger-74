@@ -1,3 +1,4 @@
+
 /**
  * Roger Response Main Processor
  * 
@@ -5,7 +6,7 @@
  */
 
 import { processEmotions, extractEmotionsFromInput } from '../emotions';
-import { verifyResponseMathematically } from '../../strictVerification';
+import { verifyResponseMathematically } from '../strictVerification';
 
 /**
  * Process a complete response through all enhancement and verification steps

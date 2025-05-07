@@ -343,7 +343,7 @@ export const socialEmotionalContexts: SocialEmotionalContext[] = [
     primaryEmotion: 'disappointed',
     secondaryEmotion: 'embarrassed',
     intensity: 'medium',
-    description: 'Disappointment from a date that didn't go well'
+    description: "Disappointment from a date that didn't go well"
   }
 ];
 
