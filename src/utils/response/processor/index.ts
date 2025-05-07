@@ -15,12 +15,13 @@ import { applyResponseRules } from './ruleProcessing';
 
 // Import emergencyPathDetection module
 import * as emergencyModule from './emergencyPathDetection';
+import { SeverityLevel } from './emergencyPathDetection/types';
 // Create a default emergency handler function that passes through the response
 const handleEmergencyDetection = (responseText: string, userInput: string) => {
   if (emergencyModule.applyEmergencyIntervention) {
     return emergencyModule.applyEmergencyIntervention(responseText, {
       isEmergencyPath: false,
-      severity: 'LOW',
+      severity: SeverityLevel.LOW,
       flags: [],
       requiresImmediateIntervention: false
     });
