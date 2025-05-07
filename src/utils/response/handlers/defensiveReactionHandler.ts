@@ -1,69 +1,51 @@
 
 /**
- * Defensive Reaction Handler
- * 
- * Detects and responds to defensive reactions patients may have
- * when mental health concerns are mentioned.
+ * Handler for defensive reactions
  */
 
-import { generateDeescalationResponse } from '../../../../utils/responseUtils';
-
-/**
- * Patterns that suggest a defensive reaction to mental health suggestions
- */
-const defensiveReactionPatterns = [
-  /I('?m| am) not crazy/i,
-  /I don'?t need (therapy|help|a therapist|medication|meds)/i,
-  /stop (saying|telling me|suggesting) I('?m| am|'?ve| have) (mental|crazy|ill)/i,
-  /nothing('?s| is) wrong with me/i,
-  /don'?t (psychoanalyze|diagnose) me/i,
-  /I('?m| am) fine/i,
-  /not everything is (mental health|a disorder|depression|anxiety)/i,
-  /you('?re| are) (making|being|getting) (me angry|annoying|pushy)/i,
-  /that('?s| is) (offensive|insulting)/i,
-  /stop (pushing|insisting)/i
-];
+import { detectDefensivePatterns } from '../patternDetection';
+import { createMessage } from '../../../utils/messageUtils';
+import { ConcernType } from '../../../utils/reflection/reflectionTypes';
 
 /**
- * Checks if user message contains defensive reactions
- * @param userInput User message text
- * @returns True if defensive reaction detected
+ * Handles defensive reactions from users
  */
-const isDefensiveReaction = (userInput: string): boolean => {
-  return defensiveReactionPatterns.some(pattern => pattern.test(userInput));
+export const handleDefensiveReaction = (
+  userInput: string,
+  conversationHistory: string[]
+): string | null => {
+  // Detect defensive patterns in the user's message
+  const defensePatterns = detectDefensivePatterns(userInput);
+  
+  if (defensePatterns.length > 0) {
+    // Handle defensive reactions with appropriate responses
+    return generateDefensiveReactionResponse(userInput, defensePatterns);
+  }
+  
+  return null;
 };
 
 /**
- * Creates an appropriate response to defensive reactions
- * @param userInput User message text
- * @returns Response text if defensive reaction detected, null otherwise
+ * Generate appropriate responses to defensive reactions
  */
-export const createDefensiveReactionResponse = (userInput: string): string | null => {
-  if (!isDefensiveReaction(userInput)) {
-    return null;
+const generateDefensiveReactionResponse = (
+  userInput: string, 
+  defensivePatterns: string[]
+): string => {
+  // If the user feels judged or criticized
+  if (defensivePatterns.some(pattern => /judge|judging|criticized|attacking/i.test(pattern))) {
+    return "I appreciate you letting me know how my response came across. That wasn't my intention, and I value your feedback. I'm here to understand and support you, not to judge.";
   }
+  
+  // If the user feels misunderstood
+  if (defensivePatterns.some(pattern => /misunderstood|didn't understand|not listening/i.test(pattern))) {
+    return "I can see I've misunderstood something important. I'd like to better understand your perspective. Could you help me see what I missed?";
+  }
+  
+  // Generic defensive reaction response
+  return "I notice there might be some tension in our conversation. That's completely understandable. I'm here to support you, and I'm open to shifting our conversation in whatever way would be most helpful for you.";
+};
 
-  // Tailor response based on specific patterns
-  if (/not crazy/i.test(userInput)) {
-    return "I would never suggest that you're 'crazy.' I believe in listening to your experiences without labels. What matters is how you're feeling and what would be helpful for you right now.";
-  }
-  
-  if (/don'?t need (therapy|help)/i.test(userInput)) {
-    return "You know yourself best, and I respect your perspective on what you need. I'm here to listen and support you in whatever way feels helpful to you.";
-  }
-  
-  if (/stop (saying|telling|suggesting)/i.test(userInput)) {
-    return "I apologize if anything I've said has felt presumptuous. I want to make sure I'm understanding you correctly. Could you tell me more about what's on your mind?";
-  }
-  
-  if (/nothing('?s| is) wrong with me/i.test(userInput)) {
-    return "I don't believe there's anything 'wrong' with you. Everyone faces challenges at times, and talking through experiences is just one way some people find helpful. What would be most useful for you right now?";
-  }
-  
-  if (/offensive|insulting/i.test(userInput)) {
-    return "I apologize for causing offense. That was not my intention at all. I value your perspective and want to understand better how I can support you in a way that feels respectful and helpful.";
-  }
-  
-  // Default de-escalation response
-  return generateDeescalationResponse(userInput);
+export default {
+  handleDefensiveReaction
 };

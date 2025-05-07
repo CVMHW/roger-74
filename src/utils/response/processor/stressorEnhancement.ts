@@ -1,111 +1,79 @@
+
 /**
- * Stressor Enhancement
+ * Stressor Awareness Enhancement
  * 
- * Enhances responses with stressor awareness
+ * Improves responses based on detected stressors
  */
 
-import { detectStressors, getPrimaryStressor } from '../../stressors/stressorDetection';
-import { generateStressorResponse, getCoOccurringStressorResponse, getRelatedStressorResponse } from '../../stressors/stressorResponses';
+import { detectStressors } from '../../stressors/stressorDetection';
+import { getStressorResponse } from '../../stressors/stressorResponses';
+import { DetectedStressor } from '../../stressors/stressorTypes';
 
 /**
- * Enhance response with stressor awareness
+ * Enhances responses by incorporating awareness of detected stressors
+ * 
+ * @param responseText Original response text
+ * @param userInput User input that prompted the response
+ * @param conversationHistory Previous conversation for context
+ * @returns Enhanced response with stressor awareness
  */
 export const enhanceWithStressorAwareness = (
-  response: string,
-  userInput: string
+  responseText: string,
+  userInput: string,
+  conversationHistory: string[] = []
 ): string => {
-  try {
-    // Only apply enhancement if response doesn't already have stressor content
-    if (hasStressorResponseMarkers(response)) {
-      return response;
-    }
-    
-    // Detect stressors in user input
-    const detectedStressors = detectStressors(userInput);
-    
-    // If no stressors or low confidence, return original
-    if (detectedStressors.length === 0 || detectedStressors[0].confidence < 0.7) {
-      return response;
-    }
-    
-    // Get primary stressor
-    const primaryStressor = detectedStressors[0];
-    
-    // Check for co-occurring stressors
-    if (detectedStressors.length > 1 && detectedStressors[1].confidence > 0.65) {
-      // Generate response for co-occurring stressors
-      const secondaryStressor = detectedStressors[1];
-      const stressorResponse = getCoOccurringStressorResponse(
-        primaryStressor,
-        secondaryStressor
-      );
-      
-      // Combine with original response if appropriate
-      if (response.length < 120) {
-        return `${response} ${stressorResponse}`;
-      } else {
-        return stressorResponse;
-      }
-    }
-    
-    // Check for related stressors
-    const relatedResponse = getRelatedStressorResponse(primaryStressor.stressor.id);
-    if (relatedResponse) {
-      // If the original response is short, combine them
-      if (response.length < 120) {
-        return `${response} ${relatedResponse}`;
-      }
-      
-      // Otherwise, replace with stressor-specific response
-      const stressorResponse = generateStressorResponse(primaryStressor, userInput);
-      return stressorResponse;
-    }
-    
-    // For high confidence and severe stressors, consider replacing response
-    if (primaryStressor.confidence > 0.8 && 
-        (primaryStressor.intensity === 'severe' || primaryStressor.stressor.severity === 'severe')) {
-      const stressorResponse = generateStressorResponse(primaryStressor, userInput);
-      return stressorResponse;
-    }
-    
-    // For other cases, keep original response
-    return response;
-  } catch (error) {
-    console.error("Error enhancing with stressor awareness:", error);
-    return response;
+  // Don't modify responses that are already quite long
+  if (responseText.length > 350) {
+    return responseText;
   }
+  
+  // Detect potential stressors in the user input
+  const detectedStressors = detectStressors(userInput, conversationHistory);
+  
+  // If no significant stressors detected, return original response
+  if (!detectedStressors || detectedStressors.length === 0) {
+    return responseText;
+  }
+  
+  // Get the highest priority stressor
+  const primaryStressor = detectedStressors.sort((a, b) => 
+    (b.confidenceScore || 0) - (a.confidenceScore || 0)
+  )[0];
+  
+  // Skip enhancement if confidence is low
+  if (primaryStressor.confidenceScore && primaryStressor.confidenceScore < 0.6) {
+    return responseText;
+  }
+  
+  // Check if the original response already addresses the stressor
+  if (primaryStressor.keyword && responseText.toLowerCase().includes(primaryStressor.keyword.toLowerCase())) {
+    return responseText;
+  }
+  
+  // Get a suitable response enhancement for this stressor
+  const stressorResponse = getStressorResponse(primaryStressor.category || 'general', userInput);
+  
+  // If we have a relevant stressor response, integrate it
+  if (stressorResponse) {
+    // Check if the response is short enough to be enhanced
+    if (responseText.length < 200) {
+      return `${responseText} ${stressorResponse}`;
+    } else {
+      // For longer responses, find a good breaking point
+      const lastSentenceBreak = responseText.lastIndexOf('.');
+      if (lastSentenceBreak > responseText.length * 0.7) {
+        // Insert before the last sentence
+        return responseText.substring(0, lastSentenceBreak + 1) + 
+               ` ${stressorResponse} ` + 
+               responseText.substring(lastSentenceBreak + 1);
+      } else {
+        // Append to the end if no good breaking point
+        return `${responseText} ${stressorResponse}`;
+      }
+    }
+  }
+  
+  return responseText;
 };
 
-/**
- * Check if response already has stressor content
- */
-const hasStressorResponseMarkers = (response: string): boolean => {
-  const lowerResponse = response.toLowerCase();
-  
-  // Check for phrases that indicate stressor awareness
-  const stressorPhrases = [
-    'must be stressful',
-    'sounds stressful',
-    'that stress',
-    'dealing with',
-    'coping with',
-    'handling',
-    'pressure',
-    'anxiety',
-    'worried about',
-    'concerned about'
-  ];
-  
-  return stressorPhrases.some(phrase => lowerResponse.includes(phrase));
-};
-
-/**
- * Check if response is a specific stressor response
- */
-export const isStressorResponse = (response: string): boolean => {
-  // This can be used by other systems to detect when a response
-  // has already been handled by the stressor system
-  return response.includes("I hear how") || 
-         response.includes("I can hear that") ||
-         response.includes("I notice you're dealing with");
-};
+export default enhanceWithStressorAwareness;

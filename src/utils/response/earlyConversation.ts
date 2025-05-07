@@ -5,6 +5,30 @@
  * Specialized processing for the critical first few turns of conversation
  */
 
+import {
+  generateSmallTalkResponse,
+  isLikelyChild,
+  isLikelyNewcomer
+} from '../conversation/smallTalk';
+
+import {
+  generateCulturalConnectionPrompt,
+  incorporateRogerPersonality,
+  generateConnectionStatement,
+  generateTransitionToEric
+} from '../conversation/earlyEngagement/culturalConnector';
+
+// Import these from conversation/index.ts to ensure they're available
+import { 
+  isLikelyTeen,
+  isLikelyMale,
+  isLikelyBlueCollar,
+  mightPreferSimpleLanguage,
+  getAppropriateConversationStyle,
+  identifyImmediateConcern,
+  generateImmediateConcernResponse
+} from '../conversation';
+
 /**
  * Apply early conversation RAG (Retrieval Augmented Generation) 
  * for use in early parts of conversation
@@ -45,6 +69,33 @@ export const createEarlyConversationGrounding = (userInput: string): string => {
 };
 
 /**
+ * Process early conversation with special handling for first few exchanges
+ */
+export const processEarlyConversationStages = (
+  response: string,
+  userInput: string,
+  conversationHistory: string[] = []
+): string => {
+  // Apply RAG for safer early responses
+  let enhancedResponse = applyEarlyConversationRAG(response, userInput);
+  
+  // For the very first exchange, be extra cautious about assumptions
+  if (conversationHistory.length <= 1) {
+    // Avoid statements that imply prior knowledge
+    enhancedResponse = enhancedResponse
+      .replace(/you've been feeling/gi, "you may be feeling")
+      .replace(/you've experienced/gi, "you might be experiencing");
+      
+    // Ensure we ask open-ended questions to gather more information
+    if (!enhancedResponse.includes("?") && enhancedResponse.length < 150) {
+      enhancedResponse += " What else would be helpful for me to understand about your situation?";
+    }
+  }
+  
+  return enhancedResponse;
+};
+
+/**
  * Extract simple topics from text without complex NLP
  */
 function extractSimpleTopics(text: string): string[] {
@@ -76,3 +127,39 @@ function extractSimpleTopics(text: string): string[] {
     .slice(0, 3)
     .map(([word]) => word);
 }
+
+/**
+ * Generate appropriate response for early conversations
+ */
+export const generateEarlyConversationResponse = (
+  userInput: string,
+  messageCount: number
+): string => {
+  // Prioritize immediate concerns
+  const immediateConcern = identifyImmediateConcern(userInput);
+  if (immediateConcern) {
+    return generateImmediateConcernResponse(userInput, immediateConcern);
+  }
+  
+  // Generate small talk response
+  const smallTalkResponse = generateSmallTalkResponse(userInput, messageCount);
+  if (smallTalkResponse) {
+    return smallTalkResponse;
+  }
+  
+  // Generate cultural connection prompt
+  if (messageCount <= 5) {
+    const culturalConnectionPrompt = generateCulturalConnectionPrompt(userInput, messageCount);
+    if (culturalConnectionPrompt) {
+      return culturalConnectionPrompt;
+    }
+  }
+  
+  // Default response
+  return "I'm here to chat while you wait. How are you feeling today?";
+};
+
+// Export the handleEarlyConversation function to fix the import issue
+export const handleEarlyConversation = (userInput: string, messageCount: number): string => {
+  return generateEarlyConversationResponse(userInput, messageCount);
+};

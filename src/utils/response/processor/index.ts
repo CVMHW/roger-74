@@ -7,19 +7,19 @@
 
 // Import required subsystems
 import { correctGrammar } from './grammarCorrection';
-import validateResponseQuality from './validation';
-import handleEmergencyDetection from './emergencyPathDetection';
-import handleMisidentifiedEmotions from './emotionHandler';
-import handlePotentialHallucinations from './hallucinationHandler';
-import processMultipleApproaches from './approachSelector';
-import integrateLogotherapy from './logotherapyIntegration';
+import { validateResponseQuality } from './validation';
+import { handleEmergencyDetection } from './emergencyPathDetection';
+import { handleMisidentifiedEmotions } from './emotionHandler';
+import { handlePotentialHallucinations } from './hallucinationHandler';
+import { processMultipleApproaches } from './approachSelector';
+import { integrateLogotherapy } from './logotherapyIntegration';
 import { enhanceWithMemoryBank as enhanceWithMemory } from './memoryEnhancement';
-import detectPatternRepetition from './repetitionPrevention';
-import processWithMemorySystem from './memorySystemHandler';
-import { processEarlyConversation } from '../earlyConversation';
-import applyRules from './ruleProcessing';
-import detectResponseRisks from './responseRiskAssessment';
-import { enhanceWithStressorAwareness as enhanceStressorAwareness } from './stressorEnhancement';
+import { detectPatternRepetition } from './repetitionPrevention';
+import { processWithMemorySystem } from './memorySystemHandler';
+import { applyEarlyConversationRAG } from '../earlyConversation';
+import { applyResponseRules as applyRules } from './ruleProcessing';
+import { detectResponseRisks } from './responseRiskAssessment';
+import { enhanceWithStressorAwareness } from './stressorEnhancement';
 
 // Unified interface for response processing
 export interface ProcessedResponse {
@@ -49,10 +49,9 @@ export function processCompleteResponse(
     
     // 1. First apply early conversation handling if applicable
     if (conversationHistory.length <= 3) {
-      processedResponse = processEarlyConversation(
+      processedResponse = applyEarlyConversationRAG(
         processedResponse,
-        userInput,
-        conversationHistory
+        userInput
       );
     }
     
@@ -115,7 +114,9 @@ export function processCompleteResponse(
     );
     
     // Extract the processed response from the result object
-    processedResponse = hallucinationResult.processedResponse;
+    if (hallucinationResult && typeof hallucinationResult === 'object' && 'processedResponse' in hallucinationResult) {
+      processedResponse = hallucinationResult.processedResponse;
+    }
     
     // 10. Apply grammar correction with user input for length adjustment
     processedResponse = correctGrammar(processedResponse, userInput);
@@ -131,7 +132,7 @@ export function processCompleteResponse(
     }
     
     // 13. Enhance with stressor awareness if applicable
-    processedResponse = enhanceStressorAwareness(
+    processedResponse = enhanceWithStressorAwareness(
       processedResponse,
       userInput,
       conversationHistory
@@ -160,7 +161,6 @@ export function processCompleteResponse(
 }
 
 // Re-export core processor functions
-export { enhanceWithMemory } from './memoryEnhancement';
+export { enhanceWithMemoryBank as enhanceWithMemory } from './memoryEnhancement';
 export { handlePotentialHallucinations } from './hallucinationHandler';
-export { processEarlyConversation } from '../earlyConversation';
-
+export { applyEarlyConversationRAG } from '../earlyConversation';

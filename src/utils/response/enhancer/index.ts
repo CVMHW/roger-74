@@ -1,3 +1,4 @@
+
 /**
  * Response Enhancer Index
  * 
@@ -7,7 +8,7 @@
 // Import from the new integrated system
 import { enhanceResponse } from '../enhancer';
 import { processResponseThroughMasterRules } from '../responseProcessor';
-import { enhanceWithMemory } from '../processor'; // Fixed import name
+import { enhanceWithMemoryBank as enhanceWithMemory } from '../processor/memoryEnhancement'; 
 
 // Re-export the main functionality
 export { enhanceResponse };

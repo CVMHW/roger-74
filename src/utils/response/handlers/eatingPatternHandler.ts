@@ -1,4 +1,3 @@
-
 /**
  * Eating Pattern Handler
  * 
@@ -53,8 +52,7 @@ export const handleEatingPatterns = (userInput: string): string | null => {
     // Create memory entry with detailed analysis
     recordToMemory(
       userInput, 
-      `EATING CONCERN: ${result.riskLevel}. Phrases: ${detectionResult.matchedPhrases.join(', ')}`,
-      0.9 // High priority
+      `EATING CONCERN: ${result.riskLevel}. Phrases: ${detectionResult.matchedPhrases.join(', ')}`
     );
     
     // For non-Cleveland food contexts with moderate to high risk,
