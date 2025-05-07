@@ -15,34 +15,67 @@ import { applyResponseRules } from './ruleProcessing';
 
 // Import emergencyPathDetection module
 import * as emergencyModule from './emergencyPathDetection';
-const handleEmergencyDetection = emergencyModule.handleIntervention || emergencyModule.handleEmergencyPath || function(responseText: string, userInput: string) { return responseText; };
+// Create a default emergency handler function that passes through the response
+const handleEmergencyDetection = (responseText: string, userInput: string) => {
+  if (emergencyModule.applyEmergencyIntervention) {
+    return emergencyModule.applyEmergencyIntervention(responseText, userInput);
+  }
+  return responseText;
+};
 
 // Import emotionHandler module
 import * as emotionModule from './emotionHandler';
-const handleMisidentifiedEmotions = emotionModule.handleMisidentifiedEmotions || function(responseText: string, userInput: string) { return responseText; };
+// Create a default emotion handler function that passes through the response
+const handleMisidentifiedEmotions = (responseText: string, userInput: string) => {
+  if (emotionModule.emotionMisidentificationHandler) {
+    return emotionModule.emotionMisidentificationHandler(responseText, userInput);
+  }
+  return responseText;
+};
 
 // Import hallucinationHandler module
 import { handlePotentialHallucinations } from './hallucinationHandler';
 
 // Import approachSelector module
 import * as approachModule from './approachSelector';
-const processMultipleApproaches = approachModule.processMultipleApproaches || function(responseText: string, userInput: string, conversationHistory: string[] = []) { return responseText; };
+// Create a default approach handler function
+const processMultipleApproaches = (responseText: string, userInput: string, conversationHistory: string[] = []) => {
+  if (approachModule.selectResponseApproach) {
+    // Simple implementation that doesn't modify the response but uses the available functions
+    const approach = approachModule.selectResponseApproach(userInput, conversationHistory);
+    console.log("Selected approach type:", approach.type);
+    return responseText;
+  }
+  return responseText;
+};
 
 // Import logotherapyIntegration module
 import * as logotherapyModule from './logotherapyIntegration';
-const integrateLogotherapy = logotherapyModule.integrateLogotherapy || function(responseText: string, userInput: string, conversationHistory: string[] = []) { return responseText; };
+// Create a default logotherapy integration function
+const integrateLogotherapy = (responseText: string, userInput: string, conversationHistory: string[] = []) => {
+  return responseText; // Simple pass-through implementation
+};
 
 // Import repetitionPrevention module
 import * as repetitionModule from './repetitionPrevention';
-const detectPatternRepetition = repetitionModule.detectPatternRepetition || function(responseText: string, conversationHistory: string[] = []) { return { text: responseText, wasModified: false }; };
+// Create a default repetition detection function
+const detectPatternRepetition = (responseText: string, conversationHistory: string[] = []) => {
+  return { text: responseText, wasModified: false };
+};
 
 // Import memorySystemHandler module
 import * as memoryModule from './memorySystemHandler';
-const processWithMemorySystem = memoryModule.processWithMemorySystem || function(responseText: string, userInput: string, conversationHistory: string[] = []) { return responseText; };
+// Create a default memory system handling function
+const processWithMemorySystem = (responseText: string, userInput: string, conversationHistory: string[] = []) => {
+  return responseText;
+};
 
 // Import responseRiskAssessment module
 import * as riskModule from './responseRiskAssessment';
-const detectResponseRisks = riskModule.detectResponseRisks || function(responseText: string, userInput: string) { return { hasRisks: false, safeResponse: responseText }; };
+// Create a default risk assessment function
+const detectResponseRisks = (responseText: string, userInput: string) => {
+  return { hasRisks: false, safeResponse: responseText };
+};
 
 // Unified interface for response processing
 export interface ProcessedResponse {

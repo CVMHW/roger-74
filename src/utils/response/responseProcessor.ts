@@ -14,8 +14,8 @@ export {
   processCompleteResponse as processResponseThroughMasterRules
 } from './processor';
 
-// Export enhancer function - fixed import name
-export { enhanceWithMemory as enhanceResponseWithMemory } from './processor';
+// Export enhancer function - using correct import name
+export { enhanceWithMemoryBank as enhanceResponseWithMemory } from './processor';
 
 // Re-export integrated hallucination prevention
 export { preventHallucinations } from '../memory/hallucination/preventionV2';
