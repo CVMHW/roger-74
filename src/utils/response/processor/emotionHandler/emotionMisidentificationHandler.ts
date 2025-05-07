@@ -6,12 +6,7 @@
  * This is specifically for Rogerian/emotional responses, not logotherapy
  */
 
-// Import Cleveland-specific content and references
-import { detectClevelandSportsReference } from '../../../conversationEnhancement/ohio/detectors';
-import { detectOhioReferences } from '../../../conversationEnhancement/ohio/references';
-
-// Import from masterRules for emotional content detection
-import { detectEmotionalContent } from '../../../masterRules/emotionalAttunement/detectors';
+import { emotionsWheel, getEmotionFromWheel, detectSocialEmotionalContext } from '../../../emotions/emotionsWheel';
 
 // Import everyday situation handlers - using correct function names
 import { 
@@ -34,7 +29,26 @@ export const checkEmotionMisidentification = (
     return false;
   }
   
-  // Check for negative emotion indicators in user input
+  // First check for explicit emotion mentions
+  const emotionWords = Object.keys(emotionsWheel).concat(
+    Object.values(emotionsWheel).flatMap(e => e.synonyms)
+  );
+  
+  const mentionedEmotions = emotionWords.filter(word => 
+    new RegExp(`\\b${word}\\b`, 'i').test(userInput)
+  );
+  
+  if (mentionedEmotions.length > 0) {
+    return true; // User explicitly mentioned an emotion but we said "neutral"
+  }
+  
+  // Check for social emotional contexts
+  const socialContext = detectSocialEmotionalContext(userInput);
+  if (socialContext) {
+    return true;
+  }
+  
+  // Check for other negative emotion indicators in user input
   const negativeEmotionPatterns = [
     /rough|tough|bad|difficult|hard|stressful|awful|terrible|worst|annoying/i,
     /embarrass(ing|ed)?|awkward|uncomfortable|cringe/i,
@@ -47,9 +61,7 @@ export const checkEmotionMisidentification = (
     /ruined|screwed up|messed up|failed|blew it|disaster/i,
     // Add social situation indicators
     /cute (girl|guy|person)|date|flirt|hitting on|talk to|first impression/i,
-    /rejected|turned down|stood up|ghosted|dumped|broke up/i,
-    // Sports context indicators often tied to emotions
-    /(cavs|browns|guardians) (game|match|lost|won)/i
+    /rejected|turned down|stood up|ghosted|dumped|broke up/i
   ];
   
   // If input mentions any negative emotions but response claims neutral, it's a misidentification
@@ -58,70 +70,70 @@ export const checkEmotionMisidentification = (
 
 /**
  * Fix emotion misidentification in responses
- * Returns a more human, conversational response that acknowledges the emotional context
+ * @param response Original response text
+ * @param userInput User's input message
+ * @returns Corrected response
  */
 export const fixEmotionMisidentification = (
   response: string,
   userInput: string
 ): string => {
-  // Check for Cleveland references for better localized response
-  const ohioReferences = detectOhioReferences(userInput);
-  const isClevelandSports = detectClevelandSportsReference(userInput);
+  // First check for explicitly mentioned emotions
+  const emotionWords = Object.keys(emotionsWheel).concat(
+    Object.values(emotionsWheel).flatMap(e => e.synonyms)
+  );
   
-  // For social situations and embarrassment
-  if (/spill(ed)?|embarrass(ing|ed)?|awkward|mess(ed)?( up)?|accident/i.test(userInput)) {
-    if (/cute (girl|guy|woman|man|date)/i.test(userInput)) {
-      // Dating/attraction context with Cleveland sports if applicable
-      if (isClevelandSports) {
-        return response
-          .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "Oh man, that's embarrassing at the game")
-          .replace(/Would you like to tell me more about what happened\?/i, "I've definitely spilled beer at Cavs games before. How did she react?");
-      }
-      
-      return response
-        .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "Oh man, that's embarrassing")
-        .replace(/Would you like to tell me more about what happened\?/i, "I've been there - those moments are the worst! How did she react?");
+  let mentionedEmotion = '';
+  for (const emotion of emotionWords) {
+    if (new RegExp(`\\b${emotion}\\b`, 'i').test(userInput)) {
+      // Found an explicit emotion mention
+      mentionedEmotion = emotion;
+      break;
     }
-    
+  }
+
+  // Get the standardized emotion entry if one was mentioned
+  let emotionEntry = mentionedEmotion ? getEmotionFromWheel(mentionedEmotion) : undefined;
+  
+  // If no explicit emotion was mentioned, check for social context
+  if (!emotionEntry) {
+    const socialContext = detectSocialEmotionalContext(userInput);
+    if (socialContext) {
+      emotionEntry = getEmotionFromWheel(socialContext.primaryEmotion);
+    }
+  }
+  
+  // For social embarrassment with spilling a drink
+  if (/spill(ed)?.*drink.*girl|spill(ed)?.*on.*girl/i.test(userInput)) {
+    return response
+      .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "That sounds really embarrassing")
+      .replace(/Would you like to tell me more about what happened\?/i, "Social moments like that can be tough. How did she react when it happened?");
+  }
+  
+  // For general embarrassment or social awkwardness
+  if (/embarrass(ing|ed)?|awkward|uncomfortable/i.test(userInput)) {
     return response
       .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "That sounds embarrassing")
-      .replace(/Would you like to tell me more about what happened\?/i, "Those kinds of moments can feel really uncomfortable. How are you feeling about it now?");
+      .replace(/Would you like to tell me more about what happened\?/i, "Those kinds of moments can make anyone feel self-conscious. How are you handling it?");
   }
   
-  // For sports context
-  if (/(cavs|browns|guardians|sports|game|match)/i.test(userInput)) {
-    // Use everyday situation detector to get more context
-    const situationInfo = detectEverydaySituation(userInput);
-    
-    if (/spill(ed)?|mess/i.test(userInput)) {
-      // Sports + embarrassment combination
-      return response
-        .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "That's a rough situation at the game")
-        .replace(/Would you like to tell me more about what happened\?/i, "Watching the Cavs should be fun, not stressful! What happened after you spilled the drink?");
-    }
-    
+  // If we found an emotion entry, use it to correct the response
+  if (emotionEntry) {
     return response
-      .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "I hear you're a sports fan")
-      .replace(/Would you like to tell me more about what happened\?/i, "I follow the Cavs too. What happened at the game that made your day rough?");
+      .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, `I hear that you're feeling ${emotionEntry.name}`)
+      .replace(/Would you like to tell me more about what happened\?/i, `Would you like to share more about what's making you feel ${emotionEntry.name}?`);
   }
   
-  // For rough/tough day mentions - integrate with emotional content detection
-  if (/rough|tough|hard|difficult|bad day/i.test(userInput)) {
-    const emotionInfo = detectEmotionalContent(userInput);
-    if (ohioReferences.hasOhioReference) {
-      return response
-        .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "Sounds like a rough day here in Cleveland")
-        .replace(/Would you like to tell me more about what happened\?/i, "Cleveland days have their ups and downs. What made today particularly challenging?");
-    }
-    
+  // For sad emotions specifically (our main case)
+  if (/sad|down|upset|blue/i.test(userInput)) {
     return response
-      .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "You've had a rough day")
-      .replace(/Would you like to tell me more about what happened\?/i, "Those days can be draining. What was the most challenging part of your day?");
+      .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "I hear that you're feeling sad")
+      .replace(/Would you like to tell me more about what happened\?/i, "Would you like to share more about what's making you feel that way?");
   }
   
-  // For other negative emotions
+  // For general negative emotions without specifics
   return response
-    .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "That sounds challenging")
+    .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "That sounds difficult")
     .replace(/Would you like to tell me more about what happened\?/i, "Can you tell me more about how that made you feel?");
 };
 
@@ -133,39 +145,17 @@ export const addHumanTouch = (
   response: string,
   userInput: string
 ): string => {
-  const lowerInput = userInput.toLowerCase();
-  
-  // Check from memory system if user has mentioned Cleveland before
-  const isFromCleveland = true; // Default assumption for Roger
-  
-  // Only apply humanizing touches if not already humanized
+  // Check if the response is already sufficiently human-like
   if (/oh man|I've been there|Those days can be|totally get that/i.test(response)) {
     return response;
   }
   
-  // Detect repetitive phrases and fix them
-  response = response
-    .replace(/Based on what you're sharing, Based on what you're sharing/i, "Based on what you're sharing")
-    .replace(/From what you've shared, From what you've shared/i, "From what you've shared")
-    .replace(/I hear what you're sharing, I hear what you're sharing/i, "I hear what you're sharing");
-  
-  // For Cleveland sports fans - integrate with Cleveland detectors
-  if (/(cavs|browns|guardians)/i.test(lowerInput)) {
-    const sportsPhrases = [
-      "As a Cleveland guy myself, I definitely understand the sports rollercoaster. ",
-      "Cleveland sports, right? Always an adventure. ",
-      "I'm a Cavs fan too - this season has had its moments! "
-    ];
-    const randomSportsPhrase = sportsPhrases[Math.floor(Math.random() * sportsPhrases.length)];
-    response = randomSportsPhrase + response;
-  }
-  
   // For social embarrassment
-  if (/spill(ed)?|embarrass/i.test(lowerInput) && /social|people|girl|guy|date|bar/i.test(lowerInput)) {
+  if (/spill(ed)?.*drink|spill(ed)?.*girl|embarrass/i.test(userInput)) {
     const socialPhrases = [
-      "Oh man, social mishaps are the worst. ",
-      "I totally get that feeling. ",
-      "Social stuff can be so tricky sometimes. "
+      "Oh man, that's definitely awkward. ",
+      "I totally understand feeling embarrassed. ",
+      "Those social mishaps can really stick with you. "
     ];
     const randomSocialPhrase = socialPhrases[Math.floor(Math.random() * socialPhrases.length)];
     response = randomSocialPhrase + response;
@@ -179,47 +169,6 @@ export const addHumanTouch = (
     .replace("That sounds challenging", "That's tough")
     .replace(/^Based on what you're sharing,\s*/i, "")
     .replace(/^From what you've shared,\s*/i, "");
-  
-  // Fix repetitive phrases that sound robotic
-  const repetitivePatterns = [
-    /Based on what you're sharing, Based on what/i,
-    /From what you've shared, From what/i,
-    /I hear what you're sharing, I hear what/i,
-    /(what you've shared,?\s*){2,}/i,
-    /(I hear\s*){2,}/i,
-    /(Based on\s*){2,}/i
-  ];
-  
-  for (const pattern of repetitivePatterns) {
-    if (pattern.test(response)) {
-      response = response.replace(pattern, (match) => {
-        const parts = match.split(',');
-        if (parts.length > 1) {
-          return parts[0] + ',';
-        }
-        const words = match.split(' ');
-        const uniqueWords = [...new Set(words)];
-        return uniqueWords.join(' ');
-      });
-    }
-  }
-  
-  // Fix non-contextual restaurant recommendations
-  if ((lowerInput.includes("eating") || lowerInput.includes("food")) &&
-      response.includes("Great Lakes Brewing Company")) {
-    if (lowerInput.includes("disorder") || lowerInput.includes("anorexia") || 
-        lowerInput.includes("bulimia") || lowerInput.includes("binge")) {
-      response = response.replace(
-        /I've heard great things about Great Lakes Brewing Company.*?atmosphere\./i,
-        "I understand that eating can be a complex topic. Would you like to share more about your relationship with food?"
-      );
-    } else {
-      response = response.replace(
-        /I've heard great things about Great Lakes Brewing Company.*?atmosphere\./i,
-        "I'm curious to hear more about your relationship with food. What aspects of your eating would be most helpful to discuss?"
-      );
-    }
-  }
   
   return response;
 };

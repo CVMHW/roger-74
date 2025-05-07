@@ -1,53 +1,53 @@
 
 /**
  * Detectors for emotional content and everyday situations
+ * Enhanced with the comprehensive emotions wheel
  */
 
 import { EmotionInfo, EverydaySituationInfo } from './types';
+import { 
+  getEmotionFromWheel, 
+  detectSocialEmotionalContext, 
+  emotionsWheel 
+} from '../../emotions/emotionsWheel';
 
 /**
- * Detects emotional content in user input
+ * Detects emotional content in user input using the emotions wheel
  * @param input User message
  * @returns Information about detected emotions
  */
 export const detectEmotionalContent = (input: string): EmotionInfo => {
-  // Check for explicit emotion words
-  const emotionPatterns = {
-    sadness: {
-      high: /(devastated|heartbroken|despair|miserable|hopeless)/i,
-      medium: /(sad|down|depressed|blue|unhappy|upset)/i,
-      low: /(disappointed|bummed|bit sad|little down)/i
-    },
-    anxiety: {
-      high: /(terrified|panicking|freaking out|can't breathe|panic)/i,
-      medium: /(anxious|nervous|worried|stressed|afraid|on edge)/i,
-      low: /(concerned|uneasy|unsettled|little nervous|slight worry)/i
-    },
-    anger: {
-      high: /(furious|enraged|livid|seething|outraged)/i,
-      medium: /(angry|mad|frustrated|irritated|annoyed)/i,
-      low: /(bothered|irked|peeved|bugged|rubbed wrong)/i
-    },
-    joy: {
-      high: /(thrilled|elated|overjoyed|ecstatic|over the moon)/i,
-      medium: /(happy|glad|pleased|delighted|content)/i,
-      low: /(content|satisfied|okay|fine|alright)/i
-    },
-    shame: {
-      high: /(mortified|humiliated|ashamed|disgraced)/i,
-      medium: /(embarrassed|guilty|regretful|foolish)/i,
-      low: /(awkward|silly|sheepish|bit embarrassed)/i
-    }
-  };
+  // First check for social emotional contexts (specific situations)
+  const socialContext = detectSocialEmotionalContext(input);
+  if (socialContext) {
+    return {
+      hasEmotion: true,
+      primaryEmotion: socialContext.primaryEmotion,
+      intensity: socialContext.intensity,
+      isImplicit: false
+    };
+  }
   
-  // Check for explicit emotions first
-  for (const [emotion, intensities] of Object.entries(emotionPatterns)) {
-    for (const [level, pattern] of Object.entries(intensities)) {
-      if (pattern.test(input)) {
+  // Check for explicit emotion words using the emotions wheel
+  const lowerInput = input.toLowerCase();
+  for (const emotion in emotionsWheel) {
+    // Check for direct emotion name mention
+    if (new RegExp(`\\b${emotion}\\b`, 'i').test(input)) {
+      return {
+        hasEmotion: true,
+        primaryEmotion: emotion,
+        intensity: emotionsWheel[emotion].intensity,
+        isImplicit: false
+      };
+    }
+    
+    // Check synonyms
+    for (const synonym of emotionsWheel[emotion].synonyms) {
+      if (new RegExp(`\\b${synonym}\\b`, 'i').test(input)) {
         return {
           hasEmotion: true,
           primaryEmotion: emotion,
-          intensity: level as 'low' | 'medium' | 'high',
+          intensity: emotionsWheel[emotion].intensity,
           isImplicit: false
         };
       }
@@ -56,13 +56,14 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
   
   // Check for implicit emotional content through situations
   const implicitEmotionPatterns = [
-    { situation: /(lost|died|passed away|death|funeral)/i, emotion: 'sadness', intensity: 'medium' as const },
-    { situation: /(broke up|divorce|separated|left me|ending relationship)/i, emotion: 'sadness', intensity: 'medium' as const },
-    { situation: /(fired|laid off|unemployed|lost job|can't find work)/i, emotion: 'sadness', intensity: 'medium' as const },
-    { situation: /(test|exam|interview|presentation|deadline|meeting)/i, emotion: 'anxiety', intensity: 'medium' as const },
-    { situation: /(fight|argument|disagreement|conflict|confrontation)/i, emotion: 'anger', intensity: 'medium' as const },
-    { situation: /(promotion|succeeded|accomplished|achieved|won|graduated)/i, emotion: 'joy', intensity: 'medium' as const },
-    { situation: /(mistake|error|forgot|failed to|didn't mean to|accident)/i, emotion: 'shame', intensity: 'low' as const }
+    { situation: /(lost|died|passed away|death|funeral)/i, emotion: 'sad', intensity: 'medium' as const },
+    { situation: /(broke up|divorce|separated|left me|ending relationship)/i, emotion: 'sad', intensity: 'medium' as const },
+    { situation: /(fired|laid off|unemployed|lost job|can't find work)/i, emotion: 'sad', intensity: 'medium' as const },
+    { situation: /(test|exam|interview|presentation|deadline|meeting)/i, emotion: 'anxious', intensity: 'medium' as const },
+    { situation: /(fight|argument|disagreement|conflict|confrontation)/i, emotion: 'angry', intensity: 'medium' as const },
+    { situation: /(promotion|succeeded|accomplished|achieved|won|graduated)/i, emotion: 'happy', intensity: 'medium' as const },
+    { situation: /(mistake|error|forgot|failed to|didn't mean to|accident)/i, emotion: 'embarrassed', intensity: 'medium' as const },
+    { situation: /(spill|mess|dropped|broke something)/i, emotion: 'embarrassed', intensity: 'medium' as const }
   ];
   
   for (const pattern of implicitEmotionPatterns) {
@@ -98,7 +99,8 @@ export const detectEverydaySituation = (input: string): EverydaySituationInfo =>
     { type: "lost_item", pattern: /(lost|misplaced|can't find|where is|looking for)/i, needsSupport: true },
     { type: "minor_conflict", pattern: /(argument|disagreement|fight|mad at|angry with)/i, needsSupport: true },
     { type: "schedule_issue", pattern: /(schedule|appointment|meeting|calendar|forgot)/i, needsSupport: false },
-    { type: "tired_sleep", pattern: /(tired|exhausted|sleep|nap|rest|fatigue)/i, needsSupport: true }
+    { type: "tired_sleep", pattern: /(tired|exhausted|sleep|nap|rest|fatigue)/i, needsSupport: true },
+    { type: "social_embarrassment", pattern: /(embarrassing|awkward|uncomfortable|spill)/i, needsSupport: true }
   ];
   
   for (const situation of everydaySituations) {
@@ -118,3 +120,29 @@ export const detectEverydaySituation = (input: string): EverydaySituationInfo =>
   };
 };
 
+/**
+ * Detects emotion from explicit statement
+ * @param userInput User's message text
+ * @returns Detected emotion or null
+ */
+export const detectExplicitEmotionStatement = (userInput: string): string | null => {
+  // Detect "I feel X" or "I am X" statements
+  const explicitPatterns = [
+    /\bI\s+(?:feel|am|was|got|become|became)\s+(\w+)/i,
+    /\bfeeling\s+(\w+)/i,
+    /\bJust\s+(?:feeling|feel)\s+(\w+)/i
+  ];
+  
+  for (const pattern of explicitPatterns) {
+    const match = userInput.match(pattern);
+    if (match && match[1]) {
+      const potentialEmotion = match[1].toLowerCase();
+      // Check if it's a known emotion
+      if (getEmotionFromWheel(potentialEmotion)) {
+        return potentialEmotion;
+      }
+    }
+  }
+  
+  return null;
+};
