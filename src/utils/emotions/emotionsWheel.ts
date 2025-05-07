@@ -1,3 +1,4 @@
+
 /**
  * Emotions Wheel System
  * 
@@ -15,12 +16,25 @@ export interface EmotionEntry {
   color: string;
 }
 
+interface EmotionalContentResult {
+  primaryEmotion: string;
+  intensity: string;
+  description: string;
+  hasEmotion: boolean;
+}
+
+interface SocialEmotionalContext {
+  primaryEmotion: string;
+  intensity: string;
+  description: string;
+}
+
 /**
  * Detects social-emotional context in user input
  * @param userInput The user's message
  * @returns Object containing detected emotion and intensity
  */
-export const detectSocialEmotionalContext = (userInput: string) => {
+export const detectSocialEmotionalContext = (userInput: string): SocialEmotionalContext | null => {
   // Check for embarrassment
   if (/embarrass(ed|ing)?|awkward|cringe/i.test(userInput)) {
     return {
@@ -74,13 +88,14 @@ export const detectSocialEmotionalContext = (userInput: string) => {
  * @param userInput The user's message
  * @returns Object containing detected emotion and intensity
  */
-export const detectEmotionalContent = (userInput: string) => {
+export const detectEmotionalContent = (userInput: string): EmotionalContentResult | null => {
   // Check for happiness
   if (/happy|joyful|excited|delighted|cheerful/i.test(userInput)) {
     return {
       primaryEmotion: 'happy',
       intensity: 'medium',
-      description: 'Feeling pleased or delighted'
+      description: 'Feeling pleased or delighted',
+      hasEmotion: true
     };
   }
   
@@ -89,7 +104,8 @@ export const detectEmotionalContent = (userInput: string) => {
     return {
       primaryEmotion: 'sad',
       intensity: 'medium',
-      description: 'Feeling sorrowful or dejected'
+      description: 'Feeling sorrowful or dejected',
+      hasEmotion: true
     };
   }
   
@@ -98,7 +114,8 @@ export const detectEmotionalContent = (userInput: string) => {
     return {
       primaryEmotion: 'angry',
       intensity: 'medium',
-      description: 'Feeling displeasure or hostility'
+      description: 'Feeling displeasure or hostility',
+      hasEmotion: true
     };
   }
   
@@ -107,7 +124,8 @@ export const detectEmotionalContent = (userInput: string) => {
     return {
       primaryEmotion: 'fearful',
       intensity: 'medium',
-      description: 'Feeling afraid or worried'
+      description: 'Feeling afraid or worried',
+      hasEmotion: true
     };
   }
   
@@ -116,7 +134,8 @@ export const detectEmotionalContent = (userInput: string) => {
     return {
       primaryEmotion: 'surprised',
       intensity: 'medium',
-      description: 'Feeling startled or astonished'
+      description: 'Feeling startled or astonished',
+      hasEmotion: true
     };
   }
   
@@ -125,7 +144,8 @@ export const detectEmotionalContent = (userInput: string) => {
     return {
       primaryEmotion: 'disgusted',
       intensity: 'medium',
-      description: 'Feeling revulsion or distaste'
+      description: 'Feeling revulsion or distaste',
+      hasEmotion: true
     };
   }
   
@@ -133,7 +153,7 @@ export const detectEmotionalContent = (userInput: string) => {
 };
 
 // Define the emotions wheel as a structured object
-export const emotionsWheel = {
+export const emotionsWheel: Record<string, Record<string, EmotionEntry>> = {
   joy: {
     ecstasy: {
       name: 'ecstasy',
@@ -679,13 +699,13 @@ export const getEmotionFromWheel = (emotionName: string): EmotionEntry | undefin
   
   for (const parentEmotion in emotionsWheel) {
     if (emotionsWheel.hasOwnProperty(parentEmotion)) {
-      const parent = emotionsWheel[parentEmotion as keyof typeof emotionsWheel];
+      const parent = emotionsWheel[parentEmotion];
       
       for (const emotion in parent) {
         if (parent.hasOwnProperty(emotion)) {
-          const entry = parent[emotion as keyof typeof parent];
+          const entry = parent[emotion];
           if (entry.name.toLowerCase() === lowerName || entry.synonyms.some(synonym => synonym.toLowerCase() === lowerName)) {
-            return entry as EmotionEntry;
+            return entry;
           }
         }
       }
@@ -734,13 +754,6 @@ export const extractEmotionsFromInput = (userInput: string) => {
     description: null,
     hasEmotion: false
   };
-  
-  if (emotionalContent.primaryEmotion) {
-    hasDetectedEmotion = true;
-    emotionalContent.hasEmotion = true;
-  } else {
-    emotionalContent.hasEmotion = false;
-  }
   
   // Detect social-emotional context
   const socialContext = detectSocialEmotionalContext(userInput) || {

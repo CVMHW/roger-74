@@ -30,9 +30,17 @@ export const checkEmotionMisidentification = (
   }
   
   // First check for explicit emotion mentions
-  const emotionWords = Object.keys(emotionsWheel).concat(
-    Object.values(emotionsWheel).flatMap(e => e.synonyms)
-  );
+  const emotionWords: string[] = [];
+  
+  // Collect all emotion words from the wheel
+  for (const parentEmotion in emotionsWheel) {
+    emotionWords.push(parentEmotion);
+    for (const childEmotion in emotionsWheel[parentEmotion]) {
+      const emotion = emotionsWheel[parentEmotion][childEmotion];
+      emotionWords.push(emotion.name);
+      emotionWords.push(...emotion.synonyms);
+    }
+  }
   
   const mentionedEmotions = emotionWords.filter(word => 
     new RegExp(`\\b${word}\\b`, 'i').test(userInput)
@@ -79,9 +87,17 @@ export const fixEmotionMisidentification = (
   userInput: string
 ): string => {
   // First check for explicitly mentioned emotions
-  const emotionWords = Object.keys(emotionsWheel).concat(
-    Object.values(emotionsWheel).flatMap(e => e.synonyms)
-  );
+  const emotionWords: string[] = [];
+  
+  // Collect all emotion words from the wheel
+  for (const parentEmotion in emotionsWheel) {
+    emotionWords.push(parentEmotion);
+    for (const childEmotion in emotionsWheel[parentEmotion]) {
+      const emotion = emotionsWheel[parentEmotion][childEmotion];
+      emotionWords.push(emotion.name);
+      emotionWords.push(...emotion.synonyms);
+    }
+  }
   
   let mentionedEmotion = '';
   for (const emotion of emotionWords) {

@@ -23,7 +23,7 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
     return {
       hasEmotion: true,
       primaryEmotion: socialContext.primaryEmotion,
-      intensity: socialContext.intensity,
+      intensity: socialContext.intensity as "high" | "medium" | "low",
       isImplicit: false
     };
   }
@@ -36,20 +36,23 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
       return {
         hasEmotion: true,
         primaryEmotion: emotion,
-        intensity: emotionsWheel[emotion].intensity,
+        intensity: emotionsWheel[emotion].intensity as "high" | "medium" | "low",
         isImplicit: false
       };
     }
     
     // Check synonyms
-    for (const synonym of emotionsWheel[emotion].synonyms) {
-      if (new RegExp(`\\b${synonym}\\b`, 'i').test(input)) {
-        return {
-          hasEmotion: true,
-          primaryEmotion: emotion,
-          intensity: emotionsWheel[emotion].intensity,
-          isImplicit: false
-        };
+    for (const childEmotion in emotionsWheel[emotion]) {
+      const synonyms = emotionsWheel[emotion][childEmotion].synonyms;
+      for (const synonym of synonyms) {
+        if (new RegExp(`\\b${synonym}\\b`, 'i').test(input)) {
+          return {
+            hasEmotion: true,
+            primaryEmotion: emotion,
+            intensity: emotionsWheel[emotion][childEmotion].intensity as "high" | "medium" | "low",
+            isImplicit: false
+          };
+        }
       }
     }
   }
