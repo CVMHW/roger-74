@@ -38,14 +38,32 @@ export function processEmotions(responseText: string, userInput: string): string
     // Determine which type of reflection is most appropriate
     const reflectionType = determineReflectionType(userInput, emotionInfo);
     
+    // NEW: Special handling for brief temporal statements that should always use meaning reflection
+    const isBriefTemporalStatement = userInput.split(/\s+/).length <= 5 && 
+      /(terrible|awful|horrible|rough|bad|tough) (day|night|week|morning|evening)/i.test(userInput);
+    
     // Check for emotion-focused responses being used for meaning-focused content
-    if (reflectionType === 'meaning' && 
-        responseText.match(/I hear that you're feeling|I notice you're feeling|sounds like you feel|you seem to feel/i) &&
-        !responseText.match(/important to you|matters to you|value|searching for|trying to|balance|tension between|struggling with/i)) {
+    if ((reflectionType === 'meaning' || isBriefTemporalStatement) && 
+        responseText.match(/I hear that you're feeling|I notice you're feeling|sounds like you feel|you seem to feel|That sounds difficult/i) &&
+        !responseText.match(/important to you|matters to you|value|searching for|trying to|balance|tension between|struggling with|difficult moments often reveal|challenging experiences|priorities|significant/i)) {
       
       // This appears to be a reflection of feeling when meaning is needed
       // Let's enhance the response with meaning elements
       
+      // For brief temporal statements, create a completely new meaning-focused response
+      if (isBriefTemporalStatement) {
+        const timeFrame = userInput.match(/(day|night|week|morning|evening)/i)?.[0].toLowerCase() || "experience";
+        
+        const meaningResponses = [
+          `These challenging ${timeFrame}s often make us reflect on what's truly important. What aspects of this ${timeFrame} have been most significant for you?`,
+          `Difficult ${timeFrame}s like this can reveal what matters to us on a deeper level. What has been weighing on your mind about this?`,
+          `When we go through tough ${timeFrame}s, it often tells us something important about our lives and what we value. What's been most challenging about this for you?`
+        ];
+        
+        return meaningResponses[Math.floor(Math.random() * meaningResponses.length)];
+      }
+      
+      // For other meaning themes, enhance the existing response
       if (meaningThemes.hasMeaningTheme && meaningThemes.themes.length > 0) {
         const theme = meaningThemes.themes[0];
         

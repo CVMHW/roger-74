@@ -1,3 +1,4 @@
+
 /**
  * Detectors for emotional content and everyday situations
  * Enhanced with the comprehensive emotions wheel
@@ -22,7 +23,7 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
     return {
       hasEmotion: true,
       primaryEmotion: socialContext.primaryEmotion,
-      intensity: socialContext.intensity ? (socialContext.intensity as unknown as "high" | "medium" | "low") : "medium",
+      intensity: socialContext.intensity || "medium",
       isImplicit: false
     };
   }
@@ -58,14 +59,18 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
   
   // Check for implicit emotional content through situations
   const implicitEmotionPatterns = [
-    { situation: /(lost|died|passed away|death|funeral)/i, emotion: 'sad', intensity: 'medium' as const },
-    { situation: /(broke up|divorce|separated|left me|ending relationship)/i, emotion: 'sad', intensity: 'medium' as const },
-    { situation: /(fired|laid off|unemployed|lost job|can't find work)/i, emotion: 'sad', intensity: 'medium' as const },
-    { situation: /(test|exam|interview|presentation|deadline|meeting)/i, emotion: 'anxious', intensity: 'medium' as const },
-    { situation: /(fight|argument|disagreement|conflict|confrontation)/i, emotion: 'angry', intensity: 'medium' as const },
-    { situation: /(promotion|succeeded|accomplished|achieved|won|graduated)/i, emotion: 'happy', intensity: 'medium' as const },
-    { situation: /(mistake|error|forgot|failed to|didn't mean to|accident)/i, emotion: 'embarrassed', intensity: 'medium' as const },
-    { situation: /(spill|mess|dropped|broke something)/i, emotion: 'embarrassed', intensity: 'medium' as const }
+    { situation: /(lost|died|passed away|death|funeral)/i, emotion: 'sad', intensity: 'medium' },
+    { situation: /(broke up|divorce|separated|left me|ending relationship)/i, emotion: 'sad', intensity: 'medium' },
+    { situation: /(fired|laid off|unemployed|lost job|can't find work)/i, emotion: 'sad', intensity: 'medium' },
+    { situation: /(test|exam|interview|presentation|deadline|meeting)/i, emotion: 'anxious', intensity: 'medium' },
+    { situation: /(fight|argument|disagreement|conflict|confrontation)/i, emotion: 'angry', intensity: 'medium' },
+    { situation: /(promotion|succeeded|accomplished|achieved|won|graduated)/i, emotion: 'happy', intensity: 'medium' },
+    { situation: /(mistake|error|forgot|failed to|didn't mean to|accident)/i, emotion: 'embarrassed', intensity: 'medium' },
+    { situation: /(spill|mess|dropped|broke something)/i, emotion: 'embarrassed', intensity: 'medium' },
+    // New patterns for temporal descriptions that often have meaning implications
+    { situation: /(terrible|awful|horrible|rough) (day|night|week|morning|evening)/i, emotion: 'sad', intensity: 'high' },
+    { situation: /(bad|rough|tough) (day|night|week|morning|evening)/i, emotion: 'sad', intensity: 'medium' },
+    { situation: /(great|amazing|wonderful) (day|night|week|morning|evening)/i, emotion: 'happy', intensity: 'high' }
   ];
   
   for (const pattern of implicitEmotionPatterns) {
@@ -221,6 +226,21 @@ export const detectMeaningThemes = (userInput: string): {
   // Detect themes related to struggle
   if (/tough|difficult|hard|struggle|challenging|overwhelming|too much/i.test(userInput)) {
     meaningThemes.push("facing challenges");
+  }
+  
+  // NEW: Detect experiential time patterns that often indicate deeper meaning
+  // Brief statements about time periods often carry deep meaning implications
+  if (/(terrible|awful|horrible|rough|bad|tough) (day|night|week|morning|evening)/i.test(userInput)) {
+    meaningThemes.push("processing difficult experiences");
+    lifeValues.push("finding meaning in hardship");
+  }
+  
+  // NEW: Special handling for very brief statements
+  // When a user provides a very brief statement, it often carries deeper meaning
+  if (userInput.split(/\s+/).length <= 5 && 
+      /(terrible|awful|horrible|rough|bad|tough|difficult)/i.test(userInput)) {
+    meaningThemes.push("reflecting on challenges");
+    lifeValues.push("resilience");
   }
   
   return {

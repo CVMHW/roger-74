@@ -1,3 +1,4 @@
+
 /**
  * Generators for emotionally attuned responses
  */
@@ -52,7 +53,12 @@ export const generateEmotionallyAttunedResponse = (
   
   // Get the appropriate template
   const emotionTemplates = responseTemplates[primaryEmotion as keyof typeof responseTemplates];
-  let response = emotionTemplates[intensity as keyof typeof emotionTemplates];
+  let response = emotionTemplates ? emotionTemplates[intensity as keyof typeof emotionTemplates] : "";
+  
+  // If no template found, provide a generic response
+  if (!response) {
+    response = "I hear that you're having some strong feelings about this. Would you like to share more about what's happening?";
+  }
   
   // For implicit emotions, modify the response slightly
   if (isImplicit) {
@@ -75,6 +81,21 @@ export const generateMeaningFocusedResponse = (userInput: string): string => {
   
   if (!meaningThemes.hasMeaningTheme) {
     return "";
+  }
+  
+  // Special handling for brief statements with temporal references
+  if (/(terrible|awful|horrible|rough|bad|tough) (day|night|week|morning|evening)/i.test(userInput.toLowerCase())) {
+    const timeFrame = userInput.match(/(day|night|week|morning|evening)/i)?.[0].toLowerCase();
+    
+    // Create responses that reflect meaning rather than just feelings
+    const briefTimeResponses = [
+      `These difficult moments often reveal what matters most to us. I wonder what about this ${timeFrame} has been particularly significant for you?`,
+      `When we go through challenging ${timeFrame}s like this, it can make us reflect on what's truly important. What aspects of this experience stand out to you?`,
+      `Difficult ${timeFrame}s can sometimes highlight the contrast between what we're experiencing and what we value or hope for. What's been weighing on your mind about this?`,
+      `Challenging experiences often bring our priorities into focus. What about this ${timeFrame} feels most significant for you right now?`
+    ];
+    
+    return briefTimeResponses[Math.floor(Math.random() * briefTimeResponses.length)];
   }
   
   // Choose appropriate reflection of meaning based on detected themes
@@ -112,8 +133,13 @@ export const generateMeaningFocusedResponse = (userInput: string): string => {
     return "It seems like having a sense of control and choice in your situation matters a lot to you. Being able to direct your own path appears to be a significant value.";
   }
   
-  if (meaningThemes.themes.includes("facing challenges")) {
-    return "I'm hearing that you're facing some significant challenges right now. These difficult moments often reveal what truly matters to us and what we're capable of.";
+  if (meaningThemes.themes.includes("facing challenges") || 
+      meaningThemes.themes.includes("reflecting on challenges")) {
+    return "I'm hearing that you're facing some significant challenges right now. These difficult moments often reveal what truly matters to us and what we're capable of. What aspects feel most important to you?";
+  }
+  
+  if (meaningThemes.themes.includes("processing difficult experiences")) {
+    return "When we go through difficult times, it often reveals something about what matters to us or what we're struggling with on a deeper level. What's been most significant about this experience for you?";
   }
   
   // Default meaning response for other themes
@@ -175,10 +201,15 @@ export const determineReflectionType = (userInput: string, emotionInfo: EmotionI
   // Check for deeper meaning themes
   const meaningThemes = detectMeaningThemes(userInput);
   
+  // NEW: Special handling for brief emotional statements - PRIORITIZE MEANING for these
+  const isBriefEmotionalStatement = userInput.split(/\s+/).length <= 5 && 
+    /(terrible|awful|horrible|rough|bad|tough|difficult) (day|night|week|morning|evening|time)/i.test(userInput);
+  
   // Use reflection of meaning when:
   // 1. Content is complex AND has meaning indicators, OR
-  // 2. Has clear meaning themes detected
-  if ((isComplexContent && hasMeaningIndicators) || meaningThemes.hasMeaningTheme) {
+  // 2. Has clear meaning themes detected, OR
+  // 3. Is a brief emotional statement about a time period (new rule)
+  if ((isComplexContent && hasMeaningIndicators) || meaningThemes.hasMeaningTheme || isBriefEmotionalStatement) {
     return 'meaning';
   }
   
