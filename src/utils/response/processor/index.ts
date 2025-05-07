@@ -46,7 +46,7 @@ export const processCompleteResponse = (
     
     // Check for everyday situations first - HIGH PRIORITY
     const situationInfo = detectEverydaySituation(userInput);
-    if (situationInfo.isEverydaySituation) {
+    if (situationInfo && situationInfo.isEverydaySituation) {
       // For everyday situations, use specialized handling
       const everydayResponse = generateEverydayFrustrationResponse(situationInfo);
       if (everydayResponse) {

@@ -7,7 +7,7 @@
 
 // Import from conversation/theSmallStuff for everyday situations
 export { 
-  detectEverydaySituation,
+  detectEverydayFrustration as detectEverydaySituation,
   generateEverydayFrustrationResponse 
 } from '../../../conversation/theSmallStuff/index';
 
@@ -26,4 +26,3 @@ export {
 } from './emotionMisidentificationHandler';
 
 // Export additional emotion-related handlers as needed
-

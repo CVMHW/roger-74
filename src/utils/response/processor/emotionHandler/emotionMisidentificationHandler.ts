@@ -10,15 +10,12 @@
 import { detectClevelandSportsReference } from '../../../conversationEnhancement/ohio/detectors';
 import { detectOhioReferences } from '../../../conversationEnhancement/ohio/references';
 
-// Import emotion data from reflection system
-import { 
-  getFeelingCategories, 
-  detectEmotionalContent 
-} from '../../../reflection';
+// Import from masterRules for emotional content detection
+import { detectEmotionalContent } from '../../../masterRules/emotionalAttunement/detectors';
 
-// Import everyday situation handlers
+// Import everyday situation handlers - using correct function names
 import { 
-  detectEverydaySituation,
+  detectEverydayFrustration as detectEverydaySituation,
   generateEverydayFrustrationResponse 
 } from '../../../conversation/theSmallStuff';
 
@@ -31,7 +28,7 @@ export const checkEmotionMisidentification = (
   userInput: string
 ): boolean => {
   // Check if response claims user is feeling neutral
-  const claimsNeutral = /you('re| are) feeling neutral/i.test(response);
+  const claimsNeutral = /you('re| are) feeling neutral|feeling neutral|hear you're feeling neutral/i.test(response);
   
   if (!claimsNeutral) {
     return false;
@@ -77,17 +74,17 @@ export const fixEmotionMisidentification = (
       // Dating/attraction context with Cleveland sports if applicable
       if (isClevelandSports) {
         return response
-          .replace(/you('re| are) feeling neutral/i, "oh man, that's embarrassing at the game")
+          .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "Oh man, that's embarrassing at the game")
           .replace(/Would you like to tell me more about what happened\?/i, "I've definitely spilled beer at Cavs games before. How did she react?");
       }
       
       return response
-        .replace(/you('re| are) feeling neutral/i, "oh man, that's embarrassing")
+        .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "Oh man, that's embarrassing")
         .replace(/Would you like to tell me more about what happened\?/i, "I've been there - those moments are the worst! How did she react?");
     }
     
     return response
-      .replace(/you('re| are) feeling neutral/i, "that sounds embarrassing")
+      .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "That sounds embarrassing")
       .replace(/Would you like to tell me more about what happened\?/i, "Those kinds of moments can feel really uncomfortable. How are you feeling about it now?");
   }
   
@@ -99,12 +96,12 @@ export const fixEmotionMisidentification = (
     if (/spill(ed)?|mess/i.test(userInput)) {
       // Sports + embarrassment combination
       return response
-        .replace(/you('re| are) feeling neutral/i, "that's a rough situation at the game")
+        .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "That's a rough situation at the game")
         .replace(/Would you like to tell me more about what happened\?/i, "Watching the Cavs should be fun, not stressful! What happened after you spilled the drink?");
     }
     
     return response
-      .replace(/you('re| are) feeling neutral/i, "I hear you're a sports fan")
+      .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "I hear you're a sports fan")
       .replace(/Would you like to tell me more about what happened\?/i, "I follow the Cavs too. What happened at the game that made your day rough?");
   }
   
@@ -113,18 +110,18 @@ export const fixEmotionMisidentification = (
     const emotionInfo = detectEmotionalContent(userInput);
     if (ohioReferences.hasOhioReference) {
       return response
-        .replace(/you('re| are) feeling neutral/i, "sounds like a rough day here in Cleveland")
+        .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "Sounds like a rough day here in Cleveland")
         .replace(/Would you like to tell me more about what happened\?/i, "Cleveland days have their ups and downs. What made today particularly challenging?");
     }
     
     return response
-      .replace(/you('re| are) feeling neutral/i, "you've had a rough day")
+      .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "You've had a rough day")
       .replace(/Would you like to tell me more about what happened\?/i, "Those days can be draining. What was the most challenging part of your day?");
   }
   
   // For other negative emotions
   return response
-    .replace(/you('re| are) feeling neutral/i, "that sounds challenging")
+    .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "That sounds challenging")
     .replace(/Would you like to tell me more about what happened\?/i, "Can you tell me more about how that made you feel?");
 };
 
@@ -146,6 +143,12 @@ export const addHumanTouch = (
     return response;
   }
   
+  // Detect repetitive phrases and fix them
+  response = response
+    .replace(/Based on what you're sharing, Based on what you're sharing/i, "Based on what you're sharing")
+    .replace(/From what you've shared, From what you've shared/i, "From what you've shared")
+    .replace(/I hear what you're sharing, I hear what you're sharing/i, "I hear what you're sharing");
+  
   // For Cleveland sports fans - integrate with Cleveland detectors
   if (/(cavs|browns|guardians)/i.test(lowerInput)) {
     const sportsPhrases = [
@@ -159,9 +162,6 @@ export const addHumanTouch = (
   
   // For social embarrassment
   if (/spill(ed)?|embarrass/i.test(lowerInput) && /social|people|girl|guy|date|bar/i.test(lowerInput)) {
-    // Use conversation enhancement system for appropriate response
-    const situationInfo = detectEverydaySituation(userInput);
-    
     const socialPhrases = [
       "Oh man, social mishaps are the worst. ",
       "I totally get that feeling. ",
@@ -176,8 +176,50 @@ export const addHumanTouch = (
     .replace("I understand that must be difficult", "That's rough")
     .replace("I hear what you're saying about", "Sounds like")
     .replace("Would you care to elaborate", "Want to tell me more")
-    .replace("That sounds challenging", "That's tough");
+    .replace("That sounds challenging", "That's tough")
+    .replace(/^Based on what you're sharing,\s*/i, "")
+    .replace(/^From what you've shared,\s*/i, "");
+  
+  // Fix repetitive phrases that sound robotic
+  const repetitivePatterns = [
+    /Based on what you're sharing, Based on what/i,
+    /From what you've shared, From what/i,
+    /I hear what you're sharing, I hear what/i,
+    /(what you've shared,?\s*){2,}/i,
+    /(I hear\s*){2,}/i,
+    /(Based on\s*){2,}/i
+  ];
+  
+  for (const pattern of repetitivePatterns) {
+    if (pattern.test(response)) {
+      response = response.replace(pattern, (match) => {
+        const parts = match.split(',');
+        if (parts.length > 1) {
+          return parts[0] + ',';
+        }
+        const words = match.split(' ');
+        const uniqueWords = [...new Set(words)];
+        return uniqueWords.join(' ');
+      });
+    }
+  }
+  
+  // Fix non-contextual restaurant recommendations
+  if ((lowerInput.includes("eating") || lowerInput.includes("food")) &&
+      response.includes("Great Lakes Brewing Company")) {
+    if (lowerInput.includes("disorder") || lowerInput.includes("anorexia") || 
+        lowerInput.includes("bulimia") || lowerInput.includes("binge")) {
+      response = response.replace(
+        /I've heard great things about Great Lakes Brewing Company.*?atmosphere\./i,
+        "I understand that eating can be a complex topic. Would you like to share more about your relationship with food?"
+      );
+    } else {
+      response = response.replace(
+        /I've heard great things about Great Lakes Brewing Company.*?atmosphere\./i,
+        "I'm curious to hear more about your relationship with food. What aspects of your eating would be most helpful to discuss?"
+      );
+    }
+  }
   
   return response;
 };
-
