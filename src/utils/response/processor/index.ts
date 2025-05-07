@@ -20,3 +20,6 @@ export interface ProcessedResponse {
   wasModified: boolean;
   reason?: string;
 }
+
+// Export repetition prevention system
+export { detectHarmfulRepetitions, fixHarmfulRepetitions } from './repetitionPrevention';
