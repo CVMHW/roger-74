@@ -24,7 +24,7 @@ export { determinePreventionOptions } from './preventionOptions';
 export * from './utils';
 
 // Export the early conversation functionality
-export * from '../earlyConversation';
+export * from '../../earlyConversation';
 
 // Export missing function for conversation stage handler
 export { applyEarlyConversationRAG } from '../../earlyConversation';

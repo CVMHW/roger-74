@@ -1,3 +1,4 @@
+
 /**
  * Response Processor
  * 
@@ -114,11 +115,14 @@ export const processCompleteResponse = (
     );
     
     // 9. Apply hallucination prevention as final safety
-    processedResponse = handlePotentialHallucinations(
+    const hallucinationResult = handlePotentialHallucinations(
       processedResponse,
       userInput,
       conversationHistory
     );
+    
+    // Extract the processed response from the result object
+    processedResponse = hallucinationResult.processedResponse;
     
     // 10. Apply grammar correction with user input for length adjustment
     processedResponse = correctGrammar(processedResponse, userInput);

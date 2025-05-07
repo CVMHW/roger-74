@@ -52,5 +52,8 @@ export const preventHallucinationsWithRepetitionCheck = (
   }
   
   // Then apply standard hallucination prevention
-  return preventHallucinations(responseText, userInput, conversationHistory);
+  const result = preventHallucinations(responseText, userInput, conversationHistory);
+  
+  // Return the processed response text, not the whole result object
+  return result.processedResponse;
 };
