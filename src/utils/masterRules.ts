@@ -44,5 +44,5 @@ export const isDirectMedicalAdvice = (text: string): boolean => {
   return medicalAdvicePatterns.some(pattern => pattern.test(text));
 };
 
-// Re-export existing detection functions
+// Re-export existing detection functions - using correct path
 export { isSmallTalk, isIntroduction, isPersonalSharing } from './response/processor/contextDetection';

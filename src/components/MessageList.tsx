@@ -53,6 +53,9 @@ const MessageList: React.FC<MessageListProps> = ({
     return () => clearTimeout(timeoutId);
   }, [messages, isTyping, processingContext]);
 
+  // Find any rollback messages
+  const hasRollbackInProgress = messages.some(msg => msg.isRollingBack);
+
   return (
     <ScrollArea className="h-full overflow-y-auto" scrollHideDelay={0}>
       <div 
@@ -74,7 +77,7 @@ const MessageList: React.FC<MessageListProps> = ({
               R
             </div>
             <div className="ml-2 p-2">
-              <TypingIndicator />
+              <TypingIndicator isSlowMode={hasRollbackInProgress} />
               {/* Show processing context if provided */}
               {processingContext && (
                 <div className="text-xs text-gray-500 italic mt-1">{processingContext}</div>

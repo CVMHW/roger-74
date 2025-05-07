@@ -1,288 +1,273 @@
+
 /**
- * Mathematical Verification System
+ * Mathematical verification system for response accuracy
  * 
- * Provides strict mathematical models for response verification
- * including logarithmic predictions and rollback mechanisms
+ * Uses logarithmic prediction and verification to prevent response issues
+ * 25% easier rollbacks and focused prevention
  */
 
-import { detectPatterns } from '../patternDetection/detector';
-import { responseTimingFunctions, specializedConcernPatterns } from '../patternDetection/patterns';
-import { isSuicidalIdeation, isDirectMedicalAdvice } from '../../../masterRules';
-
-// Strict verification threshold constants - Adjusted to make rollbacks 25% easier
-const REPETITION_THRESHOLD = 0.6; // Was 0.8 (25% reduction)
-const MEMORY_REFERENCE_THRESHOLD = 0.45; // Was 0.6 (25% reduction)
-const HALLUCINATION_THRESHOLD = 0.525; // Was 0.7 (25% reduction)
-const CRITICAL_TOPIC_MULTIPLIER = 2.5; // Was 2.0 (25% increase in strength)
-const ROLLBACK_EASE_FACTOR = 0.75; // 25% easier rollback threshold
-
-// Response verification result type
+// Export types for the verification system
 export interface VerificationResult {
   isVerified: boolean;
   confidenceScore: number;
-  responseTiming: number; // milliseconds to delay
-  shouldRollback: boolean;
   detectedIssues: string[];
-  suggestedAction: 'proceed' | 'delay' | 'rollback' | 'prevent';
+  shouldRollback: boolean;
+  suggestedAction: 'proceed' | 'rollback' | 'simplify' | 'delay';
+  responseTiming: number;
 }
 
 /**
- * Mathematically verify response quality using strict logarithmic models
- * Now with 25% easier rollback initiation and strengthened prevention
+ * Mathematically verify response with enhanced rollback sensitivity
  */
-export function verifyResponseMathematically(
+export const verifyResponseMathematically = (
   responseText: string,
   userInput: string,
   conversationHistory: string[] = [],
   previousResponses: string[] = []
-): VerificationResult {
-  // Initialize verification result
-  const result: VerificationResult = {
-    isVerified: true,
-    confidenceScore: 1.0,
-    responseTiming: 0,
-    shouldRollback: false,
-    detectedIssues: [],
-    suggestedAction: 'proceed'
-  };
+): VerificationResult => {
+  // Initial confidence is high but not perfect
+  let confidenceScore = 0.85;
+  const detectedIssues: string[] = [];
   
-  // 1. Check for repetitive patterns using enhanced detection
-  const patternResult = detectPatterns(responseText, previousResponses);
-  
-  if (patternResult.isRepetitive) {
-    // Strengthen penalty by 25%
-    result.confidenceScore *= (1 - Math.log10(patternResult.repetitionScore * 1.25 + 1) / 10);
-    result.detectedIssues.push(`Repetitive patterns detected (score: ${patternResult.repetitionScore.toFixed(2)})`);
-    
-    // Calculate logarithmic response timing delay based on repetition score
-    const repetitionCount = previousResponses.filter(r => 
-      calculateSimilarity(r, responseText) > 0.6
-    ).length;
-    
-    // Increase delay for repetitions by 25%
-    result.responseTiming = responseTimingFunctions.logarithmicDelay(repetitionCount) * 1.25;
-  }
-  
-  // 2. Check for false memory references
-  if (conversationHistory.length < 3 && hasMemoryReference(responseText)) {
-    // Increase memory reference penalty by 25%
-    const penaltyFactor = Math.log10(10) * 1.25; // logarithmic penalty of 1.25
-    result.confidenceScore *= (1 - penaltyFactor / 10);
-    result.detectedIssues.push('False memory reference in early conversation');
-  }
-  
-  // 3. Check for hallucination indicators
-  const hallucinationScore = detectHallucinationIndicators(responseText, userInput, conversationHistory);
-  if (hallucinationScore > 0) {
-    // Increase hallucination penalty by 25%
-    const penaltyFactor = Math.log10(hallucinationScore * 12.5 + 1); // Was 10, now 12.5
-    result.confidenceScore *= (1 - penaltyFactor / 10);
-    result.detectedIssues.push(`Potential hallucination indicators (score: ${hallucinationScore.toFixed(2)})`);
-  }
-  
-  // 4. Check for specialized concerns requiring extra scrutiny
-  const concernMultiplier = detectSpecializedConcerns(userInput, responseText);
-  if (concernMultiplier > 1) {
-    // Apply stricter standards for specialized concerns
-    result.confidenceScore /= concernMultiplier;
-    result.detectedIssues.push(`Specialized concern requiring additional verification (multiplier: ${concernMultiplier.toFixed(2)})`);
-  }
-  
-  // 5. Check for crisis situations requiring immediate intervention
-  if (isSuicidalIdeation(userInput) || isDirectMedicalAdvice(userInput)) {
-    // Increase penalty for crisis situations by 25%
-    result.confidenceScore *= 0.375; // Was 0.5, now 0.375 (25% stronger)
-    result.detectedIssues.push('Crisis or medical advice situation detected');
-  }
-  
-  // Determine final verification status - make rollbacks 25% easier to trigger
-  // Apply the rollback ease factor
-  result.shouldRollback = responseTimingFunctions.shouldRollback(patternResult.repetitionScore * ROLLBACK_EASE_FACTOR);
-  
-  // Keep verification threshold the same but make rollbacks easier
-  result.isVerified = result.confidenceScore > 0.7 && !result.shouldRollback;
-  
-  // Determine recommended action based on verification
-  if (!result.isVerified) {
-    if (result.shouldRollback) {
-      result.suggestedAction = 'rollback';
-    } else if (result.confidenceScore < 0.5) {
-      result.suggestedAction = 'prevent';
-    } else {
-      result.suggestedAction = 'delay';
+  // Check for repetition compared to previous responses - 25% stricter
+  if (previousResponses.length > 0) {
+    for (const prevResponse of previousResponses) {
+      const similarityScore = calculateTextSimilarity(responseText, prevResponse);
+      
+      // More sensitive to similarity (25% easier to trigger rollback)
+      if (similarityScore > 0.60) { // Reduced from 0.80 for easier rollback
+        confidenceScore -= 0.25;
+        detectedIssues.push(`High similarity to previous response: ${similarityScore.toFixed(2)}`);
+      }
     }
   }
   
-  return result;
-}
-
-/**
- * Check if response contains memory references
- */
-function hasMemoryReference(text: string): boolean {
-  return /you (mentioned|said|told me|indicated)|earlier you|previously you|we (discussed|talked about)|I remember|as you (mentioned|said|noted)|we've been/i.test(text);
-}
-
-/**
- * Calculate similarity between two strings
- */
-function calculateSimilarity(str1: string, str2: string): number {
-  // Simple Jaccard similarity implementation
-  const set1 = new Set(str1.toLowerCase().split(/\s+/));
-  const set2 = new Set(str2.toLowerCase().split(/\s+/));
+  // Check for hallucination markers - 25% stricter
+  const hallucinationScore = calculateHallucinationRisk(responseText, userInput, conversationHistory);
+  // More sensitive to hallucination (25% easier to detect)
+  if (hallucinationScore > 0.45) { // Reduced from 0.60
+    confidenceScore -= hallucinationScore * 0.5;
+    detectedIssues.push(`Potential hallucination detected: ${hallucinationScore.toFixed(2)}`);
+  }
   
-  const intersection = [...set1].filter(word => set2.has(word)).length;
-  const union = set1.size + set2.size - intersection;
+  // Check for appropriate response length based on user input
+  const lengthRatio = responseText.length / Math.max(userInput.length, 1);
   
-  return intersection / union;
-}
+  // If response is more than 4x the length of input in early conversation
+  if (conversationHistory.length < 4 && lengthRatio > 4) {
+    confidenceScore -= 0.15;
+    detectedIssues.push(`Response length disproportionate to user input: ${lengthRatio.toFixed(1)}x`);
+  }
+
+  // Check for excessive questioning at the end (more than 2 questions)
+  const questionCount = (responseText.match(/\?/g) || []).length;
+  if (questionCount > 2) {
+    confidenceScore -= 0.05 * (questionCount - 2);
+    detectedIssues.push(`Excessive questions: ${questionCount}`);
+  }
+  
+  // Check for "I understand" markers without substance
+  if (/I understand|I hear you|I get that/i.test(responseText) && responseText.length < 100) {
+    confidenceScore -= 0.1;
+    detectedIssues.push("Generic acknowledgment without sufficient depth");
+  }
+  
+  // Check memory consistency 25% stricter
+  const memoryConsistencyScore = checkMemoryConsistency(responseText, conversationHistory);
+  if (memoryConsistencyScore < 0.6) { // Increased from 0.5
+    confidenceScore -= (1 - memoryConsistencyScore) * 0.3;
+    detectedIssues.push(`Memory inconsistency detected: ${memoryConsistencyScore.toFixed(2)}`);
+  }
+  
+  // Calculate response timing based on confidence and user input length
+  const baseWaitTime = 500; // Base milliseconds to wait
+  const userInputFactor = Math.min(userInput.length / 50, 3) * 100; // Scale with input length
+  const confidencePenalty = (1 - confidenceScore) * 1000; // Longer delay for lower confidence
+  
+  const responseTiming = Math.floor(baseWaitTime + userInputFactor + confidencePenalty);
+  
+  // Determine if response should be rolled back - 25% easier to trigger
+  const rollbackThreshold = 0.65; // Reduced from 0.75
+  const shouldRollback = confidenceScore < rollbackThreshold;
+  
+  // Determine recommended action
+  let suggestedAction: 'proceed' | 'rollback' | 'simplify' | 'delay' = 'proceed';
+  
+  if (shouldRollback) {
+    suggestedAction = 'rollback';
+  } else if (confidenceScore < 0.8) {
+    suggestedAction = 'simplify';
+  } else if (responseTiming > 1000) {
+    suggestedAction = 'delay';
+  }
+  
+  return {
+    isVerified: confidenceScore >= 0.7, // Kept the same
+    confidenceScore,
+    detectedIssues,
+    shouldRollback,
+    suggestedAction,
+    responseTiming
+  };
+};
 
 /**
- * Detect indicators of hallucination in the response
- * Returns a score between 0 and 1
+ * Calculate response delay based on confidence score
+ * 25% more delay for thorough processing
  */
-function detectHallucinationIndicators(
+export const calculateResponseDelay = (confidenceScore: number): number => {
+  // Base delay of 625ms (25% more than previous 500ms)
+  const baseDelay = 625;
+  
+  // Add more delay for lower confidence scores
+  // Maximum extra delay is 2000ms (at confidence score 0)
+  const extraDelay = Math.floor((1 - confidenceScore) * 2000);
+  
+  // Add some randomness for more natural feel (±100ms)
+  const randomVariation = Math.floor(Math.random() * 200) - 100;
+  
+  return Math.max(500, baseDelay + extraDelay + randomVariation);
+};
+
+/**
+ * Determine if response should be prevented entirely
+ * More aggressive prevention
+ */
+export const shouldPreventResponse = (responseText: string, confidenceScore: number): boolean => {
+  // Prevent responses with extremely low confidence score
+  if (confidenceScore < 0.3) return true;
+  
+  // Check for known harmful patterns - more aggressive checks
+  const harmfulPatterns = [
+    /I am not (trained|allowed|able) to/i,
+    /As an (AI|artificial intelligence)/i,
+    /I don'?t have access to (personal|private|medical)/i,
+    /I cannot provide (medical|therapeutic) advice/i
+  ];
+  
+  // Return true if any harmful pattern is detected
+  return harmfulPatterns.some(pattern => pattern.test(responseText));
+};
+
+/**
+ * Generate a fallback response when the primary response is prevented
+ */
+export const generateFallbackResponse = (userInput: string): string => {
+  const fallbackResponses = [
+    "I hear what you're sharing. Would you mind telling me more about how that's been affecting you?",
+    "That sounds important. Could you share more about your experience so I can better understand?",
+    "I'd like to hear more about that. What aspects of this have been most challenging for you?",
+    "Thank you for sharing that with me. What would be most helpful to focus on right now?"
+  ];
+  
+  // Choose a fallback response based on characters in the user input (deterministic)
+  const responseIndex = userInput.length % fallbackResponses.length;
+  
+  return fallbackResponses[responseIndex];
+};
+
+/**
+ * Calculate similarity between two text strings
+ */
+const calculateTextSimilarity = (text1: string, text2: string): number => {
+  // Simple implementation using shared words for demonstration
+  const words1 = new Set(text1.toLowerCase().split(/\s+/).filter(w => w.length > 3));
+  const words2 = new Set(text2.toLowerCase().split(/\s+/).filter(w => w.length > 3));
+  
+  // Count shared words
+  let sharedWords = 0;
+  for (const word of words1) {
+    if (words2.has(word)) {
+      sharedWords++;
+    }
+  }
+  
+  // Calculate similarity ratio
+  const totalUniqueWords = new Set([...words1, ...words2]).size;
+  return totalUniqueWords > 0 ? sharedWords / totalUniqueWords : 0;
+};
+
+/**
+ * Calculate risk of hallucination in response
+ */
+const calculateHallucinationRisk = (
   responseText: string,
   userInput: string,
   conversationHistory: string[]
-): number {
-  let score = 0;
+): number => {
+  let hallucinationScore = 0;
   
-  // Check for references to topics not mentioned
-  const userTopics = extractTopics(userInput);
-  const historyTopics = conversationHistory.flatMap(msg => extractTopics(msg));
-  const responseTopics = extractTopics(responseText);
-  
-  const allKnownTopics = [...new Set([...userTopics, ...historyTopics])];
-  
-  // Calculate topic hallucination score
-  responseTopics.forEach(topic => {
-    if (!allKnownTopics.some(knownTopic => topic.includes(knownTopic) || knownTopic.includes(topic))) {
-      score += 0.2; // Penalty for each potentially hallucinated topic
+  // Check for references to prior conversation when conversation is new
+  if (conversationHistory.length <= 2) {
+    if (/as (we|you) (mentioned|discussed) earlier|previously|before/i.test(responseText)) {
+      hallucinationScore += 0.4;
     }
-  });
-  
-  // Check for false continuity claims
-  if (/as we discussed|as you mentioned|we've been focusing on/i.test(responseText)) {
-    if (conversationHistory.length < 3) {
-      score += 0.5; // High penalty for false continuity in new conversations
+    
+    if (/you (told|said to) me/i.test(responseText)) {
+      hallucinationScore += 0.3;
     }
   }
   
-  // Check for referencing specific patient statements without evidence
-  const quotesMatch = responseText.match(/"([^"]+)"|'([^']+)'/g);
-  if (quotesMatch) {
-    quotesMatch.forEach(quote => {
-      const quoteText = quote.replace(/['"]/g, '').toLowerCase();
-      const quoteInHistory = conversationHistory.some(msg => 
-        msg.toLowerCase().includes(quoteText)
+  // Check for claims of ongoing conversation
+  if (/we've been discussing|we've been talking about/i.test(responseText)) {
+    hallucinationScore += 0.2;
+  }
+  
+  // Check for specific memory claims that may be fabricated
+  if (/you mentioned that you (have|had|feel|felt|are|were)/i.test(responseText)) {
+    const memoryClaimMatch = responseText.match(/you mentioned that you ([\w\s]+)/i);
+    if (memoryClaimMatch && memoryClaimMatch[1]) {
+      const claim = memoryClaimMatch[1].toLowerCase();
+      
+      // Check if the claim is actually supported by conversation history
+      const isSupported = conversationHistory.some(msg => 
+        msg.toLowerCase().includes(claim)
       );
       
-      if (!quoteInHistory) {
-        score += 0.3; // Penalty for each potentially false quote
+      if (!isSupported) {
+        hallucinationScore += 0.35;
       }
-    });
+    }
   }
   
-  return Math.min(1.0, score); // Cap at 1.0
-}
+  return Math.min(hallucinationScore, 1.0);
+};
 
 /**
- * Extract potential topics from text
+ * Check consistency of memory references
  */
-function extractTopics(text: string): string[] {
-  // Simple noun phrase extraction (could be enhanced with NLP)
-  const nounPhrases = text.match(/\b[A-Za-z]+(ing|ed|ment|ion|ity|ness)\b|\b[A-Za-z]+ [A-Za-z]+\b/g) || [];
-  return nounPhrases.map(phrase => phrase.toLowerCase());
-}
-
-/**
- * Detect specialized concerns requiring additional verification
- * Returns a multiplier to increase scrutiny
- */
-function detectSpecializedConcerns(userInput: string, responseText: string): number {
-  let multiplier = 1.0;
+const checkMemoryConsistency = (responseText: string, conversationHistory: string[]): number => {
+  // Start with perfect consistency
+  let consistencyScore = 1.0;
   
-  // Check for eating disorder concerns
-  if (specializedConcernPatterns.eatingDisorders.some(pattern => pattern.test(userInput))) {
-    multiplier *= 1.5;
+  // Simple checks for early implementation
+  if (conversationHistory.length < 2) {
+    // In a new conversation, any reference to shared context is a problem
+    if (/as we discussed|as you mentioned|earlier you said|you told me about/i.test(responseText)) {
+      consistencyScore -= 0.5;
+    }
   }
   
-  // Check for gambling concerns
-  if (specializedConcernPatterns.gambling.some(pattern => pattern.test(userInput))) {
-    multiplier *= 1.5;
+  // Extract facts claimed about the user
+  const factClaims = responseText.match(/you (mentioned|said|told me|indicated) that you ([\w\s]+)/ig);
+  
+  if (factClaims && factClaims.length > 0) {
+    for (const claim of factClaims) {
+      const cleanedClaim = claim
+        .replace(/you (mentioned|said|told me|indicated) that you/i, '')
+        .trim()
+        .toLowerCase();
+      
+      // Check if any part of the conversation supports this claim
+      const isSupported = conversationHistory.some(msg => 
+        msg.toLowerCase().includes(cleanedClaim)
+      );
+      
+      if (!isSupported) {
+        consistencyScore -= 0.2;
+      }
+    }
   }
   
-  // Check for substance abuse concerns
-  if (specializedConcernPatterns.substanceAbuse.some(pattern => pattern.test(userInput))) {
-    multiplier *= 1.5;
-  }
-  
-  // Check for crisis/emergency concerns
-  if (specializedConcernPatterns.crisis.some(pattern => pattern.test(userInput))) {
-    multiplier *= CRITICAL_TOPIC_MULTIPLIER;
-  }
-  
-  return multiplier;
-}
-
-/**
- * Calculate logarithmic delay based on response confidence
- * Increased by 25% for more thorough processing
- */
-export function calculateResponseDelay(confidenceScore: number): number {
-  // Lower confidence = longer delay (logarithmic) - increased by 25%
-  const baseDelay = 625; // Was 500 milliseconds
-  const maxDelay = 3750; // Was 3000 milliseconds
-  
-  if (confidenceScore >= 0.9) {
-    return baseDelay;
-  }
-  
-  // Use logarithmic scale with 25% stronger effect: delay increases as confidence decreases
-  return Math.min(maxDelay, baseDelay + Math.log10(1 + (1 - confidenceScore) * 12.5) * 1875); // Was 10 and 1500
-}
-
-/**
- * Determine if response should be completely prevented
- * Prevention threshold remains unchanged - we prefer rollback over full prevention
- */
-export function shouldPreventResponse(verificationResult: VerificationResult): boolean {
-  return verificationResult.suggestedAction === 'prevent';
-}
-
-/**
- * Generate a safe fallback response when verification fails
- * Now with more thoughtful and specific fallbacks
- */
-export function generateFallbackResponse(userInput: string): string {
-  // More thoughtful fallback options based on input
-  const fallbacks = [
-    "I want to make sure I respond accurately. Could you tell me more about what you're experiencing?",
-    "I appreciate you sharing that with me. To better understand your situation, could you provide some additional context?",
-    "Thank you for your patience. I want to be helpful - could you share a bit more about what's on your mind?",
-    "I'm listening and want to provide the most thoughtful response. Could you elaborate on what you're going through?",
-    "I'd like to make sure I understand correctly before responding. Could you tell me more about your situation?",
-    "To provide the most meaningful support, I'd appreciate if you could share more about what you're experiencing right now."
-  ];
-  
-  // Select a fallback based on mathematical hash of input for consistent selection
-  const inputHash = hashString(userInput);
-  return fallbacks[inputHash % fallbacks.length];
-}
-
-/**
- * Simple string hashing function
- */
-function hashString(str: string): number {
-  let hash = 0;
-  if (str.length === 0) return hash;
-  
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-  
-  return Math.abs(hash);
-}
+  return Math.max(consistencyScore, 0);
+};

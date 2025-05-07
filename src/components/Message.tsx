@@ -2,6 +2,7 @@
 import React from 'react';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
 import { ConcernType } from '../utils/reflection/reflectionTypes';
+import RollbackIndicator from './RollbackIndicator';
 
 export type MessageType = {
   id: string;
@@ -14,6 +15,9 @@ export type MessageType = {
     state?: string;
     city?: string;
   } | null;
+  isRollingBack?: boolean;
+  rollbackLevel?: 'low' | 'medium' | 'high';
+  rollbackMessage?: string;
 };
 
 interface MessageProps {
@@ -82,37 +86,46 @@ const Message: React.FC<MessageProps> = ({ message, onFeedback }) => {
           <span className="text-white font-medium text-sm">R</span>
         </div>
       )}
-      <div 
-        className={`chat-bubble ${message.sender === 'user' ? 'user-message' : 'roger-message'} ${message.concernType ? getConcernClass() : ''}`}
-      >
-        <div>
-          {textParagraphs.map((paragraph, index) => (
-            <p key={index} className={index > 0 ? 'mt-2' : ''}>
-              {paragraph.trim()}
-            </p>
-          ))}
-        </div>
-        <div className={`flex justify-between items-center mt-2 ${message.sender === 'user' ? 'text-gray-500' : 'text-roger-light'}`}>
-          <div className="text-xs">{formattedTime}</div>
-          
-          {message.sender === 'roger' && onFeedback && (
-            <div className="flex space-x-2">
-              <button 
-                onClick={() => onFeedback(message.id, 'positive')} 
-                className={`p-1 rounded-full hover:bg-gray-100 transition-colors ${message.feedback === 'positive' ? 'text-green-500' : 'text-gray-400'}`}
-                aria-label="Helpful response"
-              >
-                <ThumbsUp size={14} />
-              </button>
-              <button 
-                onClick={() => onFeedback(message.id, 'negative')} 
-                className={`p-1 rounded-full hover:bg-gray-100 transition-colors ${message.feedback === 'negative' ? 'text-red-500' : 'text-gray-400'}`}
-                aria-label="Unhelpful response"
-              >
-                <ThumbsDown size={14} />
-              </button>
-            </div>
-          )}
+      <div className="flex flex-col">
+        {message.sender === 'roger' && message.isRollingBack && (
+          <RollbackIndicator 
+            isActive={true} 
+            level={message.rollbackLevel}
+            message={message.rollbackMessage}
+          />
+        )}
+        <div 
+          className={`chat-bubble ${message.sender === 'user' ? 'user-message' : 'roger-message'} ${message.concernType ? getConcernClass() : ''}`}
+        >
+          <div>
+            {textParagraphs.map((paragraph, index) => (
+              <p key={index} className={index > 0 ? 'mt-2' : ''}>
+                {paragraph.trim()}
+              </p>
+            ))}
+          </div>
+          <div className={`flex justify-between items-center mt-2 ${message.sender === 'user' ? 'text-gray-500' : 'text-roger-light'}`}>
+            <div className="text-xs">{formattedTime}</div>
+            
+            {message.sender === 'roger' && onFeedback && (
+              <div className="flex space-x-2">
+                <button 
+                  onClick={() => onFeedback(message.id, 'positive')} 
+                  className={`p-1 rounded-full hover:bg-gray-100 transition-colors ${message.feedback === 'positive' ? 'text-green-500' : 'text-gray-400'}`}
+                  aria-label="Helpful response"
+                >
+                  <ThumbsUp size={14} />
+                </button>
+                <button 
+                  onClick={() => onFeedback(message.id, 'negative')} 
+                  className={`p-1 rounded-full hover:bg-gray-100 transition-colors ${message.feedback === 'negative' ? 'text-red-500' : 'text-gray-400'}`}
+                  aria-label="Unhelpful response"
+                >
+                  <ThumbsDown size={14} />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

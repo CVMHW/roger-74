@@ -5,6 +5,7 @@ import MessageList from '../MessageList';
 import MessageInput from '../MessageInput';
 import useChatLogic from '../../hooks/chat/useChatLogic';
 import CrisisResources from '../CrisisResources';
+import { useStrictResponseVerification } from '../../hooks/useStrictResponseVerification';
 
 const ChatContainer: React.FC = () => {
   const { 
@@ -15,6 +16,14 @@ const ChatContainer: React.FC = () => {
     showCrisisResources,
     processingContext
   } = useChatLogic();
+  
+  // Get the verification system with rollback visualization
+  const {
+    applyRollbackState
+  } = useStrictResponseVerification();
+  
+  // Apply rollback state to any messages that need it
+  const messagesWithRollbackState = messages.map(message => applyRollbackState(message));
   
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -34,7 +43,7 @@ const ChatContainer: React.FC = () => {
           ref={chatContainerRef}
         >
           <MessageList 
-            messages={messages} 
+            messages={messagesWithRollbackState}
             isTyping={isTyping}
             processingContext={processingContext}
             onFeedback={handleFeedback}

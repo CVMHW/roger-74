@@ -1,11 +1,9 @@
 
 /**
- * Strict Verification System Integration
+ * Strict Verification System - Main Exports
  * 
- * Mathematical system that predicts, logarithmically evaluates, and prevents 
- * hallucinations, memory issues, and repetitive responses
- * 
- * Now with 25% easier rollback thresholds and stronger prevention mechanisms
+ * Provides tools for mathematical verification and prevention of problematic responses
+ * with enhanced rollback visualization and 25% easier rollback thresholds
  */
 
 export { 

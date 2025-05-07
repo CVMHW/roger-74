@@ -1,19 +1,39 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-const TypingIndicator: React.FC = () => {
+interface TypingIndicatorProps {
+  isSlowMode?: boolean;
+}
+
+const TypingIndicator: React.FC<TypingIndicatorProps> = ({ isSlowMode = false }) => {
+  const [dotCount, setDotCount] = useState(1);
+
+  useEffect(() => {
+    // Speed up or slow down the animation based on mode
+    const interval = setInterval(() => {
+      setDotCount(prev => prev >= 3 ? 1 : prev + 1);
+    }, isSlowMode ? 800 : 400);
+
+    return () => clearInterval(interval);
+  }, [isSlowMode]);
+
   return (
-    <div className="flex items-center space-x-2 ml-2">
-      <div className="h-8 w-8 rounded-full bg-roger flex items-center justify-center">
-        <span className="text-white font-medium text-sm">R</span>
+    <div className="flex items-center">
+      <div className={`typing-indicator ${isSlowMode ? 'slow-mode' : ''}`}>
+        <div 
+          className={`dot ${dotCount >= 1 ? 'active' : ''} ${isSlowMode ? 'bg-blue-500' : 'bg-gray-500'}`}
+        />
+        <div 
+          className={`dot ${dotCount >= 2 ? 'active' : ''} ${isSlowMode ? 'bg-blue-600' : 'bg-gray-500'}`}
+        />
+        <div 
+          className={`dot ${dotCount >= 3 ? 'active' : ''} ${isSlowMode ? 'bg-blue-700' : 'bg-gray-500'}`}
+        />
       </div>
-      <div className="bg-gray-100 px-4 py-2 rounded-lg">
-        <div className="flex space-x-1">
-          <div className="h-2 w-2 bg-gray-400 rounded-full animate-pulse"></div>
-          <div className="h-2 w-2 bg-gray-400 rounded-full animate-pulse delay-100"></div>
-          <div className="h-2 w-2 bg-gray-400 rounded-full animate-pulse delay-200"></div>
-        </div>
-      </div>
+
+      <span className={`ml-2 text-sm ${isSlowMode ? 'text-blue-700' : 'text-gray-500'}`}>
+        {isSlowMode ? 'thinking carefully...' : 'typing...'}
+      </span>
     </div>
   );
 };

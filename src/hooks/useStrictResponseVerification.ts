@@ -1,3 +1,4 @@
+
 /**
  * Hook for strict mathematical response verification
  * 
@@ -8,6 +9,7 @@
 
 import { useState, useCallback } from 'react';
 import { verifyResponseMathematically, calculateResponseDelay, VerificationResult } from '../utils/response/processor/strictVerification';
+import { MessageType } from '../components/Message';
 
 /**
  * Hook for strict mathematical verification of responses
@@ -15,10 +17,13 @@ import { verifyResponseMathematically, calculateResponseDelay, VerificationResul
 export const useStrictResponseVerification = () => {
   const [lastVerificationResult, setLastVerificationResult] = useState<VerificationResult | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [isRollingBack, setIsRollingBack] = useState(false);
+  const [rollbackLevel, setRollbackLevel] = useState<'low' | 'medium' | 'high'>('medium');
+  const [rollbackMessage, setRollbackMessage] = useState<string>('');
   
   /**
    * Verify response with strict mathematical models
-   * Now with enhanced verification and easier rollbacks
+   * Now with enhanced verification, easier rollbacks, and visual indicators
    */
   const verifyResponse = useCallback((
     responseText: string,
@@ -45,12 +50,32 @@ export const useStrictResponseVerification = () => {
         setLastVerificationResult(result);
         setIsVerifying(false);
         
+        // Set rollback visualization state based on confidence score
+        if (result.shouldRollback) {
+          setIsRollingBack(true);
+          
+          // Determine rollback severity level
+          if (result.confidenceScore < 0.5) {
+            setRollbackLevel('high');
+            setRollbackMessage('I need to carefully verify this response as it touches on important concerns.');
+          } else if (result.confidenceScore < 0.7) {
+            setRollbackLevel('medium');
+            setRollbackMessage('I\'m reviewing this response to ensure it addresses your situation accurately.');
+          } else {
+            setRollbackLevel('low');
+            setRollbackMessage('Taking a moment to refine this response for clarity.');
+          }
+        } else {
+          setIsRollingBack(false);
+        }
+        
         console.log("VERIFICATION RESULT:", {
           confidence: result.confidenceScore.toFixed(2),
           rollback: result.shouldRollback,
           issues: result.detectedIssues,
           action: result.suggestedAction,
-          timing: result.responseTiming
+          timing: result.responseTiming,
+          rollbackLevel: rollbackLevel
         });
         
         resolve(result);
@@ -79,7 +104,10 @@ export const useStrictResponseVerification = () => {
         issues: [] as string[],
         shouldDelay: false,
         shouldRollback: false,
-        recommendedAction: 'proceed'
+        recommendedAction: 'proceed',
+        isRollingBack: false,
+        rollbackLevel: 'low' as const,
+        rollbackMessage: ''
       };
     }
     
@@ -89,9 +117,12 @@ export const useStrictResponseVerification = () => {
       issues: lastVerificationResult.detectedIssues,
       shouldDelay: lastVerificationResult.responseTiming > 625,
       shouldRollback: lastVerificationResult.shouldRollback,
-      recommendedAction: lastVerificationResult.suggestedAction
+      recommendedAction: lastVerificationResult.suggestedAction,
+      isRollingBack,
+      rollbackLevel,
+      rollbackMessage
     };
-  }, [lastVerificationResult]);
+  }, [lastVerificationResult, isRollingBack, rollbackLevel, rollbackMessage]);
   
   /**
    * Determine if response should be rolled back
@@ -101,6 +132,20 @@ export const useStrictResponseVerification = () => {
     if (!lastVerificationResult) return false;
     return lastVerificationResult.shouldRollback;
   }, [lastVerificationResult]);
+  
+  /**
+   * Apply rollback states to a message
+   */
+  const applyRollbackState = useCallback((message: MessageType): MessageType => {
+    if (!isRollingBack || message.sender !== 'roger') return message;
+    
+    return {
+      ...message,
+      isRollingBack,
+      rollbackLevel,
+      rollbackMessage
+    };
+  }, [isRollingBack, rollbackLevel, rollbackMessage]);
   
   /**
    * Get a simpler version of the response if needed
@@ -126,6 +171,10 @@ export const useStrictResponseVerification = () => {
     getVerificationStatus,
     shouldRollbackResponse,
     getSimplifiedResponse,
-    lastVerificationResult
+    lastVerificationResult,
+    isRollingBack,
+    rollbackLevel,
+    rollbackMessage,
+    applyRollbackState
   };
 };
