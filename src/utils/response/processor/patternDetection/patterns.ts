@@ -61,6 +61,22 @@ export const repetitivePatterns: RepetitivePattern[] = [
     regex: /I hear[,.!?\s]+I hear/i,
     pattern: 'repetitive-phrase',
     weight: 1.0
+  },
+  // Add patterns that align with CVMHW's therapeutic approach
+  {
+    regex: /Let's find meaning[,.!?\s]+Let's find meaning/i,
+    pattern: 'meaning-repetition',
+    weight: 0.8
+  },
+  {
+    regex: /(In the present moment[,.!?]?\s*){2,}/i,
+    pattern: 'mindfulness-repetition',
+    weight: 0.8
+  },
+  {
+    regex: /(Take a deep breath[,.!?]?\s*){2,}/i,
+    pattern: 'breathing-instruction-repetition',
+    weight: 0.7
   }
 ];
 
@@ -69,5 +85,20 @@ export const formulaicPhrases = [
   /From what you've shared/i,
   /I hear what you're sharing/i,
   /I hear you're feeling/i,
-  /It sounds like you're/i
+  /It sounds like you're/i,
+  /What I'm hearing is/i,
+  /I understand that you're/i,
+  /It seems like you're experiencing/i
 ];
+
+// Add mindfulness and meaning-focused phrases that reflect CVMHW approach
+export const cvmhwTherapeuticPhrases = [
+  "In this moment, let's focus on what matters to you",
+  "Finding meaning can help us navigate difficult emotions",
+  "Taking a mindful approach means acknowledging your feelings without judgment",
+  "When we connect with what's meaningful, we often find clarity",
+  "Our values can guide us through challenging times",
+  "Finding purpose in our experiences helps us make sense of them",
+  "I'm here to listen and support you in this space"
+];
+
