@@ -1,4 +1,3 @@
-
 /**
  * Mathematical verification system for response accuracy
  * 
@@ -133,9 +132,9 @@ export const calculateResponseDelay = (confidenceScore: number): number => {
  * Determine if response should be prevented entirely
  * More aggressive prevention
  */
-export const shouldPreventResponse = (responseText: string, confidenceScore: number): boolean => {
+export const shouldPreventResponse = (verificationResult: VerificationResult): boolean => {
   // Prevent responses with extremely low confidence score
-  if (confidenceScore < 0.3) return true;
+  if (verificationResult.confidenceScore < 0.3) return true;
   
   // Check for known harmful patterns - more aggressive checks
   const harmfulPatterns = [
@@ -146,7 +145,7 @@ export const shouldPreventResponse = (responseText: string, confidenceScore: num
   ];
   
   // Return true if any harmful pattern is detected
-  return harmfulPatterns.some(pattern => pattern.test(responseText));
+  return harmfulPatterns.some(pattern => pattern.test(verificationResult.suggestedAction));
 };
 
 /**

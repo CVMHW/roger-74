@@ -45,4 +45,4 @@ export const isDirectMedicalAdvice = (text: string): boolean => {
 };
 
 // Re-export existing detection functions - using correct path
-export { isSmallTalk, isIntroduction, isPersonalSharing } from './response/processor/contextDetection';
+export { isSmallTalk, isIntroduction, isPersonalSharing } from './masterRules/detection/topicDetection';
