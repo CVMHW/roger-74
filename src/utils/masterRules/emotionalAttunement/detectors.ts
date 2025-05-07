@@ -1,3 +1,4 @@
+
 /**
  * Detectors for emotional content and everyday situations
  * Enhanced with the comprehensive emotions wheel
@@ -23,7 +24,7 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
       hasEmotion: true,
       primaryEmotion: socialContext.primaryEmotion,
       // Fix the type conversion by explicitly casting the intensity as the correct type
-      intensity: (socialContext.intensity as "high" | "medium" | "low") || "medium",
+      intensity: (socialContext.intensity as unknown as "high" | "medium" | "low") || "medium",
       isImplicit: false
     };
   }
@@ -33,10 +34,12 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
   for (const emotion in emotionsWheel) {
     // Check for direct emotion name mention
     if (new RegExp(`\\b${emotion}\\b`, 'i').test(input)) {
+      // Convert intensity to the correct type with proper type assertions
+      const intensity = ((emotionsWheel[emotion].intensity || "medium") as unknown) as "high" | "medium" | "low";
       return {
         hasEmotion: true,
         primaryEmotion: emotion,
-        intensity: emotionsWheel[emotion].intensity as "high" | "medium" | "low",
+        intensity,
         isImplicit: false
       };
     }
@@ -46,10 +49,12 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
       const synonyms = emotionsWheel[emotion][childEmotion].synonyms;
       for (const synonym of synonyms) {
         if (new RegExp(`\\b${synonym}\\b`, 'i').test(input)) {
+          // Convert intensity to the correct type with proper type assertions
+          const intensity = ((emotionsWheel[emotion][childEmotion].intensity || "medium") as unknown) as "high" | "medium" | "low";
           return {
             hasEmotion: true,
             primaryEmotion: emotion,
-            intensity: emotionsWheel[emotion][childEmotion].intensity as "high" | "medium" | "low",
+            intensity,
             isImplicit: false
           };
         }
