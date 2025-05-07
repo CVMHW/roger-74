@@ -58,6 +58,31 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
     }
   }
   
+  // Enhanced contextual emotion detection for subtle language
+  // Look for hedging language that often surrounds emotion words
+  const hedgingPatterns = [
+    /kind of|sort of|a bit|slightly|somewhat|a little|not really|almost/i,
+    /feels like I('m| am)|seems like I('m| am)|I think I might be/i
+  ];
+  
+  const emotionIndicators = [
+    { words: /(?:not (?:feeling|doing)) (?:so |too |very )?(good|great|well|okay|fine)/i, emotion: 'sad', intensity: 'low' as "low" | "medium" | "high" },
+    { words: /(?:been better|seen better days|not my best|not myself)/i, emotion: 'sad', intensity: 'low' as "low" | "medium" | "high" },
+    { words: /(?:meh|blah|whatever|who cares|doesn't matter)/i, emotion: 'apathetic', intensity: 'medium' as "low" | "medium" | "high" },
+    { words: /(?:on my mind|can't stop thinking|keeps coming up|dwelling on)/i, emotion: 'preoccupied', intensity: 'medium' as "low" | "medium" | "high" }
+  ];
+  
+  for (const indicator of emotionIndicators) {
+    if (indicator.words.test(lowerInput)) {
+      return {
+        hasEmotion: true,
+        primaryEmotion: indicator.emotion,
+        intensity: indicator.intensity,
+        isImplicit: true
+      };
+    }
+  }
+  
   // Check for implicit emotional content through situations
   for (const pattern of implicitEmotionPatterns) {
     if (pattern.situation.test(input)) {
@@ -68,6 +93,37 @@ export const detectEmotionalContent = (input: string): EmotionInfo => {
         isImplicit: true
       };
     }
+  }
+  
+  // Enhanced detection of mixed emotions
+  if (/(mixed feelings|conflicted|torn|bittersweet|complicated)/i.test(input)) {
+    // Try to determine which emotions are mixed
+    const emotions = [];
+    
+    if (/(happy|excited|good|positive)/i.test(input)) emotions.push('happy');
+    if (/(sad|down|unhappy|upset)/i.test(input)) emotions.push('sad');
+    if (/(nervous|anxious|worried)/i.test(input)) emotions.push('anxious');
+    if (/(angry|frustrated|annoyed)/i.test(input)) emotions.push('angry');
+    
+    // If we found specific emotions, return the dominant one with mixed flag
+    if (emotions.length > 0) {
+      return {
+        hasEmotion: true,
+        primaryEmotion: emotions[0], // Return the first detected emotion as primary
+        intensity: "medium",
+        isImplicit: false,
+        isMixed: true, // Add this flag to indicate mixed emotions
+        secondaryEmotions: emotions.slice(1) // Include other detected emotions
+      };
+    }
+    
+    // If specific emotions aren't clear, return generic conflicted state
+    return {
+      hasEmotion: true,
+      primaryEmotion: 'conflicted',
+      intensity: "medium",
+      isImplicit: true
+    };
   }
   
   return {
