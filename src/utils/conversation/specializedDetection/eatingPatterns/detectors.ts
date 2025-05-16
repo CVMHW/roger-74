@@ -49,21 +49,21 @@ export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderC
   const directMatches = directEDPatterns.filter(pattern => pattern.test(normalizedInput));
   if (directMatches.length > 0) {
     highestRiskLevel = 'high';
-    matchedPhrases.push(...directMatches.map(r => r.toString()));
+    matchedPhrases.push(...directMatches.map(r => r.toString().replace(/\/.+\/i/, '')));
   }
   
   // Check body image patterns (high risk)
   const bodyMatches = bodyImagePatterns.filter(pattern => pattern.test(normalizedInput));
   if (bodyMatches.length > 0) {
     if (highestRiskLevel === 'none') highestRiskLevel = 'high';
-    matchedPhrases.push(...bodyMatches.map(r => r.toString()));
+    matchedPhrases.push(...bodyMatches.map(r => r.toString().replace(/\/.+\/i/, '')));
   }
   
   // Check control patterns (moderate risk)
   const controlMatches = controlPatterns.filter(pattern => pattern.test(normalizedInput));
   if (controlMatches.length > 0) {
     if (highestRiskLevel === 'none') highestRiskLevel = 'moderate';
-    matchedPhrases.push(...controlMatches.map(r => r.toString()));
+    matchedPhrases.push(...controlMatches.map(r => r.toString().replace(/\/.+\/i/, '')));
   }
   
   // Check distress patterns (low risk if alone, moderate with others)
@@ -71,16 +71,17 @@ export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderC
   if (distressMatches.length > 0) {
     if (highestRiskLevel === 'none') highestRiskLevel = 'low';
     if (matchedPhrases.length > 0 && highestRiskLevel === 'low') highestRiskLevel = 'moderate';
-    matchedPhrases.push(...distressMatches.map(r => r.toString()));
+    matchedPhrases.push(...distressMatches.map(r => r.toString().replace(/\/.+\/i/, '')));
   }
   
   // Check for environmental context markers that might increase risk
-  const contextMarkers = [
+  const contextMarkers: string[] = [
     /alone|lonely|isolated|no support|no help|no one understands/i,
     /depressed|anxious|stressed|overwhelmed|hopeless/i,
     /tried to stop|can'?t stop|getting worse|out of control/i,
     /long time|years|months|weeks|every day|constant/i
-  ].filter(pattern => pattern.test(normalizedInput));
+  ].filter(pattern => pattern.test(normalizedInput))
+   .map(pattern => pattern.toString().replace(/\/.+\/i/, ''));
   
   // Check specifically for "not eating" or similar strong indicators
   if (/not eating|haven'?t (been )?eat(ing|en)|struggling not eating|can'?t eat|don'?t eat/i.test(normalizedInput)) {
@@ -159,7 +160,7 @@ export const isFoodSmallTalk = (userInput: string): FoodSmallTalkResult => {
   // Check for general food talk
   const generalFoodMatches = foodSmallTalkPatterns.filter(pattern => pattern.test(normalizedInput));
   
-  // Collect food topics mentioned
+  // Collect food topics mentioned - FIXING TYPE ERROR HERE
   const topics: string[] = [
     ...clevelandMatches.map(r => r.toString().replace(/\/.+\/i/, '')),
     ...generalFoodMatches.map(r => r.toString().replace(/\/.+\/i/, ''))
