@@ -1,6 +1,6 @@
 
 /**
- * Type definitions for eating pattern detection
+ * Types for eating pattern detection system
  */
 
 export type RiskLevel = 'none' | 'low' | 'moderate' | 'high';

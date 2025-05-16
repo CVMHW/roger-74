@@ -1,149 +1,136 @@
 
 /**
- * Detection functions for eating patterns
+ * Detectors for eating patterns
  */
 
-import { 
-  eatingDisorderKeywords, 
-  eatingDisorderPhrases, 
-  contextualRiskMarkers,
+import {
+  eatingDisorderKeywords,
+  eatingDisorderPhrases,
   foodSmallTalkPatterns,
-  clevelandFoodContexts
+  clevelandFoodContexts,
+  contextualRiskMarkers
 } from './constants';
 import { EatingDisorderConcernResult, FoodSmallTalkResult } from './types';
 
 /**
- * Detects potential eating disorder concerns in user input
- * @param userInput User's message
- * @returns Assessment of eating disorder risk level and details
+ * Detects potential eating disorder concerns in user input with high sensitivity
  */
 export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderConcernResult => {
-  const normalizedInput = userInput.toLowerCase();
-  const matchedPhrases: string[] = [];
-  const contextMarkers: string[] = [];
+  const lowerInput = userInput.toLowerCase();
+  const result: EatingDisorderConcernResult = {
+    isEatingDisorderConcern: false,
+    riskLevel: 'none',
+    matchedPhrases: [],
+    contextMarkers: [],
+    isLikelySmallTalk: false
+  };
   
-  // Check for eating disorder phrases
-  let matchCount = 0;
-  for (const pattern of eatingDisorderPhrases) {
-    const matches = normalizedInput.match(pattern);
-    if (matches && matches.length > 0) {
-      matchedPhrases.push(matches[0]);
-      matchCount++;
+  // Check for direct mentions of eating disorders
+  for (const keyword of eatingDisorderKeywords) {
+    if (lowerInput.includes(keyword)) {
+      result.matchedPhrases.push(keyword);
     }
   }
   
-  // Check for keywords as additional signals
-  for (const keyword of eatingDisorderKeywords) {
-    if (new RegExp(`\\b${keyword}\\b`, 'i').test(normalizedInput)) {
-      if (!matchedPhrases.includes(keyword)) {
-        matchedPhrases.push(keyword);
-      }
-      matchCount += 0.5; // Keywords count as partial matches
+  // Check for specific phrases that indicate eating disorders
+  for (const phrase of eatingDisorderPhrases) {
+    const match = lowerInput.match(phrase);
+    if (match) {
+      result.matchedPhrases.push(match[0]);
     }
   }
   
   // Check for contextual risk markers
   for (const marker of contextualRiskMarkers) {
-    const matches = normalizedInput.match(marker);
-    if (matches && matches.length > 0) {
-      contextMarkers.push(matches[0]);
-      matchCount += 0.5; // Context markers increase risk but aren't definitive
+    const match = lowerInput.match(marker);
+    if (match) {
+      result.contextMarkers.push(match[0]);
     }
   }
   
-  // Check if this is likely just food small talk, especially Cleveland-related
-  const isGeneralFoodSmallTalk = foodSmallTalkPatterns.some(pattern => pattern.test(normalizedInput));
-  const isClevelandFoodTalk = clevelandFoodContexts.some(pattern => pattern.test(normalizedInput));
-  let isLikelySmallTalk = isGeneralFoodSmallTalk || isClevelandFoodTalk;
+  // If just one simple food mention, likely small talk
+  const isSimpleFoodTalk = foodSmallTalkPatterns.some(pattern => pattern.test(lowerInput));
   
-  // If there are ED phrases but also small talk patterns, resolve the ambiguity
-  // Special handling for Cleveland food contexts - be more cautious about flagging these as concerns
-  if (matchCount > 0 && isLikelySmallTalk) {
-    if (isClevelandFoodTalk) {
-      // For Cleveland food talk, require stronger evidence of ED concerns
-      isLikelySmallTalk = matchCount < 2.5 || contextMarkers.length === 0;
-    } else {
-      // For general food small talk, use normal threshold
-      isLikelySmallTalk = matchCount < 1.5 && contextMarkers.length === 0;
+  // If Cleveland food context, might be small talk about local food
+  const isClevelandFoodContext = clevelandFoodContexts.some(context => 
+    lowerInput.includes(context.toLowerCase())
+  );
+  
+  // Direct mention of eating disorders - highest priority detection
+  if (
+    lowerInput.includes('eating disorder') ||
+    lowerInput.includes('anorexia') ||
+    lowerInput.includes('bulimia') ||
+    lowerInput.includes('binge eating')
+  ) {
+    result.isEatingDisorderConcern = true;
+    result.riskLevel = 'high';
+  }
+  // Check for serious concerns with multiple indicators
+  else if (result.matchedPhrases.length >= 2 || result.contextMarkers.length >= 2) {
+    result.isEatingDisorderConcern = true;
+    result.riskLevel = 'high';
+  } 
+  // Check for moderate concerns
+  else if (result.matchedPhrases.length === 1 && result.contextMarkers.length >= 1) {
+    result.isEatingDisorderConcern = true;
+    result.riskLevel = 'moderate';
+  }
+  // Check for low risk concerns
+  else if (result.matchedPhrases.length === 1 || result.contextMarkers.length === 1) {
+    // Distinguish from Cleveland food talk
+    if (!isClevelandFoodContext) {
+      result.isEatingDisorderConcern = true;
+      result.riskLevel = 'low';
     }
   }
   
-  // Determine risk level based on matches and context
-  let riskLevel: 'none' | 'low' | 'moderate' | 'high' = 'none';
-  if (matchCount >= 3 || (matchCount >= 1.5 && contextMarkers.length >= 2)) {
-    riskLevel = 'high';
-  } else if (matchCount >= 1.5 || (matchCount >= 1 && contextMarkers.length >= 1)) {
-    riskLevel = 'moderate';
-  } else if (matchCount > 0) {
-    riskLevel = 'low';
+  // If both Cleveland food context and very minimal indicators, might be small talk
+  if (isClevelandFoodContext && result.matchedPhrases.length <= 1 && result.contextMarkers.length === 0) {
+    result.isLikelySmallTalk = true;
   }
   
-  // Cleveland food context adjustment - reduce risk level for Cleveland food talk
-  // unless there's very strong evidence of an eating disorder
-  if (isClevelandFoodTalk && riskLevel !== 'high' && contextMarkers.length < 3) {
-    if (riskLevel === 'moderate') {
-      riskLevel = 'low';
-    } else if (riskLevel === 'low') {
-      riskLevel = 'none';
-    }
+  // If just general food talk with no concerns
+  if (isSimpleFoodTalk && result.matchedPhrases.length === 0 && result.contextMarkers.length === 0) {
+    result.isLikelySmallTalk = true;
   }
   
-  // If this is clearly small talk with minimal ED signals, reduce the risk level
-  if (isLikelySmallTalk && riskLevel === 'low') {
-    riskLevel = 'none';
-  }
-  
-  return {
-    isEatingDisorderConcern: riskLevel !== 'none',
-    riskLevel,
-    matchedPhrases,
-    contextMarkers,
-    isLikelySmallTalk
-  };
+  return result;
 };
 
 /**
- * Detects if the user's input is primarily about food as small talk
- * with special handling for Cleveland food contexts
- * @param userInput User's message
- * @returns Whether the message is primarily food-related small talk
+ * Determines if message is just food small talk rather than a concern
  */
 export const isFoodSmallTalk = (userInput: string): FoodSmallTalkResult => {
-  const normalizedInput = userInput.toLowerCase();
-  const topics: string[] = [];
+  const lowerInput = userInput.toLowerCase();
+  const result: FoodSmallTalkResult = {
+    isSmallTalk: false,
+    topics: [],
+    isClevelandSpecific: false
+  };
   
-  let smallTalkMatchCount = 0;
+  // Check for food small talk patterns
   for (const pattern of foodSmallTalkPatterns) {
-    const matches = normalizedInput.match(pattern);
-    if (matches && matches.length > 0) {
-      topics.push(matches[0]);
-      smallTalkMatchCount++;
+    const match = lowerInput.match(pattern);
+    if (match) {
+      result.isSmallTalk = true;
+      result.topics.push(match[0]);
     }
   }
   
-  // Check if this is Cleveland-specific food talk
-  const isClevelandSpecific = clevelandFoodContexts.some(pattern => {
-    const matches = normalizedInput.match(pattern);
-    if (matches && matches.length > 0) {
-      topics.push(matches[0]);
-      smallTalkMatchCount += 0.5; // Cleveland food contexts boost small talk score
-      return true;
+  // Check for Cleveland-specific food contexts
+  for (const context of clevelandFoodContexts) {
+    if (lowerInput.includes(context.toLowerCase())) {
+      result.isClevelandSpecific = true;
+      result.topics.push(context);
     }
-    return false;
-  });
+  }
   
-  // Check if there are any eating disorder concerns
-  const { isEatingDisorderConcern, riskLevel } = detectEatingDisorderConcerns(userInput);
+  // If no explicit eating disorder concerns and has food talk, it's likely small talk
+  const hasExplicitConcerns = eatingDisorderPhrases.some(phrase => phrase.test(lowerInput));
+  if (!hasExplicitConcerns && (result.topics.length > 0 || result.isClevelandSpecific)) {
+    result.isSmallTalk = true;
+  }
   
-  // It's food small talk if it matches patterns and doesn't raise high-level ED concerns
-  // For Cleveland food talk, we're even more lenient about classifying as small talk
-  const isSmallTalk = smallTalkMatchCount > 0 && 
-                      (!isEatingDisorderConcern || 
-                       (isClevelandSpecific && riskLevel !== 'high'));
-  
-  return {
-    isSmallTalk,
-    topics,
-    isClevelandSpecific
-  };
+  return result;
 };

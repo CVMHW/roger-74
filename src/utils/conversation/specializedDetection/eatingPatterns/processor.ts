@@ -1,3 +1,4 @@
+
 /**
  * Main processor for food-related messages
  */
@@ -19,6 +20,15 @@ export const processFoodRelatedMessage = (userInput: string): FoodRelatedMessage
   
   // Check for Cleveland-specific food talk
   const smallTalkResult = isFoodSmallTalk(userInput);
+  
+  // Direct mentions of eating disorders always take priority
+  if (/eating disorder|anorexia|bulimia|binge eating|eating issues|eating problems|purging/i.test(userInput.toLowerCase())) {
+    return {
+      responseType: 'eating_disorder',
+      riskLevel: 'high',
+      suggestedResponse: generateEatingDisorderResponse(userInput, edResult)
+    };
+  }
   
   // Special handling for Cleveland food contexts - generally treat as small talk
   // unless there's very strong evidence of an eating disorder

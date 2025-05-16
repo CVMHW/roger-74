@@ -1,99 +1,55 @@
 
 /**
- * Constants related to eating patterns detection
+ * Constants for eating pattern detection
  */
 
-// Keywords and phrases associated with potential eating disorders
+// Keywords that might indicate eating disorder concerns
 export const eatingDisorderKeywords = [
-  'fat', 'lose weight', 'diet', 'calories', 'burn', 'purge',
-  'throw up', 'vomit', 'starve', 'binge', 'guilty', 'disgusting',
-  'control', 'exercise', 'laxative', 'cleanse', 'clean eating',
-  'restrict', 'hungry', 'thinner', 'skinny'
+  'eating disorder', 'anorexia', 'bulimia', 'binge', 'purge', 'restrict',
+  'calories', 'weight', 'fat', 'thin', 'skinny', 'diet', 'body image',
+  'overweight', 'underweight', 'eating habits', 'food fear', 'starve',
+  'eating issues', 'eating problems', 'body dysmorphia', 'exercise compulsion'
 ];
 
-// Common eating disorder phrases to monitor (high sensitivity)
+// Phrases more specific to eating disorders
 export const eatingDisorderPhrases = [
-  /I feel fat/i,
-  /I need to lose weight/i,
-  /I haven'?t eaten (all day|today|since)/i,
-  /I ate too much/i,
-  /scared of (gaining|weight)/i,
-  /hate my body/i,
-  /I'?m not (hungry|eating)/i,
-  /burn (off|these|the) calories/i,
-  /can'?t stop eating/i,
-  /feel guilty (after|about|when) eat/i,
-  /trying to be (healthier|skinnier|thinner)/i,
-  /[Oo]n a diet/i,
-  /cutting (out|down) (carbs|food|calories|sugar)/i,
-  /(doing|on) a cleanse/i,
-  /eat(ing)? clean/i,
-  /can'?t control (myself|around food)/i,
-  /ate the whole/i,
-  /(so|too) full[,]? but (keep|still) eat/i,
-  /out of control when I eat/i,
-  /make myself (throw|vomit|purge)/i,
-  /use laxatives/i,
-  /exercise (excessively|too much|after eating)/i,
-  /look disgusting/i,
-  /[Ii]'?m too (big|fat|heavy)/i,
-  /wish I was (thinner|smaller|skinnier)/i,
-  /count(ing)? (calories|points|macros)/i,
-  /skip(ping|ped) (meals|breakfast|lunch|dinner)/i,
-  /food (rules|ritual|routine)/i,
-  /weighing myself/i,
-  /body (check|checking)/i
+  /can'?t (eat|keep food down)/i,
+  /afraid (of|to) eat/i,
+  /hate (my body|how I look)/i,
+  /(obsessed|obsessing|fixated) (with|on) (weight|food|calories|appearance)/i,
+  /eating disorder (concerns|issues|problems|thoughts)/i,
+  /body (image|dysmorphia|hatred|loathing)/i,
+  /feel (fat|disgusting|huge|bloated)/i,
+  /(purge|purging|vomit|throw up) after (eating|meals)/i,
+  /(restrict|restricting|cut|cutting) (calories|food)/i,
+  /(binge|binging|overeating|overeat)/i
 ];
 
-// Patterns indicating positive/neutral food small talk
-export const foodSmallTalkPatterns = [
-  /love (food|eating|cooking|baking)/i,
-  /favorite (food|meal|restaurant|dish|recipe)/i,
-  /try(ing)? (a new|this) recipe/i,
-  /cook(ing|ed) (dinner|lunch|breakfast)/i,
-  /eat(ing)? out/i,
-  /restaurant recommendation/i,
-  /best place to eat/i,
-  /food was (amazing|great|good|delicious)/i,
-  /enjoy(ed)? (my meal|dinner|lunch|breakfast)/i,
-  /what (should I|to) (eat|have|cook) for/i,
-  /grocery shopping/i,
-  /food (preference|allergy|sensitivity)/i,
-  /vegetarian|vegan|pescatarian|omnivore/i,
-  /gluten[- ]free|dairy[- ]free|nut[- ]free/i
-];
-
-// Cleveland-specific food contexts
+// Contexts that might indicate Cleveland-specific food talk
 export const clevelandFoodContexts = [
-  /west side market/i,
-  /little italy/i,
-  /tremont/i, 
-  /ohio city/i,
-  /pierogi/i,
-  /polish food/i,
-  /corned beef/i,
-  /slyman'?s/i,
-  /great lakes brewing/i,
-  /mitchell'?s ice cream/i,
-  /melt/i,
-  /cleveland food/i,
-  /lakewood restaurant/i,
-  /barrio/i,
-  /sokolowski'?s/i,
-  /tommy'?s/i,
-  /hot sauce williams/i,
-  /lido lounge/i,
-  /east 4th/i
+  'west side market', 'little italy', 'tremont', 'ohio city',
+  'great lakes brewing', 'market garden', 'melt bar and grilled',
+  'pierogi', 'polish food', 'corned beef', 'slyman\'s',
+  'mitchell\'s ice cream', 'cleveland food scene', 'lakewood restaurants'
 ];
 
-// Context markers that increase concern level
+// Patterns indicating small talk about food
+export const foodSmallTalkPatterns = [
+  /(like|enjoy|love) (to eat|food|eating|cooking)/i,
+  /favorite (food|restaurant|dish|meal|cuisine)/i,
+  /(good|great|best) place to eat/i,
+  /(recommendation|recommend) for (food|restaurant|eating)/i,
+  /try this new (restaurant|place|food)/i,
+  /cooking (recipe|dinner|lunch|breakfast)/i,
+  /food (festival|event|truck|market)/i
+];
+
+// Risk markers that might indicate more serious concerns
 export const contextualRiskMarkers = [
-  /always|every day|constantly|never/i, // Absolutist language
-  /have to|need to|must|should/i,       // Rigid thinking
-  /terrified|scared|afraid|anxious/i,   // Emotional distress
-  /avoid|won't allow|can't have/i,      // Restriction language
-  /obsess|fixate|think about|worry/i,   // Ruminative thoughts
-  /punish|deserve|earn|reward/i,        // Punishment/earning mentality
-  /failure|failed|messed up|bad/i,      // Self-criticism
-  /weight (gain|loss|change)/i          // Direct weight focus
+  /(worry|worried|anxious|afraid|scared) about (eating|food|weight|body)/i,
+  /(struggle|struggling|hard|difficult) (with|to) eat/i,
+  /(control|controlling) (food|eating|intake|calories)/i,
+  /(hate|hating|loathe|despise) (myself|my body|how I look)/i,
+  /(avoid|avoiding|skip|skipping) (meals|food|eating)/i,
+  /(guilty|shame|ashamed|disgusted) (after|about|when) (eating|food)/i
 ];

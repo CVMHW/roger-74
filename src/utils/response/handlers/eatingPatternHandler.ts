@@ -1,3 +1,4 @@
+
 /**
  * Eating Pattern Handler
  * 
@@ -32,6 +33,14 @@ const CLEVELAND_FOOD_CONTEXTS = [
  * @returns Response with categorization if related to eating patterns, null otherwise
  */
 export const handleEatingPatterns = (userInput: string): string | null => {
+  // Always prioritize direct mentions of eating disorders
+  if (/eating disorder|anorexia|bulimia|binge eating|eating issues|eating problems/i.test(userInput.toLowerCase())) {
+    // Record to memory with high priority
+    recordToMemory(userInput, 'URGENT: Detected explicit eating disorder mention');
+    
+    return `I noticed you mentioned something related to eating disorders. This is something I take very seriously. The Emily Program (${EMILY_PROGRAM_INFO.helpline}) specializes in supporting people with complex feelings about food and body image. Would it help to talk more about what you're experiencing, or would you prefer resources for support?`;
+  }
+  
   // Process the message through our specialized detector
   const result = processFoodRelatedMessage(userInput);
   
@@ -114,6 +123,11 @@ export const enhanceEatingDisorderResponse = (
  * while being careful not to misclassify casual food enjoyment in Cleveland
  */
 export const needsSpecializedEatingResponseHandling = (userInput: string): boolean => {
+  // Direct mentions of eating disorders always need specialized handling
+  if (/eating disorder|anorexia|bulimia|binge eating|eating issues|eating problems/i.test(userInput.toLowerCase())) {
+    return true;
+  }
+
   const { isEatingDisorderConcern, riskLevel } = detectEatingDisorderConcerns(userInput);
   
   // Check if this might be Cleveland-specific food enjoyment
