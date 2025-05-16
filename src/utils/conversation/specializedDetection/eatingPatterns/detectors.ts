@@ -1,4 +1,3 @@
-
 /**
  * Specialized detectors for eating disorder concerns and food small talk
  */
@@ -98,12 +97,26 @@ export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderC
   const isLikelySmallTalk = isClevelandFoodTalk && matchedPhrases.length < 2;
   const isEatingDisorderConcern = (matchedPhrases.length > 0 && !isLikelySmallTalk) || highestRiskLevel === 'high';
   
+  // Determine appropriate approach based on risk level
+  let recommendedApproach: 'general-support' | 'specialized-referral' | 'crisis-response' = 'general-support';
+  if (highestRiskLevel === 'high') {
+    recommendedApproach = 'crisis-response';
+  } else if (highestRiskLevel === 'moderate') {
+    recommendedApproach = 'specialized-referral';
+  }
+  
+  // Determine if immediate attention is needed
+  const needsImmediate = highestRiskLevel === 'high' || 
+                         (highestRiskLevel === 'moderate' && contextMarkers.length >= 2);
+  
   return {
     isEatingDisorderConcern,
     riskLevel: isEatingDisorderConcern ? highestRiskLevel : 'none',
     matchedPhrases,
     contextMarkers,
-    isLikelySmallTalk
+    isLikelySmallTalk,
+    recommendedApproach,
+    needsImmediate
   };
 };
 
