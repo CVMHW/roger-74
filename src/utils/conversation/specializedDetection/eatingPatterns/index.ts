@@ -9,7 +9,8 @@
 // Export detector functions
 export { 
   detectEatingDisorderConcerns, 
-  isFoodSmallTalk 
+  isFoodSmallTalk,
+  FoodSmallTalkResult
 } from './detectors';
 
 // Export response generators
@@ -25,15 +26,6 @@ export { processFoodRelatedMessage } from './processor';
 export type { 
   RiskLevel,
   EatingDisorderConcernResult,
-  FoodSmallTalkResult,
   FoodRelatedMessageResult
 } from './types';
 
-// Export constants for potential reuse
-export { 
-  eatingDisorderKeywords,
-  eatingDisorderPhrases,
-  foodSmallTalkPatterns,
-  clevelandFoodContexts,
-  contextualRiskMarkers
-} from './constants';

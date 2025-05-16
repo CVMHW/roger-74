@@ -1,8 +1,8 @@
 
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
 import { detectMildSomaticComplaints, detectSimpleNegativeState } from '../../utils/conversationalUtils';
-// Import the new eating pattern detector
-import { detectEatingDisorderConcerns } from '../../utils/conversation/specializedDetection/eatingPatternDetector';
+// Import the eating pattern detector directly from the detectors file
+import { detectEatingDisorderConcerns } from '../../utils/conversation/specializedDetection/eatingPatterns/detectors';
 
 export const useConcernDetection = () => {
   const detectConcerns = (userInput: string): ConcernType => {

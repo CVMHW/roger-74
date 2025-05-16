@@ -3,7 +3,7 @@
  * Main processor for food-related messages
  */
 
-import { detectEatingDisorderConcerns, isFoodSmallTalk } from './detectors';
+import { detectEatingDisorderConcerns, isFoodSmallTalk, FoodSmallTalkResult } from './detectors';
 import { 
   generateEatingDisorderResponse, 
   generateFoodSmallTalkResponse 

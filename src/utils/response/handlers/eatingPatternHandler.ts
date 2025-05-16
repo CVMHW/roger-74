@@ -108,7 +108,7 @@ export const enhanceEatingDisorderResponse = (
   
   // If it's a moderate concern, causing distress, and not just Cleveland food talk
   if (detectionResult.riskLevel === 'moderate' && 
-      detectionResult.contextMarkers.length > 0 &&
+      detectionResult.contextMarkers && detectionResult.contextMarkers.length > 0 &&
       !isClevelandFoodContext) {
     
     return `${initialResponse} These thoughts can sometimes take up a lot of mental space. Some people find it helpful to talk with specialists like those at The Emily Program. Would it be helpful to explore resources for support with these feelings?`;

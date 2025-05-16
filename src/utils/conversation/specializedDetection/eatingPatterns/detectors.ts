@@ -14,6 +14,8 @@ export interface EatingDisorderDetectionResult {
   matchedPhrases: string[];
   recommendedApproach: 'general-support' | 'specialized-referral' | 'crisis-response';
   needsImmediate: boolean;
+  contextMarkers: string[]; // Adding this missing property
+  isLikelySmallTalk: boolean; // Adding this missing property
 }
 
 // High-risk patterns that indicate severe eating disorder concerns
@@ -74,7 +76,9 @@ export function detectEatingDisorderConcerns(userInput: string): EatingDisorderD
     riskLevel: 'low',
     matchedPhrases: [],
     recommendedApproach: 'general-support',
-    needsImmediate: false
+    needsImmediate: false,
+    contextMarkers: [], // Initialize empty context markers
+    isLikelySmallTalk: false // Initialize as not small talk
   };
 
   // Check for exclusion patterns first
@@ -85,6 +89,7 @@ export function detectEatingDisorderConcerns(userInput: string): EatingDisorderD
       !highRiskPatterns.some(pattern => pattern.test(userInput)) && 
       !moderateRiskPatterns.some(pattern => pattern.test(userInput)) &&
       !userInput.toLowerCase().includes('disorder')) {
+    result.isLikelySmallTalk = true;
     return result;
   }
 
@@ -97,6 +102,7 @@ export function detectEatingDisorderConcerns(userInput: string): EatingDisorderD
       result.matchedPhrases.push(match[0]);
       result.recommendedApproach = 'crisis-response';
       result.needsImmediate = true;
+      result.contextMarkers.push('high-risk-language');
     }
   }
 
@@ -109,6 +115,7 @@ export function detectEatingDisorderConcerns(userInput: string): EatingDisorderD
         result.riskLevel = 'moderate';
         result.matchedPhrases.push(match[0]);
         result.recommendedApproach = 'specialized-referral';
+        result.contextMarkers.push('moderate-risk-language');
       }
     }
   }
@@ -120,9 +127,83 @@ export function detectEatingDisorderConcerns(userInput: string): EatingDisorderD
       if (match) {
         result.isEatingDisorderConcern = true;
         result.matchedPhrases.push(match[0]);
+        result.contextMarkers.push('mild-risk-language');
       }
     }
   }
 
+  // Add context markers for direct mentions of eating disorders
+  if (/eating disorder|anorexia|bulimia|binge eating/i.test(userInput)) {
+    result.contextMarkers.push('explicit-ed-mention');
+  }
+
+  // Check if this might be casual food talk despite matches
+  result.isLikelySmallTalk = hasExclusions && result.riskLevel === 'low';
+  
   return result;
+}
+
+/**
+ * Determines if a message is casual food small talk rather than a concerning pattern
+ * 
+ * @param userInput User's message
+ * @returns Whether the message is about casual food enjoyment
+ */
+export function isFoodSmallTalk(userInput: string): FoodSmallTalkResult {
+  const result: FoodSmallTalkResult = {
+    isSmallTalk: false,
+    isClevelandSpecific: false,
+    topics: []
+  };
+  
+  // Check if this is Cleveland-specific food context
+  const clevelandFoodPatterns = [
+    /west side market|little italy|tremont|ohio city/i,
+    /pierogi|polish food|corned beef|slyman/i,
+    /great lakes brewing|mitchell's ice cream|melt/i,
+    /cleveland food scene|lakewood restaurants/i
+  ];
+  
+  for (const pattern of clevelandFoodPatterns) {
+    const match = userInput.match(pattern);
+    if (match) {
+      result.isClevelandSpecific = true;
+      result.topics.push(match[0]);
+    }
+  }
+  
+  // Check for general food small talk patterns
+  const foodSmallTalkPatterns = [
+    /(?<!eating disorder|purge|binge)(?:restaurant|dinner plans|recipe|cooking|favorite food)/i,
+    /(?<!eating disorder|purge|binge)(?:grocery|shopping list|meal prep|lunch break|breakfast)/i,
+    /(?<!eating disorder|purge|binge)(?:diet coke|diet pepsi|diet soda|eat out|take out|delivery food)/i,
+    /(?<!eating disorder|purge|binge)(?:food preferences|delicious|tasty|yummy|flavor)/i
+  ];
+  
+  for (const pattern of foodSmallTalkPatterns) {
+    const match = userInput.match(pattern);
+    if (match) {
+      result.isSmallTalk = true;
+      result.topics.push(match[0]);
+    }
+  }
+  
+  // If we have Cleveland-specific food mentions, it's likely food small talk
+  if (result.isClevelandSpecific) {
+    result.isSmallTalk = true;
+  }
+  
+  // If we have explicit eating disorder mentions, it's not small talk
+  if (/eating disorder|anorexia|bulimia|binge eating|purge|starve/i.test(userInput)) {
+    result.isSmallTalk = false;
+  }
+  
+  return result;
+}
+
+// Define the FoodSmallTalkResult interface
+export interface FoodSmallTalkResult {
+  isSmallTalk: boolean;
+  isClevelandSpecific: boolean;
+  topics: string[];
 }

@@ -3,8 +3,8 @@
  * Response generators for eating patterns detection
  */
 
-import { detectEatingDisorderConcerns, isFoodSmallTalk } from './detectors';
-import { EatingDisorderConcernResult, FoodSmallTalkResult, RiskLevel } from './types';
+import { detectEatingDisorderConcerns, isFoodSmallTalk, FoodSmallTalkResult } from './detectors';
+import { EatingDisorderConcernResult, RiskLevel } from './types';
 
 /**
  * Generate an appropriate response for an eating disorder concern
@@ -12,7 +12,7 @@ import { EatingDisorderConcernResult, FoodSmallTalkResult, RiskLevel } from './t
  */
 export const generateEatingDisorderResponse = (
   userInput: string,
-  detectionResult: EatingDisorderConcernResult
+  detectionResult: EatingDisorderConcernResult | any
 ): string => {
   const { riskLevel, matchedPhrases, isLikelySmallTalk } = detectionResult;
   
