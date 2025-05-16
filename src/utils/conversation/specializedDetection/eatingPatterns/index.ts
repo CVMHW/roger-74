@@ -12,7 +12,7 @@ export {
   isFoodSmallTalk,
 } from './detectors';
 
-// Export type from detectors
+// Export type from detectors using correct 'export type' syntax
 export type { FoodSmallTalkResult } from './detectors';
 
 // Export response generators

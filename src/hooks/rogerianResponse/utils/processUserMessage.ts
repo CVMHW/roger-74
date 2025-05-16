@@ -49,8 +49,10 @@ export const processUserMessage = async (
     // Always update conversation history
     updateConversationHistory(userInput);
     
-    // CRITICAL - Check for serious crisis situations first with RAG integration
-    if (/suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)/i.test(userInput.toLowerCase())) {
+    // CRISIS DETECTION - HIGHEST PRIORITY: Always check first before any memory system
+    // Check for suicide, self-harm, or other crisis indicators
+    if (/suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)|don'?t want to (live|be alive)|take my (own )?life/i.test(userInput.toLowerCase())) {
+      console.log("CRITICAL PRIORITY: Detected suicide or self-harm indicators");
       // Update stage
       updateStage();
       
@@ -58,15 +60,16 @@ export const processUserMessage = async (
       const crisisResponse = "Based on what you're sharing, I'm very concerned about what you're sharing regarding thoughts of suicide. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room.\n\nWould you like me to provide additional resources? Here are resources that may help:\n- 988 Suicide & Crisis Lifeline: Call or text 988\n- Crisis Text Line: Text HOME to 741741";
       
       // Record to memory systems
-      recordToMemorySystems(userInput, crisisResponse);
+      recordToMemorySystems(userInput, crisisResponse, "CRISIS:SUICIDE");
       
       // Return immediate crisis response
       return Promise.resolve(createMessage(crisisResponse, 'roger', 'crisis'));
     }
     
-    // Check for eating disorder specifically to avoid hallucination
+    // Check for eating disorder specifically to avoid hallucination - SECOND HIGHEST PRIORITY
     const edResult = detectEatingDisorderConcerns(userInput);
     if (edResult.isEatingDisorderConcern) {
+      console.log("HIGH PRIORITY: Detected eating disorder indicators with risk level:", edResult.riskLevel);
       // Update stage
       updateStage();
       
@@ -75,7 +78,7 @@ export const processUserMessage = async (
       
       if (edResponse) {
         // Record to memory systems
-        recordToMemorySystems(userInput, edResponse);
+        recordToMemorySystems(userInput, edResponse, "CRISIS:EATING-DISORDER");
         
         // Return eating disorder response
         return Promise.resolve(createMessage(edResponse, 'roger', 'eating-disorder'));
