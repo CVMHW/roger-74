@@ -59,7 +59,7 @@ export const processUserMessage = async (
       // Use crisis response
       const crisisResponse = "Based on what you're sharing, I'm very concerned about what you're sharing regarding thoughts of suicide. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room.\n\nWould you like me to provide additional resources? Here are resources that may help:\n- 988 Suicide & Crisis Lifeline: Call or text 988\n- Crisis Text Line: Text HOME to 741741";
       
-      // Record to memory systems
+      // Record to memory systems with crisis tag
       recordToMemorySystems(userInput, crisisResponse, "CRISIS:SUICIDE");
       
       // Return immediate crisis response
@@ -77,7 +77,7 @@ export const processUserMessage = async (
       const edResponse = createEatingDisorderResponse(userInput);
       
       if (edResponse) {
-        // Record to memory systems
+        // Record to memory systems with crisis tag
         recordToMemorySystems(userInput, edResponse, "CRISIS:EATING-DISORDER");
         
         // Return eating disorder response

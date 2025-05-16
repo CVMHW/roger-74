@@ -30,4 +30,3 @@ export type {
   EatingDisorderConcernResult,
   FoodRelatedMessageResult
 } from './types';
-

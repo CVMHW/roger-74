@@ -8,11 +8,18 @@ import { recordToMemory } from '../../../utils/reflection/feelingDetection';
 
 /**
  * Records both user input and response to the memory systems
+ * @param userInput User's original message
+ * @param responseText Response text to record
+ * @param crisisTag Optional crisis identifier for priority tracking
  */
-export const recordToMemorySystems = (userInput: string, responseText: string): void => {
+export const recordToMemorySystems = (userInput: string, responseText: string, crisisTag?: string): void => {
   try {
-    // Record to primary memory
-    recordToMemory(userInput, responseText);
+    // Record to primary memory with crisis tag if available
+    if (crisisTag) {
+      recordToMemory(`${crisisTag}: ${userInput}`, responseText);
+    } else {
+      recordToMemory(userInput, responseText);
+    }
     
     // Record to 5ResponseMemory system
     addToFiveResponseMemory('patient', userInput);
