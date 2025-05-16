@@ -1,165 +1,128 @@
 
 /**
- * Detectors for eating disorder concerns and food-related conversations
+ * Enhanced eating disorder detection system with specific pattern matching
+ * to prevent false positives and ensure appropriate crisis detection
  */
 
-import { EatingDisorderConcernResult, FoodSmallTalkResult, RiskLevel } from './types';
+// Import types
+import { CrisisDetectionResult } from "../../../masterRules/emotionalAttunement/types";
 
-// Phrases that might indicate eating disorder concerns
-const eatingDisorderPhrases = [
-  // Body image concerns
-  /hate my body|disgusting body|too fat|feel fat|look fat|am fat|getting fat|gained weight/i,
-  /ugly body|gross body|weight gain|gained pounds|body (shame|hatred|disgust)/i,
-  
-  // Specific eating disorder behaviors
-  /purge|purging|making myself throw up|throw up after|vomit after/i,
-  /binge|binged|ate too much|overate|lost control eating|couldn't stop eating/i,
-  /starv(e|ing)|restrict(ing)?|not eating|skipping meals|fasting|diet(ing)?/i,
-  /count(ing)? calories|tracking calories|calorie deficit|low calorie/i,
-  
-  // Exercise and compensation
-  /exercise to (burn|compensate|make up for)|punish with exercise/i,
-  /over-exercis(e|ing)|compulsive exercise|have to exercise|must exercise/i,
-  
-  // Cognitive patterns
-  /(fear|afraid) of (gaining weight|getting fat|being fat)/i,
-  /food (rules|rituals|obsession|preoccupation|anxiety)/i,
-  
-  // Medical complications
-  /passing out|fainting|dizz(y|iness) from not eating|heart problems/i,
-  /low weight|underweight|anorexic|bulimic|binge eating/i
+// Define the detection result interface
+export interface EatingDisorderDetectionResult {
+  isEatingDisorderConcern: boolean;
+  riskLevel: 'low' | 'moderate' | 'high';
+  matchedPhrases: string[];
+  recommendedApproach: 'general-support' | 'specialized-referral' | 'crisis-response';
+  needsImmediate: boolean;
+}
+
+// High-risk patterns that indicate severe eating disorder concerns
+const highRiskPatterns = [
+  /starving (myself|to death)/i,
+  /haven'?t eaten (in|for) \d+ days?/i,
+  /purge|purging|throwing up (after|everything)/i,
+  /(dangerously|critically) (underweight|thin)/i,
+  /hospitalized for (anorexia|bulimia|eating)/i,
+  /passing out from (hunger|not eating)/i,
+  /heart (problems|palpitations|issues) from (eating|purging)/i,
+  /suicidal (because of|from) (weight|body|eating)/i
 ];
 
-// Context markers that increase likelihood of eating disorder concerns
-const contextMarkers = [
-  /body image|self-esteem|worth|value|appearance|shape|size/i,
-  /weight (control|management|loss|gain|obsession)/i,
-  /meal (planning|skipping|anxiety)|food (fear|anxiety|worry)/i,
-  /eating disorder|ED|ana|mia|recovery|relapse|treatment/i
+// Moderate risk patterns that indicate concerning eating behaviors
+const moderateRiskPatterns = [
+  /anorexia|bulimia|binge eating disorder/i,
+  /hate (my body|how I look|myself)/i,
+  /obsessed with (calories|weight|food)/i,
+  /(restricting|restricting calories|not eating)/i,
+  /excessive exercise|over-exercise|compulsive exercise/i,
+  /afraid (of gaining|to eat|of food)/i,
+  /weight restoration|re-feeding/i,
+  /eating disorder (thoughts|behaviors|symptoms)/i,
+  /body dysmorphia|body image issues/i
 ];
 
-// Cleveland-specific food topics for small talk detection
-const clevelandFoodTopics = [
-  /(Cleveland|Ohio) food|Polish boy|pierogi|corned beef|Slyman|Sokolowski/i,
-  /Michael Symon|Mabel's BBQ|Great Lakes Brewing|Mitchell's Ice Cream/i,
-  /West Side Market|East 4th|Barrio|Tommy's|Aladdin's|B Spot|Lucky's/i,
-  /Little Italy|Tremont restaurant|Ohio City food|Flats food/i
+// Mild risk or general eating concern patterns
+const mildRiskPatterns = [
+  /worried about (weight|eating)/i,
+  /diet(ing)?(?! coke| pepsi| soda)/i,
+  /weight (concerns|issues|problems)/i,
+  /eating (issues|problems|concerns)/i,
+  /food (anxiety|stress|worry)/i,
+  /body image|body dissatisfaction/i
 ];
 
-// General food small talk topics
-const generalFoodTopics = [
-  /restaurant|dining|dinner|lunch|breakfast|brunch|meal|recipe/i,
-  /cook(ing|ed)?|bak(e|ing|ed)?|food|dish|cuisine|menu|taste|flavor/i,
-  /eat(ing)?|ate|hungry|delicious|yummy|tasty|craving|appetite/i,
-  /pizza|burger|pasta|sandwich|salad|dessert|cake|ice cream/i
+// Exclusion patterns to prevent false positives from casual food mentions
+const exclusionPatterns = [
+  /restaurant|dinner plans|recipe|cooking|favorite food|tasty|delicious/i,
+  /grocery|shopping list|meal prep|lunch break|breakfast/i,
+  /diet coke|diet pepsi|diet soda/i,
+  /eat out|take out|delivery food/i,
+  /food preferences/i
 ];
 
 /**
- * Detects potential eating disorder concerns in user messages
- * with sophisticated pattern matching and context analysis
+ * Detects eating disorder concerns in user input with comprehensive pattern matching
+ * to avoid false positives and correctly identify crisis situations
+ * 
+ * @param userInput The user's message
+ * @returns Detection result with risk level and recommended approach
  */
-export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderConcernResult => {
-  const result: EatingDisorderConcernResult = {
+export function detectEatingDisorderConcerns(userInput: string): EatingDisorderDetectionResult {
+  // Default result
+  const result: EatingDisorderDetectionResult = {
     isEatingDisorderConcern: false,
-    riskLevel: 'none',
+    riskLevel: 'low',
     matchedPhrases: [],
-    contextMarkers: [],
-    isLikelySmallTalk: false
+    recommendedApproach: 'general-support',
+    needsImmediate: false
   };
-  
-  // Check for direct matches to eating disorder phrases
-  for (const pattern of eatingDisorderPhrases) {
-    const matches = userInput.match(pattern);
-    if (matches) {
-      result.isEatingDisorderConcern = true;
-      result.matchedPhrases.push(matches[0]);
-    }
-  }
-  
-  // Check for context markers that indicate this might be about eating disorders
-  for (const marker of contextMarkers) {
-    const matches = userInput.match(marker);
-    if (matches) {
-      result.contextMarkers.push(matches[0]);
-    }
-  }
-  
-  // Determine if this is likely just small talk about food
-  result.isLikelySmallTalk = (
-    (generalFoodTopics.some(topic => topic.test(userInput)) || 
-     clevelandFoodTopics.some(topic => topic.test(userInput))) &&
-    result.matchedPhrases.length === 0 &&
-    result.contextMarkers.length === 0 &&
-    !/eating problem|food issue|eating issue|weight concern/i.test(userInput)
-  );
-  
-  // Determine risk level based on matched phrases and context markers
-  if (result.isEatingDisorderConcern) {
-    if (
-      result.matchedPhrases.length >= 3 || 
-      /purge|starv|anorex|passing out|fainting/i.test(userInput)
-    ) {
-      result.riskLevel = 'high';
-    } else if (
-      result.matchedPhrases.length >= 2 ||
-      result.contextMarkers.length >= 2 ||
-      /restrict|binge|throw up after/i.test(userInput)
-    ) {
-      result.riskLevel = 'moderate';
-    } else {
-      result.riskLevel = 'low';
-    }
-  }
-  
-  return result;
-};
 
-/**
- * Detects if a message is just casual food small talk,
- * with special attention to Cleveland-specific food culture
- */
-export const isFoodSmallTalk = (userInput: string): FoodSmallTalkResult => {
-  const result: FoodSmallTalkResult = {
-    isSmallTalk: false,
-    topics: [],
-    isClevelandSpecific: false
-  };
+  // Check for exclusion patterns first
+  const hasExclusions = exclusionPatterns.some(pattern => pattern.test(userInput));
   
-  // Check for eating disorder concerns first
-  const edResult = detectEatingDisorderConcerns(userInput);
-  if (edResult.isEatingDisorderConcern && !edResult.isLikelySmallTalk) {
-    // Not small talk if there are eating disorder concerns
+  // If this is casual food talk, return early
+  if (hasExclusions && 
+      !highRiskPatterns.some(pattern => pattern.test(userInput)) && 
+      !moderateRiskPatterns.some(pattern => pattern.test(userInput)) &&
+      !userInput.toLowerCase().includes('disorder')) {
     return result;
   }
-  
-  // Check for Cleveland-specific food topics
-  for (const pattern of clevelandFoodTopics) {
-    const matches = userInput.match(pattern);
-    if (matches) {
-      result.isSmallTalk = true;
-      result.topics.push(matches[0]);
-      result.isClevelandSpecific = true;
+
+  // Check for high risk patterns (most serious)
+  for (const pattern of highRiskPatterns) {
+    const match = userInput.match(pattern);
+    if (match) {
+      result.isEatingDisorderConcern = true;
+      result.riskLevel = 'high';
+      result.matchedPhrases.push(match[0]);
+      result.recommendedApproach = 'crisis-response';
+      result.needsImmediate = true;
     }
   }
-  
-  // Also check for general food topics
-  for (const pattern of generalFoodTopics) {
-    const matches = userInput.match(pattern);
-    if (matches) {
-      // Only add if we don't already have this topic
-      const topic = matches[0].toLowerCase();
-      if (!result.topics.some(t => t.toLowerCase().includes(topic))) {
-        result.isSmallTalk = true;
-        result.topics.push(matches[0]);
+
+  // Check for moderate risk patterns if no high risk was found
+  if (result.riskLevel !== 'high') {
+    for (const pattern of moderateRiskPatterns) {
+      const match = userInput.match(pattern);
+      if (match) {
+        result.isEatingDisorderConcern = true;
+        result.riskLevel = 'moderate';
+        result.matchedPhrases.push(match[0]);
+        result.recommendedApproach = 'specialized-referral';
       }
     }
   }
-  
-  // If this seems like food small talk and has no eating disorder markers,
-  // categorize it as food small talk
-  if (result.topics.length > 0 && edResult.matchedPhrases.length === 0) {
-    result.isSmallTalk = true;
+
+  // Check for mild risk patterns if no higher risks were found
+  if (result.riskLevel === 'low' && !result.isEatingDisorderConcern) {
+    for (const pattern of mildRiskPatterns) {
+      const match = userInput.match(pattern);
+      if (match) {
+        result.isEatingDisorderConcern = true;
+        result.matchedPhrases.push(match[0]);
+      }
+    }
   }
-  
+
   return result;
-};
+}

@@ -1,87 +1,78 @@
 
 /**
- * Unified response processor that integrates multiple specialized systems
+ * Central response processor with RAG integration
+ * 
+ * Applies multiple processing rules to responses to ensure quality,
+ * prevent hallucinations, and maintain appropriate therapeutic boundaries
  */
 
-import { processEmergency } from './processor/emergency';
-import { enhanceResponseWithMemory } from './processor/memoryEnhancement';
-import { detectCrisis, generateCrisisResponse } from '../masterRules/safety/crisisDetection';
-import { detectEatingDisorderConcerns } from '../conversation/specializedDetection/eatingPatterns/detectors';
-import { processFoodRelatedMessage } from '../conversation/specializedDetection/eatingPatterns/processor';
-import { retrieveAugmentation, augmentResponseWithRetrieval } from '../hallucinationPrevention/retrieval';
-import { detectHallucinations } from '../hallucinationPrevention/detector/hallucination-detector';
+import { detectPatternedResponses, fixProblematicPatterns } from './processor/patternDetector';
+import { detectEmergencyPath, categorizeFlags } from './processor/emergencyPathDetection';
+import { applyEmergencyIntervention } from './processor/emergencyPathDetection/interventionHandler';
+import { detectSpecializedTopic, processSpecializedTopicResponse } from './processor/specializedTopics';
 
 /**
- * Master response processor that integrates:
- * 1. Crisis detection
- * 2. Eating disorder detection
- * 3. RAG augmentation
- * 4. Hallucination prevention
- * 5. Memory enhancement
+ * Process response through all handlers and RAG integration
+ * to prevent hallucinations and ensure quality
  * 
- * @param responseText Original response text
- * @param userInput User's input message
- * @param conversationHistory Previous conversation history
- * @returns Processed and enhanced response
+ * @param responseText The original response text
+ * @param userInput The user message that triggered this response
+ * @param conversationHistory Recent conversation history
+ * @returns Processed response text
  */
-export function processResponse(
+export const processResponse = (
   responseText: string,
   userInput: string,
   conversationHistory: string[] = []
-): string {
+): string => {
   try {
-    console.log("Processing response through unified system");
-    
-    // CRITICAL PRIORITY: Check for crisis situations first
-    const crisisResult = detectCrisis(userInput, conversationHistory);
-    if (crisisResult.isCrisis) {
-      console.log(`CRISIS DETECTED: ${crisisResult.type} with severity ${crisisResult.severity}`);
-      const crisisResponse = generateCrisisResponse(crisisResult);
-      if (crisisResponse) {
-        return crisisResponse;
-      }
+    // Skip processing for very short responses or in early conversation
+    if (responseText.length < 20 || conversationHistory.length < 2) {
+      return responseText;
     }
     
-    // Check for eating disorder content
-    const edResult = detectEatingDisorderConcerns(userInput);
-    if (edResult.isEatingDisorderConcern && (edResult.riskLevel === 'high' || edResult.riskLevel === 'moderate')) {
-      console.log(`EATING DISORDER CONCERN: Risk level ${edResult.riskLevel}`);
-      const foodResponse = processFoodRelatedMessage(userInput);
-      if (foodResponse.responseType === 'eating_disorder') {
-        return foodResponse.suggestedResponse;
-      }
+    // Get previous responses from history to check for patterns
+    const previousResponses = conversationHistory
+      .filter(msg => msg !== userInput)
+      .slice(-3);
+    
+    // 1. Check for problematic patterns that may indicate hallucinations
+    const patternResult = detectPatternedResponses(responseText, userInput, previousResponses);
+    let processedResponse = responseText;
+    
+    if (patternResult.hasProblematicPattern) {
+      // Fix any problematic patterns detected
+      processedResponse = fixProblematicPatterns(responseText, patternResult.problematicPhrases);
     }
     
-    // Check for hallucinations in the response
-    const hallucinationCheck = detectHallucinations(responseText, userInput, conversationHistory);
-    if (hallucinationCheck.isHallucination) {
-      console.log("HALLUCINATION DETECTED: Applying corrections");
-      if (hallucinationCheck.corrections) {
-        responseText = hallucinationCheck.corrections;
-      }
-    }
-    
-    // Use RAG to augment response with relevant information
-    const retrievalResult = retrieveAugmentation(userInput, conversationHistory);
-    if (retrievalResult.retrievedContent.length > 0 && retrievalResult.confidence > 0.4) {
-      responseText = augmentResponseWithRetrieval(responseText, retrievalResult);
-    }
-    
-    // Enhance response with memory awareness
-    responseText = enhanceResponseWithMemory({
-      response: responseText,
+    // 2. Check for emergency conversation paths
+    const emergencyPathResult = detectEmergencyPath(
+      processedResponse,
       userInput,
-      conversationHistory
-    });
+      conversationHistory,
+      previousResponses
+    );
     
-    // Process emergency paths
-    responseText = processEmergency(responseText, userInput);
+    if (emergencyPathResult.isEmergencyPath) {
+      // Apply appropriate intervention based on severity
+      processedResponse = applyEmergencyIntervention(processedResponse, emergencyPathResult);
+    }
     
-    return responseText;
+    // 3. Handle specialized topics with appropriate resources
+    const topicResult = detectSpecializedTopic(userInput);
+    if (topicResult.topicDetected && topicResult.requiresSpecializedProcessing) {
+      // Process response for specialized topic
+      processedResponse = processSpecializedTopicResponse(
+        processedResponse,
+        userInput,
+        topicResult.topicType
+      );
+    }
     
+    return processedResponse;
   } catch (error) {
     console.error("Error in processResponse:", error);
-    // Return original if processing fails - safety fallback
+    // In case of error, return the original response
     return responseText;
   }
-}
+};

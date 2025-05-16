@@ -9,6 +9,8 @@ import { detectPatterns } from './patternDetection';
 import { useFeedbackLoopHandler } from '../../response/feedbackLoopHandler';
 import { checkAllRules } from '../../../utils/rulesEnforcement/rulesEnforcer';
 import { isSmallTalk, isIntroduction, isPersonalSharing } from '../../../utils/masterRules';
+import { detectEatingDisorderConcerns } from '../../../utils/conversation/specializedDetection/eatingPatterns/detectors';
+import { createEatingDisorderResponse } from '../../../utils/response/handlers/eatingDisorderHandler';
 
 /**
  * Enhanced process user message with pattern-matching NLP capabilities,
@@ -46,6 +48,39 @@ export const processUserMessage = async (
     
     // Always update conversation history
     updateConversationHistory(userInput);
+    
+    // CRITICAL - Check for serious crisis situations first with RAG integration
+    if (/suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)/i.test(userInput.toLowerCase())) {
+      // Update stage
+      updateStage();
+      
+      // Use crisis response
+      const crisisResponse = "Based on what you're sharing, I'm very concerned about what you're sharing regarding thoughts of suicide. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room.\n\nWould you like me to provide additional resources? Here are resources that may help:\n- 988 Suicide & Crisis Lifeline: Call or text 988\n- Crisis Text Line: Text HOME to 741741";
+      
+      // Record to memory systems
+      recordToMemorySystems(userInput, crisisResponse);
+      
+      // Return immediate crisis response
+      return Promise.resolve(createMessage(crisisResponse, 'roger', 'crisis'));
+    }
+    
+    // Check for eating disorder specifically to avoid hallucination
+    const edResult = detectEatingDisorderConcerns(userInput);
+    if (edResult.isEatingDisorderConcern) {
+      // Update stage
+      updateStage();
+      
+      // Get specialized response
+      const edResponse = createEatingDisorderResponse(userInput);
+      
+      if (edResponse) {
+        // Record to memory systems
+        recordToMemorySystems(userInput, edResponse);
+        
+        // Return eating disorder response
+        return Promise.resolve(createMessage(edResponse, 'roger', 'eating-disorder'));
+      }
+    }
     
     // CRITICAL - Check if user just shared something but Roger is about to ask "what's going on"
     const isContentfulFirstMessage = userInput.length > 15 && conversationHistory.length <= 1;

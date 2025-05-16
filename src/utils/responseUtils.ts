@@ -1,14 +1,23 @@
-
 import { handleEatingPatterns, enhanceEatingDisorderResponse } from './response/handlers/eatingPatternHandler';
 
+/**
+ * Generates an appropriate response to eating disorder mentions
+ * with enhanced RAG integration to prevent hallucinations
+ */
 export const getEatingDisorderMessage = (userInput: string): string => {
-  const specializedResponse = handleEatingPatterns(userInput);
+  // Import the specialized handler to prevent code duplication
+  const { createEatingDisorderResponse, getEatingDisorderResources } = require('./response/handlers/eatingDisorderHandler');
   
+  // Get the specialized response
+  const specializedResponse = createEatingDisorderResponse(userInput);
+  
+  // If we have a specific response, use it
   if (specializedResponse) {
-    return enhanceEatingDisorderResponse(specializedResponse, userInput);
+    return specializedResponse;
   }
   
-  return "I notice you're mentioning some concerns about eating or body image. These thoughts can be really challenging, and they're also very common. The Emily Program (1-888-364-5977) offers specialized support for these feelings. Would it help to talk more about how these thoughts have been affecting you?";
+  // Otherwise use a general supportive response
+  return "I hear that you're sharing concerns about your relationship with food and body. These struggles can be really difficult. The National Eating Disorders Association (NEDA) offers specialized support through their helpline at 1-800-931-2237. Would it help to talk more about what you're experiencing?";
 };
 
 const getCrisisMessage = (userInput: string): string => {
