@@ -3,7 +3,7 @@
  * Detector for everyday situations that may need emotional support
  */
 
-import { EverydaySituation } from '../types';
+import { EverydaySituation, EverydaySituationInfo } from '../types';
 
 /**
  * Patterns to detect common everyday situations that might need support
@@ -56,18 +56,26 @@ export const everydaySituations: EverydaySituation[] = [
 /**
  * Detects everyday situations in user input
  * @param userInput User's message
- * @returns The matched situation type or null if none found
+ * @returns Information about detected everyday situation
  */
-export const detectEverydaySituation = (userInput: string): string | null => {
+export const detectEverydaySituation = (userInput: string): EverydaySituationInfo => {
   const lowerInput = userInput.toLowerCase();
   
   for (const situation of everydaySituations) {
     if (situation.pattern.test(lowerInput)) {
-      return situation.type;
+      return {
+        isEverydaySituation: true,
+        situationType: situation.type,
+        practicalSupportNeeded: situation.needsSupport || false
+      };
     }
   }
   
-  return null;
+  return {
+    isEverydaySituation: false,
+    situationType: null,
+    practicalSupportNeeded: false
+  };
 };
 
 /**

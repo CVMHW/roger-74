@@ -7,7 +7,7 @@
 
 // Import from the new integrated system
 import { enhanceResponse } from '../enhancer';
-import { processCompleteResponse as processResponseThroughMasterRules } from '../processor';
+import { processResponse as processResponseThroughMasterRules } from '../processor';
 import { enhanceWithMemoryBank as enhanceWithMemory } from '../processor/memoryEnhancement'; 
 
 // Re-export the main functionality

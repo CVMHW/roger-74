@@ -11,11 +11,11 @@
 
 // Export the unified response processing system
 export { 
-  processCompleteResponse as processResponseThroughMasterRules
+  processResponse as processResponseThroughMasterRules
 } from './processor';
 
 // Export enhancer function - using correct import name
-export { enhanceWithMemoryBank as enhanceResponseWithMemory } from './processor';
+export { enhanceWithMemoryBank as enhanceResponseWithMemory } from './processor/memoryEnhancement';
 
 // Re-export integrated hallucination prevention
 export { preventHallucinations } from '../memory/hallucination/preventionV2';

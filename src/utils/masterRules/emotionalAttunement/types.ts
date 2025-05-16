@@ -33,6 +33,12 @@ export interface EverydaySituation {
   needsSupport?: boolean;
 }
 
+export interface EverydaySituationInfo {
+  isEverydaySituation: boolean;
+  situationType: string | null;
+  practicalSupportNeeded: boolean;
+}
+
 export interface CrisisDetectionResult {
   isCrisis: boolean;
   type: CrisisType | null;
