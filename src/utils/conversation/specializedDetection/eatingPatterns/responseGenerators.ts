@@ -16,9 +16,16 @@ export const generateEatingDisorderResponse = (
 ): string => {
   const { riskLevel, matchedPhrases, isLikelySmallTalk } = detectionResult;
   
+  // NEW: Check specifically for "not eating" concerns - HIGHEST PRIORITY
+  if (/not eating|haven'?t (been )?eat(ing|en)|struggling not eating|can'?t eat|don'?t eat/i.test(userInput.toLowerCase())) {
+    return "I'm concerned about what you're sharing about not eating. This is something that needs professional support. The National Eating Disorders Association (NEDA) helpline at 1-800-931-2237 can provide immediate guidance. Would it be possible for you to reach out to them today? Would you like to talk more about what support might be helpful for you right now?";
+  }
+  
   // Don't provide ED responses for what's likely just Cleveland food talk
+  // But ONLY if it doesn't contain explicit ED concerns
   const smallTalkResult = isFoodSmallTalk(userInput);
-  if (smallTalkResult.isClevelandSpecific && isLikelySmallTalk) {
+  if (smallTalkResult.isClevelandSpecific && isLikelySmallTalk && 
+      !(/eating disorder|anorexia|bulimia|not eating|haven't eaten|diet|weight/i.test(userInput.toLowerCase()))) {
     return generateFoodSmallTalkResponse(userInput, smallTalkResult);
   }
   
@@ -43,6 +50,12 @@ export const generateFoodSmallTalkResponse = (
   userInput: string,
   smallTalkResult: FoodSmallTalkResult
 ): string => {
+  // CRITICAL: First check if this is actually about eating disorders or not eating
+  // Never treat these as food small talk!
+  if (/eating disorder|anorexia|bulimia|not eating|haven't eaten|struggling not eating|can't eat|don't eat/i.test(userInput.toLowerCase())) {
+    return "I notice you're talking about some challenges with eating. This is something I take seriously. Would you like to tell me more about what you're experiencing with food and eating?";
+  }
+  
   const { topics, isClevelandSpecific } = smallTalkResult;
   
   // Special responses for Cleveland food contexts
