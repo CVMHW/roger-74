@@ -10,8 +10,10 @@
 export { 
   detectEatingDisorderConcerns, 
   isFoodSmallTalk,
-  FoodSmallTalkResult
 } from './detectors';
+
+// Export type from detectors
+export type { FoodSmallTalkResult } from './detectors';
 
 // Export response generators
 export { 
