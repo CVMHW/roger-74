@@ -1,3 +1,4 @@
+
 /**
  * Specialized detectors for eating disorder concerns and food small talk
  */
@@ -11,6 +12,34 @@ import { EatingDisorderConcernResult, FoodSmallTalkResult, RiskLevel } from './t
 export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderConcernResult => {
   // Normalize input for consistent detection
   const normalizedInput = userInput.toLowerCase().trim();
+  
+  // CRITICAL: First check specifically for binge eating or inability to stop eating
+  // These are always high risk and should never be treated as small talk
+  if (/can't stop eating|binge eating|overeating|eating too much|compulsive eating|eaten [0-9]+ .+ in a row/i.test(normalizedInput)) {
+    return {
+      isEatingDisorderConcern: true,
+      riskLevel: 'high',
+      matchedPhrases: ['compulsive eating', 'binge eating'],
+      contextMarkers: ['distress'],
+      isLikelySmallTalk: false,
+      recommendedApproach: 'crisis-response',
+      needsImmediate: true
+    };
+  }
+  
+  // CRITICAL: Check specifically for "not eating" concerns
+  // These are always high risk and should never be treated as small talk
+  if (/not eating|haven't (been )?eat(ing|en)|struggling not eating|can't eat|don't eat/i.test(normalizedInput)) {
+    return {
+      isEatingDisorderConcern: true,
+      riskLevel: 'high',
+      matchedPhrases: ['not eating', 'food restriction'],
+      contextMarkers: ['distress'],
+      isLikelySmallTalk: false,
+      recommendedApproach: 'crisis-response',
+      needsImmediate: true
+    };
+  }
   
   // Direct eating disorder phrases - highest priority
   const directEDPatterns = [
@@ -74,19 +103,16 @@ export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderC
   }
   
   // Check for environmental context markers that might increase risk
-  const contextMarkers: string[] = [
+  const contextPatterns = [
     /alone|lonely|isolated|no support|no help|no one understands/i,
     /depressed|anxious|stressed|overwhelmed|hopeless/i,
     /tried to stop|can'?t stop|getting worse|out of control/i,
     /long time|years|months|weeks|every day|constant/i
-  ].filter(pattern => pattern.test(normalizedInput))
-   .map(pattern => pattern.toString().replace(/\/.+\/i/, ''));
+  ];
   
-  // Check specifically for "not eating" or similar strong indicators
-  if (/not eating|haven'?t (been )?eat(ing|en)|struggling not eating|can'?t eat|don'?t eat/i.test(normalizedInput)) {
-    highestRiskLevel = 'high';
-    matchedPhrases.push('not eating');
-  }
+  const contextMarkers: string[] = contextPatterns
+    .filter(pattern => pattern.test(normalizedInput))
+    .map(pattern => pattern.toString().replace(/\/.+\/i/, ''));
   
   // Determine if this might be just Cleveland food talk (false positive protection)
   // Using negative lookahead to prevent matching food talk with real concerns
@@ -95,7 +121,12 @@ export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderC
   
   // Determine final result - if it's likely Cleveland food talk AND risk is low, mark as not a concern
   const isLikelySmallTalk = isClevelandFoodTalk && matchedPhrases.length < 2;
-  const isEatingDisorderConcern = (matchedPhrases.length > 0 && !isLikelySmallTalk) || highestRiskLevel === 'high';
+  
+  // IMPORTANT: Override small talk classification if there's any evidence of distress
+  // or if the risk level is high
+  const isEatingDisorderConcern = (matchedPhrases.length > 0 && !isLikelySmallTalk) || 
+                                  highestRiskLevel === 'high' || 
+                                  contextMarkers.length > 0;
   
   // Determine appropriate approach based on risk level
   let recommendedApproach: 'general-support' | 'specialized-referral' | 'crisis-response' = 'general-support';
@@ -107,7 +138,7 @@ export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderC
   
   // Determine if immediate attention is needed
   const needsImmediate = highestRiskLevel === 'high' || 
-                         (highestRiskLevel === 'moderate' && contextMarkers.length >= 2);
+                       (highestRiskLevel === 'moderate' && contextMarkers.length >= 2);
   
   return {
     isEatingDisorderConcern,
@@ -128,11 +159,9 @@ export const isFoodSmallTalk = (userInput: string): FoodSmallTalkResult => {
   // Normalize the input
   const normalizedInput = userInput.toLowerCase().trim();
   
-  // First check if this contains any eating disorder concerns
-  // If it does, it's NOT small talk regardless of other content
-  const edResult = detectEatingDisorderConcerns(userInput);
-  if (edResult.isEatingDisorderConcern && edResult.riskLevel !== 'low') {
-    // This is NOT small talk! It's a potential ED concern
+  // CRITICAL: First check specifically for binge eating or inability to stop eating
+  // These are NEVER small talk and should be treated as eating disorder concerns
+  if (/can't stop eating|binge eating|overeating|eating too much|compulsive eating|eaten [0-9]+ .+ in a row/i.test(normalizedInput)) {
     return {
       isSmallTalk: false,
       isClevelandSpecific: false,
@@ -140,9 +169,21 @@ export const isFoodSmallTalk = (userInput: string): FoodSmallTalkResult => {
     };
   }
   
-  // Check for explicit mentions of struggling or not eating
-  // These should NEVER be treated as small talk!
+  // CRITICAL: Check specifically for NOT eating concerns
+  // These are NEVER small talk
   if (/not eating|haven'?t (been )?eat(ing|en)|struggling not eating|can'?t eat|don'?t eat/i.test(normalizedInput)) {
+    return {
+      isSmallTalk: false,
+      isClevelandSpecific: false,
+      topics: []
+    };
+  }
+  
+  // First check if this contains any eating disorder concerns
+  // If it does, it's NOT small talk regardless of other content
+  const edResult = detectEatingDisorderConcerns(userInput);
+  if (edResult.isEatingDisorderConcern && edResult.riskLevel !== 'low') {
+    // This is NOT small talk! It's a potential ED concern
     return {
       isSmallTalk: false,
       isClevelandSpecific: false,
@@ -173,16 +214,16 @@ export const isFoodSmallTalk = (userInput: string): FoodSmallTalkResult => {
   // Check for general food talk
   const generalFoodMatches = foodSmallTalkPatterns.filter(pattern => pattern.test(normalizedInput));
   
-  // Collect food topics mentioned - FIXING TYPE ERROR HERE
+  // Collect food topics mentioned
   const topics: string[] = [
     ...clevelandMatches.map(r => r.toString().replace(/\/.+\/i/, '')),
     ...generalFoodMatches.map(r => r.toString().replace(/\/.+\/i/, ''))
   ];
   
   // Determine if this is food small talk
-  // IMPORTANT: Small talk should NEVER include messages about not eating or eating struggles!
+  // IMPORTANT: Small talk should NEVER include messages about eating concerns!
   const isSmallTalk = topics.length > 0 && 
-                      !/(not|no) (eat|food)|struggling|hard|difficult|problem|issue|concern|disorder|restrictive/i.test(normalizedInput);
+                      !/(not|no|can't|cant) (eat|food)|struggling|hard|difficult|problem|issue|concern|disorder|restrictive|too much|stop eating|binge/i.test(normalizedInput);
   
   return {
     isSmallTalk,

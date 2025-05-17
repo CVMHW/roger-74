@@ -15,8 +15,17 @@ import { FoodRelatedMessageResult } from './types';
  * with enhanced Cleveland food context awareness
  */
 export const processFoodRelatedMessage = (userInput: string): FoodRelatedMessageResult => {
-  // CRITICAL: First check specifically for "not eating" concerns - HIGHEST PRIORITY
-  if (/not eating|haven'?t (been )?eat(ing|en)|struggling not eating|can'?t eat|don'?t eat/i.test(userInput.toLowerCase())) {
+  // CRITICAL: First check for binge eating or can't stop eating - HIGHEST PRIORITY
+  if (/can't stop eating|binge eating|overeating|eating too much|compulsive eating|eaten [0-9]+ .+ in a row/i.test(userInput.toLowerCase())) {
+    return {
+      responseType: 'eating_disorder',
+      riskLevel: 'high',
+      suggestedResponse: "I'm concerned about what you're sharing about your eating patterns. These feelings can be overwhelming and deserve support. The National Eating Disorders Association (NEDA) helpline at 1-800-931-2237 can provide guidance. Would you like to talk more about what you're experiencing right now?"
+    };
+  }
+  
+  // CRITICAL: Second check for "not eating" concerns
+  if (/not eating|haven'?t (been )?eat(ing|en)|struggling not eating|can't eat|don't eat/i.test(userInput.toLowerCase())) {
     return {
       responseType: 'eating_disorder',
       riskLevel: 'high',
@@ -39,9 +48,8 @@ export const processFoodRelatedMessage = (userInput: string): FoodRelatedMessage
   // Check for Cleveland-specific food talk
   const smallTalkResult = isFoodSmallTalk(userInput);
   
-  // For non-Cleveland contexts, or when there are clear ED markers, process as ED concern
-  if (edResult.isEatingDisorderConcern && 
-      (!smallTalkResult.isClevelandSpecific || edResult.riskLevel === 'high' || edResult.contextMarkers.length >= 1)) {
+  // NEVER classify as small talk if there's any eating disorder concern
+  if (edResult.isEatingDisorderConcern || !smallTalkResult.isSmallTalk) {
     return {
       responseType: 'eating_disorder',
       riskLevel: edResult.riskLevel,
@@ -49,10 +57,8 @@ export const processFoodRelatedMessage = (userInput: string): FoodRelatedMessage
     };
   }
   
-  // Special handling for Cleveland food contexts - generally treat as small talk
-  // ONLY if there's no evidence of an eating disorder
-  if (smallTalkResult.isClevelandSpecific && 
-      (edResult.riskLevel === 'none' || edResult.isLikelySmallTalk)) {
+  // Special handling for Cleveland food contexts - ONLY if we're absolutely sure it's not an ED
+  if (smallTalkResult.isClevelandSpecific && smallTalkResult.isSmallTalk) {
     return {
       responseType: 'food_small_talk',
       riskLevel: 'none',

@@ -9,6 +9,18 @@ export const useConcernDetection = () => {
     // Normalize input for more consistent detection
     const lowerInput = userInput.toLowerCase().trim();
     
+    // CRITICAL: Check for eating disorders - binge eating and compulsive eating FIRST
+    if (/can't stop eating|binge eating|overeating|eating too much|compulsive eating|eaten [0-9]+ .+ in a row/i.test(lowerInput)) {
+      console.log("CRITICAL: Detected binge eating concern in message:", lowerInput);
+      return 'eating-disorder';
+    }
+    
+    // CRITICAL: Check for eating disorders - restriction and not eating FIRST
+    if (/not eating|haven'?t (been )?eat(ing|en)|struggling not eating|can'?t eat|don'?t eat/i.test(lowerInput)) {
+      console.log("CRITICAL: Detected eating restriction concern in message:", lowerInput);
+      return 'eating-disorder';
+    }
+    
     // HIGHEST PRIORITY: Check for suicidal ideation or self-harm - make this check first
     // and ensure it's very sensitive to catch any potential mentions
     if (/suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)|don'?t want to (live|be alive)|take my (own )?life|killing myself|commit suicide|die by suicide|fatal overdose|hang myself|jump off|i wish i was dead|i want to die|i might kill/i.test(lowerInput)) {
@@ -22,9 +34,9 @@ export const useConcernDetection = () => {
       return 'crisis';
     }
     
-    // NEW: Enhanced eating disorder detection using our specialized system
+    // Enhanced eating disorder detection using our specialized system
     const edResult = detectEatingDisorderConcerns(userInput);
-    if (edResult.isEatingDisorderConcern && (edResult.riskLevel === 'high' || edResult.riskLevel === 'moderate')) {
+    if (edResult.isEatingDisorderConcern) {
       console.log(`DETECTED EATING DISORDER CONCERN (${edResult.riskLevel}) with phrases:`, edResult.matchedPhrases);
       return 'eating-disorder';
     }
@@ -97,12 +109,6 @@ export const useConcernDetection = () => {
     // Check for mental health concerns - make pattern more specific to avoid false positives
     if (/\b(depress|anxiety|bipolar|schizophrenia|ocd|ptsd|trauma|mental illness|mental health|diagnosis|therapist|psychiatrist)\b/.test(lowerInput)) {
       return 'mental-health';
-    }
-    
-    // LOW-PRIORITY: Check for mild/low-risk eating concerns (after the dedicated system check)
-    if (/eating disorder|binge|purge|starv|don'?t eat|body image|weight concern/i.test(lowerInput) && 
-        !edResult.isEatingDisorderConcern) {
-      return 'eating-disorder';
     }
     
     // Check for substance use

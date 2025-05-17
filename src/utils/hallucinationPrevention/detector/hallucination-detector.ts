@@ -36,7 +36,10 @@ export const detectHallucinations = (
     /you (mentioned|said|told me) you (mentioned|said|told me)/i,
     /(I hear|It sounds like) you('re| are) (dealing with|feeling) (I hear|It sounds like) you('re| are)/i,
     /you may have indicated Just a/i,
-    /dealing with you may have indicated/i
+    /dealing with you may have indicated/i,
+    // NEW: Additional critical patterns found in recent hallucinations
+    /You mentioned eat before when we talked about|You mentioned \w+ before when we/i,
+    /I've eate\.\.\. You mentioned/i
   ];
   
   for (const pattern of repetitionPatterns) {
@@ -47,6 +50,19 @@ export const detectHallucinations = (
         description: 'Repeated phrases in response indicating model confusion'
       });
       confidenceScore -= 0.7; // Heavy penalty for dangerous repetition
+    }
+  }
+  
+  // CRITICAL: Check for hallucinations about prior conversations in early conversations
+  // This is extremely important for eating disorder and crisis situations
+  if (conversationHistory.length <= 3) {
+    if (/you mentioned before|you told me earlier|when we talked about|as we discussed|as you said|as you mentioned|you've told me/i.test(responseText)) {
+      flags.push({
+        type: 'false_memory',
+        severity: 'critical', // This is a critical issue
+        description: 'False memory reference in early conversation'
+      });
+      confidenceScore -= 0.8; // Severe penalty for this dangerous hallucination
     }
   }
   
@@ -125,7 +141,7 @@ export const detectHallucinations = (
   
   // Determine if this should be flagged as hallucination
   const isHallucination = confidenceScore < 0.6 || 
-                         flags.some(flag => flag.severity === 'high');
+                         flags.some(flag => flag.severity === 'high' || flag.severity === 'critical');
   
   // Generate token-level analysis result
   const tokenLevelAnalysis = generateTokenLevelAnalysis(responseText);

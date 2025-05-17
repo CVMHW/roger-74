@@ -3,7 +3,7 @@
  * Response generators for eating patterns detection
  */
 
-import { detectEatingDisorderConcerns, isFoodSmallTalk, FoodSmallTalkResult } from './detectors';
+import { detectEatingDisorderConcerns, FoodSmallTalkResult } from './detectors';
 import { EatingDisorderConcernResult, RiskLevel } from './types';
 
 /**
@@ -12,21 +12,18 @@ import { EatingDisorderConcernResult, RiskLevel } from './types';
  */
 export const generateEatingDisorderResponse = (
   userInput: string,
-  detectionResult: EatingDisorderConcernResult | any
+  detectionResult: EatingDisorderConcernResult
 ): string => {
   const { riskLevel, matchedPhrases, isLikelySmallTalk } = detectionResult;
   
-  // NEW: Check specifically for "not eating" concerns - HIGHEST PRIORITY
-  if (/not eating|haven'?t (been )?eat(ing|en)|struggling not eating|can'?t eat|don'?t eat/i.test(userInput.toLowerCase())) {
-    return "I'm concerned about what you're sharing about not eating. This is something that needs professional support. The National Eating Disorders Association (NEDA) helpline at 1-800-931-2237 can provide immediate guidance. Would it be possible for you to reach out to them today? Would you like to talk more about what support might be helpful for you right now?";
+  // CRITICAL: Check for binge eating or can't stop eating - HIGHEST PRIORITY
+  if (/can't stop eating|binge eating|overeating|eating too much|compulsive eating|eaten [0-9]+ .+ in a row/i.test(userInput.toLowerCase())) {
+    return "I'm concerned about what you're sharing regarding your eating patterns. These experiences can feel overwhelming. The National Eating Disorders Association (NEDA) helpline at 1-800-931-2237 provides support for compulsive eating concerns. Would you like to talk more about what you're experiencing?";
   }
   
-  // Don't provide ED responses for what's likely just Cleveland food talk
-  // But ONLY if it doesn't contain explicit ED concerns
-  const smallTalkResult = isFoodSmallTalk(userInput);
-  if (smallTalkResult.isClevelandSpecific && isLikelySmallTalk && 
-      !(/eating disorder|anorexia|bulimia|not eating|haven't eaten|diet|weight/i.test(userInput.toLowerCase()))) {
-    return generateFoodSmallTalkResponse(userInput, smallTalkResult);
+  // CRITICAL: Check specifically for "not eating" concerns
+  if (/not eating|haven'?t (been )?eat(ing|en)|struggling not eating|can't eat|don't eat/i.test(userInput.toLowerCase())) {
+    return "I'm concerned about what you're sharing about not eating. This is something that needs professional support. The National Eating Disorders Association (NEDA) helpline at 1-800-931-2237 can provide immediate guidance. Would it be possible for you to reach out to them today? Would you like to talk more about what support might be helpful for you right now?";
   }
   
   // For higher risk cases, include Emily Program referral
@@ -50,9 +47,10 @@ export const generateFoodSmallTalkResponse = (
   userInput: string,
   smallTalkResult: FoodSmallTalkResult
 ): string => {
-  // CRITICAL: First check if this is actually about eating disorders or not eating
-  // Never treat these as food small talk!
-  if (/eating disorder|anorexia|bulimia|not eating|haven't eaten|struggling not eating|can't eat|don't eat/i.test(userInput.toLowerCase())) {
+  // CRITICAL: Never treat eating disorder concerns as small talk
+  // This is a safeguard in case the detector function misses something
+  const lowerInput = userInput.toLowerCase();
+  if (/eating disorder|anorexia|bulimia|binge eating|not eating|haven't eaten|can't stop eating|overeating/i.test(lowerInput)) {
     return "I notice you're talking about some challenges with eating. This is something I take seriously. Would you like to tell me more about what you're experiencing with food and eating?";
   }
   
@@ -60,24 +58,17 @@ export const generateFoodSmallTalkResponse = (
   
   // Special responses for Cleveland food contexts
   if (isClevelandSpecific) {
-    const clevelandFoodMentions = topics.filter(topic => {
-      // We know these are strings from our patterns
-      return true;
-    });
-    
-    if (clevelandFoodMentions.length > 0) {
-      if (/west side market|market/i.test(userInput)) {
-        return "The West Side Market is such a Cleveland institution! Many people find joy in exploring all the different food vendors there. What other Cleveland spots do you enjoy?";
-      } else if (/little italy|italian/i.test(userInput)) {
-        return "Little Italy has such a rich food heritage in Cleveland. The restaurants and bakeries there have been bringing people together for generations. Do you have favorite spots there?";
-      } else if (/pierogi|polish/i.test(userInput)) {
-        return "Pierogies are definitely part of Cleveland's food identity! They're a comfort food that brings back memories for many people here. Do you have other Cleveland comfort foods you enjoy?";
-      } else if (/corned beef|slyman/i.test(userInput)) {
-        return "Cleveland's corned beef sandwiches are legendary! Places like Slyman's have been serving them up for decades. What other Cleveland food traditions do you enjoy?";
-      }
-      
-      return "Cleveland has such a rich and diverse food scene that brings people together. These shared food experiences are an important part of community and connection. What other aspects of Cleveland life do you enjoy?";
+    if (/west side market|market/i.test(userInput)) {
+      return "The West Side Market is such a Cleveland institution! Many people find joy in exploring all the different food vendors there. What other Cleveland spots do you enjoy?";
+    } else if (/little italy|italian/i.test(userInput)) {
+      return "Little Italy has such a rich food heritage in Cleveland. The restaurants and bakeries there have been bringing people together for generations. Do you have favorite spots there?";
+    } else if (/pierogi|polish/i.test(userInput)) {
+      return "Pierogies are definitely part of Cleveland's food identity! They're a comfort food that brings back memories for many people here. Do you have other Cleveland comfort foods you enjoy?";
+    } else if (/corned beef|slyman/i.test(userInput)) {
+      return "Cleveland's corned beef sandwiches are legendary! Places like Slyman's have been serving them up for decades. What other Cleveland food traditions do you enjoy?";
     }
+    
+    return "Cleveland has such a rich and diverse food scene that brings people together. These shared food experiences are an important part of community and connection. What other aspects of Cleveland life do you enjoy?";
   }
   
   // General food small talk responses
