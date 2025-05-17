@@ -35,8 +35,20 @@ export const useChatLogic = (): ChatLogicReturn => {
   const { isTyping, processUserMessage, simulateTypingResponse } = useRogerianResponse();
   
   // Import needed hooks for specific functionality
-  const { activeLocationConcern, handleLocationData, setActiveLocationConcern } = useLocationConcern();
-  const { recentCrisisMessage, handleCrisisMessage, checkDeception } = useCrisisDetection(simulateTypingResponse, setMessages);
+  const { 
+    activeLocationConcern, 
+    handleLocationData, 
+    setActiveLocationConcern 
+  } = useLocationConcern();
+  
+  // Enhanced crisis detection hook with persistent crisis handling
+  const { 
+    recentCrisisMessage, 
+    handleCrisisMessage, 
+    checkDeception,
+    handlePersistentCrisis,
+    consecutiveCrisisCount 
+  } = useCrisisDetection(simulateTypingResponse, setMessages);
   
   // Message history hooks
   const { 
@@ -102,7 +114,7 @@ export const useChatLogic = (): ChatLogicReturn => {
     }
   );
   
-  // Message handling hooks
+  // Message handling hooks with added crisis persistence handling
   const { isProcessing, setIsProcessing, handleSendMessage } = useMessageHandling(
     updateUserMessageHistory,
     checkFeedbackLoop,
@@ -114,7 +126,30 @@ export const useChatLogic = (): ChatLogicReturn => {
     simulateTypingResponse,
     feedbackLoopDetected,
     setFeedbackLoopDetected,
-    processResponse,
+    (userInput: string) => {
+      // First check for persistent crisis patterns
+      const persistentCrisisResponse = handlePersistentCrisis(userInput);
+      
+      if (persistentCrisisResponse) {
+        // Add the persistent crisis response
+        setMessages(prevMessages => [...prevMessages, persistentCrisisResponse]);
+        
+        // Simulate typing for this response
+        simulateTypingResponse(persistentCrisisResponse.text, (text) => {
+          setMessages(prevMessages => 
+            prevMessages.map(msg => 
+              msg.id === persistentCrisisResponse.id ? { ...msg, text } : msg
+            )
+          );
+          
+          // Clear the processing context once response is complete
+          setProcessingContext(null);
+        });
+      } else {
+        // Process normally if not a persistent crisis
+        processResponse(userInput);
+      }
+    },
     setMessages, 
     setProcessingContext,
     setShowCrisisResources

@@ -32,6 +32,35 @@ export const detectEmergencyPath = (
     requiresImmediateIntervention: false
   };
   
+  // CRITICAL: Check for suicide/crisis response issues
+  const isSuicideOrSelfHarm = /suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)|don'?t want to (live|be alive)|take my (own )?life/i.test(userInput.toLowerCase());
+  
+  if (isSuicideOrSelfHarm) {
+    // Check for repetition in suicide crisis response
+    const responseHasRepetition = /what you('re| are) sharing.+what you('re| are) sharing/i.test(responseText);
+    
+    if (responseHasRepetition) {
+      result.flags.push({
+        type: 'critical_suicide_repetition',
+        description: 'Critical repetition in suicide crisis response',
+        severity: SeverityLevel.SEVERE,
+        requiresImmediateIntervention: true
+      });
+    }
+    
+    // Check for non-crisis-focused response to suicide message
+    const hasProperCrisisContent = /crisis|professional|988|suicide|lifeline|emergency|help|resource/i.test(responseText);
+    
+    if (!hasProperCrisisContent) {
+      result.flags.push({
+        type: 'inappropriate_crisis_response',
+        description: 'Response to suicide content lacks appropriate crisis intervention',
+        severity: SeverityLevel.SEVERE,
+        requiresImmediateIntervention: true
+      });
+    }
+  }
+  
   // Check for the highly problematic "It seems like you shared that" pattern
   const sharedThatPattern = /It seems like you shared that/i;
   if (sharedThatPattern.test(responseText)) {
@@ -116,6 +145,21 @@ export const detectEmergencyPath = (
         description: `Changed feeling from "${previousFeeling}" to "${currentFeeling}" without user mentioning it`,
         severity: SeverityLevel.HIGH,
         requiresImmediateIntervention: false
+      });
+    }
+  }
+  
+  // Special check for continuing suicide conversation
+  if (previousResponses.length > 0 && isSuicideOrSelfHarm) {
+    // If this is a follow-up in a suicide conversation, check if Roger is still responding appropriately
+    const isFollowUpSuicideMessage = /want to die|do it|hurt|end it|no reason to live/i.test(userInput.toLowerCase());
+    
+    if (isFollowUpSuicideMessage && !/crisis|professional|988|suicide|lifeline|emergency|help|resource/i.test(responseText)) {
+      result.flags.push({
+        type: 'inappropriate_followup_crisis_response',
+        description: 'Lost crisis intervention focus in suicide conversation follow-up',
+        severity: SeverityLevel.SEVERE,
+        requiresImmediateIntervention: true
       });
     }
   }

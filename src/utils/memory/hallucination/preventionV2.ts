@@ -1,3 +1,4 @@
+
 /**
  * Hallucination Prevention System V2
  * 
@@ -49,202 +50,42 @@ export const preventHallucinations = (
   
   // If hallucination detected, apply fix
   if (hallucinationCheck.isHallucination) {
-    console.log(`HALLUCINATION PREVENTION: Hallucination detected - ${hallucinationCheck.reason}`);
+    console.log(`HALLUCINATION PREVENTION: Hallucination detected with confidence: ${hallucinationCheck.confidence}`);
     
     // Apply correction based on hallucination prevention level
-    let preventionLevel: 'low' | 'medium' | 'high' | 'aggressive';
+    let preventedResponse = responseText;
     
-    // Map the config values to the expected values
-    switch(config.hallucinationPreventionLevel) {
-      case 'aggressive':
-        preventionLevel = 'aggressive';
-        break;
-      case 'high':
-        preventionLevel = 'high';
-        break;
-      case 'medium':
-        preventionLevel = 'medium';
-        break;
-      case 'low':
-        preventionLevel = 'low';
-        break;
-      default:
-        // Default to medium for any other values
-        preventionLevel = 'medium';
+    // Check if we have specific corrections from the detector
+    if (hallucinationCheck.corrections && hallucinationCheck.corrections.length > 0) {
+      preventedResponse = hallucinationCheck.corrections[0];
+    } else {
+      // Check for suicide/self-harm content to ensure appropriate response is maintained
+      if (/suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|don'?t want to (live|be alive)/i.test(userInput.toLowerCase())) {
+        // For suicide content, create a clean response that maintains appropriate crisis intervention
+        preventedResponse = "I'm very concerned about what you're sharing. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room. Would you like me to provide additional resources?";
+      }
+      // Check for eating disorder content
+      else if (/can't stop eating|binge eating|overeating|eating too much|not eating|haven'?t been eating/i.test(userInput.toLowerCase())) {
+        // For eating disorder content, create a clean response without reference to previous conversation
+        preventedResponse = "I'm concerned about what you're sharing regarding your eating patterns. This sounds serious, and it's important that you speak with a healthcare professional. The National Eating Disorders Association (NEDA) helpline (1-800-931-2237) can provide immediate support and resources. Would it be possible for you to reach out to them today?";
+      }
+      // For other hallucinations, create a generic clean response
+      else {
+        preventedResponse = "I hear what you're sharing. What would be most helpful to focus on right now?";
+      }
     }
     
-    const correctedResponse = applyHallucinationFix(
-      responseText, 
-      hallucinationCheck, 
-      preventionLevel
-    );
-    
     return {
-      text: correctedResponse,
+      text: preventedResponse,
       wasModified: true,
-      confidence: 1 - hallucinationCheck.confidence
+      confidence: hallucinationCheck.confidence
     };
   }
   
-  // If no hallucination detected, return original response
+  // No hallucination detected, return original response
   return {
     text: responseText,
     wasModified: false,
-    confidence: hallucinationCheck.confidence
+    confidence: 1.0
   };
 };
-
-/**
- * Apply fix based on hallucination type and prevention level
- */
-function applyHallucinationFix(
-  responseText: string,
-  hallucinationCheck: { 
-    isHallucination: boolean; 
-    confidence: number; 
-    reason?: string 
-  },
-  preventionLevel: 'low' | 'medium' | 'high' | 'aggressive'
-): string {
-  // Different strategies based on hallucination type
-  if (hallucinationCheck.reason?.includes('memory reference')) {
-    return fixMemoryReference(responseText, preventionLevel);
-  }
-  
-  if (hallucinationCheck.reason?.includes('repeated phrase')) {
-    return fixRepeatedPhrases(responseText, preventionLevel);
-  }
-  
-  if (hallucinationCheck.reason?.includes('continuity')) {
-    return fixContinuityClaim(responseText, preventionLevel);
-  }
-  
-  // Default fix for any other hallucination
-  return applyDefaultFix(responseText, preventionLevel);
-}
-
-/**
- * Fix false memory references
- */
-function fixMemoryReference(
-  responseText: string, 
-  preventionLevel: 'low' | 'medium' | 'high' | 'aggressive'
-): string {
-  // Based on prevention level, apply different fixes
-  switch (preventionLevel) {
-    case 'aggressive':
-      // Replace all memory references with present-focused statements
-      return responseText
-        .replace(/you (mentioned|said|told me|indicated)/gi, "you're saying")
-        .replace(/you've been (feeling|experiencing|dealing with)/gi, "you're")
-        .replace(/as you (mentioned|said|noted|pointed out)/gi, "from what you're sharing")
-        .replace(/earlier you (mentioned|said|talked about)/gi, "you just shared that")
-        .replace(/I remember/gi, "I understand")
-        .replace(/we (discussed|talked about)/gi, "you mentioned");
-        
-    case 'high':
-      // Replace specific memory claims with hedged language
-      return responseText
-        .replace(/you (mentioned|said|told me) that ([\w\s]+?)(?=[,.?!])/gi, "it sounds like $2")
-        .replace(/I remember ([\w\s]+?)(?=[,.?!])/gi, "I understand $1");
-      
-    case 'medium':
-    case 'low':
-      // Add hedging language
-      if (!/it seems|from what I understand|if I'm understanding correctly|it sounds like/i.test(responseText)) {
-        return "Based on what you're sharing, " + responseText;
-      }
-      return responseText;
-  }
-}
-
-/**
- * Fix repeated phrases
- */
-function fixRepeatedPhrases(
-  responseText: string, 
-  preventionLevel: 'low' | 'medium' | 'high' | 'aggressive'
-): string {
-  // Split into sentences
-  const sentences = responseText.split(/(?<=[.!?])\s+/);
-  
-  // Find unique sentences (remove duplicates)
-  const uniqueSentences = Array.from(new Set(sentences));
-  
-  // Find repeated phrases within sentences and reword them
-  const processedSentences = uniqueSentences.map(sentence => {
-    // Simple deduplication of phrases
-    const words = sentence.split(/\s+/);
-    const phrases: Record<string, boolean> = {};
-    
-    for (let i = 0; i < words.length - 2; i++) {
-      const phrase = `${words[i]} ${words[i+1]} ${words[i+2]}`;
-      
-      // If we've seen this phrase before in this sentence, replace the words
-      if (phrases[phrase.toLowerCase()]) {
-        if (preventionLevel === 'aggressive' || preventionLevel === 'high') {
-          // Replace with alternative wording
-          words[i] = '';
-          words[i+1] = '';
-          words[i+2] = 'this';
-        }
-      } else {
-        phrases[phrase.toLowerCase()] = true;
-      }
-    }
-    
-    return words.filter(w => w !== '').join(' ');
-  });
-  
-  return processedSentences.join(' ');
-}
-
-/**
- * Fix false continuity claims
- */
-function fixContinuityClaim(
-  responseText: string, 
-  preventionLevel: 'low' | 'medium' | 'high' | 'aggressive'
-): string {
-  // Replace continuity claims with present-focused language
-  if (preventionLevel === 'aggressive' || preventionLevel === 'high') {
-    return responseText
-      .replace(/as we've been discussing/gi, "based on what you're sharing")
-      .replace(/our previous conversation/gi, "what you've shared")
-      .replace(/we've been focusing on/gi, "regarding")
-      .replace(/as I mentioned (earlier|before|previously)/gi, "")
-      .replace(/continuing (from|with) (where we left off|our previous)/gi, "focusing on");
-  } else {
-    return responseText
-      .replace(/as we've been discussing/gi, "from what I understand")
-      .replace(/our previous conversation/gi, "our conversation")
-      .replace(/we've been focusing on/gi, "regarding");
-  }
-}
-
-/**
- * Apply default fix for hallucinations
- */
-function applyDefaultFix(
-  responseText: string, 
-  preventionLevel: 'low' | 'medium' | 'high' | 'aggressive'
-): string {
-  // Default strategy is to make the language more present-focused
-  // and less reliant on memory claims
-  
-  if (preventionLevel === 'aggressive') {
-    // Add explicit disclaimer
-    return "Based on what you're sharing right now, " + responseText;
-  }
-  
-  if (preventionLevel === 'high') {
-    // Add hedging language
-    return responseText
-      .replace(/^/, "From what I understand, ")
-      .replace(/I know/gi, "I understand")
-      .replace(/you told me/gi, "you mentioned");
-  }
-  
-  // For medium/low, just return the original
-  return responseText;
-}

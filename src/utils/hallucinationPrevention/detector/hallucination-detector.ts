@@ -27,6 +27,21 @@ export const detectHallucinations = (
   const flags = [];
   let confidenceScore = 1.0; // Start with high confidence
   
+  // CRITICAL: SUICIDE AND CRISIS HALLUCINATION PATTERNS
+  // Check specifically for suicide and crisis response consistency
+  if (/suicide|kill (myself|me)|self.?harm|end my life/i.test(userInput.toLowerCase())) {
+    // Check if the response repeats phrases or uses awkward references to prior conversation
+    if (/you('re| are) sharing.+you('re| are) sharing/i.test(responseText) || 
+        /what you('re| are) sharing what you/i.test(responseText)) {
+      flags.push({
+        type: 'critical_suicide_repetition',
+        severity: 'critical',
+        description: 'Critical repetition in suicide response'
+      });
+      confidenceScore -= 0.9; // Severe penalty for this dangerous hallucination
+    }
+  }
+  
   // CRITICAL: EATING DISORDER HALLUCINATION PATTERNS
   // Check specifically for the pattern where eating disorder statements mix with food small talk
   const eatingDisorderHallucinationPatterns = [
@@ -70,7 +85,10 @@ export const detectHallucinations = (
     /dealing with you may have indicated/i,
     // NEW: Additional critical patterns found in recent hallucinations
     /You mentioned eat before when we talked about|You mentioned \w+ before when we/i,
-    /I've eate\.\.\. You mentioned/i
+    /I've eate\.\.\. You mentioned/i,
+    // Suicide/crisis specific patterns
+    /based on what you('re| are) sharing, what you('re| are) sharing what you('re| are) sharing/i,
+    /what you('re| are) sharing what you('re| are) sharing/i
   ];
   
   for (const pattern of repetitionPatterns) {
