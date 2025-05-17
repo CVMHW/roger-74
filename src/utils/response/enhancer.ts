@@ -88,7 +88,25 @@ export const enhanceResponse = (
   try {
     // Check if this is a crisis situation - if so, don't modify the response
     if (checkForCrisisContent(userInput)) {
+      console.log("Crisis content detected, returning original response");
       return responseText;
+    }
+    
+    // Improved emotional detection for depression and sadness
+    if (/\b(depress(ed|ion)|sad(ness)?|feeling (down|blue))\b/i.test(userInput.toLowerCase())) {
+      console.log("Depression/sadness indicators detected in user input");
+      
+      // If response doesn't acknowledge depression/sadness, prioritize emotional acknowledgment
+      if (!/\b(depress(ed|ion)|sad(ness)?|feeling (down|blue))\b/i.test(responseText.toLowerCase())) {
+        console.log("Response doesn't acknowledge emotional state, enhancing");
+        // Don't replace response but ensure emotional state is acknowledged
+        const emotionAcknowledgment = "I hear that you're feeling depressed. ";
+        
+        // Only prepend if not already acknowledging emotions
+        if (!responseText.toLowerCase().includes("feeling") && !responseText.toLowerCase().includes("emotion")) {
+          responseText = emotionAcknowledgment + responseText;
+        }
+      }
     }
     
     // First enhance with memory awareness
