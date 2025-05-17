@@ -15,11 +15,12 @@ import { useFeedbackLoopHandler } from '../../response/feedbackLoopHandler';
 import { checkAllRules } from '../../../utils/rulesEnforcement/rulesEnforcer';
 import { detectEatingDisorderConcerns } from '../../../utils/conversation/specializedDetection/eatingPatterns/detectors';
 import { createEatingDisorderResponse } from '../../../utils/response/handlers/eatingDisorderHandler';
-import { checkForCrisisContent, detectMultipleCrisisTypes, type CrisisType } from '../../chat/useCrisisDetector';
+import { checkForCrisisContent } from '../../chat/useCrisisDetector';
 import { getCrisisResponse } from '../../../utils/crisis/crisisResponseCoordinator';
 import { ConcernType } from '../../../utils/reflection/reflectionTypes';
+import { CrisisType } from '../../chat/useCrisisDetector';
 
-// Import or define the missing utility functions
+// Import utility functions
 const isSmallTalk = (input: string): boolean => {
   return /\bhello\b|\bhi\b|\bhey\b|\bgreetings\b|\bhowdy\b|\bweather\b|\bsports\b|\bweekend\b|\bplans\b/i.test(input.toLowerCase());
 };
@@ -30,6 +31,55 @@ const isIntroduction = (input: string): boolean => {
 
 const isPersonalSharing = (input: string): boolean => {
   return /\bi feel\b|\bi am feeling\b|\bi'm feeling\b|\bi've been\b|\bi have been\b|\bi'm going through\b|\bi am going through\b/i.test(input.toLowerCase());
+};
+
+// Simple function for detecting multiple crisis types
+const detectMultipleCrisisTypes = (userInput: string): string[] => {
+  const crisisTypes: string[] = [];
+  const lowercaseInput = userInput.toLowerCase();
+  
+  // Check for suicide indicators
+  if (
+    /suicid|kill (myself|me)|end (my|this) life|don'?t want to (live|be alive)|take my (own )?life/i.test(
+      lowercaseInput
+    )
+  ) {
+    crisisTypes.push('suicide');
+  }
+  
+  // Check for self-harm indicators separate from suicide
+  if (
+    /harm (myself|me)|cut (myself|me)|hurt (myself|me)|self.harm|cutting/i.test(
+      lowercaseInput
+    ) && !crisisTypes.includes('suicide')
+  ) {
+    crisisTypes.push('self-harm');
+  }
+  
+  // Check for eating disorder indicators
+  const edResult = detectEatingDisorderConcerns(userInput);
+  if (edResult.isEatingDisorderConcern && edResult.riskLevel !== 'low') {
+    crisisTypes.push('eating-disorder');
+  }
+  
+  // Check for substance abuse indicators
+  if (
+    /overdose|addicted|withdrawal|relapse|heroin|cocaine|meth|substance abuse|substance use disorder|alcoholic|alcoholism|alcohol problem|drug problem|can't stop (drinking|using)/i.test(
+      lowercaseInput
+    )
+  ) {
+    crisisTypes.push('substance-use');
+  }
+  
+  // If no specific type but there are general crisis indicators
+  if (
+    crisisTypes.length === 0 &&
+    /crisis|emergency|urgent|help me|desperate|need help now/i.test(lowercaseInput)
+  ) {
+    crisisTypes.push('general-crisis');
+  }
+  
+  return crisisTypes;
 };
 
 /**
@@ -44,8 +94,8 @@ export const processUserMessage = async (
     conversationStage: any,
     messageCount: number,
     updateStage: () => void,
-    detectConcerns: (input: string) => ConcernType,
-    generateResponse: (input: string, concernType: ConcernType) => string,
+    detectConcerns: (input: string) => ConcernType | null,
+    generateResponse: (input: string, concernType: ConcernType | null) => string,
     baseProcessUserMessage: (input: string, responseFn: any, concernFn: any, multiplier?: number) => Promise<MessageType>,
     clientPreferences: any
   }
@@ -93,7 +143,7 @@ export const processUserMessage = async (
       // Update stage
       updateStage();
       
-      let crisisType: CrisisType = crisisTypes[0];
+      let crisisType: string = crisisTypes[0];
       let crisisTag = `CRISIS:${crisisType.toUpperCase()}`;
       
       // Always prioritize suicide if it's one of the detected types
@@ -101,9 +151,6 @@ export const processUserMessage = async (
         crisisType = 'suicide';
         crisisTag = 'CRISIS:SUICIDE';
       }
-      
-      // Get concern type for the crisis coordinator
-      const concernType: ConcernType = 'crisis';
       
       // Get appropriate crisis response from coordinator
       const response = getCrisisResponse(crisisType);
@@ -116,7 +163,7 @@ export const processUserMessage = async (
       }
       
       // Return specific crisis response
-      return Promise.resolve(createMessage(response, 'roger', crisisType));
+      return Promise.resolve(createMessage(response, 'roger', crisisType as any));
     }
     
     // CRISIS DETECTION - HIGHEST PRIORITY: Always check first before any memory system
@@ -215,6 +262,9 @@ export const processUserMessage = async (
       
       return emotionalResponse;
     }
+    
+    // Get the concern type for processing
+    const concernType = detectConcerns(userInput);
     
     // Call processMessage with individual arguments, not as an object
     const response = await processMessage(

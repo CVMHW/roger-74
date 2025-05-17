@@ -1,174 +1,187 @@
 
 /**
- * Eating Disorder Detection System
- * Specialized detection for eating-related concerns
+ * Specialized detection system for eating disorder concerns
  */
 
-/**
- * Result of eating disorder concern detection
- */
+// Import the common types
+import { RiskLevel } from './types';
+
+// Define the result interface for eating disorder detection
 export interface EatingDisorderDetectionResult {
   isEatingDisorderConcern: boolean;
-  riskLevel: 'low' | 'medium' | 'high';
+  riskLevel: RiskLevel;
   needsImmediate: boolean;
-  concernType: string;
-  matchedPhrases: string[]; // Added to track matched phrases
-  contextMarkers?: string[]; // Added for additional context markers
+  matchedPhrases: string[];
+  contextMarkers?: string[];
+  isLikelySmallTalk?: boolean;
 }
 
-/**
- * Detects potential eating disorder concerns in user messages
- */
-export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderDetectionResult => {
-  const lowerInput = userInput.toLowerCase().trim();
-  const matchedPhrases: string[] = []; // Track matched phrases
-  
-  // High-risk patterns (immediate attention needed)
-  const highRiskPatterns = [
-    /can't stop eating|binge eating|overeating|eaten [0-9]+ .+ in a row/i,
-    /not eating|haven't (been )?eating|struggling not eating|can't eat|don't eat/i,
-    /purge|purging|throw(ing)? up (after|food)/i,
-    /starv(e|ing)|anorexia|bulimia|binge|restrict/i
-  ];
-  
-  // Medium-risk patterns (concerning but not immediate)
-  const mediumRiskPatterns = [
-    /eating too much|compulsive eating/i,
-    /body (image|weight|fat)|hate my body|feel fat/i,
-    /diet(ing)?|weight loss|calories|counting calories/i
-  ];
-  
-  // Low-risk patterns (potential concerns)
-  const lowRiskPatterns = [
-    /food (anxiety|worry|concern)|meal|eating habits/i,
-    /weight|body|thin|fat/i
-  ];
-  
-  // Check for high-risk patterns first (highest priority)
-  for (const pattern of highRiskPatterns) {
-    if (pattern.test(lowerInput)) {
-      const match = lowerInput.match(pattern);
-      if (match) matchedPhrases.push(match[0]);
-      
-      return {
-        isEatingDisorderConcern: true,
-        riskLevel: 'high',
-        needsImmediate: true,
-        concernType: 'eating-disorder',
-        matchedPhrases
-      };
-    }
-  }
-  
-  // Then check medium risk patterns
-  for (const pattern of mediumRiskPatterns) {
-    if (pattern.test(lowerInput)) {
-      const match = lowerInput.match(pattern);
-      if (match) matchedPhrases.push(match[0]);
-      
-      // Detect additional context markers
-      const contextMarkers = detectContextMarkers(lowerInput);
-      
-      return {
-        isEatingDisorderConcern: true,
-        riskLevel: 'medium',
-        needsImmediate: false,
-        concernType: 'eating-disorder',
-        matchedPhrases,
-        contextMarkers
-      };
-    }
-  }
-  
-  // Finally check low risk patterns
-  for (const pattern of lowRiskPatterns) {
-    if (pattern.test(lowerInput)) {
-      const match = lowerInput.match(pattern);
-      if (match) matchedPhrases.push(match[0]);
-      
-      return {
-        isEatingDisorderConcern: true,
-        riskLevel: 'low',
-        needsImmediate: false,
-        concernType: 'eating-disorder',
-        matchedPhrases
-      };
-    }
-  }
-  
-  // No eating disorder concerns detected
-  return {
-    isEatingDisorderConcern: false,
-    riskLevel: 'low',
-    needsImmediate: false,
-    concernType: 'none',
-    matchedPhrases: []
-  };
-};
-
-/**
- * Detects if message is casual food small talk
- */
-export const isFoodSmallTalk = (userInput: string): FoodSmallTalkResult => {
-  const lowerInput = userInput.toLowerCase().trim();
-  
-  // Casual food patterns
-  const casualFoodPatterns = [
-    /restaurant|dining|recipe|cook(ing)?|meal prep|grocery/i,
-    /favorite food|breakfast|lunch|dinner|snack|taste|delicious|yummy|flavor/i,
-    /pizza|burger|sushi|mexican|italian|chinese|indian|thai|japanese/i,
-    /vegetarian|vegan|gluten-free|keto|paleo|diet/i
-  ];
-  
-  for (const pattern of casualFoodPatterns) {
-    if (pattern.test(lowerInput) && 
-        !lowerInput.includes("can't stop") &&
-        !lowerInput.includes("too much") &&
-        !lowerInput.includes("hate my body") &&
-        !lowerInput.includes("feel fat")) {
-      
-      return {
-        isFoodSmallTalk: true,
-        confidence: 0.8,
-        pattern: pattern.toString()
-      };
-    }
-  }
-  
-  return {
-    isFoodSmallTalk: false,
-    confidence: 0,
-    pattern: null
-  };
-};
-
-/**
- * Detect additional context markers for better understanding
- * @private
- */
-const detectContextMarkers = (input: string): string[] => {
-  const markers: string[] = [];
-  
-  if (/distress|worry|concern|anxious|anxiet|stress|depress|sad/i.test(input)) {
-    markers.push('emotional-distress');
-  }
-  
-  if (/everyday|interfere|problem|issue|difficult|struggle|can't focus/i.test(input)) {
-    markers.push('daily-life-impact');
-  }
-  
-  if (/long time|weeks|months|years|always been|since|childhood/i.test(input)) {
-    markers.push('chronic-issue');
-  }
-  
-  return markers;
-};
-
-/**
- * Result for food small talk detection
- */
+// Define the result interface for food small talk detection
 export interface FoodSmallTalkResult {
   isFoodSmallTalk: boolean;
   confidence: number;
-  pattern: string | null;
+  context?: string;
 }
+
+// Regular expressions for eating disorder detection
+const ED_PHRASES = [
+  /starv(e|ing|ation)/i,
+  /not (eat|eating)/i,
+  /haven'?t (eat|eaten|had food)/i,
+  /skip(ping|ped)? meals/i,
+  /avoid(ing)? food/i,
+  /binge/i,
+  /purg(e|ing)/i,
+  /(over|under)weight/i,
+  /body (image|dysmorphia)/i,
+  /too (fat|skinny|heavy|thin)/i,
+  /diet(ing)?/i,
+  /anorexia/i,
+  /bulimia/i,
+  /eat(ing)? disorder/i,
+  /calories?/i,
+  /purge/i,
+  /throwing up/i,
+];
+
+// Context phrases indicating emotional distress about food
+const CONTEXT_MARKERS = [
+  /fear/i,
+  /worried/i,
+  /anxious/i,
+  /stressed?/i,
+  /obsess(ed|ion|ing)/i,
+  /can'?t stop (think|thinking)/i,
+  /hate/i,
+  /ashamed/i,
+  /guilty/i,
+  /control/i,
+  /avoid/i,
+];
+
+// Food-related small talk phrases
+const FOOD_SMALL_TALK = [
+  /like to eat/i,
+  /favorite food/i,
+  /good restaurant/i,
+  /cook/i,
+  /recipe/i,
+  /delicious/i,
+  /taste/i,
+];
+
+/**
+ * Detects potential eating disorder concerns in user messages
+ * @param text - User message to analyze
+ * @returns Detection result with risk assessment
+ */
+export const detectEatingDisorderConcerns = (text: string): EatingDisorderDetectionResult => {
+  // Default result
+  const result: EatingDisorderDetectionResult = {
+    isEatingDisorderConcern: false,
+    riskLevel: 'low',
+    needsImmediate: false,
+    matchedPhrases: [],
+    contextMarkers: [],
+    isLikelySmallTalk: false
+  };
+
+  // Match phrases
+  for (const pattern of ED_PHRASES) {
+    const match = text.match(pattern);
+    if (match) {
+      result.matchedPhrases.push(match[0]);
+    }
+  }
+
+  // No matches found
+  if (result.matchedPhrases.length === 0) {
+    return result;
+  }
+
+  // Check for context markers
+  for (const marker of CONTEXT_MARKERS) {
+    const match = text.match(marker);
+    if (match && result.contextMarkers) {
+      result.contextMarkers.push(match[0]);
+    }
+  }
+
+  // Check for small talk context 
+  for (const smallTalk of FOOD_SMALL_TALK) {
+    if (smallTalk.test(text)) {
+      result.isLikelySmallTalk = true;
+      break;
+    }
+  }
+
+  // Determine risk level
+  if (result.matchedPhrases.length >= 3) {
+    result.riskLevel = 'high';
+    result.isEatingDisorderConcern = true;
+  } else if (result.matchedPhrases.length >= 1 && result.contextMarkers && result.contextMarkers.length >= 1) {
+    result.riskLevel = 'medium';
+    result.isEatingDisorderConcern = true;
+  } else if (result.matchedPhrases.length >= 1) {
+    // At least one match but no distress markers and possible small talk
+    if (result.isLikelySmallTalk) {
+      result.riskLevel = 'low';
+      result.isEatingDisorderConcern = false;
+    } else {
+      result.riskLevel = 'low';
+      result.isEatingDisorderConcern = true;
+    }
+  }
+
+  // Check for immediate risk phrases
+  if (
+    /not eaten (in|for) (\d+|a|an|several) (day|week|month)/i.test(text) ||
+    /starving (myself|to death)/i.test(text) ||
+    /kill(ing)? myself/i.test(text) ||
+    /throwing up (all|every)/i.test(text)
+  ) {
+    result.needsImmediate = true;
+    result.riskLevel = 'high';
+  }
+
+  return result;
+};
+
+/**
+ * Determines if a message is casual food-related small talk 
+ * rather than a potential concern
+ */
+export const isFoodSmallTalk = (text: string): FoodSmallTalkResult => {
+  const result: FoodSmallTalkResult = {
+    isFoodSmallTalk: false,
+    confidence: 0
+  };
+
+  let smallTalkMatches = 0;
+  for (const pattern of FOOD_SMALL_TALK) {
+    if (pattern.test(text)) {
+      smallTalkMatches++;
+    }
+  }
+
+  // Check for casual food discussion patterns
+  if (
+    /what's your favorite/i.test(text) || 
+    /do you like/i.test(text) ||
+    /recommend/i.test(text) ||
+    smallTalkMatches >= 1
+  ) {
+    result.isFoodSmallTalk = true;
+    result.confidence = Math.min(0.3 + (smallTalkMatches * 0.2), 0.9);
+    
+    if (/restaurant|place to eat|food/i.test(text)) {
+      result.context = 'restaurant';
+      result.confidence += 0.1;
+    } else if (/cook|recipe|make/i.test(text)) {
+      result.context = 'cooking';
+      result.confidence += 0.1;
+    }
+  }
+
+  return result;
+};

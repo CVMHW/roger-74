@@ -5,10 +5,12 @@
  */
 
 import { 
-  processFoodRelatedMessage
+  processFoodRelatedMessage, 
+  FoodProcessingResult 
 } from '../../conversation/specializedDetection/eatingPatterns/processor';
 import { 
-  detectEatingDisorderConcerns
+  detectEatingDisorderConcerns, 
+  EatingDisorderDetectionResult 
 } from '../../conversation/specializedDetection/eatingPatterns/detectors';
 import { recordToMemory } from '../../nlpProcessor';
 
@@ -18,6 +20,14 @@ const EMILY_PROGRAM_INFO = {
   website: "https://www.emilyprogram.com/",
   helpline: "1-888-364-5977",
   description: "The Emily Program specializes in eating disorder treatment with locations across the country, including Ohio."
+};
+
+// SAMHSA information for substance use concerns
+const SAMHSA_INFO = {
+  name: "SAMHSA's National Helpline",
+  website: "https://www.samhsa.gov/find-help/national-helpline",
+  helpline: "1-800-662-4357",
+  description: "SAMHSA's National Helpline provides 24/7 treatment referral and information services for individuals facing mental health or substance use disorders."
 };
 
 // Cleveland-specific food contexts to help distinguish food enjoyment from concerns
@@ -46,7 +56,7 @@ export const handleEatingPatterns = (userInput: string): string | null => {
   const result = processFoodRelatedMessage(userInput);
   
   // Check if it's not food-related
-  if (result.responseType === 'neutral' && result.riskLevel === 'low') {
+  if (result.responseType === 'neutral') {
     return null;
   }
   
@@ -60,10 +70,12 @@ export const handleEatingPatterns = (userInput: string): string | null => {
     const detectionResult = detectEatingDisorderConcerns(userInput);
     
     // Create memory entry with detailed analysis
-    recordToMemory(
-      userInput, 
-      `EATING CONCERN: ${result.riskLevel}. Phrases: ${detectionResult.matchedPhrases.join(', ')}`
-    );
+    if (detectionResult.matchedPhrases && detectionResult.matchedPhrases.length > 0) {
+      recordToMemory(
+        userInput, 
+        `EATING CONCERN: ${result.riskLevel}. Phrases: ${detectionResult.matchedPhrases.join(', ')}`
+      );
+    }
     
     // For non-Cleveland food contexts with medium to high risk,
     // include Emily Program referral in response
@@ -109,7 +121,8 @@ export const enhanceEatingDisorderResponse = (
   
   // If it's a medium concern, causing distress, and not just Cleveland food talk
   if (detectionResult.riskLevel === 'medium' && 
-      detectionResult.contextMarkers && detectionResult.contextMarkers.length > 0 &&
+      detectionResult.contextMarkers && 
+      detectionResult.contextMarkers.length > 0 &&
       !isClevelandFoodContext) {
     
     return `${initialResponse} These thoughts can sometimes take up a lot of mental space. Some people find it helpful to talk with specialists like those at The Emily Program. Would it be helpful to explore resources for support with these feelings?`;
@@ -146,6 +159,7 @@ export const needsSpecializedEatingResponseHandling = (userInput: string): boole
   return isEatingDisorderConcern && (riskLevel === 'high' || riskLevel === 'medium');
 };
 
+// Export all handler functions
 export default {
   handleEatingPatterns,
   enhanceEatingDisorderResponse,

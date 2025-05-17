@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { detectEatingDisorderConcerns } from '../../utils/conversation/specializedDetection/eatingPatterns/detectors';
 import { ConcernType } from '../../utils/reflection/reflectionTypes';
@@ -11,7 +12,7 @@ export const useConcernDetection = () => {
    * @param userInput The user's message
    * @returns The type of concern detected, or null if none detected
    */
-  const detectConcerns = useCallback((userInput: string): ConcernType => {
+  const detectConcerns = useCallback((userInput: string): ConcernType | null => {
     // Convert input to lowercase for case-insensitive matching
     const lowercaseInput = userInput.toLowerCase();
 
@@ -60,7 +61,7 @@ export const useConcernDetection = () => {
     }
 
     // Default - no specific concern detected
-    return 'none';
+    return null;
   }, []);
 
   return { detectConcerns };

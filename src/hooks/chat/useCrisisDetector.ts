@@ -1,117 +1,105 @@
 
-import { useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { detectEatingDisorderConcerns } from '../../utils/conversation/specializedDetection/eatingPatterns/detectors';
 import { processFoodRelatedMessage } from '../../utils/conversation/specializedDetection/eatingPatterns/processor';
 
-// Define crisis types
 export type CrisisType = 'suicide' | 'self-harm' | 'eating-disorder' | 'substance-use' | 'general-crisis';
 
 /**
- * Detects multiple crisis types in a single message
- * @returns Array of crisis types detected
- */
-export const detectMultipleCrisisTypes = (userInput: string): CrisisType[] => {
-  if (!userInput || typeof userInput !== 'string') {
-    return [];
-  }
-  
-  const crisisTypes: CrisisType[] = [];
-  const lowerInput = userInput.toLowerCase();
-  
-  // Check for suicide mentions (highest priority)
-  if (/suicid|kill (myself|me)|end (my|this) life|want to die|don't want to (live|be alive)|take my (own )?life/i.test(lowerInput)) {
-    crisisTypes.push('suicide');
-  }
-  
-  // Check for self-harm
-  if (/harm (myself|me)|cut (myself|me)|hurt (myself|me)|self.harm/i.test(lowerInput)) {
-    crisisTypes.push('self-harm');
-  }
-  
-  // Check for eating disorders
-  const edResult = detectEatingDisorderConcerns(userInput);
-  if (edResult.isEatingDisorderConcern && (edResult.riskLevel === 'high' || edResult.riskLevel === 'medium')) {
-    crisisTypes.push('eating-disorder');
-  }
-  
-  // Check for substance use crisis
-  if (/drinking|alcohol|drunk|intoxicated|can't stop drinking|addicted|substance|drug/i.test(lowerInput)) {
-    // Check for quantity indicators that suggest crisis
-    const quantityMatch = lowerInput.match(/(\d+)\s+(beers|drinks|shots|bottles)/);
-    if (quantityMatch) {
-      const quantity = parseInt(quantityMatch[1], 10);
-      if (quantity > 10) {
-        crisisTypes.push('substance-use');
-      }
-    }
-    
-    // Check for severe language
-    if (/withdrawal|DTs|shakes|alcohol poisoning|can't stop|addicted/i.test(lowerInput)) {
-      crisisTypes.push('substance-use');
-    }
-  }
-  
-  // Check general crisis indicators
-  if (/crisis|emergency|urgent|need help now|immediate danger|severe (depression|anxiety|panic)/i.test(lowerInput)) {
-    crisisTypes.push('general-crisis');
-  }
-  
-  return crisisTypes;
-};
-
-/**
- * Enhanced hook for detecting crisis content in user messages
- * with integration to multiple specialized detection systems and executive control
+ * Hook for detecting crisis situations in user messages
  */
 export const useCrisisDetector = () => {
-  // Function to check for crisis-related content in user input
+  /**
+   * Detects if a message contains crisis content
+   * @param userInput User message to analyze
+   * @returns True if crisis content is detected
+   */
   const checkForCrisisContent = useCallback((userInput: string): boolean => {
-    console.log("CRISIS DETECTOR: Checking user input for crisis content");
+    // Convert to lowercase for case-insensitive matching
+    const lowercaseInput = userInput.toLowerCase();
     
-    // Skip processing if userInput is not a string or is empty
-    if (!userInput || typeof userInput !== 'string') {
-      console.error("CRISIS DETECTOR: Invalid input received", userInput);
-      return false;
+    // Check for suicide indicators
+    if (
+      /suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)|don'?t want to (live|be alive)|take my (own )?life/i.test(
+        lowercaseInput
+      )
+    ) {
+      return true;
     }
     
-    try {
-      // Check for multiple crisis types
-      const crisisTypes = detectMultipleCrisisTypes(userInput);
-      if (crisisTypes.length > 0) {
-        console.log("CRISIS DETECTOR: Detected crisis types:", crisisTypes);
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error("CRISIS DETECTOR: Error in crisis detection", error);
-      // Safety fallback - if there's any error, better to assume it might be a crisis
-      return /suicid|kill|harm|hurt|die|dead/i.test(userInput.toLowerCase());
+    // Check for severe eating disorder indicators
+    const edResult = detectEatingDisorderConcerns(userInput);
+    if (edResult.isEatingDisorderConcern && edResult.riskLevel === 'high') {
+      return true;
     }
-  }, []);
-  
-  return { checkForCrisisContent };
-};
-
-// Export the function directly for use in non-hook contexts
-export const checkForCrisisContent = (userInput: string): boolean => {
-  if (!userInput || typeof userInput !== 'string') {
-    console.error("CRISIS DETECTOR: Invalid input received", userInput);
-    return false;
-  }
-  
-  try {
-    // Check for multiple crisis types
-    const crisisTypes = detectMultipleCrisisTypes(userInput);
-    if (crisisTypes.length > 0) {
-      console.log("CRISIS DETECTOR: Detected crisis types:", crisisTypes);
+    
+    // Check for substance abuse indicators
+    if (
+      /overdose|addicted|withdrawal|relapse|heroin|cocaine|meth|substance abuse|substance use disorder|alcoholic|alcoholism/i.test(
+        lowercaseInput
+      )
+    ) {
       return true;
     }
     
     return false;
-  } catch (error) {
-    console.error("CRISIS DETECTOR: Error in crisis detection", error);
-    // Safety fallback - if there's any error, better to assume it might be a crisis
-    return /suicid|kill|harm|hurt|die|dead/i.test(userInput.toLowerCase());
-  }
+  }, []);
+  
+  /**
+   * Detects multiple crisis types in a single message 
+   * @param userInput User message to analyze
+   * @returns Array of crisis types detected
+   */
+  const detectMultipleCrisisTypes = useCallback((userInput: string): CrisisType[] => {
+    const crisisTypes: CrisisType[] = [];
+    const lowercaseInput = userInput.toLowerCase();
+    
+    // Check for suicide indicators
+    if (
+      /suicid|kill (myself|me)|end (my|this) life|don'?t want to (live|be alive)|take my (own )?life/i.test(
+        lowercaseInput
+      )
+    ) {
+      crisisTypes.push('suicide');
+    }
+    
+    // Check for self-harm indicators separate from suicide
+    if (
+      /harm (myself|me)|cut (myself|me)|hurt (myself|me)|self.harm|cutting/i.test(
+        lowercaseInput
+      ) && !crisisTypes.includes('suicide')
+    ) {
+      crisisTypes.push('self-harm');
+    }
+    
+    // Check for eating disorder indicators
+    const edResult = detectEatingDisorderConcerns(userInput);
+    if (edResult.isEatingDisorderConcern && edResult.riskLevel !== 'low') {
+      crisisTypes.push('eating-disorder');
+    }
+    
+    // Check for substance abuse indicators
+    if (
+      /overdose|addicted|withdrawal|relapse|heroin|cocaine|meth|substance abuse|substance use disorder|alcoholic|alcoholism|alcohol problem|drug problem|can't stop (drinking|using)/i.test(
+        lowercaseInput
+      )
+    ) {
+      crisisTypes.push('substance-use');
+    }
+    
+    // If no specific type but there are general crisis indicators
+    if (
+      crisisTypes.length === 0 &&
+      /crisis|emergency|urgent|help me|desperate|need help now/i.test(lowercaseInput)
+    ) {
+      crisisTypes.push('general-crisis');
+    }
+    
+    return crisisTypes;
+  }, []);
+  
+  return {
+    checkForCrisisContent,
+    detectMultipleCrisisTypes
+  };
 };

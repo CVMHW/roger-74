@@ -1,76 +1,57 @@
 
 /**
- * Food-Related Message Processor
- * Executive control system for processing food-related messages
+ * Food-related message processor that combines detection with response generation
  */
 
 import { detectEatingDisorderConcerns, isFoodSmallTalk } from './detectors';
-import { RiskLevel, FoodResponseType } from './types';
+import { RiskLevel, FoodResponseType, FoodRelatedMessageResult } from './types';
+import { generateEatingDisorderResponse, generateFoodSmallTalkResponse, generateNeutralResponse } from './responseGenerators';
 
-/**
- * Result of food-related message processing
- */
 export interface FoodProcessingResult {
   responseType: FoodResponseType;
   riskLevel: RiskLevel;
   needsSpecialist: boolean;
+  matchedPhrases?: string[];
+  contextMarkers?: string[];
   suggestedResponse: string;
 }
 
 /**
- * Process food-related messages to determine appropriate response category
+ * Processes a food-related message to determine how to respond
  */
 export const processFoodRelatedMessage = (userInput: string): FoodProcessingResult => {
-  // First check with specialized detector
+  // Check for eating disorder indicators first
   const edResult = detectEatingDisorderConcerns(userInput);
   
-  // If high-risk eating disorder is detected, prioritize that
-  if (edResult.isEatingDisorderConcern && edResult.riskLevel === 'high') {
-    return {
-      responseType: 'eating_disorder',
-      riskLevel: 'high',
-      needsSpecialist: true,
-      suggestedResponse: "I'm concerned about what you're sharing regarding your eating patterns. This sounds serious, and it's important that you speak with a healthcare professional. The National Eating Disorders Association (NEDA) helpline (1-800-931-2237) can provide immediate support and resources. Would it be possible for you to reach out to them today?"
-    };
-  }
-  
-  // Check for neutral/casual food discussion
+  // Check if this is casual food small talk
   const smallTalkResult = isFoodSmallTalk(userInput);
   
-  if (smallTalkResult.isFoodSmallTalk && !edResult.isEatingDisorderConcern) {
-    return {
-      responseType: 'casual',
-      riskLevel: 'low',
-      needsSpecialist: false,
-      suggestedResponse: "Thanks for sharing about your food preferences. It's always interesting to hear about different tastes and dining experiences. Would you like to tell me more about that?"
-    };
-  }
-  
-  // For medium risk ED concerns
-  if (edResult.isEatingDisorderConcern && edResult.riskLevel === 'medium') {
-    return {
-      responseType: 'eating_disorder',
-      riskLevel: 'medium',
-      needsSpecialist: true,
-      suggestedResponse: "I hear that you're struggling with thoughts about food and eating. These challenges can be really difficult to navigate alone. The National Eating Disorders Association offers specialized support through their helpline at 1-800-931-2237. Would you like to talk more about what you've been experiencing?"
-    };
-  }
-  
-  // For low risk ED concerns
-  if (edResult.isEatingDisorderConcern && edResult.riskLevel === 'low') {
-    return {
-      responseType: 'general_concern',
-      riskLevel: 'low',
-      needsSpecialist: false,
-      suggestedResponse: "Thank you for sharing about your relationship with food and body image. These topics can be challenging to talk about. While we can discuss this together, specialized support is also available if you'd find it helpful. Would you like to tell me more about what you've been experiencing?"
-    };
-  }
-  
-  // Default neutral response
-  return {
+  // Default result
+  const result: FoodProcessingResult = {
     responseType: 'neutral',
     riskLevel: 'low',
     needsSpecialist: false,
-    suggestedResponse: "I notice you mentioned something about food. Is there something specific about this topic you'd like to discuss?"
+    matchedPhrases: edResult.matchedPhrases,
+    contextMarkers: edResult.contextMarkers,
+    suggestedResponse: ""
   };
+  
+  // Determine response type based on detection results
+  if (edResult.isEatingDisorderConcern && !smallTalkResult.isFoodSmallTalk) {
+    result.responseType = 'eating_disorder';
+    result.riskLevel = edResult.riskLevel;
+    result.needsSpecialist = edResult.riskLevel === 'high' || edResult.riskLevel === 'medium';
+    result.suggestedResponse = generateEatingDisorderResponse(userInput, edResult.riskLevel);
+  } else if (smallTalkResult.isFoodSmallTalk && smallTalkResult.confidence > 0.6) {
+    result.responseType = 'casual';
+    result.suggestedResponse = generateFoodSmallTalkResponse(userInput, smallTalkResult.context);
+  } else if (smallTalkResult.isFoodSmallTalk) {
+    result.responseType = 'general_concern';
+    result.suggestedResponse = generateNeutralResponse(userInput);
+  } else {
+    result.responseType = 'neutral';
+    result.suggestedResponse = "";
+  }
+  
+  return result;
 };
