@@ -25,6 +25,121 @@ export const handlePotentialHallucinations = (
   }
 } => {
   try {
+    // CRITICAL: Check for dangerous content mixing first
+    const isCrisisContent = /suicide|self-harm|crisis|eating disorder|depression|mental health|substance-use|drinking|alcohol/i.test(userInput.toLowerCase());
+    
+    if (isCrisisContent) {
+      // Check if the response inappropriately mixes crisis content with casual/social topics
+      const containsCasualContent = /brewery|restaurant|pub|bar|craft beer|great lakes brewing|food|recipe|social gathering|concert/i.test(response);
+      
+      if (containsCasualContent) {
+        console.log("CRITICAL: Detected inappropriate mixing of crisis and casual content");
+        
+        // Create appropriate crisis response without the casual content
+        let safeResponse = response;
+        
+        // Remove casual content references
+        safeResponse = safeResponse.replace(/\b(I've heard great things about|Great Lakes Brewing Company|brewery|restaurant|pub|bar|craft beer|food|recipe|social gathering|concert|Ohio City).*?(\.|\?)/gi, '');
+        
+        // Check if we need to mention the appropriate resources
+        if (/eating disorder|can't stop eating|overeating|not eating/i.test(userInput.toLowerCase())) {
+          if (!safeResponse.includes("NEDA")) {
+            safeResponse = "I'm concerned about what you're sharing regarding your eating patterns. This sounds serious, and it's important that you speak with a healthcare professional. The National Eating Disorders Association (NEDA) helpline (1-800-931-2237) can provide immediate support and resources. Would it be possible for you to reach out to them today?";
+          }
+        } else if (/suicide|kill myself|want to die|end my life/i.test(userInput.toLowerCase())) {
+          if (!safeResponse.includes("988")) {
+            safeResponse = "I'm very concerned about what you're sharing. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room. Would you like me to provide additional resources?";
+          }
+        } else if (/drinking|alcohol|substance|drunk/i.test(userInput.toLowerCase())) {
+          if (!safeResponse.includes("SAMHSA")) {
+            safeResponse = "I'm concerned about what you're sharing regarding your drinking. This sounds serious, and it's important that you speak with a healthcare professional. The SAMHSA National Helpline (1-800-662-4357) provides free, confidential, 24/7 treatment referral and information. Would it help to discuss resources available to you?";
+          }
+        } else if (/depression|depressed|sad|feeling down/i.test(userInput.toLowerCase()) && !safeResponse.includes("depression")) {
+          safeResponse = "Thank you for sharing that you're feeling depressed. That's really important for me to know. Would you like to tell me more about what you've been experiencing?";
+        }
+        
+        return {
+          processedResponse: safeResponse,
+          hallucinationData: {
+            wasDetected: true,
+            confidence: 0.95,
+            reason: 'critical_content_mixing'
+          }
+        };
+      }
+      
+      // Check if the response is contextually appropriate for the specific crisis
+      if (/suicide|kill myself|want to die|end my life/i.test(userInput.toLowerCase())) {
+        if (!/988|crisis|emergency|professional|lifeline/i.test(response)) {
+          console.log("CRITICAL: Suicide content not addressed properly in response");
+          const safeResponse = "I'm very concerned about what you're sharing. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room. Would you like me to provide additional resources?";
+          
+          return {
+            processedResponse: safeResponse,
+            hallucinationData: {
+              wasDetected: true,
+              confidence: 0.98,
+              reason: 'critical_suicide_protocol_violation'
+            }
+          };
+        }
+      }
+      
+      // Check if the response addresses dietary concerns when eating disorders are mentioned
+      if (/eating disorder|can't stop eating|overeating|not eating/i.test(userInput.toLowerCase())) {
+        if (!/NEDA|eating|disorder|professional|treatment/i.test(response)) {
+          console.log("CRITICAL: Eating disorder content not addressed properly");
+          const safeResponse = "I'm concerned about what you're sharing regarding your eating patterns. This sounds serious, and it's important that you speak with a healthcare professional. The National Eating Disorders Association (NEDA) helpline (1-800-931-2237) can provide immediate support and resources. Would it be possible for you to reach out to them today?";
+          
+          return {
+            processedResponse: safeResponse,
+            hallucinationData: {
+              wasDetected: true,
+              confidence: 0.95,
+              reason: 'critical_ed_protocol_violation'
+            }
+          };
+        }
+      }
+      
+      // Check if the response addresses substance use concerns appropriately
+      if (/drinking|alcohol|substance|drunk/i.test(userInput.toLowerCase())) {
+        if (!/SAMHSA|substance|treatment|alcohol|drinking/i.test(response)) {
+          console.log("CRITICAL: Substance use content not addressed properly");
+          const safeResponse = "I'm concerned about what you're sharing regarding your drinking. This sounds serious, and it's important that you speak with a healthcare professional. The SAMHSA National Helpline (1-800-662-4357) provides free, confidential, 24/7 treatment referral and information. Would it help to discuss resources available to you?";
+          
+          return {
+            processedResponse: safeResponse,
+            hallucinationData: {
+              wasDetected: true,
+              confidence: 0.95,
+              reason: 'critical_substance_protocol_violation'
+            }
+          };
+        }
+      }
+    }
+    
+    // Check for context mismatch in general conversations
+    // For example, responding about food when the user mentions depression
+    if (/depress|sad|down|upset|anxious|anxiety/i.test(userInput.toLowerCase())) {
+      if (/food|eating|body image|weight/i.test(response) && 
+          !(/food|eating|body image|weight/i.test(userInput.toLowerCase()))) {
+        console.log("HALLUCINATION: Contextual mismatch - responding about food to depression");
+        
+        const safeResponse = "Thank you for sharing that you're feeling depressed. That's really important for me to know. Would you like to tell me more about what you've been experiencing?";
+        
+        return {
+          processedResponse: safeResponse,
+          hallucinationData: {
+            wasDetected: true,
+            confidence: 0.9,
+            reason: 'contextual_mismatch'
+          }
+        };
+      }
+    }
+    
     // Check if this is an everyday social situation
     const isEverydaySituation = /trip(ped)?|spill(ed)?|embarrass(ing|ed)|awkward|class|teacher|student|bar|drink|party|date|girl|guy|cute|dating/i.test(userInput);
     

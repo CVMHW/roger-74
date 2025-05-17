@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { MessageType } from '../../components/Message';
 import { createMessage } from '../../utils/messageUtils';
@@ -166,7 +165,7 @@ export const useCrisisDetection = (
       }
       // Handle substance use content
       else if (isSubstanceContent) {
-        concernType = 'substance-abuse';
+        concernType = 'substance-use';
         
         if (consecutiveCrisisCount === 1) {
           escalatedResponse = "I understand your struggle with drinking is serious. The SAMHSA National Helpline at 1-800-662-4357 provides confidential support and can connect you with local resources. They're available 24/7. Would you consider calling them?";

@@ -96,17 +96,17 @@ export const processUserMessage = async (
       }
       
       // Get appropriate crisis response from coordinator
-      const crisisResponse = getCrisisResponse(crisisType);
+      const response = getCrisisResponse(concernType as ConcernType);
       
       try {
         // Record to memory systems with crisis tag
-        recordToMemorySystems(userInput, crisisResponse, crisisTag);
+        recordToMemorySystems(userInput, response, crisisTag);
       } catch (error) {
         console.error("Error recording to memory systems:", error);
       }
       
       // Return specific crisis response
-      return Promise.resolve(createMessage(crisisResponse, 'roger', crisisType));
+      return Promise.resolve(createMessage(response, 'roger', crisisType));
     }
     
     // CRISIS DETECTION - HIGHEST PRIORITY: Always check first before any memory system
@@ -117,17 +117,17 @@ export const processUserMessage = async (
       updateStage();
       
       // Use crisis response
-      const crisisResponse = "I'm very concerned about what you're sharing regarding thoughts of suicide or self-harm. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room. Would you like me to provide additional resources?";
+      const response = "I'm very concerned about what you're sharing regarding thoughts of suicide or self-harm. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room. Would you like me to provide additional resources?";
       
       try {
         // Record to memory systems with crisis tag
-        recordToMemorySystems(userInput, crisisResponse, "CRISIS:SUICIDE");
+        recordToMemorySystems(userInput, response, "CRISIS:SUICIDE");
       } catch (error) {
         console.error("Error recording to memory systems:", error);
       }
       
       // Return immediate crisis response
-      return Promise.resolve(createMessage(crisisResponse, 'roger', 'crisis'));
+      return Promise.resolve(createMessage(response, 'roger', 'crisis'));
     }
     
     // Check for eating disorder specifically to avoid hallucination - SECOND HIGHEST PRIORITY
