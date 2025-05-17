@@ -4,7 +4,7 @@
  * Provides coordinated crisis responses based on detected crisis types
  */
 
-import { CrisisType } from '../../hooks/chat/useCrisisDetector';
+import { CrisisType } from '../../hooks/chat/crisisDetection';
 import { ConcernType } from '../reflection/reflectionTypes';
 
 /**
@@ -24,6 +24,7 @@ export const getCrisisResponse = (crisisType: CrisisType | ConcernType): string 
     case 'crisis':
       return getSuicideResponse();
     case 'general-crisis':
+      return getGeneralCrisisResponse();
     default:
       return getGeneralCrisisResponse();
   }

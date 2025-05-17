@@ -1,5 +1,9 @@
 
-import { checkForCrisisContent, detectMultipleCrisisTypes, CrisisType } from '../../../chat/useCrisisDetector';
+/**
+ * Crisis detection handling in user messages
+ */
+
+import { checkForCrisisContent, detectMultipleCrisisTypes, CrisisType } from '../../../chat/crisisDetection';
 import { ConcernType } from '../../../../utils/reflection/reflectionTypes';
 import { createMessage } from '../../../../utils/messageUtils';
 import { MessageType } from '../../../../components/Message';
