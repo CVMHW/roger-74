@@ -1,4 +1,3 @@
-
 /**
  * Eating Pattern Handler
  * 
@@ -6,9 +5,11 @@
  */
 
 import { 
-  processFoodRelatedMessage, 
-  detectEatingDisorderConcerns 
-} from '../../conversation/specializedDetection/eatingPatterns';
+  processFoodRelatedMessage
+} from '../../conversation/specializedDetection/eatingPatterns/processor';
+import { 
+  detectEatingDisorderConcerns
+} from '../../conversation/specializedDetection/eatingPatterns/detectors';
 import { recordToMemory } from '../../nlpProcessor';
 
 // Constants for resource referrals
@@ -44,8 +45,8 @@ export const handleEatingPatterns = (userInput: string): string | null => {
   // Process the message through our specialized detector
   const result = processFoodRelatedMessage(userInput);
   
-  // If it's not food-related, return null to let other handlers process it
-  if (result.responseType === 'not_food_related') {
+  // Check if it's not food-related
+  if (result.responseType === 'neutral' && result.riskLevel === 'low') {
     return null;
   }
   
@@ -64,10 +65,10 @@ export const handleEatingPatterns = (userInput: string): string | null => {
       `EATING CONCERN: ${result.riskLevel}. Phrases: ${detectionResult.matchedPhrases.join(', ')}`
     );
     
-    // For non-Cleveland food contexts with moderate to high risk,
+    // For non-Cleveland food contexts with medium to high risk,
     // include Emily Program referral in response
     if (!isClevelandFoodContext && 
-        (detectionResult.riskLevel === 'moderate' || detectionResult.riskLevel === 'high')) {
+        (detectionResult.riskLevel === 'high' || detectionResult.riskLevel === 'medium')) {
       return `${result.suggestedResponse} If you're looking for specialized support with these feelings about food or body image, The Emily Program (${EMILY_PROGRAM_INFO.helpline}) offers resources that many find helpful.`;
     }
     
@@ -106,8 +107,8 @@ export const enhanceEatingDisorderResponse = (
     return `${initialResponse} I want you to know that support is available for these feelings. The Emily Program (${EMILY_PROGRAM_INFO.helpline} or ${EMILY_PROGRAM_INFO.website}) specializes in supporting people with complex feelings about food and body image.`;
   }
   
-  // If it's a moderate concern, causing distress, and not just Cleveland food talk
-  if (detectionResult.riskLevel === 'moderate' && 
+  // If it's a medium concern, causing distress, and not just Cleveland food talk
+  if (detectionResult.riskLevel === 'medium' && 
       detectionResult.contextMarkers && detectionResult.contextMarkers.length > 0 &&
       !isClevelandFoodContext) {
     
@@ -142,7 +143,7 @@ export const needsSpecializedEatingResponseHandling = (userInput: string): boole
   }
   
   // Otherwise use normal risk assessment
-  return isEatingDisorderConcern && (riskLevel === 'high' || riskLevel === 'moderate');
+  return isEatingDisorderConcern && (riskLevel === 'high' || riskLevel === 'medium');
 };
 
 export default {

@@ -1,3 +1,9 @@
+
+/**
+ * Enhanced process user message with pattern-matching NLP capabilities,
+ * memory utilization, and safeguards for chat log review
+ */
+
 import { MessageType } from '../../../components/Message';
 import { createMessage } from '../../../utils/messageUtils';
 import { handleEmotionalPatterns } from '../emotionalResponseHandlers';
@@ -9,8 +15,9 @@ import { useFeedbackLoopHandler } from '../../response/feedbackLoopHandler';
 import { checkAllRules } from '../../../utils/rulesEnforcement/rulesEnforcer';
 import { detectEatingDisorderConcerns } from '../../../utils/conversation/specializedDetection/eatingPatterns/detectors';
 import { createEatingDisorderResponse } from '../../../utils/response/handlers/eatingDisorderHandler';
-import { detectMultipleCrisisTypes } from '../../chat/useCrisisDetector';
+import { checkForCrisisContent, detectMultipleCrisisTypes, type CrisisType } from '../../chat/useCrisisDetector';
 import { getCrisisResponse } from '../../../utils/crisis/crisisResponseCoordinator';
+import { ConcernType } from '../../../utils/reflection/reflectionTypes';
 
 // Import or define the missing utility functions
 const isSmallTalk = (input: string): boolean => {
@@ -37,8 +44,8 @@ export const processUserMessage = async (
     conversationStage: any,
     messageCount: number,
     updateStage: () => void,
-    detectConcerns: (input: string) => any,
-    generateResponse: (input: string, concernType: any) => string,
+    detectConcerns: (input: string) => ConcernType,
+    generateResponse: (input: string, concernType: ConcernType) => string,
     baseProcessUserMessage: (input: string, responseFn: any, concernFn: any, multiplier?: number) => Promise<MessageType>,
     clientPreferences: any
   }
@@ -86,7 +93,7 @@ export const processUserMessage = async (
       // Update stage
       updateStage();
       
-      let crisisType = crisisTypes[0];
+      let crisisType: CrisisType = crisisTypes[0];
       let crisisTag = `CRISIS:${crisisType.toUpperCase()}`;
       
       // Always prioritize suicide if it's one of the detected types
@@ -95,8 +102,11 @@ export const processUserMessage = async (
         crisisTag = 'CRISIS:SUICIDE';
       }
       
+      // Get concern type for the crisis coordinator
+      const concernType: ConcernType = 'crisis';
+      
       // Get appropriate crisis response from coordinator
-      const response = getCrisisResponse(concernType as ConcernType);
+      const response = getCrisisResponse(crisisType);
       
       try {
         // Record to memory systems with crisis tag

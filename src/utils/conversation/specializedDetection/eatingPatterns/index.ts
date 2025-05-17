@@ -9,24 +9,25 @@
 // Export detector functions
 export { 
   detectEatingDisorderConcerns, 
-  isFoodSmallTalk,
+  isFoodSmallTalk
 } from './detectors';
-
-// Export type from detectors using correct 'export type' syntax
-export type { FoodSmallTalkResult } from './detectors';
-
-// Export response generators
-export { 
-  generateEatingDisorderResponse, 
-  generateFoodSmallTalkResponse 
-} from './responseGenerators';
-
-// Export processor
-export { processFoodRelatedMessage } from './processor';
 
 // Export types
 export type { 
+  EatingDisorderDetectionResult,
+  FoodSmallTalkResult
+} from './detectors';
+
+// Export processor
+export { 
+  processFoodRelatedMessage,
+  type FoodProcessingResult
+} from './processor';
+
+// Export common types
+export type { 
   RiskLevel,
+  FoodResponseType,
   EatingDisorderConcernResult,
   FoodRelatedMessageResult
 } from './types';

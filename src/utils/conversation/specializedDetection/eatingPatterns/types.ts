@@ -1,31 +1,27 @@
 
 /**
- * Eating pattern detection types
+ * Types for the Eating Pattern Detection System
  */
 
-export type RiskLevel = 'none' | 'low' | 'moderate' | 'high';
+// Risk level classification
+export type RiskLevel = 'low' | 'medium' | 'high';
 
+// Response type for food-related messages
+export type FoodResponseType = 'casual' | 'eating_disorder' | 'general_concern' | 'neutral';
+
+// Result from eating disorder concern detection
 export interface EatingDisorderConcernResult {
   isEatingDisorderConcern: boolean;
   riskLevel: RiskLevel;
-  matchedPhrases: string[];
-  contextMarkers: string[];
-  isLikelySmallTalk: boolean;
-  recommendedApproach: 'general-support' | 'specialized-referral' | 'crisis-response';
   needsImmediate: boolean;
+  matchedPhrases: string[];
+  contextMarkers?: string[];
 }
 
-export interface FoodSmallTalkResult {
-  isSmallTalk: boolean;
-  isClevelandSpecific: boolean;
-  topics: string[];
-}
-
-export type ResponseType = 'eating_disorder' | 'food_small_talk' | 'not_food_related';
-
+// Result from food-related message processing
 export interface FoodRelatedMessageResult {
-  responseType: ResponseType;
+  responseType: FoodResponseType;
   riskLevel: RiskLevel;
-  protocolSource?: 'executive' | 'specialized' | 'small_talk' | 'default' | 'safety_override'; 
+  needsSpecialist: boolean;
   suggestedResponse: string;
 }

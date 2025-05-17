@@ -5,6 +5,7 @@
  */
 
 import { detectEatingDisorderConcerns } from '../../conversation/specializedDetection/eatingPatterns/detectors';
+import { RiskLevel } from '../../conversation/specializedDetection/eatingPatterns/types';
 
 /**
  * Generates appropriate responses for eating disorder concerns
@@ -26,7 +27,7 @@ export function createEatingDisorderResponse(userInput: string): string | null {
     return "I'm concerned about what you're sharing regarding your eating disorder. This sounds serious, and it's important that you speak with a healthcare professional right away. The National Eating Disorders Association (NEDA) helpline (1-800-931-2237) can provide immediate support and resources. Would it be possible for you to reach out to them today?";
   }
   
-  if (detectionResult.riskLevel === 'moderate') {
+  if (detectionResult.riskLevel === 'medium') {
     return "I hear that you're struggling with an eating disorder. These challenges can be really difficult to navigate alone. The National Eating Disorders Association (NEDA) offers specialized support through their helpline at 1-800-931-2237. Treatment from eating disorder specialists can be very effective. Would you like to talk more about what you've been experiencing?";
   }
   

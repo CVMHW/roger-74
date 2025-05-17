@@ -1,145 +1,67 @@
-
-import { ConcernType } from '../../utils/reflection/reflectionTypes';
-import { detectMildSomaticComplaints, detectSimpleNegativeState } from '../../utils/conversationalUtils';
-// Import the eating pattern detector directly from the detectors file
+import { useCallback } from 'react';
 import { detectEatingDisorderConcerns } from '../../utils/conversation/specializedDetection/eatingPatterns/detectors';
+import { ConcernType } from '../../utils/reflection/reflectionTypes';
 
+/**
+ * Hook for detecting various concerns in user messages
+ */
 export const useConcernDetection = () => {
-  const detectConcerns = (userInput: string): ConcernType => {
-    // Normalize input for more consistent detection
-    const lowerInput = userInput.toLowerCase().trim();
-    
-    // CRITICAL: Check for eating disorders - binge eating and compulsive eating FIRST
-    if (/can't stop eating|binge eating|overeating|eating too much|compulsive eating|eaten [0-9]+ .+ in a row/i.test(lowerInput)) {
-      console.log("CRITICAL: Detected binge eating concern in message:", lowerInput);
-      return 'eating-disorder';
-    }
-    
-    // CRITICAL: Check for eating disorders - restriction and not eating FIRST
-    if (/not eating|haven'?t (been )?eat(ing|en)|struggling not eating|can'?t eat|don'?t eat/i.test(lowerInput)) {
-      console.log("CRITICAL: Detected eating restriction concern in message:", lowerInput);
-      return 'eating-disorder';
-    }
-    
-    // HIGHEST PRIORITY: Check for suicidal ideation or self-harm - make this check first
-    // and ensure it's very sensitive to catch any potential mentions
-    if (/suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)|don'?t want to (live|be alive)|take my (own )?life|killing myself|commit suicide|die by suicide|fatal overdose|hang myself|jump off|i wish i was dead|i want to die|i might kill/i.test(lowerInput)) {
-      console.log("CRITICAL: Detected suicide concern in message:", lowerInput);
-      return 'tentative-harm';
-    }
-    
-    // Check for crisis situations - also high sensitivity
-    if (/crisis|emergency|urgent|need help now|immediate danger|threat|safety risk/i.test(lowerInput)) {
-      console.log("CRITICAL: Detected crisis concern in message:", lowerInput);
+  /**
+   * Detects concerns in a user's message
+   * @param userInput The user's message
+   * @returns The type of concern detected, or null if none detected
+   */
+  const detectConcerns = useCallback((userInput: string): ConcernType => {
+    // Convert input to lowercase for case-insensitive matching
+    const lowercaseInput = userInput.toLowerCase();
+
+    // Check for crisis indicators
+    if (
+      /suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)|don'?t want to (live|be alive)|take my (own )?life/i.test(
+        lowercaseInput
+      )
+    ) {
       return 'crisis';
     }
-    
-    // Enhanced eating disorder detection using our specialized system
+
+    // Check for self-harm
+    if (/self.harm|hurt(ing)? (myself|me)|cut(ting)? (myself|me)/i.test(lowercaseInput)) {
+      return 'tentative-harm';
+    }
+
+    // Check for eating disorder concerns
     const edResult = detectEatingDisorderConcerns(userInput);
-    if (edResult.isEatingDisorderConcern) {
-      console.log(`DETECTED EATING DISORDER CONCERN (${edResult.riskLevel}) with phrases:`, edResult.matchedPhrases);
+    if (edResult.isEatingDisorderConcern && edResult.riskLevel !== 'low') {
       return 'eating-disorder';
     }
-    
-    // First check for explicit feelings related to waiting/appointments
-    const negativeStateInfo = detectSimpleNegativeState(userInput);
-    const isWaitingFrustration = 
-      negativeStateInfo.explicitFeelings && 
-      negativeStateInfo.explicitFeelings.length > 0 && 
-      /\b(?:wait|waiting|late|appointment|therapist|doctor|eric|schedule)\b/i.test(userInput.toLowerCase());
-    
-    if (isWaitingFrustration) {
-      // This is not a clinical concern but an appropriate frustration
-      return null;
-    }
-    
-    // Check if this is a mild somatic complaint from overwork
-    const somaticInfo = detectMildSomaticComplaints(userInput);
-    if (somaticInfo.isMildSomatic && somaticInfo.likelyFromOverwork) {
-      // This is not a medical concern but a temporary state from overwork
-      return null;
-    }
-    
-    // Check for weather-related concerns
-    const hasWeatherRelatedConcerns = (
-      // Check for mentions of severe weather events
-      (/\b(snow|blizzard|storm|hurricane|tornado|flood|ice|weather|power outage|electricity|internet down)\b/i.test(lowerInput)) &&
-      // Combined with isolation or difficulties
-      (/\b(stuck|trapped|can'?t leave|unable to leave|days|inside|home|house|isolated|cabin fever|bored|frustrated)\b/i.test(lowerInput))
-    );
-    
-    if (hasWeatherRelatedConcerns) {
-      return 'weather-related';
-    }
-    
-    // Check for cultural adjustment concerns (migration, relocation)
-    const hasCulturalAdjustmentConcerns = (
-      // Check for mentions of immigration, relocation or cultural change
-      (/\b(immigrat|refugee|asylum|moved from|came from|new country|new culture|cultural|adjustment)\b/i.test(lowerInput) ||
-      // Mentions of specific challenges immigrants often face
-      /\b(language barrier|don'?t speak|accent|citizenship|visa|green card|foreign|foreigner)\b/i.test(lowerInput)) &&
-      // Combined with emotional difficulty
-      /\b(hard|difficult|struggle|miss|homesick|alone|lonely|isolated)\b/i.test(lowerInput)
-    );
-    
-    if (hasCulturalAdjustmentConcerns) {
-      return 'cultural-adjustment';
-    }
-    
-    // Check for general negative emotions or statements indicating sadness/depression
-    if (/\b(depress|sad|down|upset|low|unhappy|hopeless|lost|empty|numb|blue|miserable|despair|dejected|despondent)\b/i.test(lowerInput)) {
-      return 'mental-health';
-    }
-    
-    // Continue with regular detection for more serious medical concerns
-    // Check for medical concerns (only for specific serious symptoms)
-    const medicalPatterns = [
-      /severe (pain|bleeding|headache|injury|symptoms)/i,
-      /(chest pain|heart attack|stroke|seizure|unconscious)/i,
-      /(broken bone|fracture|concussion)/i,
-      /(emergency room|hospital|ambulance|911)/i,
-      /(blood pressure|pulse|heart rate) (high|low|irregular|abnormal)/i,
-      /can'?t (breathe|move|feel|walk|talk|see|hear)/i
-    ];
-    
-    if (medicalPatterns.some(pattern => pattern.test(lowerInput))) {
+
+    // Check for medical concerns
+    if (/doctor|nurse|hospital|medical|pain|sick|illness|disease|symptom/i.test(lowercaseInput)) {
       return 'medical';
     }
-    
-    // Check for mental health concerns - make pattern more specific to avoid false positives
-    if (/\b(depress|anxiety|bipolar|schizophrenia|ocd|ptsd|trauma|mental illness|mental health|diagnosis|therapist|psychiatrist)\b/.test(lowerInput)) {
+
+    // Check for mental health concerns
+    if (
+      /anxiety|depression|stress|panic|therapy|counseling|mental health|mental illness/i.test(
+        lowercaseInput
+      )
+    ) {
       return 'mental-health';
     }
-    
-    // Check for substance use
-    if (/\b(addict|alcohol|drunk|substance|drug|using|withdrawal|sober|recovery|clean|relapse|overdose)\b/.test(lowerInput)) {
+
+    // Check for substance use concerns
+    if (/alcohol|drug|addiction|substance|drinking|smoking/i.test(lowercaseInput)) {
       return 'substance-use';
     }
-    
-    // Check for gambling concerns - stricter pattern to avoid false positives
-    if ((/\b(gambling|bet|casino|poker|slots|lottery)\b/.test(lowerInput) && 
-         /\b(lost money|betting|won money)\b/.test(lowerInput)) && 
-        !/just a small bet|social gambling|once in a while/.test(lowerInput)) {
-      return 'mild-gambling';
-    }
-    
+
     // Check for PTSD
-    if (/(ptsd|post.?traumatic|flashback|trigger|trauma response)/.test(lowerInput)) {
+    if (/flashbacks|nightmares|trauma|ptsd|hypervigilance/i.test(lowercaseInput)) {
       return 'ptsd';
     }
-    
-    // Check for mild PTSD
-    if (/(nightmare|hypervigilant|startle|jumpy since|trauma|traumatic event)/.test(lowerInput)) {
-      return 'ptsd-mild';
-    }
-    
-    // Check for trauma responses that aren't full PTSD
-    if (/(freeze|flight|fight|fawn|shutdown|defensive|protect myself|unsafe|threat)/.test(lowerInput)) {
-      return 'trauma-response';
-    }
-    
-    return null;
-  };
-  
+
+    // Default - no specific concern detected
+    return 'none';
+  }, []);
+
   return { detectConcerns };
 };

@@ -12,6 +12,8 @@ export interface EatingDisorderDetectionResult {
   riskLevel: 'low' | 'medium' | 'high';
   needsImmediate: boolean;
   concernType: string;
+  matchedPhrases: string[]; // Added to track matched phrases
+  contextMarkers?: string[]; // Added for additional context markers
 }
 
 /**
@@ -19,6 +21,7 @@ export interface EatingDisorderDetectionResult {
  */
 export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderDetectionResult => {
   const lowerInput = userInput.toLowerCase().trim();
+  const matchedPhrases: string[] = []; // Track matched phrases
   
   // High-risk patterns (immediate attention needed)
   const highRiskPatterns = [
@@ -44,11 +47,15 @@ export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderD
   // Check for high-risk patterns first (highest priority)
   for (const pattern of highRiskPatterns) {
     if (pattern.test(lowerInput)) {
+      const match = lowerInput.match(pattern);
+      if (match) matchedPhrases.push(match[0]);
+      
       return {
         isEatingDisorderConcern: true,
         riskLevel: 'high',
         needsImmediate: true,
-        concernType: 'eating-disorder'
+        concernType: 'eating-disorder',
+        matchedPhrases
       };
     }
   }
@@ -56,11 +63,19 @@ export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderD
   // Then check medium risk patterns
   for (const pattern of mediumRiskPatterns) {
     if (pattern.test(lowerInput)) {
+      const match = lowerInput.match(pattern);
+      if (match) matchedPhrases.push(match[0]);
+      
+      // Detect additional context markers
+      const contextMarkers = detectContextMarkers(lowerInput);
+      
       return {
         isEatingDisorderConcern: true,
         riskLevel: 'medium',
         needsImmediate: false,
-        concernType: 'eating-disorder'
+        concernType: 'eating-disorder',
+        matchedPhrases,
+        contextMarkers
       };
     }
   }
@@ -68,11 +83,15 @@ export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderD
   // Finally check low risk patterns
   for (const pattern of lowRiskPatterns) {
     if (pattern.test(lowerInput)) {
+      const match = lowerInput.match(pattern);
+      if (match) matchedPhrases.push(match[0]);
+      
       return {
         isEatingDisorderConcern: true,
         riskLevel: 'low',
         needsImmediate: false,
-        concernType: 'eating-disorder'
+        concernType: 'eating-disorder',
+        matchedPhrases
       };
     }
   }
@@ -82,6 +101,74 @@ export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderD
     isEatingDisorderConcern: false,
     riskLevel: 'low',
     needsImmediate: false,
-    concernType: 'none'
+    concernType: 'none',
+    matchedPhrases: []
   };
 };
+
+/**
+ * Detects if message is casual food small talk
+ */
+export const isFoodSmallTalk = (userInput: string): FoodSmallTalkResult => {
+  const lowerInput = userInput.toLowerCase().trim();
+  
+  // Casual food patterns
+  const casualFoodPatterns = [
+    /restaurant|dining|recipe|cook(ing)?|meal prep|grocery/i,
+    /favorite food|breakfast|lunch|dinner|snack|taste|delicious|yummy|flavor/i,
+    /pizza|burger|sushi|mexican|italian|chinese|indian|thai|japanese/i,
+    /vegetarian|vegan|gluten-free|keto|paleo|diet/i
+  ];
+  
+  for (const pattern of casualFoodPatterns) {
+    if (pattern.test(lowerInput) && 
+        !lowerInput.includes("can't stop") &&
+        !lowerInput.includes("too much") &&
+        !lowerInput.includes("hate my body") &&
+        !lowerInput.includes("feel fat")) {
+      
+      return {
+        isFoodSmallTalk: true,
+        confidence: 0.8,
+        pattern: pattern.toString()
+      };
+    }
+  }
+  
+  return {
+    isFoodSmallTalk: false,
+    confidence: 0,
+    pattern: null
+  };
+};
+
+/**
+ * Detect additional context markers for better understanding
+ * @private
+ */
+const detectContextMarkers = (input: string): string[] => {
+  const markers: string[] = [];
+  
+  if (/distress|worry|concern|anxious|anxiet|stress|depress|sad/i.test(input)) {
+    markers.push('emotional-distress');
+  }
+  
+  if (/everyday|interfere|problem|issue|difficult|struggle|can't focus/i.test(input)) {
+    markers.push('daily-life-impact');
+  }
+  
+  if (/long time|weeks|months|years|always been|since|childhood/i.test(input)) {
+    markers.push('chronic-issue');
+  }
+  
+  return markers;
+};
+
+/**
+ * Result for food small talk detection
+ */
+export interface FoodSmallTalkResult {
+  isFoodSmallTalk: boolean;
+  confidence: number;
+  pattern: string | null;
+}
