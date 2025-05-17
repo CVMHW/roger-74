@@ -27,6 +27,37 @@ export const detectHallucinations = (
   const flags = [];
   let confidenceScore = 1.0; // Start with high confidence
   
+  // CRITICAL: EATING DISORDER HALLUCINATION PATTERNS
+  // Check specifically for the pattern where eating disorder statements mix with food small talk
+  const eatingDisorderHallucinationPatterns = [
+    // Ohio food mixed with eating disorders
+    /(eating disorder|binge eating|can't stop eating).+(great lakes brewing|ohio city|cleveland|tremont)/i,
+    /(great lakes brewing|ohio city|cleveland|tremont).+(eating disorder|binge eating|can't stop eating)/i,
+    
+    // Breaking in the middle of a critical eating disorder statement
+    /eating disorder.*craft beer/i,
+    /craft beer.*eating disorder/i,
+    /binge eating.*pub fare/i,
+    /pub fare.*binge eating/i,
+    
+    // Common eating disorder hallucination mixing patterns
+    /You mentioned eat before when we talked about/i,
+    /You mentioned \w+ before when we/i,
+    /I've eate\.\.\. You mentioned/i
+  ];
+  
+  // Check these critical patterns first
+  for (const pattern of eatingDisorderHallucinationPatterns) {
+    if (pattern.test(responseText)) {
+      flags.push({
+        type: 'critical_protocol_mix',
+        severity: 'critical',
+        description: 'Critical protocol mixing between eating disorder response and casual food content'
+      });
+      confidenceScore -= 0.9; // Severe penalty for this dangerous hallucination
+    }
+  }
+  
   // CRITICAL: First specifically check for repetition patterns like "I hear you're dealing with I hear you're dealing with"
   // Also catch "I hear you're dealing with you may have indicated" pattern
   const repetitionPatterns = [

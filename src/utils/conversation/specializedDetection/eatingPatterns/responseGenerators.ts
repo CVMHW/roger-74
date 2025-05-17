@@ -1,14 +1,15 @@
 
 /**
  * Response generators for eating patterns detection
+ * With strict hallucination prevention
  */
 
-import { detectEatingDisorderConcerns, FoodSmallTalkResult } from './detectors';
 import { EatingDisorderConcernResult, RiskLevel } from './types';
 
 /**
  * Generate an appropriate response for an eating disorder concern
  * based on the detected risk level, with Emily Program referrals when appropriate
+ * NEVER references prior conversations about eating disorders to prevent hallucinations
  */
 export const generateEatingDisorderResponse = (
   userInput: string,
@@ -28,9 +29,9 @@ export const generateEatingDisorderResponse = (
   
   // For higher risk cases, include Emily Program referral
   if (riskLevel === 'high') {
-    return "I notice you're talking about food and body image in a way that sounds distressing. These feelings can be really difficult to navigate alone. The Emily Program (1-888-364-5977) specializes in supporting people with complex feelings about food and body image. Would it help to talk about what support might be helpful for you right now?";
+    return "I'm concerned about what you're sharing regarding food and eating patterns. These feelings can be really difficult to navigate alone. The National Eating Disorders Association (NEDA) helpline at 1-800-931-2237 can provide immediate support and resources. Would it help to talk about what support might be helpful for you right now?";
   } else if (riskLevel === 'moderate') {
-    return "It sounds like you might be having some complicated feelings about food or body image. Those feelings are common, but they can also be challenging. Some people find specialized support, like what The Emily Program offers, to be helpful. What kind of support would be most helpful for you right now?";
+    return "I notice you're sharing some complex feelings about food or eating. Those feelings are common, but they can also be challenging. The Emily Program (1-888-364-5977) specializes in supporting people with complicated feelings about food and body image. What kind of support would be most helpful for you right now?";
   } else if (riskLevel === 'low') {
     return "I hear you mentioning some thoughts about food and eating. How have these thoughts been affecting you lately?";
   }
@@ -42,10 +43,11 @@ export const generateEatingDisorderResponse = (
 /**
  * Generate a food small talk response that's appropriate and supportive
  * with special handling for Cleveland food contexts
+ * NEVER CALLED FOR ACTUAL EATING DISORDER CONCERNS - this should be checked by executive control
  */
 export const generateFoodSmallTalkResponse = (
   userInput: string,
-  smallTalkResult: FoodSmallTalkResult
+  smallTalkResult: { isSmallTalk: boolean; isClevelandSpecific: boolean; topics: string[] }
 ): string => {
   // CRITICAL: Never treat eating disorder concerns as small talk
   // This is a safeguard in case the detector function misses something

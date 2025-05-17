@@ -1,6 +1,7 @@
 
 /**
  * Specialized detectors for eating disorder concerns and food small talk
+ * Enhanced with executive control and hallucination prevention
  */
 
 import { EatingDisorderConcernResult, FoodSmallTalkResult, RiskLevel } from './types';
@@ -74,32 +75,44 @@ export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderC
   let highestRiskLevel: RiskLevel = 'none';
   
   // Check direct ED patterns (highest risk)
-  const directMatches = directEDPatterns.filter(pattern => pattern.test(normalizedInput));
+  const directMatches = directEDPatterns
+    .filter(pattern => pattern.test(normalizedInput))
+    .map(r => r.toString().replace(/\/.+\/i/, ''));
+    
   if (directMatches.length > 0) {
     highestRiskLevel = 'high';
-    matchedPhrases.push(...directMatches.map(r => r.toString().replace(/\/.+\/i/, '')));
+    matchedPhrases.push(...directMatches);
   }
   
   // Check body image patterns (high risk)
-  const bodyMatches = bodyImagePatterns.filter(pattern => pattern.test(normalizedInput));
+  const bodyMatches = bodyImagePatterns
+    .filter(pattern => pattern.test(normalizedInput))
+    .map(r => r.toString().replace(/\/.+\/i/, ''));
+    
   if (bodyMatches.length > 0) {
     if (highestRiskLevel === 'none') highestRiskLevel = 'high';
-    matchedPhrases.push(...bodyMatches.map(r => r.toString().replace(/\/.+\/i/, '')));
+    matchedPhrases.push(...bodyMatches);
   }
   
   // Check control patterns (moderate risk)
-  const controlMatches = controlPatterns.filter(pattern => pattern.test(normalizedInput));
+  const controlMatches = controlPatterns
+    .filter(pattern => pattern.test(normalizedInput))
+    .map(r => r.toString().replace(/\/.+\/i/, ''));
+    
   if (controlMatches.length > 0) {
     if (highestRiskLevel === 'none') highestRiskLevel = 'moderate';
-    matchedPhrases.push(...controlMatches.map(r => r.toString().replace(/\/.+\/i/, '')));
+    matchedPhrases.push(...controlMatches);
   }
   
   // Check distress patterns (low risk if alone, moderate with others)
-  const distressMatches = distressPatterns.filter(pattern => pattern.test(normalizedInput));
+  const distressMatches = distressPatterns
+    .filter(pattern => pattern.test(normalizedInput))
+    .map(r => r.toString().replace(/\/.+\/i/, ''));
+    
   if (distressMatches.length > 0) {
     if (highestRiskLevel === 'none') highestRiskLevel = 'low';
     if (matchedPhrases.length > 0 && highestRiskLevel === 'low') highestRiskLevel = 'moderate';
-    matchedPhrases.push(...distressMatches.map(r => r.toString().replace(/\/.+\/i/, '')));
+    matchedPhrases.push(...distressMatches);
   }
   
   // Check for environmental context markers that might increase risk
@@ -112,12 +125,12 @@ export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderC
   
   const contextMarkers: string[] = contextPatterns
     .filter(pattern => pattern.test(normalizedInput))
-    .map(pattern => pattern.toString().replace(/\/.+\/i/, ''));
+    .map(r => r.toString().replace(/\/.+\/i/, ''));
   
   // Determine if this might be just Cleveland food talk (false positive protection)
   // Using negative lookahead to prevent matching food talk with real concerns
   const isClevelandFoodTalk = /\b(cleveland food|ohio city|tremont|little italy)\b/i.test(normalizedInput) && 
-                              !/(not|no) (eat|food)|struggling|hard|difficult|problem|issue|concern|disorder/i.test(normalizedInput);
+                             !/(not|no) (eat|food)|struggling|hard|difficult|problem|issue|concern|disorder/i.test(normalizedInput);
   
   // Determine final result - if it's likely Cleveland food talk AND risk is low, mark as not a concern
   const isLikelySmallTalk = isClevelandFoodTalk && matchedPhrases.length < 2;
@@ -125,8 +138,8 @@ export const detectEatingDisorderConcerns = (userInput: string): EatingDisorderC
   // IMPORTANT: Override small talk classification if there's any evidence of distress
   // or if the risk level is high
   const isEatingDisorderConcern = (matchedPhrases.length > 0 && !isLikelySmallTalk) || 
-                                  highestRiskLevel === 'high' || 
-                                  contextMarkers.length > 0;
+                                highestRiskLevel === 'high' || 
+                                contextMarkers.length > 0;
   
   // Determine appropriate approach based on risk level
   let recommendedApproach: 'general-support' | 'specialized-referral' | 'crisis-response' = 'general-support';
@@ -208,22 +221,24 @@ export const isFoodSmallTalk = (userInput: string): FoodSmallTalkResult => {
   ];
   
   // Check for Cleveland food mentions
-  const clevelandMatches = clevelandFoodPatterns.filter(pattern => pattern.test(normalizedInput));
+  const clevelandMatches = clevelandFoodPatterns
+    .filter(pattern => pattern.test(normalizedInput))
+    .map(r => r.toString().replace(/\/.+\/i/, ''));
+    
   const isClevelandSpecific = clevelandMatches.length > 0;
   
   // Check for general food talk
-  const generalFoodMatches = foodSmallTalkPatterns.filter(pattern => pattern.test(normalizedInput));
+  const generalFoodMatches = foodSmallTalkPatterns
+    .filter(pattern => pattern.test(normalizedInput))
+    .map(r => r.toString().replace(/\/.+\/i/, ''));
   
   // Collect food topics mentioned
-  const topics: string[] = [
-    ...clevelandMatches.map(r => r.toString().replace(/\/.+\/i/, '')),
-    ...generalFoodMatches.map(r => r.toString().replace(/\/.+\/i/, ''))
-  ];
+  const topics: string[] = [...clevelandMatches, ...generalFoodMatches];
   
   // Determine if this is food small talk
   // IMPORTANT: Small talk should NEVER include messages about eating concerns!
   const isSmallTalk = topics.length > 0 && 
-                      !/(not|no|can't|cant) (eat|food)|struggling|hard|difficult|problem|issue|concern|disorder|restrictive|too much|stop eating|binge/i.test(normalizedInput);
+                    !/(not|no|can't|cant) (eat|food)|struggling|hard|difficult|problem|issue|concern|disorder|restrictive|too much|stop eating|binge/i.test(normalizedInput);
   
   return {
     isSmallTalk,
