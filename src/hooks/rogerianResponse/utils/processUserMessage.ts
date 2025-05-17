@@ -34,8 +34,8 @@ const isPersonalSharing = (input: string): boolean => {
 };
 
 // Simple function for detecting multiple crisis types
-const detectMultipleCrisisTypes = (userInput: string): string[] => {
-  const crisisTypes: string[] = [];
+const detectMultipleCrisisTypes = (userInput: string): (CrisisType | ConcernType)[] => {
+  const crisisTypes: (CrisisType | ConcernType)[] = [];
   const lowercaseInput = userInput.toLowerCase();
   
   // Check for suicide indicators
@@ -143,8 +143,8 @@ export const processUserMessage = async (
       // Update stage
       updateStage();
       
-      let crisisType: string = crisisTypes[0];
-      let crisisTag = `CRISIS:${crisisType.toUpperCase()}`;
+      let crisisType = crisisTypes[0];
+      let crisisTag = `CRISIS:${String(crisisType).toUpperCase()}`;
       
       // Always prioritize suicide if it's one of the detected types
       if (crisisTypes.includes('suicide')) {

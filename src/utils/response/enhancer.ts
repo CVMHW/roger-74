@@ -1,11 +1,10 @@
-
 /**
- * Response Enhancer
+ * Response enhancer
  * 
- * Unified system for enhancing responses with contextual awareness and error prevention
+ * Enhances Roger's responses with context-aware improvements
  */
 
-import { checkForCrisisContent } from '../../hooks/chat/useCrisisDetector';
+import { checkForCrisisContent, detectMultipleCrisisTypes } from '../../hooks/chat/useCrisisDetector';
 import { enhanceResponseWithMemory } from './processor/memoryEnhancement';
 import { preventHallucinations } from '../memory/hallucination/preventionV2';
 import { isEarlyConversation } from '../memory/systems/earlyConversationHandler';

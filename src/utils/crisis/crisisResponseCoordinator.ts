@@ -1,4 +1,3 @@
-
 /**
  * Crisis Response Coordinator
  * 
