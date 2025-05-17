@@ -1,4 +1,3 @@
-
 import { ConcernType } from '../../../utils/reflection/reflectionTypes';
 import { MessageType } from '../../../components/Message';
 import { createMessage } from '../../../utils/messageUtils';
@@ -26,6 +25,15 @@ export const processUserMessage = async (
   updateStage: () => void
 ): Promise<MessageType> => {
   try {
+    // Skip processing if userInput is not valid
+    if (!userInput || typeof userInput !== 'string') {
+      console.error("Invalid user input received", userInput);
+      return Promise.resolve(createMessage(
+        "I'm here to listen. What would you like to talk about today?", 
+        'roger'
+      ));
+    }
+    
     // CRITICAL - Check if user just shared something but Roger is about to ask "what's going on"
     const isContentfulFirstMessage = userInput.length > 15 && conversationHistory.length <= 1;
     
@@ -169,7 +177,7 @@ export const processUserMessage = async (
     // Return a fallback response if an error occurs - even in error, provide a supportive response
     // Don't limit length of fallback responses in error situations
     return Promise.resolve(createMessage(
-      correctGrammar("I hear what you're sharing. What would be most helpful to focus on right now?"), 
+      "I hear what you're sharing. What would be most helpful to focus on right now?", 
       'roger'
     ));
   }

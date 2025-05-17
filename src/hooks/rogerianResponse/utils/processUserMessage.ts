@@ -1,4 +1,3 @@
-
 import { MessageType } from '../../../components/Message';
 import { createMessage } from '../../../utils/messageUtils';
 import { handleEmotionalPatterns } from '../emotionalResponseHandlers';
@@ -8,9 +7,6 @@ import { enhanceResponse } from './responseEnhancer';
 import { detectPatterns } from './patternDetection';
 import { useFeedbackLoopHandler } from '../../response/feedbackLoopHandler';
 import { checkAllRules } from '../../../utils/rulesEnforcement/rulesEnforcer';
-import { isSmallTalk, isIntroduction, isPersonalSharing } from '../../../utils/masterRules';
-import { detectEatingDisorderConcerns } from '../../../utils/conversation/specializedDetection/eatingPatterns/detectors';
-import { createEatingDisorderResponse } from '../../../utils/response/handlers/eatingDisorderHandler';
 
 /**
  * Enhanced process user message with pattern-matching NLP capabilities,
@@ -43,8 +39,21 @@ export const processUserMessage = async (
   } = dependencies;
   
   try {
+    // Validate input
+    if (!userInput || typeof userInput !== 'string') {
+      console.error("Invalid user input received", userInput);
+      return Promise.resolve(createMessage(
+        "I'm here to listen. What would you like to talk about today?", 
+        'roger'
+      ));
+    }
+    
     // Run rule enforcement check at beginning of processing
-    checkAllRules();
+    try {
+      checkAllRules();
+    } catch (error) {
+      console.error("Rule enforcement error, continuing with processing:", error);
+    }
     
     // Always update conversation history
     updateConversationHistory(userInput);
@@ -57,10 +66,14 @@ export const processUserMessage = async (
       updateStage();
       
       // Use crisis response
-      const crisisResponse = "Based on what you're sharing, I'm very concerned about what you're sharing regarding thoughts of suicide. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room.\n\nWould you like me to provide additional resources? Here are resources that may help:\n- 988 Suicide & Crisis Lifeline: Call or text 988\n- Crisis Text Line: Text HOME to 741741";
+      const crisisResponse = "I'm very concerned about what you're sharing regarding thoughts of suicide or self-harm. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room. Would you like me to provide additional resources?";
       
-      // Record to memory systems with crisis tag
-      recordToMemorySystems(userInput, crisisResponse, "CRISIS:SUICIDE");
+      try {
+        // Record to memory systems with crisis tag
+        recordToMemorySystems(userInput, crisisResponse, "CRISIS:SUICIDE");
+      } catch (error) {
+        console.error("Error recording to memory systems:", error);
+      }
       
       // Return immediate crisis response
       return Promise.resolve(createMessage(crisisResponse, 'roger', 'crisis'));
@@ -163,7 +176,11 @@ export const processUserMessage = async (
     );
     
     // Record to memory systems
-    recordToMemorySystems(userInput, finalResponseText);
+    try {
+      recordToMemorySystems(userInput, finalResponseText);
+    } catch (error) {
+      console.error("Error recording to memory systems:", error);
+    }
     
     // Return the memory-enhanced response with tertiary safeguard applied
     const finalResponse = createMessage(finalResponseText, 'roger');
@@ -173,7 +190,11 @@ export const processUserMessage = async (
     console.error("Error in processUserMessage:", error);
     
     // Even in error, attempt to record the interaction
-    recordErrorToMemorySystems(userInput);
+    try {
+      recordErrorToMemorySystems(userInput);
+    } catch (recordError) {
+      console.error("Failed to record error to memory systems:", recordError);
+    }
     
     // Return a fallback response if an error occurs
     return Promise.resolve(createMessage(

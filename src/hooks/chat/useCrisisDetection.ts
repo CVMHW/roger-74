@@ -41,7 +41,7 @@ export const useCrisisDetection = (
   ): boolean => {
     if (currentCrisisMessage && 
         (new Date().getTime() - currentCrisisMessage.timestamp.getTime() < 5 * 60 * 1000)) {
-      // Analyze for potential deception/backtracking on crisis statements
+      // Use dynamic import to avoid 'require' issues
       import('../../utils/detectionUtils/deceptionDetection').then(module => {
         const deceptionAnalysis = module.detectPotentialDeception(currentCrisisMessage.message, userInput);
         
@@ -71,6 +71,8 @@ export const useCrisisDetection = (
           });
           return true;
         }
+      }).catch(error => {
+        console.error("Error in deception detection:", error);
       });
     }
     
