@@ -55,24 +55,19 @@ export const preventHallucinations = (
     // Apply correction based on hallucination prevention level
     let preventedResponse = responseText;
     
-    // Check if we have specific corrections from the detector
-    if (hallucinationCheck.corrections && hallucinationCheck.corrections.length > 0) {
-      preventedResponse = hallucinationCheck.corrections[0];
-    } else {
-      // Check for suicide/self-harm content to ensure appropriate response is maintained
-      if (/suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|don'?t want to (live|be alive)/i.test(userInput.toLowerCase())) {
-        // For suicide content, create a clean response that maintains appropriate crisis intervention
-        preventedResponse = "I'm very concerned about what you're sharing. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room. Would you like me to provide additional resources?";
-      }
-      // Check for eating disorder content
-      else if (/can't stop eating|binge eating|overeating|eating too much|not eating|haven'?t been eating/i.test(userInput.toLowerCase())) {
-        // For eating disorder content, create a clean response without reference to previous conversation
-        preventedResponse = "I'm concerned about what you're sharing regarding your eating patterns. This sounds serious, and it's important that you speak with a healthcare professional. The National Eating Disorders Association (NEDA) helpline (1-800-931-2237) can provide immediate support and resources. Would it be possible for you to reach out to them today?";
-      }
-      // For other hallucinations, create a generic clean response
-      else {
-        preventedResponse = "I hear what you're sharing. What would be most helpful to focus on right now?";
-      }
+    // Check for suicide/self-harm content to ensure appropriate response is maintained
+    if (/suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|don'?t want to (live|be alive)/i.test(userInput.toLowerCase())) {
+      // For suicide content, create a clean response that maintains appropriate crisis intervention
+      preventedResponse = "I'm very concerned about what you're sharing. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room. Would you like me to provide additional resources?";
+    }
+    // Check for eating disorder content
+    else if (/can't stop eating|binge eating|overeating|eating too much|not eating|haven'?t been eating/i.test(userInput.toLowerCase())) {
+      // For eating disorder content, create a clean response without reference to previous conversation
+      preventedResponse = "I'm concerned about what you're sharing regarding your eating patterns. This sounds serious, and it's important that you speak with a healthcare professional. The National Eating Disorders Association (NEDA) helpline (1-800-931-2237) can provide immediate support and resources. Would it be possible for you to reach out to them today?";
+    }
+    // For other hallucinations, create a generic clean response
+    else {
+      preventedResponse = "I hear what you're sharing. What would be most helpful to focus on right now?";
     }
     
     return {
@@ -89,3 +84,4 @@ export const preventHallucinations = (
     confidence: 1.0
   };
 };
+
