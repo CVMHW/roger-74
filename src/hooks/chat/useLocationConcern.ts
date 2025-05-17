@@ -16,6 +16,7 @@ interface LocationData {
 export const useLocationConcern = () => {
   const [locationData, setLocationData] = useState<LocationData | null>(null);
   const [isLocationRelevant, setIsLocationRelevant] = useState<boolean>(false);
+  const [activeLocationConcern, setActiveLocationConcern] = useState<string | null>(null);
 
   // Get location data if available and permitted by user
   useEffect(() => {
@@ -67,10 +68,29 @@ export const useLocationConcern = () => {
     }
   }, []);
 
+  // Function to handle location data from user input
+  const handleLocationData = (userInput: string, activeConcern: string | null): boolean => {
+    if (!activeConcern) return false;
+    
+    // Check if the user input contains location-related information
+    const containsLocationInfo = /\b(city|town|region|state|country|area|neighborhood|location)\b/i.test(userInput);
+    
+    if (containsLocationInfo) {
+      // Reset the active location concern since it's been addressed
+      setActiveLocationConcern(null);
+      return true;
+    }
+    
+    return false;
+  };
+
   return {
     locationData,
     isLocationRelevant,
     setIsLocationRelevant,
+    activeLocationConcern,
+    setActiveLocationConcern,
+    handleLocationData
   };
 };
 

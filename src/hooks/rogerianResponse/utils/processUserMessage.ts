@@ -1,3 +1,4 @@
+
 import { MessageType } from '../../../components/Message';
 import { createMessage } from '../../../utils/messageUtils';
 import { handleEmotionalPatterns } from '../emotionalResponseHandlers';
@@ -7,6 +8,21 @@ import { enhanceResponse } from './responseEnhancer';
 import { detectPatterns } from './patternDetection';
 import { useFeedbackLoopHandler } from '../../response/feedbackLoopHandler';
 import { checkAllRules } from '../../../utils/rulesEnforcement/rulesEnforcer';
+import { detectEatingDisorderConcerns } from '../../../utils/conversation/specializedDetection/eatingPatterns/detectors';
+import { createEatingDisorderResponse } from '../../../utils/response/handlers/eatingDisorderHandler';
+
+// Import or define the missing utility functions
+const isSmallTalk = (input: string): boolean => {
+  return /\bhello\b|\bhi\b|\bhey\b|\bgreetings\b|\bhowdy\b|\bweather\b|\bsports\b|\bweekend\b|\bplans\b/i.test(input.toLowerCase());
+};
+
+const isIntroduction = (input: string): boolean => {
+  return /\bmy name is\b|\bi am\b|\bnice to meet\b|\bpleasure\b|\bintroduce\b|\bfirst time\b/i.test(input.toLowerCase());
+};
+
+const isPersonalSharing = (input: string): boolean => {
+  return /\bi feel\b|\bi am feeling\b|\bi'm feeling\b|\bi've been\b|\bi have been\b|\bi'm going through\b|\bi am going through\b/i.test(input.toLowerCase());
+};
 
 /**
  * Enhanced process user message with pattern-matching NLP capabilities,

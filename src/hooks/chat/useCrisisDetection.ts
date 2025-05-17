@@ -41,7 +41,7 @@ export const useCrisisDetection = (
   ): boolean => {
     if (currentCrisisMessage && 
         (new Date().getTime() - currentCrisisMessage.timestamp.getTime() < 5 * 60 * 1000)) {
-      // Use dynamic import to avoid 'require' issues
+      // Use dynamic import to avoid 'require' issues with browser
       import('../../utils/detectionUtils/deceptionDetection').then(module => {
         const deceptionAnalysis = module.detectPotentialDeception(currentCrisisMessage.message, userInput);
         
@@ -68,6 +68,8 @@ export const useCrisisDetection = (
             
             // Clear the crisis tracking since we've addressed it
             setRecentCrisisMessage(null);
+          }).catch(error => {
+            console.error("Error importing deception module:", error);
           });
           return true;
         }
