@@ -1,10 +1,10 @@
 
-import { addToFiveResponseMemory } from '../../../utils/memory/fiveResponseMemory';
-import { recordToMemory } from '../../../utils/reflection/feelingDetection';
-
 /**
  * Utility functions for handling memory in Rogerian responses
  */
+
+import { addToFiveResponseMemory } from '../../../utils/memory/fiveResponseMemory';
+import { recordToMemory } from '../../../utils/reflection/feelingDetection';
 
 /**
  * Records both user input and response to the memory systems

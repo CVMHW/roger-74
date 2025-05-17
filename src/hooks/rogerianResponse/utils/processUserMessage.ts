@@ -5,82 +5,17 @@
  */
 
 import { MessageType } from '../../../components/Message';
-import { createMessage } from '../../../utils/messageUtils';
-import { handleEmotionalPatterns } from '../emotionalResponseHandlers';
-import { processUserMessage as processMessage } from '../messageProcessor';
-import { recordToMemorySystems, recordErrorToMemorySystems } from './memoryHandler';
-import { enhanceResponse } from './responseEnhancer';
-import { detectPatterns } from './patternDetection';
-import { useFeedbackLoopHandler } from '../../response/feedbackLoopHandler';
+import { validateUserInput, createDefaultResponse } from './messageProcessing/messageValidation';
+import { handleCrisisDetection } from './messageProcessing/crisisDetection';
+import { handleEatingDisorderDetection } from './messageProcessing/eatingDisorderDetection';
+import { handleFeedbackLoopDetection } from './messageProcessing/feedbackLoopDetection';
+import { handlePatternProcessing } from './messageProcessing/patternProcessing';
+import { handleEmotionalProcessing } from './messageProcessing/emotionalProcessing';
+import { handleStandardProcessing } from './messageProcessing/standardProcessing';
+import { createFallbackResponse } from './messageProcessing/errorHandling';
+import { isSmallTalk, isIntroduction, isPersonalSharing, isEverydaySituation } from './messageProcessing/contextDetection';
 import { checkAllRules } from '../../../utils/rulesEnforcement/rulesEnforcer';
-import { detectEatingDisorderConcerns } from '../../../utils/conversation/specializedDetection/eatingPatterns/detectors';
-import { createEatingDisorderResponse } from '../../../utils/response/handlers/eatingDisorderHandler';
-import { checkForCrisisContent } from '../../chat/useCrisisDetector';
-import { getCrisisResponse } from '../../../utils/crisis/crisisResponseCoordinator';
 import { ConcernType } from '../../../utils/reflection/reflectionTypes';
-import { CrisisType } from '../../chat/useCrisisDetector';
-
-// Import utility functions
-const isSmallTalk = (input: string): boolean => {
-  return /\bhello\b|\bhi\b|\bhey\b|\bgreetings\b|\bhowdy\b|\bweather\b|\bsports\b|\bweekend\b|\bplans\b/i.test(input.toLowerCase());
-};
-
-const isIntroduction = (input: string): boolean => {
-  return /\bmy name is\b|\bi am\b|\bnice to meet\b|\bpleasure\b|\bintroduce\b|\bfirst time\b/i.test(input.toLowerCase());
-};
-
-const isPersonalSharing = (input: string): boolean => {
-  return /\bi feel\b|\bi am feeling\b|\bi'm feeling\b|\bi've been\b|\bi have been\b|\bi'm going through\b|\bi am going through\b/i.test(input.toLowerCase());
-};
-
-// Simple function for detecting multiple crisis types
-const detectMultipleCrisisTypes = (userInput: string): (CrisisType | ConcernType)[] => {
-  const crisisTypes: (CrisisType | ConcernType)[] = [];
-  const lowercaseInput = userInput.toLowerCase();
-  
-  // Check for suicide indicators
-  if (
-    /suicid|kill (myself|me)|end (my|this) life|don'?t want to (live|be alive)|take my (own )?life/i.test(
-      lowercaseInput
-    )
-  ) {
-    crisisTypes.push('suicide');
-  }
-  
-  // Check for self-harm indicators separate from suicide
-  if (
-    /harm (myself|me)|cut (myself|me)|hurt (myself|me)|self.harm|cutting/i.test(
-      lowercaseInput
-    ) && !crisisTypes.includes('suicide')
-  ) {
-    crisisTypes.push('self-harm');
-  }
-  
-  // Check for eating disorder indicators
-  const edResult = detectEatingDisorderConcerns(userInput);
-  if (edResult.isEatingDisorderConcern && edResult.riskLevel !== 'low') {
-    crisisTypes.push('eating-disorder');
-  }
-  
-  // Check for substance abuse indicators
-  if (
-    /overdose|addicted|withdrawal|relapse|heroin|cocaine|meth|substance abuse|substance use disorder|alcoholic|alcoholism|alcohol problem|drug problem|can't stop (drinking|using)/i.test(
-      lowercaseInput
-    )
-  ) {
-    crisisTypes.push('substance-use');
-  }
-  
-  // If no specific type but there are general crisis indicators
-  if (
-    crisisTypes.length === 0 &&
-    /crisis|emergency|urgent|help me|desperate|need help now/i.test(lowercaseInput)
-  ) {
-    crisisTypes.push('general-crisis');
-  }
-  
-  return crisisTypes;
-};
 
 /**
  * Enhanced process user message with pattern-matching NLP capabilities,
@@ -114,12 +49,8 @@ export const processUserMessage = async (
   
   try {
     // Validate input
-    if (!userInput || typeof userInput !== 'string') {
-      console.error("Invalid user input received", userInput);
-      return Promise.resolve(createMessage(
-        "I'm here to listen. What would you like to talk about today?", 
-        'roger'
-      ));
+    if (!validateUserInput(userInput)) {
+      return Promise.resolve(createDefaultResponse());
     }
     
     // Run rule enforcement check at beginning of processing
@@ -132,185 +63,56 @@ export const processUserMessage = async (
     // Always update conversation history
     updateConversationHistory(userInput);
     
-    // ENHANCED: MULTI-CRISIS DETECTION
-    // Check for multiple crisis types in a single message
-    const crisisTypes = detectMultipleCrisisTypes(userInput);
-    
-    // If multiple crisis types are detected, prioritize suicide first, then others
-    if (crisisTypes.length > 0) {
-      console.log("MULTI-CRISIS DETECTION: Found crisis types:", crisisTypes);
-      
-      // Update stage
-      updateStage();
-      
-      let crisisType = crisisTypes[0];
-      let crisisTag = `CRISIS:${String(crisisType).toUpperCase()}`;
-      
-      // Always prioritize suicide if it's one of the detected types
-      if (crisisTypes.includes('suicide')) {
-        crisisType = 'suicide';
-        crisisTag = 'CRISIS:SUICIDE';
-      }
-      
-      // Get appropriate crisis response from coordinator
-      const response = getCrisisResponse(crisisType);
-      
-      try {
-        // Record to memory systems with crisis tag
-        recordToMemorySystems(userInput, response, crisisTag);
-      } catch (error) {
-        console.error("Error recording to memory systems:", error);
-      }
-      
-      // Return specific crisis response
-      return Promise.resolve(createMessage(response, 'roger', crisisType as any));
+    // 1. Crisis detection (highest priority)
+    const crisisResponse = handleCrisisDetection(userInput, updateStage);
+    if (crisisResponse) {
+      return Promise.resolve(crisisResponse);
     }
     
-    // CRISIS DETECTION - HIGHEST PRIORITY: Always check first before any memory system
-    // Check for suicide, self-harm, or other crisis indicators
-    if (/suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)|don'?t want to (live|be alive)|take my (own )?life/i.test(userInput.toLowerCase())) {
-      console.log("CRITICAL PRIORITY: Detected suicide or self-harm indicators");
-      // Update stage
-      updateStage();
-      
-      // Use crisis response
-      const response = "I'm very concerned about what you're sharing regarding thoughts of suicide or self-harm. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room. Would you like me to provide additional resources?";
-      
-      try {
-        // Record to memory systems with crisis tag
-        recordToMemorySystems(userInput, response, "CRISIS:SUICIDE");
-      } catch (error) {
-        console.error("Error recording to memory systems:", error);
-      }
-      
-      // Return immediate crisis response
-      return Promise.resolve(createMessage(response, 'roger', 'crisis'));
+    // 2. Eating disorder detection (second highest priority)
+    const eatingDisorderResponse = handleEatingDisorderDetection(userInput, updateStage);
+    if (eatingDisorderResponse) {
+      return Promise.resolve(eatingDisorderResponse);
     }
     
-    // Check for eating disorder specifically to avoid hallucination - SECOND HIGHEST PRIORITY
-    const edResult = detectEatingDisorderConcerns(userInput);
-    if (edResult.isEatingDisorderConcern) {
-      console.log("HIGH PRIORITY: Detected eating disorder indicators with risk level:", edResult.riskLevel);
-      // Update stage
-      updateStage();
-      
-      // Get specialized response
-      const edResponse = createEatingDisorderResponse(userInput);
-      
-      if (edResponse) {
-        // Record to memory systems with crisis tag
-        recordToMemorySystems(userInput, edResponse, "CRISIS:EATING-DISORDER");
-        
-        // Return eating disorder response
-        return Promise.resolve(createMessage(edResponse, 'roger', 'eating-disorder'));
-      }
-    }
-    
-    // CRITICAL - Check if user just shared something but Roger is about to ask "what's going on"
-    const isContentfulFirstMessage = userInput.length > 15 && conversationHistory.length <= 1;
-    
-    // Detect patterns for context-aware responses
-    const patternResult = await detectPatterns(userInput);
-    
-    // Check for social situations using masterRules
-    const isSmallTalkContext = isSmallTalk(userInput);
-    const isIntroductionContext = isIntroduction(userInput);
-    const isPersonalSharingContext = isPersonalSharing(userInput);
-    
-    // Check if this is an everyday situation
-    const isEverydaySituation = /trip(ped)?|spill(ed)?|embarrass(ing|ed)?|awkward|class|teacher|student|bar|drink|fall|fell|stumble|social|party|date/i.test(userInput);
-    
-    // If this is the first substantive message, ensure we don't ask a redundant question
-    if (isContentfulFirstMessage && patternResult.enhancedResponse) {
-      // Make sure we update the stage first
-      updateStage();
-      
-      // Record to memory systems
-      recordToMemorySystems(userInput, patternResult.enhancedResponse);
-      
-      // Return the enhanced context response
-      return Promise.resolve(createMessage(patternResult.enhancedResponse, 'roger'));
-    }
-    
-    // Check if the user is indicating Roger isn't listening or is stuck in a loop
-    const { handleFeedbackLoop } = useFeedbackLoopHandler();
-    const feedbackLoopResponse = handleFeedbackLoop(userInput, conversationHistory);
-    
+    // 3. Check for feedback loops
+    const feedbackLoopResponse = handleFeedbackLoopDetection(userInput, conversationHistory, updateStage);
     if (feedbackLoopResponse) {
-      // Update conversation stage
-      updateStage();
-      
-      // Record to memory systems
-      recordToMemorySystems(userInput, feedbackLoopResponse);
-      
-      // Create a message with the recovery response
-      return Promise.resolve(createMessage(feedbackLoopResponse, 'roger'));
+      return Promise.resolve(feedbackLoopResponse);
     }
     
-    // Handle emotional patterns and special cases
-    const emotionalResponse = await handleEmotionalPatterns(
+    // 4. First message pattern detection
+    const patternResponse = await handlePatternProcessing(userInput, conversationHistory, updateStage);
+    if (patternResponse) {
+      return Promise.resolve(patternResponse);
+    }
+    
+    // 5. Emotional pattern processing
+    const emotionalResponse = await handleEmotionalProcessing(
       userInput, 
-      conversationHistory,
+      conversationHistory, 
       baseProcessUserMessage,
       detectConcerns,
       updateStage
     );
-    
     if (emotionalResponse) {
-      // Record to memory systems
-      recordToMemorySystems(userInput, emotionalResponse.text);
-      
-      return emotionalResponse;
+      return Promise.resolve(emotionalResponse);
     }
     
-    // Get the concern type for processing
-    const concernType = detectConcerns(userInput);
-    
-    // Call processMessage with individual arguments, not as an object
-    const response = await processMessage(
+    // 6. Standard message processing (fallback)
+    return handleStandardProcessing(
       userInput,
       detectConcerns,
       generateResponse,
       baseProcessUserMessage,
       conversationHistory,
+      messageCount,
       clientPreferences,
       updateStage
     );
     
-    // Enhance the response with memory rules, master rules, and chat log review
-    // Pass information about message context for better response generation
-    const finalResponseText = enhanceResponse(
-      response.text,
-      userInput,
-      messageCount,
-      conversationHistory
-    );
-    
-    // Record to memory systems
-    try {
-      recordToMemorySystems(userInput, finalResponseText);
-    } catch (error) {
-      console.error("Error recording to memory systems:", error);
-    }
-    
-    // Return the memory-enhanced response with tertiary safeguard applied
-    const finalResponse = createMessage(finalResponseText, 'roger');
-    return finalResponse;
-    
   } catch (error) {
     console.error("Error in processUserMessage:", error);
-    
-    // Even in error, attempt to record the interaction
-    try {
-      recordErrorToMemorySystems(userInput);
-    } catch (recordError) {
-      console.error("Failed to record error to memory systems:", recordError);
-    }
-    
-    // Return a fallback response if an error occurs
-    return Promise.resolve(createMessage(
-      "I'm listening. Could you tell me more about what's been happening?", 
-      'roger'
-    ));
+    return Promise.resolve(createFallbackResponse(userInput));
   }
 };
