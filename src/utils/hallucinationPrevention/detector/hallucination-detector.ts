@@ -1,4 +1,3 @@
-
 /**
  * Core hallucination detection functionality
  */
@@ -31,7 +30,7 @@ export const detectHallucinations = (
   // Enhanced pattern detection for crisis situations
   
   // Check for dangerous mixing of crisis response with casual content
-  if (/eating disorder|suicide|crisis|self-harm|mental health/i.test(responseText.toLowerCase())) {
+  if (/eating disorder|suicide|crisis|self-harm|mental health|drinking|alcohol|substance/i.test(responseText.toLowerCase())) {
     const containsCasualContent = /brewery|restaurant|pub|bar|craft beer|food|recipe|social gathering|concert/i.test(responseText);
     
     if (containsCasualContent) {
@@ -41,6 +40,35 @@ export const detectHallucinations = (
         description: 'Mixing crisis response with casual/social content'
       });
       confidenceScore -= 0.9; // Severe penalty for this dangerous mixture
+    }
+  }
+  
+  // ENHANCED: MULTI-CRISIS DETECTION
+  // Check if the response is addressing the wrong crisis type
+  if (/suicide|kill (myself|me)|shoot myself|self.?harm|end my life/i.test(userInput.toLowerCase())) {
+    // If talking about suicide but response mentions eating disorders exclusively
+    if (!/suicide|crisis|988|emergency|professional help|lifeline|kill|harm|emergency room/i.test(responseText.toLowerCase()) && 
+        /eating disorder|NEDA|National Eating Disorders Association/i.test(responseText)) {
+      flags.push({
+        type: 'crisis_type_mismatch',
+        severity: 'critical',
+        description: 'Response about eating disorders when user is discussing suicide'
+      });
+      confidenceScore -= 0.9;
+    }
+  }
+  
+  // Check for substance abuse content being mishandled
+  if (/drinking|alcohol|drunk|intoxicated|can't stop drinking|addicted|substance|beer|30 beers/i.test(userInput.toLowerCase())) {
+    // If response doesn't address substance use but instead talks about eating disorders
+    if (!/drinking|alcohol|substance|SAMHSA|recovery|sober/i.test(responseText.toLowerCase()) &&
+        /eating disorder|NEDA|National Eating Disorders Association/i.test(responseText)) {
+      flags.push({
+        type: 'substance_use_mishandled',
+        severity: 'high',
+        description: 'Substance use concern addressed as eating disorder'
+      });
+      confidenceScore -= 0.7;
     }
   }
   

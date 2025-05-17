@@ -1,4 +1,3 @@
-
 import { MessageType } from '../../../components/Message';
 import { createMessage } from '../../../utils/messageUtils';
 import { handleEmotionalPatterns } from '../emotionalResponseHandlers';
@@ -10,6 +9,8 @@ import { useFeedbackLoopHandler } from '../../response/feedbackLoopHandler';
 import { checkAllRules } from '../../../utils/rulesEnforcement/rulesEnforcer';
 import { detectEatingDisorderConcerns } from '../../../utils/conversation/specializedDetection/eatingPatterns/detectors';
 import { createEatingDisorderResponse } from '../../../utils/response/handlers/eatingDisorderHandler';
+import { detectMultipleCrisisTypes } from '../../chat/useCrisisDetector';
+import { getCrisisResponse } from '../../../utils/crisis/crisisResponseCoordinator';
 
 // Import or define the missing utility functions
 const isSmallTalk = (input: string): boolean => {
@@ -73,6 +74,40 @@ export const processUserMessage = async (
     
     // Always update conversation history
     updateConversationHistory(userInput);
+    
+    // ENHANCED: MULTI-CRISIS DETECTION
+    // Check for multiple crisis types in a single message
+    const crisisTypes = detectMultipleCrisisTypes(userInput);
+    
+    // If multiple crisis types are detected, prioritize suicide first, then others
+    if (crisisTypes.length > 0) {
+      console.log("MULTI-CRISIS DETECTION: Found crisis types:", crisisTypes);
+      
+      // Update stage
+      updateStage();
+      
+      let crisisType = crisisTypes[0];
+      let crisisTag = `CRISIS:${crisisType.toUpperCase()}`;
+      
+      // Always prioritize suicide if it's one of the detected types
+      if (crisisTypes.includes('suicide')) {
+        crisisType = 'suicide';
+        crisisTag = 'CRISIS:SUICIDE';
+      }
+      
+      // Get appropriate crisis response from coordinator
+      const crisisResponse = getCrisisResponse(crisisType);
+      
+      try {
+        // Record to memory systems with crisis tag
+        recordToMemorySystems(userInput, crisisResponse, crisisTag);
+      } catch (error) {
+        console.error("Error recording to memory systems:", error);
+      }
+      
+      // Return specific crisis response
+      return Promise.resolve(createMessage(crisisResponse, 'roger', crisisType));
+    }
     
     // CRISIS DETECTION - HIGHEST PRIORITY: Always check first before any memory system
     // Check for suicide, self-harm, or other crisis indicators

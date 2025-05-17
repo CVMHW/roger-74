@@ -1,4 +1,3 @@
-
 /**
  * Response Enhancer
  * 
@@ -16,6 +15,7 @@ import { isSmallTalk, isIntroduction, isPersonalSharing } from '../masterRules';
 import { detectClevelandContent } from '../cleveland/clevelandDetectors';
 import { enhanceResponseWithClevelandPerspective } from '../cleveland/clevelandResponses';
 import { detectClevelandTopics, storeClevelandMemory } from '../cleveland';
+import { detectMultipleCrisisTypes } from '../../hooks/chat/useCrisisDetector';
 
 /**
  * Enhance a response with memory integration and hallucination prevention
@@ -33,6 +33,22 @@ export const enhanceResponse = (
   }
 ): string => {
   try {
+    // ENHANCED: Check for multiple crisis types first before doing any processing
+    const crisisTypes = detectMultipleCrisisTypes(userInput);
+    
+    // If this is a crisis message, don't apply normal enhancements
+    if (crisisTypes.length > 0) {
+      // Record to memory systems
+      recordToMemorySystems(
+        response,
+        undefined,
+        `CRISIS:${crisisTypes[0].toUpperCase()}`,
+        0.9 // High importance for crisis responses
+      );
+      
+      return response; // Return crisis response unmodified
+    }
+    
     // Get relevant memories from the memory bank
     const relevantMemories = retrieveRelevantMemories(userInput);
     

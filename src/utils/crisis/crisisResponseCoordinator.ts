@@ -1,4 +1,3 @@
-
 /**
  * Crisis Response Coordinator
  * 
@@ -13,7 +12,7 @@ export type CrisisType =
   | 'suicide' 
   | 'self-harm' 
   | 'eating-disorder'
-  | 'substance-abuse'
+  | 'substance-use'  // Changed from 'substance-abuse' to match ConcernType
   | 'general-crisis';
 
 // Response guidelines for different crisis types
@@ -56,7 +55,7 @@ const crisisGuidelinesMap: Record<CrisisType, CrisisResponseGuidelines> = {
       "Eating Disorders Anonymous: www.eatingdisordersanonymous.org"
     ]
   },
-  'substance-abuse': {
+  'substance-use': {  // Changed from 'substance-abuse' to match ConcernType
     initialResponse: "I'm concerned about what you're sharing regarding your drinking. This sounds serious, and it's important that you speak with a healthcare professional. The SAMHSA National Helpline (1-800-662-4357) provides free, confidential, 24/7 treatment referral and information. Would it help to discuss resources available to you?",
     followupResponse: "I understand your struggle with drinking is serious. The SAMHSA National Helpline at 1-800-662-4357 provides confidential support and can connect you with local resources. They're available 24/7. Would you consider calling them?",
     escalatedResponse: "Your continued struggle with alcohol is concerning. Please know that recovery is possible with the right support. The SAMHSA helpline at 1-800-662-4357 can help you find treatment options that work for your situation. You don't have to face this alone.",
@@ -134,7 +133,7 @@ export const detectCrisisTypeFromInput = (userInput: string): CrisisType | null 
   
   // Check for substance abuse indicators
   if (/drinking|drunk|alcohol|can't stop drinking|addicted/i.test(lowerInput)) {
-    return 'substance-abuse';
+    return 'substance-use';  // Changed from 'substance-abuse' to match ConcernType
   }
   
   return null;
@@ -153,8 +152,8 @@ function mapConcernToCrisisType(concernType: string): CrisisType {
       return 'self-harm';
     case 'eating-disorder':
       return 'eating-disorder';
-    case 'substance-abuse':
-      return 'substance-abuse';
+    case 'substance-use':  // Changed from 'substance-abuse' to match ConcernType
+      return 'substance-use'; 
     default:
       return 'general-crisis';
   }
