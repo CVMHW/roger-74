@@ -65,6 +65,11 @@ export const preventHallucinations = (
       // For eating disorder content, create a clean response without reference to previous conversation
       preventedResponse = "I'm concerned about what you're sharing regarding your eating patterns. This sounds serious, and it's important that you speak with a healthcare professional. The National Eating Disorders Association (NEDA) helpline (1-800-931-2237) can provide immediate support and resources. Would it be possible for you to reach out to them today?";
     }
+    // Check for alcohol/substance use issues
+    else if (/drinking|alcohol|drunk|intoxicated|can't stop drinking|addicted|substance/i.test(userInput.toLowerCase())) {
+      // For substance use content, create appropriate response
+      preventedResponse = "I'm concerned about what you're sharing regarding your drinking. This sounds serious, and it's important that you speak with a healthcare professional. The SAMHSA National Helpline (1-800-662-4357) provides free, confidential, 24/7 treatment referral and information. Would it help to discuss resources available to you?";
+    }
     // For other hallucinations, create a generic clean response
     else {
       preventedResponse = "I hear what you're sharing. What would be most helpful to focus on right now?";
@@ -84,4 +89,3 @@ export const preventHallucinations = (
     confidence: 1.0
   };
 };
-

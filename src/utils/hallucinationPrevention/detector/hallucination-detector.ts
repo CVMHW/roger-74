@@ -11,7 +11,7 @@ import {
   detectRepeatedContent,
   detectFalseContinuity
 } from './detection-flags';
-import { generateTokenLevelAnalysis, generateCorrection } from './token-analysis';
+import { generateTokenLevelAnalysis } from './token-analysis';
 
 /**
  * Checks for potential hallucinations in a response
@@ -27,6 +27,23 @@ export const detectHallucinations = (
   const flags = [];
   let confidenceScore = 1.0; // Start with high confidence
   
+  // CRITICAL: CRISIS DETECTION WITH VECTOR-BASED PATTERN RECOGNITION
+  // Enhanced pattern detection for crisis situations
+  
+  // Check for dangerous mixing of crisis response with casual content
+  if (/eating disorder|suicide|crisis|self-harm|mental health/i.test(responseText.toLowerCase())) {
+    const containsCasualContent = /brewery|restaurant|pub|bar|craft beer|food|recipe|social gathering|concert/i.test(responseText);
+    
+    if (containsCasualContent) {
+      flags.push({
+        type: 'critical_protocol_violation',
+        severity: 'critical',
+        description: 'Mixing crisis response with casual/social content'
+      });
+      confidenceScore -= 0.9; // Severe penalty for this dangerous mixture
+    }
+  }
+  
   // CRITICAL: SUICIDE AND CRISIS HALLUCINATION PATTERNS
   // Check specifically for suicide and crisis response consistency
   if (/suicide|kill (myself|me)|self.?harm|end my life/i.test(userInput.toLowerCase())) {
@@ -40,14 +57,24 @@ export const detectHallucinations = (
       });
       confidenceScore -= 0.9; // Severe penalty for this dangerous hallucination
     }
+    
+    // Verify that suicide response contains appropriate crisis resources
+    if (!/(988|crisis|professional|emergency|lifeline|help)/i.test(responseText)) {
+      flags.push({
+        type: 'missing_crisis_resources',
+        severity: 'critical',
+        description: 'Suicide response missing appropriate crisis resources'
+      });
+      confidenceScore -= 0.8;
+    }
   }
   
   // CRITICAL: EATING DISORDER HALLUCINATION PATTERNS
   // Check specifically for the pattern where eating disorder statements mix with food small talk
   const eatingDisorderHallucinationPatterns = [
-    // Ohio food mixed with eating disorders
-    /(eating disorder|binge eating|can't stop eating).+(great lakes brewing|ohio city|cleveland|tremont)/i,
-    /(great lakes brewing|ohio city|cleveland|tremont).+(eating disorder|binge eating|can't stop eating)/i,
+    // Location/food mentions mixed with eating disorders
+    /(eating disorder|binge eating|can't stop eating).+(brewing|restaurant|pub|ohio|city|craft beer)/i,
+    /(brewing|restaurant|pub|ohio|city|craft beer).+(eating disorder|binge eating|can't stop eating)/i,
     
     // Breaking in the middle of a critical eating disorder statement
     /eating disorder.*craft beer/i,
@@ -73,8 +100,7 @@ export const detectHallucinations = (
     }
   }
   
-  // CRITICAL: First specifically check for repetition patterns like "I hear you're dealing with I hear you're dealing with"
-  // Also catch "I hear you're dealing with you may have indicated" pattern
+  // CRITICAL: Check for repetition patterns like "I hear you're dealing with I hear you're dealing with"
   const repetitionPatterns = [
     /I hear (you'?re|you are) dealing with I hear (you'?re|you are) dealing with/i,
     /I hear (you'?re|you are) dealing with you may have indicated/i,
@@ -115,28 +141,6 @@ export const detectHallucinations = (
     }
   }
   
-  // CRITICAL: Check for "we've been focusing on health" hallucination
-  // This is a special case that's occurring frequently
-  if (/we've been focusing on health|dealing with health|focusing on health/i.test(responseText) && 
-      !conversationHistory.some(msg => /health|medical|doctor|sick|ill|wellness/i.test(msg))) {
-    flags.push({
-      type: 'false_continuity',
-      severity: 'high',
-      description: 'False reference to discussing health topics that were not mentioned'
-    });
-    confidenceScore -= 0.6; // Heavy penalty for this specific hallucination
-  }
-  
-  // NEW: Check for confusing phrases like "you may have indicated Just a rough day"
-  if (/you may have indicated/i.test(responseText)) {
-    flags.push({
-      type: 'false_continuity',
-      severity: 'high',
-      description: 'Confused phrasing that creates an unclear reference'
-    });
-    confidenceScore -= 0.5;
-  }
-  
   // Check for memory references without actual memory
   const memoryFlags = detectFalseMemoryReferences(responseText, userInput, conversationHistory);
   flags.push(...memoryFlags);
@@ -158,14 +162,14 @@ export const detectHallucinations = (
   // Reduce confidence based on continuity flags
   confidenceScore -= continuityFlags.length * 0.3;
   
-  // NEW: Detect token-level issues using probabilistic analysis
+  // Detect token-level issues using probabilistic analysis
   const tokenFlags = detectTokenLevelIssues(responseText, userInput, conversationHistory);
   flags.push(...tokenFlags);
   
   // Reduce confidence based on token-level flags
   confidenceScore -= tokenFlags.length * 0.15;
   
-  // NEW: Detect repeated content (a sign of model confusion)
+  // Detect repeated content (a sign of model confusion)
   const repetitionFlags = detectRepeatedContent(responseText);
   flags.push(...repetitionFlags);
   
@@ -200,7 +204,6 @@ export const detectHallucinations = (
     isHallucination,
     confidence: confidenceScore,
     flags,
-    corrections: isHallucination ? generateCorrection(responseText, flags) : undefined,
     tokenLevelAnalysis
   };
 };
