@@ -1,10 +1,11 @@
+
 /**
  * Response enhancer
  * 
  * Enhances Roger's responses with context-aware improvements
  */
 
-import { checkForCrisisContent, detectMultipleCrisisTypes } from '../../hooks/chat/useCrisisDetector';
+import { checkForCrisisContent, detectMultipleCrisisTypes } from '../../hooks/chat/crisisDetection';
 import { enhanceResponseWithMemory } from './processor/memoryEnhancement';
 import { preventHallucinations } from '../memory/hallucination/preventionV2';
 import { isEarlyConversation } from '../memory/systems/earlyConversationHandler';
