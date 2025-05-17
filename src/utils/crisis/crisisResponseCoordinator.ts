@@ -11,16 +11,19 @@ import { ConcernType } from '../reflection/reflectionTypes';
 /**
  * Get an appropriate crisis response based on the detected crisis type
  */
-export const getCrisisResponse = (crisisType: CrisisType | string): string => {
+export const getCrisisResponse = (crisisType: CrisisType | ConcernType): string => {
   switch (crisisType) {
     case 'suicide':
       return getSuicideResponse();
     case 'self-harm':
+    case 'tentative-harm':
       return getSelfHarmResponse();
     case 'eating-disorder':
       return getEatingDisorderCrisisResponse();
     case 'substance-use':
       return getSubstanceUseCrisisResponse();
+    case 'crisis':
+      return getSuicideResponse();
     case 'general-crisis':
     default:
       return getGeneralCrisisResponse();
@@ -65,17 +68,17 @@ const getGeneralCrisisResponse = (): string => {
 /**
  * Get a crisis response based on a concern type from the reflection system
  */
-export const getCrisisResponseFromConcernType = (concernType: ConcernType): string => {
+export const getCrisisResponseFromConcernType = (concernType: ConcernType | CrisisType): string => {
   switch (concernType) {
     case 'crisis':
       return getSuicideResponse();
     case 'tentative-harm':
+    case 'self-harm':
       return getSelfHarmResponse();
     case 'eating-disorder':
       return getEatingDisorderCrisisResponse();
     case 'substance-use':
       return getSubstanceUseCrisisResponse();
-    case 'general-crisis':
     default:
       return getGeneralCrisisResponse();
   }
@@ -84,10 +87,12 @@ export const getCrisisResponseFromConcernType = (concernType: ConcernType): stri
 /**
  * Get resources for a specific crisis type
  */
-export const getCrisisResources = (crisisType: CrisisType | string): string => {
+export const getCrisisResources = (crisisType: CrisisType | ConcernType): string => {
   switch (crisisType) {
     case 'suicide':
+    case 'crisis':
     case 'self-harm':
+    case 'tentative-harm':
       return "- National Suicide Prevention Lifeline: 988 or 1-800-273-8255\n" +
              "- Crisis Text Line: Text HOME to 741741\n" +
              "- Veterans Crisis Line: 988 then press 1\n" +

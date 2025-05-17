@@ -7,7 +7,14 @@
  */
 
 import { searchMemory } from '../memory/memoryController';
-import { MemoryPiece } from '../memory/memoryBank';
+
+// Export the MemoryPiece interface for use in other modules
+export interface MemoryPiece {
+  content: string;
+  role: string;
+  metadata?: any;
+  importance: number;
+}
 
 /**
  * Retrieve facts from memory to ground responses
