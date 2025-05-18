@@ -6,7 +6,7 @@
  */
 
 import { retrieveFactualGrounding } from '../retrieval';
-import { isEmergency, isSuicidalIdeation } from '../../masterRules';
+import { isSuicidalIdeation, isEmergency } from '../../masterRules/safety/safetyUtils';
 
 /**
  * Enhance crisis response with accurate resources from vector database

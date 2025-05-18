@@ -6,7 +6,7 @@
  * incorporating memory, vector knowledge, and hallucination prevention
  */
 
-import { processResponseThroughMasterRules } from './processor';
+import { processResponse } from './processor';
 import { retrieveAugmentation, augmentResponseWithRetrieval, addConversationExchange } from '../hallucinationPrevention/retrieval';
 import { enhanceWithMeaningPerspective } from '../logotherapy/logotherapyIntegration';
 import { getRogerPersonalityInsight } from '../reflection/rogerPersonality';
@@ -41,7 +41,7 @@ export const enhanceResponse = async (
     let enhancedText = responseText;
     
     // Step 1: Process through master rules (existing functionality)
-    enhancedText = processResponseThroughMasterRules(enhancedText, userInput, conversationHistory);
+    enhancedText = processResponse(enhancedText, userInput, conversationHistory);
     
     // Step 2: Retrieve relevant vector knowledge with RAG
     try {

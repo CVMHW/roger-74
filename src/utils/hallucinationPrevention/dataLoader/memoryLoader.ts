@@ -24,29 +24,16 @@ export const loadFromMemorySystem = async (): Promise<void> => {
     
     // Load from the main memory system
     try {
-      const memories = memoryController.getAllMemories();
+      // Use getMemoryStatus instead of getAllMemories which doesn't exist
+      const memoryStatus = memoryController.getMemoryStatus();
       
-      // Process patient memories
-      const patientMemories = memories.filter(item => item.role === 'patient');
-      for (const memory of patientMemories) {
-        await addMemoryToCollection(
-          memory.content,
-          COLLECTIONS.USER_MESSAGES,
-          { importance: memory.importance || 0.5, source: 'memory_system' }
-        );
+      // Check if we have short-term memory data
+      if (memoryStatus && memoryStatus.shortTerm) {
+        // We can't access raw memories directly, so note this limitation
+        console.log(`ℹ️ Short-term memory contains ${memoryStatus.shortTerm.itemCount} items but can't be directly imported`);
       }
       
-      // Process roger memories
-      const rogerMemories = memories.filter(item => item.role === 'roger');
-      for (const memory of rogerMemories) {
-        await addMemoryToCollection(
-          memory.content,
-          COLLECTIONS.ROGER_RESPONSES,
-          { importance: memory.importance || 0.5, source: 'memory_system' }
-        );
-      }
-      
-      console.log(`✅ Loaded ${patientMemories.length} patient memories and ${rogerMemories.length} Roger memories from memory controller`);
+      console.log(`✅ Checked memory controller system statistics`);
     } catch (memoryError) {
       console.error("Error loading from main memory system:", memoryError);
     }
