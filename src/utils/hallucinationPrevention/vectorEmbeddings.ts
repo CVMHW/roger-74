@@ -18,6 +18,47 @@ let embeddingModel: any = null;
 let isUsingSimulation = false;
 let modelInitialized = false;
 let modelInitializationPromise: Promise<void> | null = null;
+let initAttempts = 0;
+const MAX_INIT_ATTEMPTS = 3;
+
+/**
+ * Detect the best available device for running models
+ */
+export const detectBestAvailableDevice = async (): Promise<string> => {
+  try {
+    // Check for WebGPU support
+    if ('gpu' in navigator) {
+      console.log("WebGPU support detected, will try to use it");
+      return "webgpu";
+    }
+    
+    // Check for WebAssembly SIMD support
+    if (WebAssembly && typeof WebAssembly.instantiateStreaming === 'function') {
+      try {
+        const module = await WebAssembly.compile(new Uint8Array([
+          0, 97, 115, 109, 1, 0, 0, 0, 1, 4, 1, 96, 0, 0, 3, 2, 1, 0, 10, 9, 1, 7, 0, 
+          65, 0, 65, 0, 253, 0, 26, 11
+        ]));
+        const hasSIMD = WebAssembly.Module.exports(module).some(
+          ({ name }) => name === "simd"
+        );
+        if (hasSIMD) {
+          console.log("WebAssembly SIMD support detected, using WASM");
+          return "wasm";
+        }
+      } catch (e) {
+        // SIMD not supported
+      }
+    }
+
+    // Fallback to CPU
+    console.log("Using CPU as fallback");
+    return "cpu";
+  } catch (error) {
+    console.error("Error detecting device capabilities:", error);
+    return "cpu"; // Default to CPU
+  }
+};
 
 /**
  * Initialize the embedding model
@@ -29,24 +70,50 @@ export const initializeEmbeddingModel = async (): Promise<void> => {
     return modelInitializationPromise;
   }
   
+  // Check if we've exceeded max attempts
+  if (initAttempts >= MAX_INIT_ATTEMPTS) {
+    console.warn(`⚠️ Max initialization attempts (${MAX_INIT_ATTEMPTS}) reached, using simulation`);
+    isUsingSimulation = true;
+    modelInitialized = false;
+    return;
+  }
+  
+  initAttempts++;
+  
   // Create a new initialization promise
   modelInitializationPromise = (async () => {
     try {
-      console.log("🔄 Initializing embedding model from Hugging Face...");
+      console.log(`🔄 Initializing embedding model attempt ${initAttempts}/${MAX_INIT_ATTEMPTS}...`);
       
-      // Create a feature-extraction pipeline with a small, efficient model
-      // Specify WebGPU if available, otherwise fall back to CPU
+      // Detect the best available device
+      const device = await detectBestAvailableDevice();
+      console.log(`Using device: ${device} for model initialization`);
+      
+      const startTime = performance.now();
+      
+      // Browser memory info if available
+      if ('memory' in performance) {
+        const memoryInfo = (performance as any).memory;
+        console.log(`Memory before model load: ${Math.round(memoryInfo.usedJSHeapSize / (1024 * 1024))}MB / ${Math.round(memoryInfo.jsHeapSizeLimit / (1024 * 1024))}MB`);
+      }
+      
+      // Create a feature-extraction pipeline with a browser-compatible model
+      // Using a smaller model better suited for browser environments
       embeddingModel = await pipeline(
         "feature-extraction",
-        "mixedbread-ai/mxbai-embed-small-v1", // Using better model
+        "Xenova/all-MiniLM-L6-v2", // More browser-friendly model
         { 
-          quantized: false, // Avoid quantization issues
           revision: "main",
-          progress_callback: (progress) => {
-            console.log(`Model loading progress: ${Math.round(progress * 100)}%`);
+          device: device,
+          progress_callback: (progress: number) => {
+            const percentage = Math.round(progress * 100);
+            console.log(`Model loading progress: ${percentage}%`);
           }
         }
       );
+      
+      const loadTime = performance.now() - startTime;
+      console.log(`✅ Model loaded in ${Math.round(loadTime)}ms`);
       
       // Test the model with a simple example
       const testResult = await embeddingModel("Test embedding", { 
@@ -54,9 +121,10 @@ export const initializeEmbeddingModel = async (): Promise<void> => {
         normalize: true 
       });
       
-      if (testResult && testResult.data) {
+      if (testResult && (testResult.data || testResult)) {
         console.log("✅ Embedding model successfully initialized and tested");
-        console.log(`📐 Embedding size: ${testResult.data.length}`);
+        const dataArray = testResult.data || testResult;
+        console.log(`📐 Embedding size: ${Array.isArray(dataArray) ? dataArray.length : 'unknown'}`);
         isUsingSimulation = false;
         modelInitialized = true;
         return;
@@ -69,6 +137,19 @@ export const initializeEmbeddingModel = async (): Promise<void> => {
       embeddingModel = null;
       isUsingSimulation = true;
       modelInitialized = false;
+      
+      // Schedule retry with exponential backoff if attempts remain
+      if (initAttempts < MAX_INIT_ATTEMPTS) {
+        const backoffTime = Math.pow(2, initAttempts) * 1000; // Exponential backoff
+        console.log(`Will retry in ${backoffTime}ms`);
+        setTimeout(() => {
+          // Reset the promise so we can try again
+          modelInitializationPromise = null;
+          initializeEmbeddingModel().catch(e => {
+            console.error("Retry failed:", e);
+          });
+        }, backoffTime);
+      }
     } finally {
       // Reset the initialization promise once we're done
       modelInitializationPromise = null;
@@ -94,11 +175,18 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
       }
     }
     
+    const startTime = performance.now();
+    
     // Generate real embeddings using the model
     const result = await embeddingModel(text, { pooling: "mean", normalize: true });
     
-    // Convert to regular array for easier handling
-    return Array.from(result.data);
+    const processingTime = performance.now() - startTime;
+    console.log(`Generated embedding in ${Math.round(processingTime)}ms for "${text.substring(0, 20)}..."`);
+    
+    // Handle different output formats (some models return {data: Float32Array}, others return Float32Array directly)
+    const embedArray = result.data ? Array.from(result.data) : Array.isArray(result) ? result : Array.from(result);
+    
+    return embedArray;
     
   } catch (error) {
     console.error("Error generating embedding, falling back to simulation:", error);
@@ -109,9 +197,14 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
 };
 
 /**
- * Generate embeddings for multiple texts
+ * Generate embeddings for multiple texts, with batching and timeout protection
  */
-export const generateEmbeddings = async (texts: string[]): Promise<EmbeddingResult[]> => {
+export const generateEmbeddings = async (
+  texts: string[], 
+  options: { batchSize?: number, timeoutMs?: number } = {}
+): Promise<EmbeddingResult[]> => {
+  const { batchSize = 5, timeoutMs = 10000 } = options;
+  
   try {
     if (isUsingSimulation) {
       // If we're already known to be using simulation, don't attempt real embeddings
@@ -124,22 +217,39 @@ export const generateEmbeddings = async (texts: string[]): Promise<EmbeddingResu
     const results: EmbeddingResult[] = [];
     
     // Process texts in batches to avoid memory issues
-    const batchSize = 5;
     for (let i = 0; i < texts.length; i += batchSize) {
       const batch = texts.slice(i, i + batchSize);
+      console.log(`Processing embedding batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(texts.length/batchSize)}`);
       
-      // Generate embeddings for each text in the batch
-      const embeddings = await Promise.all(
-        batch.map(async (text) => {
-          const embedding = await generateEmbedding(text);
+      // Generate embeddings for each text in the batch with timeout protection
+      const batchPromises = batch.map(async (text) => {
+        try {
+          // Create a promise that rejects after timeout
+          const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error(`Embedding generation timed out after ${timeoutMs}ms`)), timeoutMs);
+          });
+          
+          // Race the embedding generation against the timeout
+          const embedding = await Promise.race([
+            generateEmbedding(text),
+            timeoutPromise
+          ]);
+          
           return {
             text,
             embedding
           };
-        })
-      );
+        } catch (error) {
+          console.error(`Error generating embedding for text: "${text.substring(0, 30)}..."`, error);
+          return {
+            text,
+            embedding: generateSimulatedEmbedding(text) // Fallback for individual failures
+          };
+        }
+      });
       
-      results.push(...embeddings);
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
     }
     
     return results;
@@ -199,6 +309,7 @@ export const forceReinitializeEmbeddingModel = async (): Promise<boolean> => {
   modelInitialized = false;
   isUsingSimulation = false;
   modelInitializationPromise = null;
+  initAttempts = 0;
   
   try {
     await initializeEmbeddingModel();

@@ -9,6 +9,9 @@
 import { enhanceResponse as enhanceResponseUnified } from '../../../utils/response/enhancer';
 import { isSmallTalk, isIntroduction, isPersonalSharing } from '../../../utils/masterRules';
 
+// Track initialization attempt
+let initializationAttempted = false;
+
 /**
  * Enhances a response with memory rules, master rules, and chat log review
  * Now delegates to the unified enhancement pipeline
@@ -24,6 +27,19 @@ export const enhanceResponse = (
   const isSmallTalkContext = isSmallTalk(userInput);
   const isIntroductionContext = isIntroduction(userInput);
   const isPersonalSharingContext = isPersonalSharing(userInput);
+  
+  // Try to initialize the RAG system on first use if not already initialized
+  if (!initializationAttempted) {
+    initializationAttempted = true;
+    import('../../../utils/hallucinationPrevention/index').then(ragModule => {
+      console.log("Initializing RAG system from response enhancer...");
+      ragModule.initializeRAGSystem().catch(error => 
+        console.error("Error initializing RAG system:", error)
+      );
+    }).catch(error => 
+      console.error("Error importing RAG module:", error)
+    );
+  }
   
   // Call the async function but use it synchronously by returning the immediate response text
   // This maintains backward compatibility with existing code

@@ -26,21 +26,35 @@ import {
 } from '../hallucinationPrevention/retrieval';
 import {
   isUsingSimulatedEmbeddings,
-  forceReinitializeEmbeddingModel
+  forceReinitializeEmbeddingModel,
+  detectBestAvailableDevice
 } from '../hallucinationPrevention/vectorEmbeddings';
 
 // Initialization flag to ensure we only try to initialize once
 let ragSystemInitialized = false;
+let lastInitAttempt = 0;
+const INIT_COOLDOWN_MS = 60000; // 1 minute cooldown between init attempts
 
 /**
  * Initialize the RAG system if not already initialized
  */
 const ensureRAGSystemInitialized = async (): Promise<boolean> => {
-  if (ragSystemInitialized) {
+  const now = Date.now();
+  
+  // If we've initialized recently or if we're already not using simulations, return
+  if (ragSystemInitialized && now - lastInitAttempt < INIT_COOLDOWN_MS) {
     return !isUsingSimulatedEmbeddings();
   }
   
+  lastInitAttempt = now;
+  
   try {
+    console.log("🔄 Checking RAG system initialization status...");
+    
+    // Detect best device
+    const device = await detectBestAvailableDevice();
+    console.log(`Using device: ${device} for RAG operations`);
+    
     // If using simulated embeddings, try to reinitialize the model first
     if (isUsingSimulatedEmbeddings()) {
       console.log("⚠️ Attempting to switch from simulated to real embeddings...");
@@ -126,11 +140,13 @@ export const getRepetitionRecoveryResponse = (): string => {
 /**
  * Get status of embedding system for diagnostics
  */
-export const getEmbeddingSystemStatus = (): string => {
+export const getEmbeddingSystemStatus = async (): Promise<string> => {
   const isSimulated = isUsingSimulatedEmbeddings();
+  const device = await detectBestAvailableDevice();
+  
   return isSimulated 
-    ? "⚠️ Using simulated embeddings (fallback mode)" 
-    : "✅ Using Hugging Face transformer embeddings";
+    ? `⚠️ Using simulated embeddings (fallback mode) on ${device}` 
+    : `✅ Using Hugging Face transformer embeddings on ${device}`;
 };
 
 /**
@@ -146,8 +162,10 @@ export const enhanceResponse = async (
 ): Promise<string> => {
   try {
     // Ensure the RAG system is initialized
+    const startTime = performance.now();
     const isUsingRealEmbeddings = await ensureRAGSystemInitialized();
-    console.log("Response enhancer status:", getEmbeddingSystemStatus());
+    const systemStatus = await getEmbeddingSystemStatus();
+    console.log("Response enhancer status:", systemStatus);
     console.log(`RAG system using real embeddings: ${isUsingRealEmbeddings}`);
     
     // Check if this is a crisis situation - if so, don't modify the response
@@ -200,6 +218,7 @@ export const enhanceResponse = async (
     let enhancedResponse = hallucinationResult.text;
     
     try {
+      // Check if embeddings are available
       if (isUsingRealEmbeddings) {
         console.log("Using real embeddings for RAG augmentation");
         
@@ -233,6 +252,10 @@ export const enhanceResponse = async (
     addConversationExchange(userInput, processedResponse).catch(error => 
       console.error("Error storing conversation in vector database:", error)
     );
+    
+    // Log total enhancement time
+    const enhancementTime = performance.now() - startTime;
+    console.log(`Response enhancement completed in ${Math.round(enhancementTime)}ms`);
     
     // Return the final enhanced response
     return processedResponse;
