@@ -1,6 +1,4 @@
 
-// In persistentVectorStore.ts, we need to fix the vector property
-
 /**
  * Process records for storage or retrieval
  */
@@ -42,5 +40,18 @@ export const loadPersistedVectors = async (): Promise<any[]> => {
   } catch (error) {
     console.error("Error loading persisted vectors:", error);
     return [];
+  }
+};
+
+// Export the preload vectors function needed in vectorEmbeddings/index.ts
+export const preloadVectors = async (): Promise<boolean> => {
+  try {
+    console.log("Preloading vectors from persistent storage...");
+    const vectors = await loadPersistedVectors();
+    // Implement preloading logic here if needed
+    return vectors.length > 0;
+  } catch (error) {
+    console.error("Error preloading vectors:", error);
+    return false;
   }
 };

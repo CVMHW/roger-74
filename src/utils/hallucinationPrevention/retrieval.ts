@@ -1,26 +1,73 @@
+
 /**
- * Retrieval-Augmented Generation system
- * 
- * Provides vector-based knowledge retrieval to ground responses
+ * Retrieval system for hallucination prevention
+ * Enhanced with vector database integration
  */
 
 import { MemoryPiece } from '../../types/hallucinationPrevention';
 import vectorDB from './vectorDatabase';
-import { extractEmotionsFromInput } from '../response/processor/emotions';
+import { generateEmbedding } from './vectorEmbeddings';
+import { addConversationExchange } from './conversationTracker';
 
-// Export MemoryPiece for use in other modules
-export type { MemoryPiece };
+// For type checking
+export interface RetrievalResult {
+  retrievedContent: string[];
+  confidence: number;
+  sources?: string[];
+  metadata?: any;
+}
 
 /**
- * Initializes the retrieval system
+ * Initialize the retrieval system
  */
 export const initializeRetrievalSystem = async (): Promise<boolean> => {
   try {
-    console.log("Initializing retrieval system...");
+    // Ensure required collections exist
+    if (!vectorDB.hasCollection('knowledge')) {
+      vectorDB.createCollection('knowledge');
+    }
     
-    // Initialize vector database with emotional content
-    await initializeVectorDatabase();
+    if (!vectorDB.hasCollection('conversation_history')) {
+      vectorDB.createCollection('conversation_history');
+    }
     
+    if (!vectorDB.hasCollection('emotions')) {
+      vectorDB.createCollection('emotions');
+    }
+    
+    // Load initial data if needed
+    const emotionsCollection = vectorDB.collection('emotions');
+    
+    // Add some basic emotion data if collection is empty
+    if (emotionsCollection.itemCount() === 0) {
+      console.log("Initializing emotions data in vector database");
+      
+      // Add depression data
+      const depressionEmbedding = await generateEmbedding("Depression is a serious condition characterized by persistent sadness, hopelessness, and loss of interest in activities");
+      emotionsCollection.addItem({
+        id: "emotion_depression",
+        vector: depressionEmbedding,
+        metadata: {
+          emotion: "depression",
+          description: "Depression is a serious condition characterized by persistent sadness, hopelessness, and loss of interest in activities",
+          priority: "high"
+        }
+      });
+      
+      // Add anxiety data
+      const anxietyEmbedding = await generateEmbedding("Anxiety involves feelings of worry, nervousness, or unease about something with an uncertain outcome");
+      emotionsCollection.addItem({
+        id: "emotion_anxiety",
+        vector: anxietyEmbedding,
+        metadata: {
+          emotion: "anxiety",
+          description: "Anxiety involves feelings of worry, nervousness, or unease about something with an uncertain outcome",
+          priority: "high"
+        }
+      });
+    }
+    
+    console.log("Retrieval system initialized successfully");
     return true;
   } catch (error) {
     console.error("Error initializing retrieval system:", error);
@@ -29,358 +76,152 @@ export const initializeRetrievalSystem = async (): Promise<boolean> => {
 };
 
 /**
- * Initialize vector database with emotional content
- */
-const initializeVectorDatabase = async (): Promise<boolean> => {
-  try {
-    // Create emotional content collection if it doesn't exist
-    if (!vectorDB.hasCollection('emotional_content')) {
-      const emotionalCollection = vectorDB.createCollection('emotional_content');
-      
-      // Add depression-related content
-      const depressionContent = [
-        "Depression is a serious mental health condition characterized by persistent sadness, loss of interest in activities, and can include feelings of worthlessness and hopelessness.",
-        "When supporting someone with depression, acknowledge their feelings without judgment and encourage professional help.",
-        "Depression affects approximately 280 million people worldwide and is a leading cause of disability."
-      ];
-      
-      for (const content of depressionContent) {
-        await emotionalCollection.addItem({
-          id: `depression_${Date.now()}_${Math.random()}`,
-          vector: await generateSimpleEmbedding(content),
-          text: content,
-          metadata: {
-            content,
-            category: 'depression',
-            importance: 0.95
-          }
-        });
-      }
-      
-      // Add anxiety-related content
-      const anxietyContent = [
-        "Anxiety disorders are characterized by persistent, excessive worry and fear about everyday situations.",
-        "Supporting someone with anxiety involves validating their feelings while not reinforcing avoidance behaviors.",
-        "Techniques like deep breathing, mindfulness, and cognitive behavioral therapy can help manage anxiety."
-      ];
-      
-      for (const content of anxietyContent) {
-        await emotionalCollection.addItem({
-          id: `anxiety_${Date.now()}_${Math.random()}`,
-          vector: await generateSimpleEmbedding(content),
-          text: content,
-          metadata: {
-            content,
-            category: 'anxiety',
-            importance: 0.9
-          }
-        });
-      }
-      
-      // Add stress-related content
-      const stressContent = [
-        "Stress is the body's response to pressure from difficult or challenging situations.",
-        "Chronic stress can lead to various physical and mental health problems including anxiety and depression.",
-        "Stress management techniques include exercise, mindfulness, social connection, and setting healthy boundaries."
-      ];
-      
-      for (const content of stressContent) {
-        await emotionalCollection.addItem({
-          id: `stress_${Date.now()}_${Math.random()}`,
-          vector: await generateSimpleEmbedding(content),
-          text: content,
-          metadata: {
-            content,
-            category: 'stress',
-            importance: 0.85
-          }
-        });
-      }
-      
-      console.log("Vector database initialized with emotional content");
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error initializing vector database with emotional content:", error);
-    return false;
-  }
-};
-
-/**
- * Simple embedding function - would be replaced with a real embedding model
- * This is just for demo purposes
- */
-const generateSimpleEmbedding = async (text: string): Promise<number[]> => {
-  // In production, this would use a real embedding model
-  // For now, create a pseudorandom but deterministic vector based on the text
-  const vector = new Array(128).fill(0);
-  for (let i = 0; i < text.length; i++) {
-    const charCode = text.charCodeAt(i);
-    vector[i % vector.length] += charCode / 255;
-  }
-  
-  // Normalize
-  const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
-  return vector.map(val => val / magnitude);
-};
-
-/**
- * Retrieves relevant context based on a query
+ * Retrieve augmentation for a user input
  */
 export const retrieveAugmentation = async (
-  query: string,
+  userInput: string,
   conversationHistory: string[] = []
-): Promise<{
-  retrievalSucceeded: boolean;
-  retrievedContent?: string[];
-  score?: number;
-}> => {
+): Promise<RetrievalResult> => {
   try {
-    console.log(`RAG: Retrieving context for query: ${query}`);
+    // Generate embedding for query
+    const queryEmbedding = await generateEmbedding(userInput);
     
-    // Extract emotions to aid in retrieval
-    const emotions = extractEmotionsFromInput(query);
+    // First check emotions collection for highly relevant emotional content
+    const emotionsCollection = vectorDB.collection('emotions');
+    const emotionalMatches = emotionsCollection.search(queryEmbedding, 2);
     
-    // Try vector-based retrieval first
-    try {
-      if (vectorDB.hasCollection('emotional_content')) {
-        const emotionalCollection = vectorDB.getCollection('emotional_content');
-        
-        // Generate query vector
-        const queryVector = await generateSimpleEmbedding(query);
-        
-        // Search for similar content
-        const results = await emotionalCollection.search(queryVector, 3);
-        
-        if (results && results.length > 0) {
-          const retrievedContent = results.map(result => result.record.metadata.content);
-          return {
-            retrievalSucceeded: true,
-            retrievedContent,
-            score: results[0].score
-          };
-        }
+    // Then search knowledge base
+    const knowledgeCollection = vectorDB.collection('knowledge');
+    const knowledgeMatches = knowledgeCollection.search(queryEmbedding, 3);
+    
+    // Finally get conversation history context
+    const historyCollection = vectorDB.collection('conversation_history');
+    const historyMatches = historyCollection.search(queryEmbedding, 2);
+    
+    // Combine all retrieved content
+    const retrievedContent: string[] = [];
+    
+    // Add emotional content first (highest priority)
+    emotionalMatches.forEach(match => {
+      if (match.score > 0.7 && match.item.metadata?.description) {
+        retrievedContent.push(match.item.metadata.description);
       }
-    } catch (vectorError) {
-      console.error("Vector search failed, falling back to pattern matching:", vectorError);
-    }
+    });
     
-    // Fallback to pattern matching if vector search fails or is not available
-    const mockEmotionalContent: Record<string, string[]> = {
-      'depression': [
-        "Depression is a serious mental health condition that affects how a person feels, thinks, and acts.",
-        "When supporting someone with depression, acknowledge their feelings without judgment and encourage professional help.",
-        "Depression affects approximately 280 million people worldwide and is a leading cause of disability."
-      ],
-      'anxiety': [
-        "Anxiety disorders are characterized by persistent, excessive worry and fear about everyday situations.",
-        "Supporting someone with anxiety involves validating their feelings while not reinforcing avoidance behaviors.",
-        "Techniques like deep breathing, mindfulness, and cognitive behavioral therapy can help manage anxiety."
-      ],
-      'stress': [
-        "Stress is the body's response to pressure from difficult or challenging situations.",
-        "Chronic stress can lead to various physical and mental health problems including anxiety and depression.",
-        "Stress management techniques include exercise, mindfulness, social connection, and setting healthy boundaries."
-      ]
-    };
+    // Add knowledge content
+    knowledgeMatches.forEach(match => {
+      if (match.score > 0.6 && match.item.metadata?.content) {
+        retrievedContent.push(match.item.metadata.content);
+      }
+    });
     
-    // Check if query is related to emotions
-    let retrievedContent: string[] = [];
-    let score = 0.5;
-    
-    // Check for depression content
-    if (/\b(depress(ed|ion|ing)?|sad|down|low|hopeless|worthless|empty|numb)\b/i.test(query)) {
-      retrievedContent = mockEmotionalContent['depression'];
-      score = 0.95;
-    } 
-    // Check for anxiety content
-    else if (/\b(anxious|anxiety|worry|worried|nervous|panic|fear|scared)\b/i.test(query)) {
-      retrievedContent = mockEmotionalContent['anxiety'];
-      score = 0.9;
-    } 
-    // Check for stress content
-    else if (/\b(stress(ed|ful)?|overwhelm(ed|ing)?|pressure|burden(ed)?)\b/i.test(query)) {
-      retrievedContent = mockEmotionalContent['stress'];
-      score = 0.85;
-    }
+    // Add conversation history content
+    historyMatches.forEach(match => {
+      if (match.score > 0.8 && match.item.metadata?.content) {
+        retrievedContent.push(match.item.metadata.content);
+      }
+    });
     
     return {
-      retrievalSucceeded: retrievedContent.length > 0,
-      retrievedContent: retrievedContent.length > 0 ? retrievedContent : undefined,
-      score: retrievedContent.length > 0 ? score : undefined
+      retrievedContent,
+      confidence: retrievedContent.length > 0 ? 0.85 : 0.1
     };
   } catch (error) {
-    console.error("Error in RAG retrieval:", error);
-    return { retrievalSucceeded: false };
+    console.error("Error in retrieveAugmentation:", error);
+    return {
+      retrievedContent: [],
+      confidence: 0
+    };
   }
 };
 
 /**
- * Augments a response with retrieved knowledge
+ * Augment a response with retrieved content
  */
 export const augmentResponseWithRetrieval = async (
   responseText: string,
   userInput: string,
-  retrievalResult: {
-    retrievalSucceeded: boolean;
-    retrievedContent?: string[];
-    score?: number;
-  }
+  retrievalResult: RetrievalResult
 ): Promise<string> => {
   try {
-    if (!retrievalResult.retrievalSucceeded || 
-        !retrievalResult.retrievedContent || 
-        retrievalResult.retrievedContent.length === 0) {
+    if (!retrievalResult.retrievedContent || retrievalResult.retrievedContent.length === 0) {
       return responseText;
     }
     
-    console.log("RAG: Augmenting response with retrieved content");
+    // Simple augmentation strategy
+    const contextText = retrievalResult.retrievedContent.join(" ");
     
-    // For depression, ensure we explicitly acknowledge it
-    if (/\b(depress(ed|ion|ing)?|sad|down|low|hopeless|worthless|empty|numb)\b/i.test(userInput) && 
-        !responseText.toLowerCase().includes("depress")) {
-      // Add depression acknowledgment if missing
-      return `I hear that you're feeling depressed. ${responseText}`;
+    // Check for depression content
+    const hasDepressionContent = /\b(depress(ed|ion|ing)?|sad|down|low|mood)\b/i.test(contextText);
+    
+    if (hasDepressionContent && !/\b(depress(ed|ion|ing)?|sad|down|low|mood)\b/i.test(responseText)) {
+      // Ensure depression is acknowledged in the response if present in context
+      return "I understand this relates to feelings of depression. " + responseText;
     }
     
-    // For anxiety, ensure we acknowledge it
-    if (/\b(anxious|anxiety|worry|worried|nervous|panic|fear|scared)\b/i.test(userInput) && 
-        !responseText.toLowerCase().includes("anxi")) {
-      // Add anxiety acknowledgment if missing
-      return `I understand you're feeling anxious. ${responseText}`;
-    }
-    
+    // For other cases, just return the original response for now
+    // A more sophisticated implementation would carefully blend the information
     return responseText;
   } catch (error) {
-    console.error("Error in RAG augmentation:", error);
+    console.error("Error in augmentResponseWithRetrieval:", error);
     return responseText;
   }
 };
 
 /**
- * Add conversation exchange to vector database
+ * Find similar previous responses to aid in consistent answering
  */
-export const addConversationExchange = async (
+export const retrieveSimilarResponses = async (
   userInput: string,
-  responseText: string
-): Promise<boolean> => {
+  count: number = 3
+): Promise<string[]> => {
   try {
-    console.log("RAG: Adding conversation exchange to memory");
+    // Generate embedding for query
+    const queryEmbedding = await generateEmbedding(userInput);
     
-    if (vectorDB.hasCollection('conversation_history')) {
-      const historyCollection = vectorDB.collection('conversation_history');
-      
-      // Add user input
-      await historyCollection.addItem({
-        id: `user_${Date.now()}`,
-        vector: await generateSimpleEmbedding(userInput),
-        text: userInput,
-        metadata: {
-          content: userInput,
-          role: 'user',
-          timestamp: Date.now()
-        }
-      });
-      
-      // Add response
-      await historyCollection.addItem({
-        id: `assistant_${Date.now()}`,
-        vector: await generateSimpleEmbedding(responseText),
-        text: responseText,
-        metadata: {
-          content: responseText,
-          role: 'assistant',
-          timestamp: Date.now()
-        }
-      });
-      
-      return true;
-    } else {
-      // Create collection if it doesn't exist
-      const historyCollection = vectorDB.createCollection('conversation_history');
-      
-      // We'll implement the adding logic in a future update
-      return true;
-    }
+    // Search conversation history for assistant responses
+    const historyCollection = vectorDB.collection('conversation_history');
+    const matches = historyCollection.search(queryEmbedding, count * 2, {
+      filter: (record) => record.metadata?.role === 'assistant'
+    });
+    
+    // Extract the content
+    return matches
+      .filter(match => match.score > 0.7)
+      .slice(0, count)
+      .map(match => match.item.metadata?.content || "")
+      .filter(content => content.length > 0);
   } catch (error) {
-    console.error("Error adding conversation exchange to RAG:", error);
-    return false;
+    console.error("Error retrieving similar responses:", error);
+    return [];
   }
 };
 
 /**
- * Retrieve factual grounding based on topics
+ * Retrieve factual grounding for a topic
  */
-export const retrieveFactualGrounding = (
-  topics: string[],
-  limit: number = 5
-): MemoryPiece[] => {
+export const retrieveFactualGrounding = async (
+  topic: string,
+  count: number = 3
+): Promise<string[]> => {
   try {
-    console.log(`Retrieving factual grounding for topics: ${topics.join(', ')}`);
+    // Generate embedding for topic
+    const topicEmbedding = await generateEmbedding(topic);
     
-    const facts: MemoryPiece[] = [];
+    // Search knowledge base
+    const knowledgeCollection = vectorDB.collection('knowledge');
+    const matches = knowledgeCollection.search(topicEmbedding, count);
     
-    // Add facts based on topics
-    if (topics.some(topic => /depress|sad|down/i.test(topic))) {
-      facts.push({
-        content: "Depression is a serious mental health condition that affects how a person feels, thinks, and acts.",
-        role: 'system',
-        importance: 0.95
-      });
-    }
-    
-    if (topics.some(topic => /anxiety|worry|stress/i.test(topic))) {
-      facts.push({
-        content: "Anxiety disorders are characterized by persistent, excessive worry and fear about everyday situations.",
-        role: 'system',
-        importance: 0.9
-      });
-    }
-    
-    if (topics.some(topic => /crisis|emergency|suicide|harm/i.test(topic))) {
-      facts.push({
-        content: "If someone is experiencing thoughts of suicide, it's important to take it seriously and connect them with crisis resources like the 988 Suicide & Crisis Lifeline.",
-        role: 'system',
-        importance: 0.99
-      });
-    }
-    
-    // Return facts limited to specified count
-    return facts.slice(0, limit);
+    // Extract the content
+    return matches
+      .filter(match => match.score > 0.65)
+      .map(match => match.item.metadata?.content || "")
+      .filter(content => content.length > 0);
   } catch (error) {
     console.error("Error retrieving factual grounding:", error);
     return [];
   }
 };
 
-/**
- * Retrieve similar responses to a query
- */
-export const retrieveSimilarResponses = async (
-  query: string,
-  limit: number = 3
-): Promise<string[]> => {
-  try {
-    if (!vectorDB.hasCollection('conversation_history')) {
-      return [];
-    }
-    
-    const collection = vectorDB.collection('conversation_history');
-    const queryVector = await generateSimpleEmbedding(query);
-    
-    const results = await collection.search(
-      queryVector, 
-      limit,
-      { 
-        filter: (record) => record.metadata?.role === 'assistant',
-        scoreThreshold: 0.6
-      }
-    );
-    
-    return results.map(result => result.record.text || '').filter(Boolean);
-  } catch (error) {
-    console.error("Error retrieving similar responses:", error);
-    return [];
-  }
-};
+// Re-export the addConversationExchange function to satisfy imports elsewhere
+export { addConversationExchange };
