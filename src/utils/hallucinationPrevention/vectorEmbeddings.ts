@@ -1,3 +1,4 @@
+
 /**
  * Vector Embeddings System
  * 
@@ -14,6 +15,7 @@ export interface EmbeddingResult {
 }
 
 let embeddingModel: any = null;
+let isUsingSimulation = false;
 
 /**
  * Initialize the embedding model
@@ -21,20 +23,32 @@ let embeddingModel: any = null;
  */
 export const initializeEmbeddingModel = async (): Promise<void> => {
   try {
-    console.log("Initializing embedding model...");
+    console.log("Initializing embedding model from Hugging Face...");
     
     // Create a feature-extraction pipeline with a small, efficient model
     embeddingModel = await pipeline(
       "feature-extraction",
-      "mixedbread-ai/mxbai-embed-xsmall-v1",
-      { /* Remove the quantized option as it's not supported in this context */ }
+      "mixedbread-ai/mxbai-embed-xsmall-v1"
     );
     
-    console.log("Embedding model successfully initialized");
+    // Test the model with a simple example
+    const testEmbedding = await embeddingModel("Test embedding", { 
+      pooling: "mean", 
+      normalize: true 
+    });
+    
+    if (testEmbedding && testEmbedding.data) {
+      console.log("✅ Embedding model successfully initialized and tested");
+      isUsingSimulation = false;
+      return;
+    } else {
+      throw new Error("Model initialized but test embedding failed");
+    }
   } catch (error) {
-    console.error("Failed to initialize embedding model:", error);
-    // Fallback to a simulated embedding function
+    console.error("❌ Failed to initialize embedding model:", error);
+    console.warn("⚠️ Falling back to simulated embeddings");
     embeddingModel = null;
+    isUsingSimulation = true;
   }
 };
 
@@ -49,6 +63,7 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
       
       // If still not available, use fallback
       if (!embeddingModel) {
+        console.log("Using simulated embedding fallback");
         return generateSimulatedEmbedding(text);
       }
     }
@@ -60,8 +75,9 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
     return Array.from(result.data);
     
   } catch (error) {
-    console.error("Error generating embedding:", error);
+    console.error("Error generating embedding, falling back to simulation:", error);
     // Fallback to simulated embeddings
+    isUsingSimulation = true;
     return generateSimulatedEmbedding(text);
   }
 };
@@ -71,6 +87,14 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
  */
 export const generateEmbeddings = async (texts: string[]): Promise<EmbeddingResult[]> => {
   try {
+    if (isUsingSimulation) {
+      // If we're already known to be using simulation, don't attempt real embeddings
+      return texts.map(text => ({
+        text,
+        embedding: generateSimulatedEmbedding(text)
+      }));
+    }
+    
     const results: EmbeddingResult[] = [];
     
     // Process texts in batches to avoid memory issues
@@ -95,6 +119,7 @@ export const generateEmbeddings = async (texts: string[]): Promise<EmbeddingResu
     return results;
   } catch (error) {
     console.error("Error generating batch embeddings:", error);
+    isUsingSimulation = true;
     
     // Fallback to simulated embeddings
     return texts.map(text => ({
@@ -109,7 +134,7 @@ export const generateEmbeddings = async (texts: string[]): Promise<EmbeddingResu
  * This provides a basic approximation based on character frequency
  */
 export const generateSimulatedEmbedding = (text: string): number[] => {
-  console.log("Using simulated embedding for: " + text.substring(0, 20) + "...");
+  console.log("🛑 Using simulated embedding for: " + text.substring(0, 20) + "...");
   
   // Normalize text
   const normalizedText = text.toLowerCase().trim();
@@ -136,6 +161,13 @@ export const generateSimulatedEmbedding = (text: string): number[] => {
   // Normalize the embedding
   const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
   return embedding.map(val => val / (magnitude || 1));
+};
+
+/**
+ * Check if we're using simulated embeddings
+ */
+export const isUsingSimulatedEmbeddings = (): boolean => {
+  return isUsingSimulation;
 };
 
 /**
@@ -216,6 +248,9 @@ export const findMostSimilar = async (
 };
 
 // Initialize the embedding model when this module is imported
-initializeEmbeddingModel().catch(error => 
+initializeEmbeddingModel().then(() => {
+  console.log(`Embedding system status: ${isUsingSimulation ? 'Using simulation' : 'Using Hugging Face model'}`);
+}).catch(error => 
   console.error("Error initializing embedding model on import:", error)
 );
+

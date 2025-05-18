@@ -1,4 +1,3 @@
-
 /**
  * Response enhancer
  * 
@@ -22,6 +21,9 @@ import {
   augmentResponseWithRetrieval,
   getPatientSentiment
 } from '../hallucinationPrevention/retrieval';
+import {
+  isUsingSimulatedEmbeddings
+} from '../hallucinationPrevention/vectorEmbeddings';
 
 /**
  * Records user message to memory systems
@@ -88,6 +90,16 @@ export const getRepetitionRecoveryResponse = (): string => {
 };
 
 /**
+ * Get status of embedding system for diagnostics
+ */
+export const getEmbeddingSystemStatus = (): string => {
+  const isSimulated = isUsingSimulatedEmbeddings();
+  return isSimulated 
+    ? "⚠️ Using simulated embeddings (fallback mode)" 
+    : "✅ Using Hugging Face transformer embeddings";
+};
+
+/**
  * Enhances a response with unified enhancement pipeline
  * including RAG-based factual grounding
  */
@@ -99,6 +111,8 @@ export const enhanceResponse = async (
   contextInfo: any = {}
 ): Promise<string> => {
   try {
+    console.log("Response enhancer status:", getEmbeddingSystemStatus());
+    
     // Check if this is a crisis situation - if so, don't modify the response
     if (checkForCrisisContent(userInput)) {
       console.log("Crisis content detected, returning original response");
