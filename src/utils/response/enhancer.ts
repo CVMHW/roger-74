@@ -1,7 +1,9 @@
+
 /**
  * Response enhancer
  * 
  * Enhances Roger's responses with context-aware improvements
+ * and RAG-based factual grounding
  */
 
 import { checkForCrisisContent, detectMultipleCrisisTypes } from '../../hooks/chat/crisisDetection';
@@ -9,6 +11,17 @@ import { enhanceResponseWithMemory } from './processor/memoryEnhancement';
 import { preventHallucinations } from '../memory/hallucination/preventionV2';
 import { isEarlyConversation } from '../memory/systems/earlyConversationHandler';
 import { processResponse } from './processor';
+
+// Import the new RAG components
+import { 
+  augmentResponseWithReranking,
+  extractTopics 
+} from '../hallucinationPrevention/vectorReranker';
+import { 
+  retrieveAugmentation,
+  augmentResponseWithRetrieval,
+  getPatientSentiment
+} from '../hallucinationPrevention/retrieval';
 
 /**
  * Records user message to memory systems
@@ -76,23 +89,30 @@ export const getRepetitionRecoveryResponse = (): string => {
 
 /**
  * Enhances a response with unified enhancement pipeline
+ * including RAG-based factual grounding
  */
-export const enhanceResponse = (
+export const enhanceResponse = async (
   responseText: string,
   userInput: string,
   messageCount: number,
   conversationHistory: string[] = [],
   contextInfo: any = {}
-): string => {
+): Promise<string> => {
   try {
     // Check if this is a crisis situation - if so, don't modify the response
     if (checkForCrisisContent(userInput)) {
       console.log("Crisis content detected, returning original response");
       return responseText;
     }
+
+    // Detect emotional content using semantic analysis
+    const sentimentResult = await getPatientSentiment(userInput);
+    const isDepressed = sentimentResult['depression'] === 'detected';
+    const isAnxious = sentimentResult['anxiety'] === 'detected';
+    const isAngry = sentimentResult['anger'] === 'detected';
     
-    // Improved emotional detection for depression and sadness
-    if (/\b(depress(ed|ion)|sad(ness)?|feeling (down|blue))\b/i.test(userInput.toLowerCase())) {
+    // Enhanced emotional detection for depression and sadness
+    if (isDepressed || /\b(depress(ed|ion)|sad(ness)?|feeling (down|blue))\b/i.test(userInput.toLowerCase())) {
       console.log("Depression/sadness indicators detected in user input");
       
       // If response doesn't acknowledge depression/sadness, prioritize emotional acknowledgment
@@ -122,9 +142,29 @@ export const enhanceResponse = (
       conversationHistory
     );
     
+    // Get topics for RAG retrieval
+    const topics = extractTopics(userInput);
+    
+    // Process through RAG system to ground in facts
+    let enhancedResponse = hallucinationResult.text;
+    
+    try {
+      // Use new RAG augmentation
+      const retrievalResult = await retrieveAugmentation(userInput, conversationHistory);
+      
+      if (retrievalResult.confidence > 0.3) {
+        enhancedResponse = await augmentResponseWithRetrieval(enhancedResponse, retrievalResult);
+      } else {
+        // Fallback to reranker if retrieval confidence is low
+        enhancedResponse = await augmentResponseWithReranking(enhancedResponse, userInput);
+      }
+    } catch (error) {
+      console.error("Error in RAG augmentation:", error);
+    }
+    
     // Process the response through all handlers using the unified processor
     const processedResponse = processResponse(
-      hallucinationResult.text,
+      enhancedResponse,
       userInput,
       conversationHistory
     );

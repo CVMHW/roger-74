@@ -3,10 +3,15 @@
  * Vector Reranker System
  * 
  * Implements cross-encoder reranking for improved RAG retrieval
- * using the bi-encoder + cross-encoder pattern shown in the examples
+ * using proper vector embeddings and similarity calculations
  */
 
 import { retrieveFactualGrounding, MemoryPiece } from './retrieval';
+import { 
+  generateEmbedding, 
+  cosineSimilarity, 
+  findMostSimilar 
+} from './vectorEmbeddings';
 
 /**
  * Types for ranking results
@@ -28,16 +33,13 @@ interface RerankerSettings {
 }
 
 /**
- * Rerank retrieved content with simulated cross-encoder scores
- * 
- * In a production environment, this would use an actual cross-encoder model
- * to compute relevance scores between the query and each document
+ * Rerank retrieved content with actual vector similarity
  */
-export const rerankWithSimulatedCrossEncoder = (
+export const rerankWithVectorSimilarity = async (
   query: string,
   retrievedMemories: MemoryPiece[],
   settings: RerankerSettings = { topK: 3, threshold: 0.6 }
-): MemoryPiece[] => {
+): Promise<MemoryPiece[]> => {
   // Default settings
   const { topK, threshold, requireMinimumScore = false, minimumScore = 0.5 } = settings;
   
@@ -45,20 +47,77 @@ export const rerankWithSimulatedCrossEncoder = (
     return [];
   }
   
-  // For simulation, we'll use a simple relevance heuristic
+  try {
+    // Generate embedding for query
+    const queryEmbedding = await generateEmbedding(query);
+    
+    // Calculate similarity for each memory
+    const rankedResults: RankedResult[] = await Promise.all(
+      retrievedMemories.map(async (memory, index) => {
+        // Generate embedding for memory content
+        const memoryEmbedding = await generateEmbedding(memory.content);
+        
+        // Calculate cosine similarity
+        let score = cosineSimilarity(queryEmbedding, memoryEmbedding);
+        
+        // Apply importance as a multiplier (capped at 1.0)
+        score = Math.min(score * (1 + (memory.importance || 0.5)), 1.0);
+        
+        return {
+          content: memory.content,
+          score,
+          originalIndex: index
+        };
+      })
+    );
+    
+    // Sort by score descending
+    const sortedResults = rankedResults.sort((a, b) => b.score - a.score);
+    
+    // Filter by threshold if required
+    const filteredResults = requireMinimumScore 
+      ? sortedResults.filter(result => result.score >= minimumScore)
+      : sortedResults;
+    
+    // Take top K results
+    const topResults = filteredResults.slice(0, topK);
+    
+    // Map back to original objects
+    return topResults.map(result => retrievedMemories[result.originalIndex]);
+    
+  } catch (error) {
+    console.error("Error in vector reranking:", error);
+    
+    // Fallback to simple keyword matching if vector similarity fails
+    return fallbackRanking(query, retrievedMemories, settings);
+  }
+};
+
+/**
+ * Fallback ranking function using keyword matching
+ * Used when vector similarity fails
+ */
+const fallbackRanking = (
+  query: string,
+  retrievedMemories: MemoryPiece[],
+  settings: RerankerSettings
+): MemoryPiece[] => {
+  const { topK } = settings;
+  
+  // Extract important terms from query (words longer than 3 chars)
+  const queryTerms = query.toLowerCase()
+    .split(/\W+/)
+    .filter(term => term.length > 3);
+  
+  // Rank based on keyword matches
   const rankedResults: RankedResult[] = retrievedMemories.map((memory, index) => {
-    // Simulate cross-encoder scoring by checking for keyword matches
-    // In a real implementation, this would use a language model
-    const queryTerms = query.toLowerCase().split(/\W+/).filter(term => term.length > 3);
     const contentLower = memory.content.toLowerCase();
     
     let score = 0;
     for (const term of queryTerms) {
       if (contentLower.includes(term)) {
-        // Award points for exact matches
         score += 0.2;
         
-        // Award more points for phrase matches
         if (contentLower.includes(queryTerms.join(" "))) {
           score += 0.3;
         }
@@ -66,7 +125,7 @@ export const rerankWithSimulatedCrossEncoder = (
     }
     
     // Adjust score by memory importance
-    score = Math.min(score * (1 + memory.importance), 1.0);
+    score = Math.min(score * (1 + (memory.importance || 0.5)), 1.0);
     
     return {
       content: memory.content,
@@ -78,32 +137,27 @@ export const rerankWithSimulatedCrossEncoder = (
   // Sort by score descending
   const sortedResults = rankedResults.sort((a, b) => b.score - a.score);
   
-  // Filter by threshold if required
-  const filteredResults = requireMinimumScore 
-    ? sortedResults.filter(result => result.score >= minimumScore)
-    : sortedResults;
-  
   // Take top K results
-  const topResults = filteredResults.slice(0, topK);
+  const topResults = sortedResults.slice(0, topK);
   
   // Map back to original objects
   return topResults.map(result => retrievedMemories[result.originalIndex]);
 };
 
 /**
- * Improve RAG retrieval with bi-encoder + cross-encoder pattern
+ * Improve RAG retrieval with vector embeddings + reranking
  */
-export const retrieveAndRerankMemories = (
+export const retrieveAndRerankMemories = async (
   query: string,
   topics: string[],
   limit: number = 5
-): MemoryPiece[] => {
+): Promise<MemoryPiece[]> => {
   try {
-    // 1. Initial retrieval using bi-encoder (vector similarity)
+    // 1. Initial retrieval using topics
     const retrievedMemories = retrieveFactualGrounding(topics, limit * 2);
     
-    // 2. Reranking with cross-encoder (more precise but computationally expensive)
-    const rerankedMemories = rerankWithSimulatedCrossEncoder(query, retrievedMemories, {
+    // 2. Reranking with vector similarity
+    const rerankedMemories = await rerankWithVectorSimilarity(query, retrievedMemories, {
       topK: limit,
       threshold: 0.6,
       requireMinimumScore: true,
@@ -119,9 +173,10 @@ export const retrieveAndRerankMemories = (
 
 /**
  * Extract topics from a user query for better retrieval
+ * Enhanced with better stopword filtering and phrase detection
  */
 export const extractTopics = (query: string): string[] => {
-  // Remove common stop words
+  // Expanded stop words list
   const stopWords = [
     "i", "me", "my", "myself", "we", "our", "ours", "ourselves", 
     "you", "your", "yours", "yourself", "yourselves", 
@@ -138,7 +193,8 @@ export const extractTopics = (query: string): string[] => {
     "when", "where", "why", "how", "all", "any", "both", "each", "few", 
     "more", "most", "other", "some", "such", "no", "nor", "not", "only", 
     "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", 
-    "just", "don", "should", "now"
+    "just", "don", "should", "now", "also", "get", "got", "like", "make",
+    "way", "even", "well", "back", "much", "many", "would", "could", "one"
   ];
   
   // Extract words longer than 3 chars that aren't stop words
@@ -152,34 +208,39 @@ export const extractTopics = (query: string): string[] => {
     phrases.push(`${words[i]} ${words[i + 1]}`);
   }
   
+  // Extract 3-word phrases (trigrams) for even better matches
+  for (let i = 0; i < words.length - 2; i++) {
+    phrases.push(`${words[i]} ${words[i + 1]} ${words[i + 2]}`);
+  }
+  
   // Combine individual words and phrases, removing duplicates
   const allTopics = [...words, ...phrases];
   const uniqueTopics = [...new Set(allTopics)];
   
-  // Return top 5 topics
-  return uniqueTopics.slice(0, 5);
+  // Return top 7 topics (increased from 5)
+  return uniqueTopics.slice(0, 7);
 };
 
 /**
- * Enhanced augment response with reranking
+ * Enhanced augment response with semantically integrated content
  */
-export const augmentResponseWithReranking = (
+export const augmentResponseWithReranking = async (
   response: string,
   userInput: string,
-): string => {
+): Promise<string> => {
   try {
     // Extract topics from user input
     const topics = extractTopics(userInput);
     
     // Retrieve and rerank memories
-    const rerankedMemories = retrieveAndRerankMemories(userInput, topics, 3);
+    const rerankedMemories = await retrieveAndRerankMemories(userInput, topics, 3);
     
     // If no good matches found, return original response
     if (rerankedMemories.length === 0) {
       return response;
     }
     
-    // Use the top memory to augment the response
+    // Get the top memory
     const topMemory = rerankedMemories[0].content;
     
     // Avoid duplication if response already contains memory
@@ -187,21 +248,52 @@ export const augmentResponseWithReranking = (
       return response;
     }
     
-    // Integrate memory naturally
-    if (response.length < 100) {
-      // For short responses, simply prepend
-      return `${topMemory} ${response}`;
-    } else {
-      // For longer responses, insert at a natural point
-      const sentences = response.split(/(?<=[.!?])\s+/);
-      const insertPoint = Math.floor(sentences.length / 3);
+    // Split response into sentences for better integration
+    const sentences = response.split(/(?<=[.!?])\s+/);
+    
+    // Find the most semantically relevant point to insert the memory
+    let bestSentenceIndex = 0;
+    let highestSimilarity = -1;
+    
+    try {
+      // Find the sentence most similar to the memory
+      const memoryEmbedding = await generateEmbedding(topMemory);
       
-      return [
-        ...sentences.slice(0, insertPoint),
-        topMemory,
-        ...sentences.slice(insertPoint)
-      ].join(' ');
+      for (let i = 0; i < sentences.length; i++) {
+        if (sentences[i].length < 10) continue; // Skip very short sentences
+        
+        const sentenceEmbedding = await generateEmbedding(sentences[i]);
+        const similarity = cosineSimilarity(memoryEmbedding, sentenceEmbedding);
+        
+        if (similarity > highestSimilarity) {
+          highestSimilarity = similarity;
+          bestSentenceIndex = i;
+        }
+      }
+    } catch (error) {
+      // If similarity calculation fails, use a default insertion point
+      bestSentenceIndex = Math.floor(sentences.length / 3);
     }
+    
+    // Create a natural transition phrase based on the memory content
+    let transitionPhrase = "Relating to what you've shared, ";
+    
+    if (topMemory.includes("feel") || topMemory.includes("feeling")) {
+      transitionPhrase = "Connecting with your feelings, ";
+    } else if (topMemory.includes("think") || topMemory.includes("thought")) {
+      transitionPhrase = "Building on your thoughts, ";
+    } else if (topMemory.includes("want") || topMemory.includes("need")) {
+      transitionPhrase = "Addressing what you're looking for, ";
+    }
+    
+    // Insert the memory with the transition phrase
+    const enhancedResponse = [
+      ...sentences.slice(0, bestSentenceIndex),
+      `${transitionPhrase}${topMemory}`,
+      ...sentences.slice(bestSentenceIndex)
+    ].join(' ');
+    
+    return enhancedResponse;
   } catch (error) {
     console.error("Error augmenting response with reranking:", error);
     return response;

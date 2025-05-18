@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { MessageType } from '../../../components/Message';
 import { enhanceResponse } from '../../../utils/response/enhancer';
@@ -9,6 +8,7 @@ import { handleErrorResponse } from './useErrorHandling';
 
 /**
  * Hook that combines and orchestrates various response-related hooks
+ * with support for async RAG enhancement
  */
 export const useResponseHooks = (
   processUserMessage: (userInput: string) => Promise<MessageType>,
@@ -28,7 +28,7 @@ export const useResponseHooks = (
   const [recentResponses, setRecentResponses] = useState<string[]>([]);
 
   // Process a response with appropriate delay and handling
-  const processResponse = useCallback((userInput: string) => {
+  const processResponse = useCallback(async (userInput: string) => {
     // Record user message to memory system
     processUserMessageMemory(userInput);
     
@@ -49,60 +49,81 @@ export const useResponseHooks = (
     }
     
     // Process user input to generate Roger's response after appropriate delay
-    setTimeout(() => {
-      processUserMessage(userInput)
-        .then(rogerResponse => {
-          try {
-            // Use unified enhancement pipeline for comprehensive response processing
-            const responseWithContextCheck = enhanceResponse(
-              rogerResponse.text,
-              userInput,
-              conversationHistory.length,
-              conversationHistory
+    setTimeout(async () => {
+      try {
+        const rogerResponse = await processUserMessage(userInput);
+        
+        // Set an initial empty version of the response for better UX
+        setMessages(prevMessages => [...prevMessages, rogerResponse]);
+        
+        try {
+          // Use unified enhancement pipeline for comprehensive response processing
+          // Now with async support for vector operations
+          const responseWithContextCheck = await enhanceResponse(
+            rogerResponse.text,
+            userInput,
+            conversationHistory.length,
+            conversationHistory
+          );
+          
+          // Check for repetition in recent responses
+          if (checkForResponseRepetition(responseWithContextCheck, recentResponses)) {
+            // If repetition detected, use a recovery response
+            const recoveryResponse = getRepetitionRecoveryResponse();
+            
+            // Update the response with the recovery text
+            const updatedResponse = {
+              ...rogerResponse,
+              text: recoveryResponse
+            };
+            
+            // Update message in state
+            setMessages(prevMessages => 
+              prevMessages.map(msg => 
+                msg.id === rogerResponse.id ? updatedResponse : msg
+              )
             );
             
-            // Check for repetition in recent responses
-            if (checkForResponseRepetition(responseWithContextCheck, recentResponses)) {
-              // If repetition detected, use a recovery response
-              const recoveryResponse = getRepetitionRecoveryResponse();
-              
-              // Update the response with the recovery text
-              rogerResponse = {
-                ...rogerResponse,
-                text: recoveryResponse
-              };
-            } else {
-              // Update the response with enhanced text
-              rogerResponse = {
-                ...rogerResponse,
-                text: responseWithContextCheck
-              };
-              
-              // Update recent responses for future repetition checks
-              setRecentResponses(prev => {
-                const updated = [responseWithContextCheck, ...prev];
-                // Keep only the 5 most recent responses
-                return updated.slice(0, 5);
-              });
-            }
+            // Use the recovery text for simulation
+            simulateTypingResponse(recoveryResponse, (text) => {
+              // No need to update message again, already updated above
+              setProcessingContext(null);
+            });
+          } else {
+            // Update the response with enhanced text
+            const updatedResponse = {
+              ...rogerResponse,
+              text: responseWithContextCheck
+            };
+            
+            // Update message in state
+            setMessages(prevMessages => 
+              prevMessages.map(msg => 
+                msg.id === rogerResponse.id ? updatedResponse : msg
+              )
+            );
+            
+            // Update recent responses for future repetition checks
+            setRecentResponses(prev => {
+              const updated = [responseWithContextCheck, ...prev];
+              // Keep only the 5 most recent responses
+              return updated.slice(0, 5);
+            });
             
             // Track response with enhanced tracking system
-            enhanceAndTrackResponse(rogerResponse.text);
+            enhanceAndTrackResponse(responseWithContextCheck);
             
             // Check if this is a crisis-related response and store it for deception detection
-            handleCrisisMessage(userInput, rogerResponse);
-            
-            // Add the empty response message first (will be updated during typing simulation)
-            setMessages(prevMessages => [...prevMessages, rogerResponse]);
+            handleCrisisMessage(userInput, updatedResponse);
             
             // Set up to request location after this message if needed
-            if (rogerResponse.concernType && 
-                isLocationDataNeeded(rogerResponse.concernType) && 
+            if (updatedResponse.concernType && 
+                isLocationDataNeeded(updatedResponse.concernType) && 
                 !activeLocationConcern) {
               
               setActiveLocationConcern({
-                concernType: rogerResponse.concernType,
-                messageId: rogerResponse.id,
+                concernType: updatedResponse.concernType,
+                messageId: updatedResponse.id,
                 askedForLocation: false
               });
             }
@@ -111,25 +132,30 @@ export const useResponseHooks = (
             setConversationHistory(prev => [...prev, responseWithContextCheck]);
             
             // Simulate typing with a callback to update the message text
-            simulateTypingResponse(rogerResponse.text, (text) => {
-              setMessages(prevMessages => 
-                prevMessages.map(msg => 
-                  msg.id === rogerResponse.id ? { ...msg, text } : msg
-                )
-              );
-              
+            simulateTypingResponse(updatedResponse.text, (text) => {
+              // No need to update message again - already handled above
               // Clear the processing context once response is complete
               setProcessingContext(null);
             });
-          } catch (innerError) {
-            console.error("Error processing Roger's response:", innerError);
-            handleErrorResponse(isCritical, setMessages, simulateTypingResponse, setProcessingContext);
           }
-        })
-        .catch(error => {
-          console.error("Error generating response:", error);
-          handleErrorResponse(isCritical, setMessages, simulateTypingResponse, setProcessingContext);
-        });
+        } catch (innerError) {
+          console.error("Error enhancing Roger's response:", innerError);
+          
+          // Still proceed with original response if enhancement fails
+          simulateTypingResponse(rogerResponse.text, (text) => {
+            setMessages(prevMessages => 
+              prevMessages.map(msg => 
+                msg.id === rogerResponse.id ? { ...msg, text } : msg
+              )
+            );
+            
+            setProcessingContext(null);
+          });
+        }
+      } catch (error) {
+        console.error("Error generating response:", error);
+        handleErrorResponse(isCritical, setMessages, simulateTypingResponse, setProcessingContext);
+      }
     }, responseDelay);
   }, [
     processUserMessage,
