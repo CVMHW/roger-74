@@ -1,4 +1,3 @@
-
 /**
  * Response enhancer
  * 
@@ -134,7 +133,7 @@ export const enhanceResponse = (
     return processedResponse;
     
   } catch (error) {
-    console.error("Error in response enhancement:", error);
+    console.log("Error in response enhancement:", error);
     return responseText; // Return original response if enhancement fails
   }
 };

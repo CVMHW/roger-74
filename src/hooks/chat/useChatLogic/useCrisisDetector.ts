@@ -26,4 +26,4 @@ export const useCrisisDetector = () => {
 };
 
 // Export the function directly for use in non-hook contexts
-export { checkForCrisisContent };
+export { checkForCrisisContent } from '../crisisDetection';
