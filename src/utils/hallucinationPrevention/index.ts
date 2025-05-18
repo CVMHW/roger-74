@@ -1,110 +1,191 @@
 
 /**
- * Hallucination Prevention System
+ * Retrieval Augmented Generation System - Main Entry Point
  * 
- * Main entry point for the RAG system that connects all components
+ * Advanced RAG system with hybrid search, reranking, and session-persistent vectors
  */
 
-// Export vector database components
-export * from './vectorDatabase';
-export * from './dataLoader';
-export * from './retrieval';
+import { initializeVectorDatabase } from './dataLoader';
+import { retrieveFactualGrounding, retrieveAugmentation, augmentResponseWithRetrieval } from './retrieval';
+import { retrieveEnhanced, expandQuery, augmentResponseWithEnhancedRetrieval } from './enhancedRetrieval';
+import { performHybridSearch } from './hybridSearch';
+import { rerankResults } from './reranker';
+import { persistVectors, loadPersistedVectors, getPersistedVectors } from './persistentVectorStore';
+import vectorDB from './vectorDatabase';
+import { COLLECTIONS } from './dataLoader/types';
+import { isUsingSimulatedEmbeddings, forceReinitializeEmbeddingModel } from './vectorEmbeddings';
 
-// Export integration components
-export * from './integration';
-
-// Import necessary components
-import { initializeRAGIntegration } from './integration';
-import { generateEmbedding, forceReinitializeEmbeddingModel } from './vectorEmbeddings';
-import { integrateKnowledgeIntoResponse } from './integration';
-
-// Connection status
+// Track initialization status
 let isInitialized = false;
+let isInitializing = false;
 
 /**
  * Initialize the RAG system
  */
 export const initializeRAGSystem = async (): Promise<boolean> => {
+  // Prevent concurrent initialization
+  if (isInitializing) {
+    console.log("RAG System initialization already in progress...");
+    return false;
+  }
+  
+  // Skip if already initialized
+  if (isInitialized) {
+    console.log("RAG System already initialized");
+    return true;
+  }
+  
+  isInitializing = true;
+  
   try {
-    console.log("🔄 Initializing RAG system...");
+    console.log("Initializing RAG System...");
     
-    // First, try to initialize the embedding model
-    try {
+    // First try to reinitialize the embedding model with real embeddings
+    if (isUsingSimulatedEmbeddings()) {
+      console.log("Currently using simulated embeddings, attempting to reinitialize...");
       await forceReinitializeEmbeddingModel();
-    } catch (modelError) {
-      console.warn("⚠️ Could not initialize embedding model:", modelError);
-      console.log("⚠️ Will use simulated embeddings as fallback");
     }
     
-    // Initialize the vector database and integrations
-    const success = await initializeRAGIntegration();
+    // Try to load persisted vectors first
+    console.log("Loading persisted vectors...");
     
-    if (success) {
-      console.log("✅ RAG system initialized successfully");
-      isInitialized = true;
-    } else {
-      console.error("❌ Failed to initialize RAG system");
-      isInitialized = false;
+    const factsLoaded = loadPersistedVectors(COLLECTIONS.FACTS, (records) => {
+      const collection = vectorDB.collection(COLLECTIONS.FACTS);
+      records.forEach(record => collection.insert(record));
+    });
+    
+    const knowledgeLoaded = loadPersistedVectors(COLLECTIONS.ROGER_KNOWLEDGE, (records) => {
+      const collection = vectorDB.collection(COLLECTIONS.ROGER_KNOWLEDGE);
+      records.forEach(record => collection.insert(record));
+    });
+    
+    const userMsgLoaded = loadPersistedVectors(COLLECTIONS.USER_MESSAGES, (records) => {
+      const collection = vectorDB.collection(COLLECTIONS.USER_MESSAGES);
+      records.forEach(record => collection.insert(record));
+    });
+    
+    const rogerRespLoaded = loadPersistedVectors(COLLECTIONS.ROGER_RESPONSES, (records) => {
+      const collection = vectorDB.collection(COLLECTIONS.ROGER_RESPONSES);
+      records.forEach(record => collection.insert(record));
+    });
+    
+    console.log("Persisted vectors loaded:", { 
+      factsLoaded, knowledgeLoaded, userMsgLoaded, rogerRespLoaded 
+    });
+    
+    // Initialize vector database with fresh data
+    const dbInitialized = await initializeVectorDatabase();
+    
+    // Persist all vectors from database to localStorage
+    for (const collectionName of [
+      COLLECTIONS.FACTS,
+      COLLECTIONS.ROGER_KNOWLEDGE,
+      COLLECTIONS.USER_MESSAGES,
+      COLLECTIONS.ROGER_RESPONSES
+    ]) {
+      const collection = vectorDB.collection(collectionName);
+      if (collection.size() > 0) {
+        persistVectors(collectionName, collection.getAll());
+      }
     }
     
-    return success;
+    isInitialized = true;
+    isInitializing = false;
+    
+    console.log("RAG System initialization complete");
+    return true;
   } catch (error) {
-    console.error("❌ Error initializing RAG system:", error);
-    isInitialized = false;
+    console.error("Error initializing RAG system:", error);
+    isInitializing = false;
     return false;
   }
 };
 
 /**
- * Check if RAG system is initialized
+ * Enhanced retrieval with hybrid search and reranking
  */
-export const isRAGSystemInitialized = (): boolean => {
-  return isInitialized;
-};
-
-/**
- * Process text through the RAG system to enhance response
- */
-export const processResponse = async (
-  responseText: string,
-  userInput: string,
-  conversationHistory: string[] = [],
-  messageCount: number = conversationHistory.length
-): Promise<string> => {
+export const retrieveRelevantContent = async (
+  query: string,
+  userHistory: string[] = []
+): Promise<{
+  content: MemoryPiece[];
+  expandedTopics: string[];
+}> => {
   try {
-    // Try to initialize if not already done
+    // Initialize if needed
     if (!isInitialized) {
-      try {
-        await initializeRAGSystem();
-      } catch (error) {
-        console.error("Error initializing RAG system:", error);
-      }
+      await initializeRAGSystem();
     }
     
-    // Process the response through knowledge integration
-    return await integrateKnowledgeIntoResponse(
-      responseText,
-      userInput,
-      messageCount,
-      conversationHistory
-    );
+    // Extract and expand topics from query
+    const expandedTopics = expandQuery(query);
+    
+    // Use enhanced retrieval with hybrid search and reranking
+    const retrievedContent = await retrieveEnhanced(query, expandedTopics, {
+      limit: 5,
+      rerank: true
+    });
+    
+    return {
+      content: retrievedContent,
+      expandedTopics
+    };
   } catch (error) {
-    console.error("Error processing response through RAG:", error);
-    return responseText;
+    console.error("Error in retrieveRelevantContent:", error);
+    
+    // Fallback to basic retrieval
+    const topics = query.toLowerCase()
+      .split(/\W+/)
+      .filter(word => word.length > 3);
+      
+    return {
+      content: retrieveFactualGrounding(topics, 3),
+      expandedTopics: topics
+    };
   }
 };
 
 /**
- * Create a standalone vector embedding for text
+ * Enhanced response augmentation with advanced RAG
  */
-export const createEmbedding = async (text: string): Promise<number[]> => {
-  return await generateEmbedding(text);
+export const enhanceResponseWithRAG = async (
+  responseText: string,
+  userInput: string,
+  conversationHistory: string[] = []
+): Promise<string> => {
+  try {
+    // Retrieve relevant content using enhanced RAG
+    const { content: retrievedContent } = await retrieveRelevantContent(userInput, conversationHistory);
+    
+    if (retrievedContent.length === 0) {
+      return responseText;
+    }
+    
+    // Augment the response with retrieved content
+    return augmentResponseWithEnhancedRetrieval(
+      responseText,
+      userInput,
+      retrievedContent
+    );
+  } catch (error) {
+    console.error("Error enhancing response with RAG:", error);
+    return responseText;
+  }
 };
 
-// Default export
-export default {
-  initializeRAGSystem,
-  isRAGSystemInitialized,
-  processResponse,
-  createEmbedding
+// Re-export key components for external use
+export {
+  retrieveFactualGrounding,
+  retrieveAugmentation, 
+  augmentResponseWithRetrieval,
+  performHybridSearch,
+  rerankResults
 };
+
+// Export memory piece type
+export type { MemoryPiece } from './retrieval';
+
+// Initialize on import
+initializeRAGSystem().catch(error => 
+  console.error("Error initializing RAG system on import:", error)
+);

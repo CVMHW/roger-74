@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { MessageType } from '../../../components/Message';
 import { enhanceResponse } from '../../../utils/response/enhancer';
@@ -5,6 +6,9 @@ import { checkForResponseRepetition, getRepetitionRecoveryResponse, processUserM
 import { isLocationDataNeeded } from '../../../utils/messageUtils';
 import { containsCriticalKeywords } from '../messageProcessor/detectionUtils';
 import { handleErrorResponse } from './useErrorHandling';
+
+// Import our new enhanced RAG system
+import { enhanceResponseWithRAG } from '../../../utils/hallucinationPrevention';
 
 /**
  * Hook that combines and orchestrates various response-related hooks
@@ -67,6 +71,13 @@ export const useResponseHooks = (
               rogerResponse.text,
               userInput,
               conversationHistory.length,
+              conversationHistory
+            );
+            
+            // Further enhance with our new RAG system
+            responseWithContextCheck = await enhanceResponseWithRAG(
+              responseWithContextCheck,
+              userInput,
               conversationHistory
             );
           } catch (enhanceError) {
