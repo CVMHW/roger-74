@@ -32,13 +32,16 @@ export {
   forceReinitializeEmbeddingModel,
   isUsingSimulatedEmbeddings,
   generateEmbedding,
-  getEmbeddingSuccessRate
+  getEmbeddingSuccessRate,
+  getEmbeddingCacheStats
 } from './embeddingModel';
 
 // Export embedding generator functions
 export {
   generateEmbeddings,
-  findMostSimilar
+  findMostSimilar,
+  findSimilarContent,
+  chunkAndEmbedText
 } from './embeddingGenerator';
 
 // Initialize the embedding model when this module is imported

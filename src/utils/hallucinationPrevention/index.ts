@@ -9,7 +9,7 @@ import { initializeVectorDatabase } from './dataLoader';
 import { retrieveFactualGrounding, retrieveAugmentation, augmentResponseWithRetrieval, MemoryPiece } from './retrieval';
 import { retrieveEnhanced, expandQuery, augmentResponseWithEnhancedRetrieval } from './enhancedRetrieval';
 import { performHybridSearch } from './hybridSearch';
-import { rerankResults } from './reranker';
+import { rerankResults, retrieveWithReranking, rerankWithCrossAttention } from './reranker';
 import { 
   persistVectors, 
   loadPersistedVectors, 
@@ -23,13 +23,19 @@ import {
   isUsingSimulatedEmbeddings, 
   forceReinitializeEmbeddingModel, 
   initializeEmbeddingSystem,
-  isEmbeddingSystemReady
+  isEmbeddingSystemReady,
+  getEmbeddingCacheStats
 } from './vectorEmbeddings';
 
 // Track initialization status
 let isInitialized = false;
 let isInitializing = false;
 let initializationPromise: Promise<boolean> | null = null;
+
+// Track vector reuse stats
+let vectorsLoaded = 0;
+let vectorsCreated = 0;
+let initStartTime = 0;
 
 /**
  * Initialize the RAG system
@@ -48,6 +54,7 @@ export const initializeRAGSystem = async (): Promise<boolean> => {
   }
   
   isInitializing = true;
+  initStartTime = Date.now();
   
   // Create a new initialization promise
   initializationPromise = (async () => {
@@ -66,12 +73,13 @@ export const initializeRAGSystem = async (): Promise<boolean> => {
       // Check if we have recent persisted vectors
       const hasRecent = await hasRecentPersistedVectors();
       
-      // Load vectors from persistent storage with proper error handling
+      // Function to load vectors for a collection with metrics
       const loadCollection = async (collectionName: string): Promise<boolean> => {
         try {
           return loadPersistedVectors(collectionName, (records) => {
             const collection = vectorDB.collection(collectionName);
             records.forEach(record => collection.insert(record));
+            vectorsLoaded += records.length;
             console.log(`Inserted ${records.length} records into ${collectionName} from persistence`);
           });
         } catch (error) {
@@ -89,7 +97,6 @@ export const initializeRAGSystem = async (): Promise<boolean> => {
       ];
       
       // Also start the vector database initialization in parallel
-      // This will load fresh data if needed
       const dbInitPromise = initializeVectorDatabase();
       
       // Wait for all loading operations to complete
@@ -101,6 +108,24 @@ export const initializeRAGSystem = async (): Promise<boolean> => {
       
       // Complete the vector database initialization
       const dbInitialized = await dbInitPromise;
+      
+      // Count new vectors created during initialization
+      const countCollectionSize = (collectionName: string): number => {
+        try {
+          return vectorDB.collection(collectionName).size();
+        } catch (e) {
+          return 0;
+        }
+      };
+      
+      const totalVectors = 
+        countCollectionSize(COLLECTIONS.FACTS) +
+        countCollectionSize(COLLECTIONS.ROGER_KNOWLEDGE) +
+        countCollectionSize(COLLECTIONS.USER_MESSAGES) +
+        countCollectionSize(COLLECTIONS.ROGER_RESPONSES);
+      
+      // Estimate newly created vectors
+      vectorsCreated = Math.max(0, totalVectors - vectorsLoaded);
       
       // Initialize embedding system if not already done
       await initializeEmbeddingSystem();
@@ -122,12 +147,21 @@ export const initializeRAGSystem = async (): Promise<boolean> => {
         }
       }));
       
+      // Log stats
+      const initTimeMs = Date.now() - initStartTime;
+      console.log(`RAG System initialized in ${initTimeMs}ms:`, {
+        vectorsLoaded,
+        vectorsCreated,
+        totalVectors,
+        cachingEnabled: true,
+        usingRealEmbeddings: !isUsingSimulatedEmbeddings()
+      });
+      
       isInitialized = true;
       isInitializing = false;
       initializationPromise = null;
       
-      console.log("RAG System initialization complete");
-      return true;
+      return !isUsingSimulatedEmbeddings();
     } catch (error) {
       console.error("Error initializing RAG system:", error);
       isInitializing = false;
@@ -138,6 +172,55 @@ export const initializeRAGSystem = async (): Promise<boolean> => {
   
   return initializationPromise;
 };
+
+/**
+ * Get RAG system stats for monitoring
+ */
+export const getRAGSystemStats = (): {
+  initialized: boolean;
+  usingRealEmbeddings: boolean;
+  vectorsLoaded: number;
+  vectorsCreated: number;
+  vectorReuse: number;
+  embeddingCache: ReturnType<typeof getEmbeddingCacheStats>;
+  collectionSizes: Record<string, number>;
+} => {
+  // Calculate vector reuse percentage
+  const vectorReuse = totalVectors() > 0 ? 
+    Math.round((vectorsLoaded / totalVectors()) * 100) : 0;
+    
+  // Get collection sizes
+  const collectionSizes: Record<string, number> = {};
+  [
+    COLLECTIONS.FACTS,
+    COLLECTIONS.ROGER_KNOWLEDGE,
+    COLLECTIONS.USER_MESSAGES,
+    COLLECTIONS.ROGER_RESPONSES
+  ].forEach(name => {
+    try {
+      collectionSizes[name] = vectorDB.collection(name).size();
+    } catch (e) {
+      collectionSizes[name] = 0;
+    }
+  });
+  
+  return {
+    initialized: isInitialized,
+    usingRealEmbeddings: !isUsingSimulatedEmbeddings(),
+    vectorsLoaded,
+    vectorsCreated,
+    vectorReuse,
+    embeddingCache: getEmbeddingCacheStats(),
+    collectionSizes
+  };
+};
+
+/**
+ * Get total number of vectors in the system
+ */
+function totalVectors(): number {
+  return vectorsLoaded + vectorsCreated;
+}
 
 /**
  * Check if RAG system is ready for high-quality embeddings
@@ -151,7 +234,7 @@ export const isRAGSystemReady = (): boolean => {
  */
 export const retrieveRelevantContent = async (
   query: string,
-  userHistory: string[] = []
+  conversationHistory: string[] = []
 ): Promise<{
   content: MemoryPiece[];
   expandedTopics: string[];
@@ -163,12 +246,13 @@ export const retrieveRelevantContent = async (
     }
     
     // Extract and expand topics from query
-    const expandedTopics = expandQuery(query);
+    const expandedTopics = await generateExpandedQuery(query, expandQuery(query));
     
     // Use enhanced retrieval with hybrid search and reranking
     const retrievedContent = await retrieveEnhanced(query, expandedTopics, {
       limit: 5,
-      rerank: true
+      rerank: true,
+      conversationContext: conversationHistory
     });
     
     return {
@@ -188,6 +272,19 @@ export const retrieveRelevantContent = async (
       expandedTopics: topics
     };
   }
+};
+
+/**
+ * Generate expanded query with advanced techniques
+ * Re-export from enhancedRetrieval for convenience
+ */
+export const generateExpandedQuery = async (
+  query: string,
+  initialTopics: string[] = []
+): Promise<string[]> => {
+  // Import dynamically to avoid circular dependencies
+  const enhancedRetrieval = await import('./enhancedRetrieval');
+  return enhancedRetrieval.generateExpandedQuery(query, initialTopics);
 };
 
 /**
@@ -230,7 +327,7 @@ export {
 // Export memory piece type
 export type { MemoryPiece } from './retrieval';
 
-// Initialize on import, but don't block
+// Initialize on import, but don't block and use a more delayed start
 setTimeout(() => {
   initializeRAGSystem().catch(error => 
     console.error("Error initializing RAG system on import:", error)
