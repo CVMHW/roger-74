@@ -1,3 +1,4 @@
+
 /**
  * Response Enhancer
  * 
@@ -6,7 +7,11 @@
  */
 
 import { processResponse } from './processor';
-import { retrieveAugmentation, augmentResponseWithRetrieval, addConversationExchange } from '../hallucinationPrevention/retrieval';
+import { 
+  retrieveAugmentation,
+  augmentResponseWithRetrieval,
+  addConversationExchange
+} from '../hallucinationPrevention';
 import { enhanceWithMeaningPerspective } from '../logotherapy/logotherapyIntegration';
 import { getRogerPersonalityInsight } from '../reflection/rogerPersonality';
 import { identifyEnhancedFeelings } from '../reflection/feelingDetection';

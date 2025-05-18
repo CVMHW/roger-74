@@ -93,7 +93,7 @@ const addMemoryToCollection = async (
     collection.insert({
       id: uuidv4(),
       text: content,
-      embedding,
+      vector: embedding,
       metadata: {
         ...metadata,
         timestamp: Date.now(),

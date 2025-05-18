@@ -1,13 +1,8 @@
-
 /**
- * Hallucination Detection System
- * 
- * Central module for detecting and fixing hallucinations in responses
+ * Main exports for detector
  */
 
-// Re-export for backward compatibility
-export { checkAndFixHallucinations } from './hallucination-checker';
-export { detectHallucinations } from './hallucination-detector';
+// Fix import to use HallucinationFlag instead of HallucinationFlagType
+import { HallucinationSeverity, HallucinationFlag, HallucinationCheck } from './types';
 
-// Export standard HallucinationCheck types
-export type { HallucinationCheck, HallucinationFlag, HallucinationSeverity, HallucinationFlagType } from './types';
+export type { HallucinationSeverity, HallucinationFlag, HallucinationCheck };

@@ -25,7 +25,7 @@ export const loadKnowledge = async (entries: KnowledgeEntry[], collectionName: s
       collection.insert({
         id: uuidv4(),
         text: entry.content,
-        embedding,
+        vector: embedding,
         metadata: {
           category: entry.category,
           importance: entry.importance,

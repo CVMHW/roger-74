@@ -8,9 +8,9 @@
  */
 export interface VectorRecord {
   id: string;
-  vector: number[]; // The actual vector embedding
-  text?: string;    // Optional text content
+  vector?: number[]; // The actual vector embedding
   embedding?: number[]; // Alternative name for vector (for compatibility)
+  text?: string;    // Optional text content
   metadata?: any;   // Any additional data associated with this vector
   timestamp?: number; // Optional timestamp
 }

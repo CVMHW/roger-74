@@ -1,4 +1,3 @@
-
 /**
  * Main hallucination prevention system
  * 
@@ -9,7 +8,14 @@
 import { HallucinationPreventionOptions, HallucinationProcessResult } from '../../types/hallucinationPrevention';
 import { preventHallucinations } from './processor';
 import { detectHallucinations } from './detector';
-import { retrieveAugmentation, augmentResponseWithRetrieval, initializeRetrievalSystem } from './retrieval';
+import { 
+  retrieveAugmentation, 
+  augmentResponseWithRetrieval, 
+  initializeRetrievalSystem, 
+  addConversationExchange,
+  retrieveSimilarResponses,
+  retrieveFactualGrounding
+} from './retrieval';
 import { createEmotionContext } from '../response/processor/emotionHandler/emotionMisidentificationHandler';
 import { extractEmotionsFromInput } from '../response/processor/emotions';
 import vectorDB from './vectorDatabase';
@@ -255,8 +261,11 @@ export const analyzeConversation = async (
 // Export main functions
 export { 
   preventHallucinations,
-  detectHallucinations as checkAndFixHallucinations,
+  detectHallucinations,
   retrieveAugmentation,
   augmentResponseWithRetrieval,
-  addConversationExchange
+  // Re-export from retrieval.ts
+  addConversationExchange,
+  retrieveSimilarResponses,
+  retrieveFactualGrounding
 };

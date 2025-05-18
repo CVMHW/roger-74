@@ -5,6 +5,7 @@
  * A lightweight, fast check to quickly identify obvious hallucination patterns
  */
 
+// Fix the import to use the type from the correct location
 import { QuickCheckResult } from '../vectorDatabase/types';
 
 /**

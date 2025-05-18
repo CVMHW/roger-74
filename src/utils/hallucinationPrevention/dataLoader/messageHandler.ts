@@ -28,7 +28,7 @@ export const addUserMessage = async (message: string): Promise<void> => {
     collection.insert({
       id: uuidv4(),
       text: message,
-      embedding,
+      vector: embedding,
       metadata: {
         timestamp: Date.now(),
         source: 'user',
@@ -58,7 +58,7 @@ export const addRogerResponse = async (response: string): Promise<void> => {
     collection.insert({
       id: uuidv4(),
       text: response,
-      embedding,
+      vector: embedding,
       metadata: {
         timestamp: Date.now(),
         source: 'roger',

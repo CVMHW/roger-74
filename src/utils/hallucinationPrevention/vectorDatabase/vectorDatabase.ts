@@ -14,6 +14,8 @@ import { cosineSimilarity } from '../vectorEmbeddings';
 export class VectorCollection {
   private records: VectorRecord[] = [];
   private name: string;
+  private indexEnabled: boolean = false;
+  private indexSize: number = 0;
   
   constructor(name: string) {
     this.name = name;
@@ -23,6 +25,13 @@ export class VectorCollection {
    * Insert a record into the collection
    */
   public insert(record: VectorRecord): void {
+    // Ensure either vector or embedding is set
+    if (!record.vector && record.embedding) {
+      record.vector = record.embedding;
+    } else if (!record.vector && !record.embedding) {
+      throw new Error("Vector record must have either vector or embedding property");
+    }
+    
     this.records.push(record);
   }
   
@@ -102,6 +111,15 @@ export class VectorCollection {
   public clear(): void {
     this.records = [];
   }
+  
+  /**
+   * Enable indexing for this collection
+   */
+  public enableIndexing(indexSize: number): void {
+    this.indexEnabled = true;
+    this.indexSize = indexSize;
+    console.log(`Indexing enabled for collection ${this.name} with size ${indexSize}`);
+  }
 }
 
 /**
@@ -109,6 +127,7 @@ export class VectorCollection {
  */
 export class VectorDatabase {
   private collections: Map<string, VectorCollection> = new Map();
+  private globalIndexSize: number = 0;
   
   /**
    * Create a new collection
@@ -116,6 +135,12 @@ export class VectorDatabase {
   public createCollection(name: string): VectorCollection {
     const collection = new VectorCollection(name);
     this.collections.set(name, collection);
+    
+    // Apply global indexing if enabled
+    if (this.globalIndexSize > 0) {
+      collection.enableIndexing(this.globalIndexSize);
+    }
+    
     return collection;
   }
   
@@ -169,6 +194,18 @@ export class VectorDatabase {
       collections: collectionsCount,
       totalRecords
     };
+  }
+  
+  /**
+   * Enable indexing for all collections (current and future)
+   */
+  public enableIndexing(indexSize: number): void {
+    this.globalIndexSize = indexSize;
+    
+    // Apply to all existing collections
+    for (const collection of this.collections.values()) {
+      collection.enableIndexing(indexSize);
+    }
   }
 }
 

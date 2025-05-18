@@ -1,11 +1,13 @@
-
 /**
- * Integration of RAG with Roger's Personality
- * 
- * Connects vector database knowledge with Roger's defined personality traits
+ * Integration with personality system
  */
 
-import { retrieveFactualGrounding, retrieveSimilarResponses } from '../retrieval';
+// Update imports to use the exported functions from the main index
+import { 
+  retrieveAugmentation, 
+  augmentResponseWithRetrieval,
+  retrieveSimilarResponses 
+} from '../index';
 
 /**
  * Enhance response with Roger's personality traits from vector database

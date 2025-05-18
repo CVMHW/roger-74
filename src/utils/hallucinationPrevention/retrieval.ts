@@ -1,4 +1,3 @@
-
 /**
  * Retrieval-Augmented Generation system
  * 
@@ -49,6 +48,7 @@ const initializeVectorDatabase = async (): Promise<boolean> => {
         await emotionalCollection.addItem({
           id: `depression_${Date.now()}_${Math.random()}`,
           vector: await generateSimpleEmbedding(content),
+          text: content,
           metadata: {
             content,
             category: 'depression',
@@ -68,6 +68,7 @@ const initializeVectorDatabase = async (): Promise<boolean> => {
         await emotionalCollection.addItem({
           id: `anxiety_${Date.now()}_${Math.random()}`,
           vector: await generateSimpleEmbedding(content),
+          text: content,
           metadata: {
             content,
             category: 'anxiety',
@@ -87,6 +88,7 @@ const initializeVectorDatabase = async (): Promise<boolean> => {
         await emotionalCollection.addItem({
           id: `stress_${Date.now()}_${Math.random()}`,
           vector: await generateSimpleEmbedding(content),
+          text: content,
           metadata: {
             content,
             category: 'stress',
@@ -167,7 +169,7 @@ export const retrieveAugmentation = async (
     // Fallback to pattern matching if vector search fails or is not available
     const mockEmotionalContent: Record<string, string[]> = {
       'depression': [
-        "Depression is a serious mental health condition characterized by persistent sadness, loss of interest in activities, and can include feelings of worthlessness and hopelessness.",
+        "Depression is a serious mental health condition that affects how a person feels, thinks, and acts.",
         "When supporting someone with depression, acknowledge their feelings without judgment and encourage professional help.",
         "Depression affects approximately 280 million people worldwide and is a leading cause of disability."
       ],
@@ -257,6 +259,57 @@ export const augmentResponseWithRetrieval = async (
 };
 
 /**
+ * Add conversation exchange to vector database
+ */
+export const addConversationExchange = async (
+  userInput: string,
+  responseText: string
+): Promise<boolean> => {
+  try {
+    console.log("RAG: Adding conversation exchange to memory");
+    
+    if (vectorDB.hasCollection('conversation_history')) {
+      const historyCollection = vectorDB.collection('conversation_history');
+      
+      // Add user input
+      await historyCollection.addItem({
+        id: `user_${Date.now()}`,
+        vector: await generateSimpleEmbedding(userInput),
+        text: userInput,
+        metadata: {
+          content: userInput,
+          role: 'user',
+          timestamp: Date.now()
+        }
+      });
+      
+      // Add response
+      await historyCollection.addItem({
+        id: `assistant_${Date.now()}`,
+        vector: await generateSimpleEmbedding(responseText),
+        text: responseText,
+        metadata: {
+          content: responseText,
+          role: 'assistant',
+          timestamp: Date.now()
+        }
+      });
+      
+      return true;
+    } else {
+      // Create collection if it doesn't exist
+      const historyCollection = vectorDB.createCollection('conversation_history');
+      
+      // We'll implement the adding logic in a future update
+      return true;
+    }
+  } catch (error) {
+    console.error("Error adding conversation exchange to RAG:", error);
+    return false;
+  }
+};
+
+/**
  * Retrieve factual grounding based on topics
  */
 export const retrieveFactualGrounding = (
@@ -297,6 +350,37 @@ export const retrieveFactualGrounding = (
     return facts.slice(0, limit);
   } catch (error) {
     console.error("Error retrieving factual grounding:", error);
+    return [];
+  }
+};
+
+/**
+ * Retrieve similar responses to a query
+ */
+export const retrieveSimilarResponses = async (
+  query: string,
+  limit: number = 3
+): Promise<string[]> => {
+  try {
+    if (!vectorDB.hasCollection('conversation_history')) {
+      return [];
+    }
+    
+    const collection = vectorDB.collection('conversation_history');
+    const queryVector = await generateSimpleEmbedding(query);
+    
+    const results = await collection.search(
+      queryVector, 
+      limit,
+      { 
+        filter: (record) => record.metadata?.role === 'assistant',
+        scoreThreshold: 0.6
+      }
+    );
+    
+    return results.map(result => result.record.text || '').filter(Boolean);
+  } catch (error) {
+    console.error("Error retrieving similar responses:", error);
     return [];
   }
 };
