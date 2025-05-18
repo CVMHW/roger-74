@@ -12,7 +12,7 @@ const retrieveFactualGrounding = async (query: string, limit = 3): Promise<strin
   try {
     // Import dynamically to avoid circular dependencies
     const { retrieveAugmentation } = await import('../retrieval');
-    const result = await retrieveAugmentation(query, [], limit);
+    const result = await retrieveAugmentation(query, []);
     return result?.retrievedContent || [];
   } catch (error) {
     console.error("Error retrieving factual grounding:", error);
