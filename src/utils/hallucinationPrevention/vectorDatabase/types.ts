@@ -9,7 +9,10 @@
 export interface VectorRecord {
   id: string;
   vector: number[]; // The actual vector embedding
+  text?: string;    // Optional text content
+  embedding?: number[]; // Alternative name for vector (for compatibility)
   metadata?: any;   // Any additional data associated with this vector
+  timestamp?: number; // Optional timestamp
 }
 
 /**
@@ -26,4 +29,13 @@ export interface VectorIndex {
 export interface SimilaritySearchOptions {
   similarityFunction?: (a: number[], b: number[]) => number;
   filter?: (record: VectorRecord) => boolean;
+}
+
+/**
+ * Quick check result for hallucination detection
+ */
+export interface QuickCheckResult {
+  isPotentialHallucination: boolean;
+  confidence: number;
+  reason?: string;
 }

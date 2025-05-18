@@ -9,6 +9,21 @@
 export type HallucinationSeverity = 'low' | 'medium' | 'high' | 'critical';
 
 /**
+ * Types of hallucination flags
+ */
+export type HallucinationFlagType = 
+  | 'false_memory' 
+  | 'false_continuity' 
+  | 'logical_error' 
+  | 'token_issue' 
+  | 'repetition' 
+  | 'emotion_misidentification'
+  | 'critical_emotion_misidentification'
+  | 'critical_protocol_violation'
+  | 'crisis_type_mismatch'
+  | 'substance_use_mishandled';
+
+/**
  * A flag indicating a potential hallucination
  */
 export interface HallucinationFlag {

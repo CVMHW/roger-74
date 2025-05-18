@@ -2,115 +2,176 @@
 /**
  * Vector Database Implementation
  * 
- * A simple, memory-based vector database with indexing capabilities
+ * A simple in-memory vector database for storing and retrieving vectors
  */
 
-import { VectorIndex, VectorRecord, SimilaritySearchOptions } from './types';
-import { findNearestNeighbors } from './utils';
-import { VectorCollection } from './vectorCollection';
+import { VectorRecord, SimilaritySearchOptions } from './types';
+import { cosineSimilarity } from '../vectorEmbeddings';
 
 /**
- * Vector Database for storing and retrieving vector embeddings
+ * Vector Collection class
+ */
+export class VectorCollection {
+  private records: VectorRecord[] = [];
+  private name: string;
+  
+  constructor(name: string) {
+    this.name = name;
+  }
+  
+  /**
+   * Insert a record into the collection
+   */
+  public insert(record: VectorRecord): void {
+    this.records.push(record);
+  }
+  
+  /**
+   * Add an item to the collection (alias for insert)
+   */
+  public addItem(record: VectorRecord): void {
+    this.insert(record);
+  }
+  
+  /**
+   * Get all records in the collection
+   */
+  public getAll(): VectorRecord[] {
+    return [...this.records];
+  }
+  
+  /**
+   * Get the number of records in the collection
+   */
+  public size(): number {
+    return this.records.length;
+  }
+  
+  /**
+   * Find records similar to the given vector
+   */
+  public findSimilar(
+    vector: number[],
+    options: { limit?: number; scoreThreshold?: number; filter?: (record: VectorRecord) => boolean } = {}
+  ): Array<{ record: VectorRecord; score: number }> {
+    const { 
+      limit = 10, 
+      scoreThreshold = 0.5,
+      filter = () => true
+    } = options;
+    
+    return this.records
+      .filter(filter)
+      .map(record => {
+        const recordVector = record.vector || record.embedding || [];
+        return {
+          record,
+          score: cosineSimilarity(vector, recordVector)
+        };
+      })
+      .filter(item => item.score >= scoreThreshold)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+  }
+  
+  /**
+   * Search for records (alias for findSimilar)
+   */
+  public search(
+    vector: number[],
+    limit: number = 10,
+    options: { filter?: (record: VectorRecord) => boolean; scoreThreshold?: number } = {}
+  ): Array<{ record: VectorRecord; score: number }> {
+    return this.findSimilar(vector, { 
+      limit, 
+      scoreThreshold: options.scoreThreshold || 0.5,
+      filter: options.filter
+    });
+  }
+  
+  /**
+   * Get the name of the collection
+   */
+  public getName(): string {
+    return this.name;
+  }
+  
+  /**
+   * Clear the collection
+   */
+  public clear(): void {
+    this.records = [];
+  }
+}
+
+/**
+ * Vector Database class
  */
 export class VectorDatabase {
-  private collections: Map<string, VectorCollection>;
-  private useIndexing: boolean = false;
-  private indexingThreshold: number = 1000;
-
-  constructor() {
-    this.collections = new Map();
-    console.log("VectorDatabase: Initialized");
-  }
-
-  /**
-   * Enable indexing for collections over a certain size
-   */
-  enableIndexing(threshold: number = 1000): void {
-    this.useIndexing = true;
-    this.indexingThreshold = threshold;
-    console.log(`VectorDatabase: Indexing enabled for collections with > ${threshold} items`);
-  }
-
-  /**
-   * Disable indexing
-   */
-  disableIndexing(): void {
-    this.useIndexing = false;
-    console.log("VectorDatabase: Indexing disabled");
-  }
-
-  /**
-   * Check if a collection exists
-   */
-  hasCollection(collectionName: string): boolean {
-    return this.collections.has(collectionName);
-  }
-
+  private collections: Map<string, VectorCollection> = new Map();
+  
   /**
    * Create a new collection
    */
-  createCollection(collectionName: string): VectorCollection {
-    if (this.collections.has(collectionName)) {
-      console.log(`VectorDatabase: Collection '${collectionName}' already exists, returning existing collection`);
-      return this.collections.get(collectionName)!;
-    }
-
-    const collection = new VectorCollection(collectionName, {
-      useIndexing: this.useIndexing,
-      indexingThreshold: this.indexingThreshold
-    });
-    
-    this.collections.set(collectionName, collection);
-    console.log(`VectorDatabase: Created collection '${collectionName}'`);
+  public createCollection(name: string): VectorCollection {
+    const collection = new VectorCollection(name);
+    this.collections.set(name, collection);
     return collection;
   }
-
+  
   /**
-   * Get an existing collection
+   * Get a collection by name
    */
-  getCollection(collectionName: string): VectorCollection {
-    if (!this.collections.has(collectionName)) {
-      throw new Error(`VectorDatabase: Collection '${collectionName}' does not exist`);
+  public getCollection(name: string): VectorCollection {
+    const collection = this.collections.get(name);
+    if (!collection) {
+      throw new Error(`Collection '${name}' not found`);
     }
-    
-    return this.collections.get(collectionName)!;
+    return collection;
   }
-
+  
   /**
-   * Delete a collection
+   * Check if a collection exists
    */
-  deleteCollection(collectionName: string): boolean {
-    const result = this.collections.delete(collectionName);
-    if (result) {
-      console.log(`VectorDatabase: Deleted collection '${collectionName}'`);
-    } else {
-      console.log(`VectorDatabase: Collection '${collectionName}' not found for deletion`);
-    }
-    return result;
+  public hasCollection(name: string): boolean {
+    return this.collections.has(name);
   }
-
+  
+  /**
+   * Get a collection, creating it if it doesn't exist
+   */
+  public collection(name: string): VectorCollection {
+    if (!this.hasCollection(name)) {
+      return this.createCollection(name);
+    }
+    return this.getCollection(name);
+  }
+  
   /**
    * Get all collection names
    */
-  getCollectionNames(): string[] {
+  public getCollectionNames(): string[] {
     return Array.from(this.collections.keys());
   }
-
+  
   /**
-   * Get database stats
+   * Get database statistics
    */
-  getStats(): { totalCollections: number; collectionStats: { [key: string]: { itemCount: number } } } {
-    const collectionStats: { [key: string]: { itemCount: number } } = {};
+  public stats(): { collections: number; totalRecords: number } {
+    const collectionsCount = this.collections.size;
+    let totalRecords = 0;
     
-    for (const [name, collection] of this.collections.entries()) {
-      collectionStats[name] = {
-        itemCount: collection.getItemCount()
-      };
+    for (const collection of this.collections.values()) {
+      totalRecords += collection.size();
     }
     
     return {
-      totalCollections: this.collections.size,
-      collectionStats
+      collections: collectionsCount,
+      totalRecords
     };
   }
 }
+
+// Create the default instance
+const vectorDB = new VectorDatabase();
+export default vectorDB;

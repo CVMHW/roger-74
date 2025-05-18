@@ -25,10 +25,10 @@ export const initializeVectorDatabase = async (): Promise<boolean> => {
     console.log("🔄 Initializing vector database with core knowledge...");
     
     // Create collections if they don't exist
-    const rogerCollection = vectorDB.collection(COLLECTIONS.ROGER_KNOWLEDGE);
-    const factsCollection = vectorDB.collection(COLLECTIONS.FACTS);
-    const userCollection = vectorDB.collection(COLLECTIONS.USER_MESSAGES);
-    const responseCollection = vectorDB.collection(COLLECTIONS.ROGER_RESPONSES);
+    const rogerCollection = vectorDB.collection('roger_knowledge');
+    const factsCollection = vectorDB.collection('facts');
+    const userCollection = vectorDB.collection('user_messages');
+    const responseCollection = vectorDB.collection('roger_responses');
     
     // Skip if already populated
     if (rogerCollection.size() > 0) {

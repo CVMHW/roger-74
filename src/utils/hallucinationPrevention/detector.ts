@@ -1,3 +1,4 @@
+
 /**
  * Core hallucination detection functionality
  */
@@ -173,6 +174,7 @@ export const detectHallucinations = (
   return {
     isHallucination,
     confidence,
+    wasHallucination: isHallucination,  // For backward compatibility
     flags,
     tokenLevelAnalysis,
     emotionMisidentified: hasMisidentifiedEmotion,

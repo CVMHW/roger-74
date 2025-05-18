@@ -9,6 +9,9 @@ import { MemoryPiece } from '../../types/hallucinationPrevention';
 import vectorDB from './vectorDatabase';
 import { extractEmotionsFromInput } from '../response/processor/emotions';
 
+// Export MemoryPiece for use in other modules
+export type { MemoryPiece };
+
 /**
  * Initializes the retrieval system
  */
@@ -149,7 +152,7 @@ export const retrieveAugmentation = async (
         const results = await emotionalCollection.search(queryVector, 3);
         
         if (results && results.length > 0) {
-          const retrievedContent = results.map(result => result.metadata.content);
+          const retrievedContent = results.map(result => result.record.metadata.content);
           return {
             retrievalSucceeded: true,
             retrievedContent,
@@ -236,89 +239,20 @@ export const augmentResponseWithRetrieval = async (
     if (/\b(depress(ed|ion|ing)?|sad|down|low|hopeless|worthless|empty|numb)\b/i.test(userInput) && 
         !responseText.toLowerCase().includes("depress")) {
       // Add depression acknowledgment if missing
-      responseText = `I hear that you're feeling depressed. ${responseText}`;
+      return `I hear that you're feeling depressed. ${responseText}`;
     }
     
     // For anxiety, ensure we acknowledge it
     if (/\b(anxious|anxiety|worry|worried|nervous|panic|fear|scared)\b/i.test(userInput) && 
         !responseText.toLowerCase().includes("anxi")) {
       // Add anxiety acknowledgment if missing
-      responseText = `I understand you're feeling anxious. ${responseText}`;
+      return `I understand you're feeling anxious. ${responseText}`;
     }
     
     return responseText;
   } catch (error) {
     console.error("Error in RAG augmentation:", error);
     return responseText;
-  }
-};
-
-/**
- * Adds a conversation exchange to the RAG system for learning
- */
-export const addConversationExchange = async (
-  userInput: string,
-  responseText: string
-): Promise<boolean> => {
-  try {
-    console.log("RAG: Adding conversation exchange to memory");
-    
-    if (vectorDB.hasCollection('conversation_history')) {
-      const historyCollection = vectorDB.getCollection('conversation_history');
-      
-      // Add user input
-      await historyCollection.addItem({
-        id: `user_${Date.now()}`,
-        vector: await generateSimpleEmbedding(userInput),
-        metadata: {
-          content: userInput,
-          role: 'user',
-          timestamp: Date.now()
-        }
-      });
-      
-      // Add response
-      await historyCollection.addItem({
-        id: `assistant_${Date.now()}`,
-        vector: await generateSimpleEmbedding(responseText),
-        metadata: {
-          content: responseText,
-          role: 'assistant',
-          timestamp: Date.now()
-        }
-      });
-      
-      return true;
-    } else {
-      // Create collection if it doesn't exist
-      const historyCollection = vectorDB.createCollection('conversation_history');
-      
-      // Add initial exchange
-      await historyCollection.addItem({
-        id: `user_${Date.now()}`,
-        vector: await generateSimpleEmbedding(userInput),
-        metadata: {
-          content: userInput,
-          role: 'user',
-          timestamp: Date.now()
-        }
-      });
-      
-      await historyCollection.addItem({
-        id: `assistant_${Date.now()}`,
-        vector: await generateSimpleEmbedding(responseText),
-        metadata: {
-          content: responseText,
-          role: 'assistant',
-          timestamp: Date.now()
-        }
-      });
-      
-      return true;
-    }
-  } catch (error) {
-    console.error("Error adding conversation exchange to RAG:", error);
-    return false;
   }
 };
 
@@ -363,63 +297,6 @@ export const retrieveFactualGrounding = (
     return facts.slice(0, limit);
   } catch (error) {
     console.error("Error retrieving factual grounding:", error);
-    return [];
-  }
-};
-
-/**
- * Retrieve similar responses based on a query
- */
-export const retrieveSimilarResponses = async (
-  query: string,
-  limit: number = 3
-): Promise<string[]> => {
-  try {
-    console.log(`Retrieving similar responses for: ${query}`);
-    
-    // Try vector-based retrieval first
-    try {
-      if (vectorDB.hasCollection('conversation_history')) {
-        const historyCollection = vectorDB.getCollection('conversation_history');
-        
-        // Generate query vector
-        const queryVector = await generateSimpleEmbedding(query);
-        
-        // Search for similar responses
-        const results = await historyCollection.search(queryVector, limit, {
-          filter: item => item.metadata.role === 'assistant'
-        });
-        
-        if (results && results.length > 0) {
-          return results.map(result => result.metadata.content);
-        }
-      }
-    } catch (vectorError) {
-      console.error("Vector search failed for similar responses, falling back to mock data:", vectorError);
-    }
-    
-    // Mock implementation
-    const responses: string[] = [];
-    
-    // Add mock responses based on query content
-    if (/depress|sad|down/i.test(query)) {
-      responses.push(
-        "I hear that you're feeling depressed. Depression can be really difficult to deal with, and I appreciate you sharing that with me. Have you been able to talk to a healthcare provider about how you're feeling?",
-        "It sounds like you're going through a really tough time with these feelings of depression. Many people find it helpful to speak with a professional who can provide proper support and guidance."
-      );
-    }
-    
-    if (/anxiety|worry|stress/i.test(query)) {
-      responses.push(
-        "I understand anxiety can be overwhelming. Have you found any techniques that help you manage these feelings when they come up?",
-        "When I feel anxious, I sometimes focus on my breathing to help ground myself. Have you tried any relaxation techniques that might help in those moments?"
-      );
-    }
-    
-    // Return responses limited to specified count
-    return responses.slice(0, limit);
-  } catch (error) {
-    console.error("Error retrieving similar responses:", error);
     return [];
   }
 };

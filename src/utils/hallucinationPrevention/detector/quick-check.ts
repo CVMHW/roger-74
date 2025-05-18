@@ -5,7 +5,7 @@
  * A lightweight, fast check to quickly identify obvious hallucination patterns
  */
 
-import { QuickCheckResult } from './types';
+import { QuickCheckResult } from '../vectorDatabase/types';
 
 /**
  * Performs a quick check for potential hallucinations
