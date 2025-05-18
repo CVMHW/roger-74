@@ -1,223 +1,170 @@
 
-/**
- * Emotion Misidentification Handler
- * 
- * Specialized handler for detecting and correcting emotion misidentification in responses
- * This is specifically for Rogerian/emotional responses, not logotherapy
- */
-
-import { emotionsWheel, getEmotionFromWheel, detectSocialEmotionalContext } from '../../../emotions/emotionsWheel';
-
-// Import everyday situation handlers
-import { 
-  detectEverydayFrustration as detectEverydaySituation,
-  generateEverydayFrustrationResponse 
-} from '../../../conversation/theSmallStuff';
+// This is a new file to handle emotion misidentification
 
 /**
- * Check for emotion misidentification in responses
- * Especially checks for "neutral" identification when negative emotions are present
+ * Checks for emotion misidentification in generated responses
+ * @param responseText The generated response text
+ * @param userInput The original user input
+ * @returns Boolean indicating if misidentification was detected
  */
-export const checkEmotionMisidentification = (
-  response: string,
-  userInput: string
-): boolean => {
-  // Check if response claims user is feeling neutral
-  const claimsNeutral = /you('re| are) feeling neutral|feeling neutral|hear you're feeling neutral/i.test(response);
+export const checkEmotionMisidentification = (responseText: string, userInput: string): boolean => {
+  // Check if response claims neutral when user expressed negative emotions
+  const claimsNeutral = /you'?re feeling neutral|you seem neutral|neutral tone/i.test(responseText);
   
-  if (!claimsNeutral) {
-    return false;
-  }
+  // Check if user actually expressed negative emotions
+  const hasNegativeEmotions = /\b(depress(ed|ing|ion)?|sad|upset|down|hurt|angry|anxious|stressed|worried|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
   
-  // Improved detection of emotional content - prioritize depression detection
-  // Explicitly check for depression mentions FIRST - highest priority
-  if (/depress(ed|ion|ing)|sad|down|blue|low|hopeless|worthless|empty|numb/i.test(userInput.toLowerCase())) {
-    console.log("EMOTION DETECTION: Depression mentioned but not recognized");
-    return true;
-  }
+  // Check if user expressed positive emotions but we said negative
+  const claimsNegative = /you'?re feeling (sad|upset|down|depressed|anxious|worried)/i.test(responseText);
+  const hasPositiveEmotions = /\b(happy|excited|great|good|wonderful|amazing|fantastic|joyful|pleased|delighted|thrilled)\b/i.test(userInput.toLowerCase());
   
-  // First check for explicit emotion mentions
-  const emotionWords: string[] = [];
-  
-  // Collect all emotion words from the wheel
-  for (const parentEmotion in emotionsWheel) {
-    emotionWords.push(parentEmotion);
-    for (const childEmotion in emotionsWheel[parentEmotion]) {
-      const emotion = emotionsWheel[parentEmotion][childEmotion];
-      emotionWords.push(emotion.name);
-      emotionWords.push(...emotion.synonyms);
-    }
-  }
-  
-  const mentionedEmotions = emotionWords.filter(word => 
-    new RegExp(`\\b${word}\\b`, 'i').test(userInput)
-  );
-  
-  if (mentionedEmotions.length > 0) {
-    console.log("EMOTION DETECTION: Explicit emotions mentioned:", mentionedEmotions);
-    return true; // User explicitly mentioned an emotion but we said "neutral"
-  }
-  
-  // Check for social emotional contexts
-  const socialContext = detectSocialEmotionalContext(userInput);
-  if (socialContext) {
-    console.log("EMOTION DETECTION: Social emotional context detected:", socialContext);
-    return true;
-  }
-  
-  // Check for other negative emotion indicators in user input
-  const negativeEmotionPatterns = [
-    /rough|tough|bad|difficult|hard|stressful|awful|terrible|worst|annoying/i,
-    /embarrass(ing|ed)?|awkward|uncomfortable|cringe/i,
-    /spill(ed)?|accident|mess(ed up)?|mistake/i,
-    /sad|upset|depress(ed|ing)|down|blue|low|lonely/i,
-    /anxious|nervous|worr(ied|y)|stress(ed|ful)/i,
-    /frustrat(ed|ing)|annoy(ed|ing)|angry|mad|piss(ed)?|irritat(ed|ing)/i,
-    // Add more casual expressions that indicate negative feelings
-    /sucks|sucked|terrible|went wrong|not great|problem|wasn't good/i,
-    /ruined|screwed up|messed up|failed|blew it|disaster/i,
-    // Add social situation indicators
-    /rejected|turned down|stood up|ghosted|dumped|broke up/i
+  // Check for direct emotion statements
+  const directEmotionStatements = [
+    /\bI'?m feeling (\w+)/i,
+    /\bI feel (\w+)/i,
+    /feeling (\w+)/i,
+    /\bI'?m (\w+)/i
   ];
   
-  // If input mentions any negative emotions but response claims neutral, it's a misidentification
-  for (const pattern of negativeEmotionPatterns) {
-    if (pattern.test(userInput)) {
-      console.log("EMOTION DETECTION: Negative emotion pattern matched:", pattern);
-      return true;
-    }
-  }
-  
-  return false;
-};
-
-/**
- * Fix emotion misidentification in responses
- * @param response Original response text
- * @param userInput User's input message
- * @returns Corrected response
- */
-export const fixEmotionMisidentification = (
-  response: string,
-  userInput: string
-): string => {
-  // Special case for depression - highest priority
-  if (/depress(ed|ion|ing)|feeling down/i.test(userInput.toLowerCase())) {
-    console.log("EMOTION CORRECTION: Fixing depression misidentification");
-    
-    // Create a compassionate response for depression
-    return response
-      .replace(/you('re| are) feeling neutral|I hear you're feeling neutral|From what you've shared, I hear you're feeling neutral/i, 
-               "I hear that you're feeling depressed")
-      .replace(/Would you like to tell me more about what happened\?/i, 
-               "That sounds really difficult. Would you like to share more about what's been going on for you?");
-  }
-  
-  // First check for explicitly mentioned emotions
-  const emotionWords: string[] = [];
-  
-  // Collect all emotion words from the wheel
-  for (const parentEmotion in emotionsWheel) {
-    emotionWords.push(parentEmotion);
-    for (const childEmotion in emotionsWheel[parentEmotion]) {
-      const emotion = emotionsWheel[parentEmotion][childEmotion];
-      emotionWords.push(emotion.name);
-      emotionWords.push(...emotion.synonyms);
-    }
-  }
-  
-  let mentionedEmotion = '';
-  for (const emotion of emotionWords) {
-    if (new RegExp(`\\b${emotion}\\b`, 'i').test(userInput)) {
-      // Found an explicit emotion mention
-      mentionedEmotion = emotion;
+  // Extract directly stated emotions
+  let statedEmotion: string | null = null;
+  for (const pattern of directEmotionStatements) {
+    const match = userInput.match(pattern);
+    if (match && match[1]) {
+      statedEmotion = match[1].toLowerCase();
       break;
     }
   }
-
-  // Get the standardized emotion entry if one was mentioned
-  let emotionEntry = mentionedEmotion ? getEmotionFromWheel(mentionedEmotion) : undefined;
   
-  // If no explicit emotion was mentioned, check for social context
-  if (!emotionEntry) {
-    const socialContext = detectSocialEmotionalContext(userInput);
-    if (socialContext) {
-      emotionEntry = getEmotionFromWheel(socialContext.primaryEmotion);
-    }
+  // Check if we acknowledged the stated emotion
+  const acknowledgedStatedEmotion = statedEmotion ? 
+    new RegExp(`feeling ${statedEmotion}|you'?re ${statedEmotion}|you feel ${statedEmotion}`, 'i').test(responseText) : 
+    false;
+  
+  // Critical depression check
+  const mentionsDepression = /\b(depress(ed|ing|ion)?|feeling down|feeling low)\b/i.test(userInput.toLowerCase());
+  const acknowledgesDepression = /\b(depress(ed|ing|ion)?|feeling down|difficult time)\b/i.test(responseText.toLowerCase());
+  
+  if (mentionsDepression && !acknowledgesDepression) {
+    console.log("CRITICAL: Depression mentioned but not acknowledged");
+    return true;
   }
   
-  // For sad emotions specifically (our most common case)
-  if (/sad|down|upset|blue/i.test(userInput)) {
-    console.log("EMOTION CORRECTION: Fixing sadness misidentification");
-    return response
-      .replace(/you('re| are) feeling neutral|I hear you're feeling neutral|From what you've shared, I hear you're feeling neutral/i, 
-               "I hear that you're feeling sad")
-      .replace(/Would you like to tell me more about what happened\?/i, 
-               "I'm sorry to hear you're going through this. Would you like to share more about what's making you feel sad?");
-  }
-  
-  // If we found an emotion entry, use it to correct the response
-  if (emotionEntry) {
-    console.log("EMOTION CORRECTION: Using emotion from wheel:", emotionEntry.name);
-    return response
-      .replace(/you('re| are) feeling neutral|I hear you're feeling neutral|From what you've shared, I hear you're feeling neutral/i, 
-               `I hear that you're feeling ${emotionEntry.name}`)
-      .replace(/Would you like to tell me more about what happened\?/i, 
-               `Would you like to share more about what's making you feel ${emotionEntry.name}?`);
-  }
-  
-  // For general negative emotions without specifics
-  console.log("EMOTION CORRECTION: Using general negative emotion correction");
-  return response
-    .replace(/you('re| are) feeling neutral|I hear you're feeling neutral|From what you've shared, I hear you're feeling neutral/i, 
-             "That sounds difficult")
-    .replace(/Would you like to tell me more about what happened\?/i, 
-             "Can you tell me more about how that made you feel?");
+  // Return true if any misidentification is detected
+  return (
+    (claimsNeutral && hasNegativeEmotions) || 
+    (claimsNegative && hasPositiveEmotions && !hasNegativeEmotions) ||
+    (statedEmotion && !acknowledgedStatedEmotion)
+  );
 };
 
 /**
- * Add humanizing touches to responses
- * Makes Roger's responses more natural and less robotic
+ * Fixes emotion misidentification in responses
+ * @param responseText The generated response text
+ * @param userInput The original user input
+ * @returns Fixed response text
  */
-export const addHumanTouch = (
-  response: string,
-  userInput: string
-): string => {
-  // Check if the response is already sufficiently human-like
-  if (/oh man|I've been there|Those days can be|totally get that/i.test(response)) {
-    return response;
+export const fixEmotionMisidentification = (responseText: string, userInput: string): string => {
+  // Fix response that claims neutral when user expressed negative emotions
+  if (/you'?re feeling neutral|you seem neutral|neutral tone/i.test(responseText)) {
+    // Check for depression specifically
+    if (/\b(depress(ed|ing|ion)?|feeling down|feeling low)\b/i.test(userInput.toLowerCase())) {
+      return responseText.replace(
+        /you'?re feeling neutral|you seem neutral|neutral tone/i,
+        "you're feeling depressed"
+      );
+    }
+    
+    // Check for sadness
+    if (/\b(sad|upset|hurt|down)\b/i.test(userInput.toLowerCase())) {
+      return responseText.replace(
+        /you'?re feeling neutral|you seem neutral|neutral tone/i,
+        "you're feeling sad"
+      );
+    }
+    
+    // Check for anxiety
+    if (/\b(anxious|worried|nervous|stressed|anxiety|scared|afraid)\b/i.test(userInput.toLowerCase())) {
+      return responseText.replace(
+        /you'?re feeling neutral|you seem neutral|neutral tone/i,
+        "you're feeling anxious"
+      );
+    }
+    
+    // Generic negative emotion fallback
+    if (/\b(bad|terrible|awful|horrible|not (good|great|okay|well|fine))\b/i.test(userInput.toLowerCase())) {
+      return responseText.replace(
+        /you'?re feeling neutral|you seem neutral|neutral tone/i,
+        "you're not feeling well"
+      );
+    }
   }
   
-  // For depression or sadness
-  if (/depress(ed|ion)|sad|down|blue|low|lonely/i.test(userInput)) {
-    const empathyPhrases = [
-      "I'm really sorry to hear that. ",
-      "That sounds really tough. ",
-      "That can be really hard to go through. "
-    ];
-    const randomPhrase = empathyPhrases[Math.floor(Math.random() * empathyPhrases.length)];
-    response = randomPhrase + response;
+  // Fix claims of negative emotion when user expressed positive emotions
+  if (/you'?re feeling (sad|upset|down|depressed|anxious|worried)/i.test(responseText) && 
+      /\b(happy|excited|great|good|wonderful|amazing|fantastic|joyful)\b/i.test(userInput.toLowerCase()) &&
+      !/\b(sad|upset|down|depressed|anxious|worried|bad|negative)\b/i.test(userInput.toLowerCase())) {
+    
+    return responseText.replace(
+      /you'?re feeling (sad|upset|down|depressed|anxious|worried)/i,
+      "you're feeling positive"
+    );
   }
   
-  // For social embarrassment
-  else if (/spill(ed)?.*drink|spill(ed)?.*girl|embarrass/i.test(userInput)) {
-    const socialPhrases = [
-      "Oh man, that's definitely awkward. ",
-      "I totally understand feeling embarrassed. ",
-      "Those social mishaps can really stick with you. "
-    ];
-    const randomSocialPhrase = socialPhrases[Math.floor(Math.random() * socialPhrases.length)];
-    response = randomSocialPhrase + response;
+  // Extract directly stated emotions
+  let statedEmotion: string | null = null;
+  const directEmotionStatements = [
+    /\bI'?m feeling (\w+)/i,
+    /\bI feel (\w+)/i,
+    /feeling (\w+)/i,
+    /\bI'?m (\w+)/i
+  ];
+  
+  for (const pattern of directEmotionStatements) {
+    const match = userInput.match(pattern);
+    if (match && match[1]) {
+      statedEmotion = match[1].toLowerCase();
+      if (!/neutral|okay|fine|alright|so-so/i.test(statedEmotion)) {
+        break;
+      }
+    }
   }
   
-  // Make responses less clinical for everyday situations
-  response = response
-    .replace("I understand that must be difficult", "That's rough")
-    .replace("I hear what you're saying about", "Sounds like")
-    .replace("Would you care to elaborate", "Want to tell me more")
-    .replace("That sounds challenging", "That's tough")
-    .replace(/^Based on what you're sharing,\s*/i, "")
-    .replace(/^From what you've shared,\s*/i, "");
+  // If we have a stated emotion that isn't acknowledged, fix it
+  if (statedEmotion) {
+    // Check if emotion is already acknowledged correctly
+    if (!new RegExp(`feeling ${statedEmotion}|you'?re ${statedEmotion}|you feel ${statedEmotion}`, 'i').test(responseText)) {
+      // Find a place to insert the acknowledgment
+      if (/^I hear|^I understand|^It sounds like/i.test(responseText)) {
+        // Replace existing acknowledgment
+        return responseText.replace(
+          /^(I hear|I understand|It sounds like)([^.]*)\./i,
+          `$1 that you're feeling ${statedEmotion}.`
+        );
+      } else {
+        // Add acknowledgment at beginning
+        return `I hear that you're feeling ${statedEmotion}. ${responseText}`;
+      }
+    }
+  }
   
-  return response;
+  // Special handling for depression mentions that aren't acknowledged
+  if (/\b(depress(ed|ing|ion)?|feeling down|feeling low)\b/i.test(userInput.toLowerCase()) &&
+      !/\b(depress(ed|ing|ion)?|feeling down|difficult time)\b/i.test(responseText.toLowerCase())) {
+    
+    // Find a place to insert the acknowledgment
+    if (/^I hear|^I understand|^It sounds like/i.test(responseText)) {
+      // Replace existing acknowledgment
+      return responseText.replace(
+        /^(I hear|I understand|It sounds like)([^.]*)\./i,
+        `$1 that you're feeling depressed.`
+      );
+    } else {
+      // Add acknowledgment at beginning
+      return `I'm sorry to hear that you're feeling depressed. ${responseText}`;
+    }
+  }
+  
+  // Return original if no fixes were needed
+  return responseText;
 };

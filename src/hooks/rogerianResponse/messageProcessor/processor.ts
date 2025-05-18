@@ -38,9 +38,11 @@ export const processUserMessage = async (
       ));
     }
     
-    // Key enhancement: Check for depression and emotional content first
-    // This needs to happen before any other processing
-    if (/depress(ed|ion|ing)|sad|down|blue|low|hopeless|worthless|empty|numb/i.test(userInput.toLowerCase())) {
+    // CRITICAL FIX: More robust depression detection with higher priority
+    // Pattern will match depression and variants with higher sensitivity
+    const hasDepressionIndicators = /\b(depress(ed|ion|ing)?|sad|down|blue|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible|depressed))/i.test(userInput.toLowerCase());
+    
+    if (hasDepressionIndicators) {
       console.log("EMOTION DETECTION: Depression mentioned - prioritizing compassionate response");
       
       // Make sure we update the stage first

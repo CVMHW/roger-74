@@ -47,6 +47,15 @@ const useRogerianResponse = () => {
         conversationHistory = conversationHistory.slice(-5);
       }
       
+      // CRITICAL: Check for depression immediately
+      const hasDepressionIndicators = /\b(depress(ed|ion|ing)?|sad|down|blue|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible|depressed))\b/i.test(userInput.toLowerCase());
+      
+      if (hasDepressionIndicators) {
+        console.log("CRITICAL: Depression detected, ensuring appropriate response");
+        // Store in memory with high importance
+        masterMemory.addMemory(userInput, 'patient', { emotions: ['depressed'] }, 0.9);
+      }
+      
       // Check if this is a new conversation
       if (masterMemory.isNewConversation(userInput)) {
         console.log("NEW CONVERSATION DETECTED: Resetting memory systems");
@@ -71,9 +80,11 @@ const useRogerianResponse = () => {
       if (isRAGSystemReady()) {
         try {
           // Check if message is longer than simple greeting
-          const isSubstantiveMessage = userInput.length > 30;
+          const isSubstantiveMessage = userInput.length > 20 || 
+            /\b(depress(ed|ion|ing)?|feeling|feel|sad|down|upset|stressed|anxious|worried|angry)\b/i.test(userInput.toLowerCase());
           
           if (isSubstantiveMessage) {
+            console.log("SUBSTANTIVE MESSAGE: Applying RAG enhancement");
             enhancedText = await enhanceResponseWithRAG(
               enhancedText,
               userInput,
@@ -92,6 +103,12 @@ const useRogerianResponse = () => {
       conversationHistory.push(enhancedText);
       if (conversationHistory.length > 10) {
         conversationHistory = conversationHistory.slice(-10);
+      }
+      
+      // FINAL CHECK: Ensure depression is properly addressed
+      if (hasDepressionIndicators && !/\b(depress(ed|ion|ing)?|difficult|hard time)\b/i.test(enhancedText.toLowerCase())) {
+        console.log("CRITICAL: Adding depression acknowledgment to response");
+        enhancedText = "I'm really sorry to hear you're feeling depressed. " + enhancedText;
       }
       
       // Return enhanced response

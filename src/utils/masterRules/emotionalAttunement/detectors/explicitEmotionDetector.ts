@@ -8,7 +8,7 @@ import { explicitEmotionPatterns } from './constants';
 
 /**
  * Detects emotion from explicit statement
- * @param userInput User's message text
+ * @param userInput User's message
  * @returns Detected emotion or null
  */
 export const detectExplicitEmotionStatement = (userInput: string): string | null => {
@@ -24,12 +24,17 @@ export const detectExplicitEmotionStatement = (userInput: string): string | null
     }
   }
   
+  // CRITICAL FIX: Directly check for depression-related words first (highest priority)
+  if (/\b(depress(ed|ing)?|sad|down|low|hopeless|miserable|unhappy)\b/i.test(userInput.toLowerCase())) {
+    return 'depressed';
+  }
+  
   // Check for nuanced expressions of emotion
   const nuancedPatterns = [
     { pattern: /not (feeling|doing) (so |too |very )?(good|great|well|okay|fine)/i, emotion: 'sad' },
     { pattern: /been better|seen better days/i, emotion: 'sad' },
     { pattern: /can't (seem to )?stop (thinking|worrying) about/i, emotion: 'anxious' },
-    { pattern: /feeling (a bit|kind of|sort of|slightly|somewhat) (off|down|upset|sad|anxious|nervous|worried|happy|excited)/i, emotion: null },
+    { pattern: /feeling (a bit|kind of|sort of|slightly|somewhat|pretty) (off|down|upset|sad|anxious|nervous|worried|happy|excited|depressed)/i, emotion: null },
     { pattern: /mixed feelings about/i, emotion: 'conflicted' },
     { pattern: /don't (really |quite )?know (how|what) (I'm|I am) feeling/i, emotion: 'confused' }
   ];
@@ -40,6 +45,10 @@ export const detectExplicitEmotionStatement = (userInput: string): string | null
       // For patterns where we extract the emotion from the match
       if (!emotion && match[2]) {
         const extractedEmotion = match[2].toLowerCase().trim();
+        // Important fix: Map "depressed" to proper emotion category
+        if (extractedEmotion === "depressed" || extractedEmotion === "depression") {
+          return "depressed";
+        }
         if (getEmotionFromWheel(extractedEmotion)) {
           return extractedEmotion;
         }
