@@ -23,13 +23,25 @@ const MODEL_CONFIG = {
   modelId: "Xenova/all-MiniLM-L6-v2", // Browser-optimized embedding model
   revision: "main",
   quantized: true, // Use quantized model for better performance
+  backupModels: ["Xenova/paraphrase-multilingual-MiniLM-L12-v2", "Xenova/all-mpnet-base-v2"]
 };
+
+// Track success rates for persistence optimization
+let successfulEmbeddings = 0;
+let totalEmbeddingRequests = 0;
 
 /**
  * Check if we're using simulated embeddings
  */
 export const isUsingSimulatedEmbeddings = (): boolean => {
   return isUsingSimulation;
+};
+
+/**
+ * Get embedding success rate (for persistence optimization)
+ */
+export const getEmbeddingSuccessRate = (): number => {
+  return totalEmbeddingRequests > 0 ? successfulEmbeddings / totalEmbeddingRequests : 0;
 };
 
 /**
@@ -95,12 +107,44 @@ export const initializeEmbeddingModel = async (): Promise<void> => {
         progress_callback: progressCallback
       };
       
-      // Create a feature-extraction pipeline with a browser-compatible model
-      embeddingModel = await pipeline(
-        "feature-extraction" as PipelineType,
-        MODEL_CONFIG.modelId,
-        pipelineOptions
-      );
+      // Try primary model first, then fallback models if needed
+      let modelToTry = MODEL_CONFIG.modelId;
+      let modelLoadSuccess = false;
+      
+      // Try primary model
+      try {
+        // Create a feature-extraction pipeline with a browser-compatible model
+        embeddingModel = await pipeline(
+          "feature-extraction" as PipelineType,
+          modelToTry,
+          pipelineOptions
+        );
+        modelLoadSuccess = true;
+      } catch (primaryError) {
+        console.warn(`Failed to load primary model ${modelToTry}:`, primaryError);
+        
+        // Try backup models sequentially
+        for (const backupModel of MODEL_CONFIG.backupModels) {
+          if (modelLoadSuccess) break;
+          
+          try {
+            console.log(`Attempting to load backup model: ${backupModel}`);
+            embeddingModel = await pipeline(
+              "feature-extraction" as PipelineType,
+              backupModel,
+              pipelineOptions
+            );
+            modelLoadSuccess = true;
+            console.log(`Successfully loaded backup model: ${backupModel}`);
+          } catch (backupError) {
+            console.warn(`Failed to load backup model ${backupModel}:`, backupError);
+          }
+        }
+        
+        if (!modelLoadSuccess) {
+          throw new Error("All model loading attempts failed");
+        }
+      }
       
       const loadTime = performance.now() - startTime;
       console.log(`✅ Model loaded in ${Math.round(loadTime)}ms`);
@@ -117,6 +161,11 @@ export const initializeEmbeddingModel = async (): Promise<void> => {
         console.log(`📐 Embedding size: ${Array.isArray(dataArray) ? dataArray.length : 'unknown'}`);
         isUsingSimulation = false;
         modelInitialized = true;
+        
+        // Reset tracking for this session
+        successfulEmbeddings = 0;
+        totalEmbeddingRequests = 0;
+        
         return;
       } else {
         throw new Error("Model initialized but test embedding failed");
@@ -174,6 +223,8 @@ export const forceReinitializeEmbeddingModel = async (): Promise<boolean> => {
  * Generate embeddings for text using the embedding model
  */
 export const generateEmbedding = async (text: string): Promise<number[]> => {
+  totalEmbeddingRequests++;
+  
   try {
     // If model not initialized, try initializing
     if (!modelInitialized) {
@@ -213,6 +264,9 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
       throw new Error("Could not extract embedding array from result");
     }
     
+    // Track successful embedding generation
+    successfulEmbeddings++;
+    
     return embedArray;
     
   } catch (error) {
@@ -222,3 +276,10 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
     return generateSimulatedEmbedding(text);
   }
 };
+
+// Initialize on module load to speed up first embedding generation
+setTimeout(() => {
+  initializeEmbeddingModel().catch(error => {
+    console.error("Failed to pre-initialize embedding model:", error);
+  });
+}, 1000); // Delay by 1 second to allow page to load first

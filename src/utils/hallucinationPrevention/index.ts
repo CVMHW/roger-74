@@ -10,27 +10,35 @@ import { retrieveFactualGrounding, retrieveAugmentation, augmentResponseWithRetr
 import { retrieveEnhanced, expandQuery, augmentResponseWithEnhancedRetrieval } from './enhancedRetrieval';
 import { performHybridSearch } from './hybridSearch';
 import { rerankResults } from './reranker';
-import { persistVectors, loadPersistedVectors, getPersistedVectors } from './persistentVectorStore';
+import { 
+  persistVectors, 
+  loadPersistedVectors, 
+  getPersistedVectors, 
+  hasRecentPersistedVectors, 
+  preloadVectors 
+} from './persistentVectorStore';
 import vectorDB from './vectorDatabase';
 import { COLLECTIONS } from './dataLoader/types';
 import { 
   isUsingSimulatedEmbeddings, 
   forceReinitializeEmbeddingModel, 
-  initializeEmbeddingSystem 
+  initializeEmbeddingSystem,
+  isEmbeddingSystemReady
 } from './vectorEmbeddings';
 
 // Track initialization status
 let isInitialized = false;
 let isInitializing = false;
+let initializationPromise: Promise<boolean> | null = null;
 
 /**
  * Initialize the RAG system
+ * Enhanced with better persistence handling and parallel loading
  */
 export const initializeRAGSystem = async (): Promise<boolean> => {
-  // Prevent concurrent initialization
-  if (isInitializing) {
-    console.log("RAG System initialization already in progress...");
-    return false;
+  // Return existing promise if initialization is in progress
+  if (initializationPromise) {
+    return initializationPromise;
   }
   
   // Skip if already initialized
@@ -41,73 +49,101 @@ export const initializeRAGSystem = async (): Promise<boolean> => {
   
   isInitializing = true;
   
-  try {
-    console.log("Initializing RAG System...");
-    
-    // First try to reinitialize the embedding model with real embeddings
-    if (isUsingSimulatedEmbeddings()) {
-      console.log("Currently using simulated embeddings, attempting to reinitialize...");
-      await forceReinitializeEmbeddingModel();
-    }
-    
-    // Try to load persisted vectors first
-    console.log("Loading persisted vectors...");
-    
-    // Load vectors from persistent storage with proper error handling
-    const loadCollection = async (collectionName: string): Promise<boolean> => {
-      try {
-        return loadPersistedVectors(collectionName, (records) => {
-          const collection = vectorDB.collection(collectionName);
-          records.forEach(record => collection.insert(record));
-        });
-      } catch (error) {
-        console.error(`Error loading collection ${collectionName}:`, error);
-        return false;
+  // Create a new initialization promise
+  initializationPromise = (async () => {
+    try {
+      console.log("Initializing RAG System...");
+      
+      // First try to reinitialize the embedding model with real embeddings
+      if (isUsingSimulatedEmbeddings()) {
+        console.log("Currently using simulated embeddings, attempting to reinitialize...");
+        await forceReinitializeEmbeddingModel();
       }
-    };
-    
-    // Load all collections in parallel for better performance
-    const [factsLoaded, knowledgeLoaded, userMsgLoaded, rogerRespLoaded] = await Promise.all([
-      loadCollection(COLLECTIONS.FACTS),
-      loadCollection(COLLECTIONS.ROGER_KNOWLEDGE),
-      loadCollection(COLLECTIONS.USER_MESSAGES),
-      loadCollection(COLLECTIONS.ROGER_RESPONSES)
-    ]);
-    
-    console.log("Persisted vectors loaded:", { 
-      factsLoaded, knowledgeLoaded, userMsgLoaded, rogerRespLoaded 
-    });
-    
-    // Initialize vector database with fresh data
-    const dbInitialized = await initializeVectorDatabase();
-    
-    // Persist all vectors from database to localStorage
-    await Promise.all([
-      COLLECTIONS.FACTS,
-      COLLECTIONS.ROGER_KNOWLEDGE,
-      COLLECTIONS.USER_MESSAGES,
-      COLLECTIONS.ROGER_RESPONSES
-    ].map(async (collectionName) => {
-      try {
-        const collection = vectorDB.collection(collectionName);
-        if (collection.size() > 0) {
-          persistVectors(collectionName, collection.getAll());
+      
+      // Try to load persisted vectors first
+      console.log("Loading persisted vectors...");
+      
+      // Check if we have recent persisted vectors
+      const hasRecent = await hasRecentPersistedVectors();
+      
+      // Load vectors from persistent storage with proper error handling
+      const loadCollection = async (collectionName: string): Promise<boolean> => {
+        try {
+          return loadPersistedVectors(collectionName, (records) => {
+            const collection = vectorDB.collection(collectionName);
+            records.forEach(record => collection.insert(record));
+            console.log(`Inserted ${records.length} records into ${collectionName} from persistence`);
+          });
+        } catch (error) {
+          console.error(`Error loading collection ${collectionName}:`, error);
+          return false;
         }
-      } catch (error) {
-        console.error(`Error persisting collection ${collectionName}:`, error);
-      }
-    }));
-    
-    isInitialized = true;
-    isInitializing = false;
-    
-    console.log("RAG System initialization complete");
-    return true;
-  } catch (error) {
-    console.error("Error initializing RAG system:", error);
-    isInitializing = false;
-    return false;
-  }
+      };
+      
+      // Start the loading in parallel for better performance
+      const loadingPromises = [
+        loadCollection(COLLECTIONS.FACTS),
+        loadCollection(COLLECTIONS.ROGER_KNOWLEDGE),
+        loadCollection(COLLECTIONS.USER_MESSAGES),
+        loadCollection(COLLECTIONS.ROGER_RESPONSES)
+      ];
+      
+      // Also start the vector database initialization in parallel
+      // This will load fresh data if needed
+      const dbInitPromise = initializeVectorDatabase();
+      
+      // Wait for all loading operations to complete
+      const [factsLoaded, knowledgeLoaded, userMsgLoaded, rogerRespLoaded] = await Promise.all(loadingPromises);
+      
+      console.log("Persisted vectors loaded:", { 
+        factsLoaded, knowledgeLoaded, userMsgLoaded, rogerRespLoaded 
+      });
+      
+      // Complete the vector database initialization
+      const dbInitialized = await dbInitPromise;
+      
+      // Initialize embedding system if not already done
+      await initializeEmbeddingSystem();
+      
+      // Persist all vectors from database to localStorage
+      await Promise.all([
+        COLLECTIONS.FACTS,
+        COLLECTIONS.ROGER_KNOWLEDGE,
+        COLLECTIONS.USER_MESSAGES,
+        COLLECTIONS.ROGER_RESPONSES
+      ].map(async (collectionName) => {
+        try {
+          const collection = vectorDB.collection(collectionName);
+          if (collection.size() > 0) {
+            persistVectors(collectionName, collection.getAll());
+          }
+        } catch (error) {
+          console.error(`Error persisting collection ${collectionName}:`, error);
+        }
+      }));
+      
+      isInitialized = true;
+      isInitializing = false;
+      initializationPromise = null;
+      
+      console.log("RAG System initialization complete");
+      return true;
+    } catch (error) {
+      console.error("Error initializing RAG system:", error);
+      isInitializing = false;
+      initializationPromise = null;
+      return false;
+    }
+  })();
+  
+  return initializationPromise;
+};
+
+/**
+ * Check if RAG system is ready for high-quality embeddings
+ */
+export const isRAGSystemReady = (): boolean => {
+  return isInitialized && isEmbeddingSystemReady();
 };
 
 /**
@@ -194,7 +230,9 @@ export {
 // Export memory piece type
 export type { MemoryPiece } from './retrieval';
 
-// Initialize on import
-initializeRAGSystem().catch(error => 
-  console.error("Error initializing RAG system on import:", error)
-);
+// Initialize on import, but don't block
+setTimeout(() => {
+  initializeRAGSystem().catch(error => 
+    console.error("Error initializing RAG system on import:", error)
+  );
+}, 3000); // Delay initialization slightly to improve page load performance
