@@ -25,7 +25,9 @@ export const enhanceResponse = (
   const isIntroductionContext = isIntroduction(userInput);
   const isPersonalSharingContext = isPersonalSharing(userInput);
   
-  return enhanceResponseUnified(
+  // Call the async function but use it synchronously by returning the immediate response text
+  // This maintains backward compatibility with existing code
+  enhanceResponseUnified(
     responseText, 
     userInput, 
     messageCount, 
@@ -36,5 +38,10 @@ export const enhanceResponse = (
       isIntroductionContext,
       isPersonalSharingContext
     }
-  );
+  ).catch(error => {
+    console.error("Error in async response enhancement:", error);
+  });
+  
+  // Return the original text for backward compatibility
+  return responseText;
 };

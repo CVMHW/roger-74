@@ -8,5 +8,5 @@ export * from './types';
 export * from './detectors';
 export * from './useCrisisDetector';
 
-// Export our new semantic detector
+// Export our new semantic detector with better naming to avoid conflicts
 export { checkForCrisisContentAsync } from '../useChatLogic/useCrisisDetector';

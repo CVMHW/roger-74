@@ -1,4 +1,3 @@
-
 /**
  * Response enhancer
  * 
@@ -146,7 +145,7 @@ export const enhanceResponse = async (
     const topics = extractTopics(userInput);
     
     // Process through RAG system to ground in facts
-    let enhancedResponse = hallucinationResult.text;
+    let enhancedResponse = hallucinationResult.processedResponse; // Use processedResponse instead of text
     
     try {
       // Use new RAG augmentation

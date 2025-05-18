@@ -78,7 +78,8 @@ export const useCrisisDetector = () => {
  */
 export const checkForCrisisContentAsync = async (userInput: string): Promise<boolean> => {
   // First use the traditional detection for speed
-  if (checkForCrisisContent(userInput)) {
+  const traditionalDetection = checkForCrisisContent(userInput);
+  if (traditionalDetection) {
     return true;
   }
   

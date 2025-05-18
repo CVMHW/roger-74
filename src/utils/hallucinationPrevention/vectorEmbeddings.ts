@@ -1,4 +1,3 @@
-
 /**
  * Vector Embeddings System
  * 
@@ -28,7 +27,7 @@ export const initializeEmbeddingModel = async (): Promise<void> => {
     embeddingModel = await pipeline(
       "feature-extraction",
       "mixedbread-ai/mxbai-embed-xsmall-v1",
-      { quantized: true }
+      { /* Remove the quantized option as it's not supported in this context */ }
     );
     
     console.log("Embedding model successfully initialized");

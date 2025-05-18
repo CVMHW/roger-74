@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { MessageType } from '../../../components/Message';
 import { enhanceResponse } from '../../../utils/response/enhancer';
@@ -59,12 +60,20 @@ export const useResponseHooks = (
         try {
           // Use unified enhancement pipeline for comprehensive response processing
           // Now with async support for vector operations
-          const responseWithContextCheck = await enhanceResponse(
-            rogerResponse.text,
-            userInput,
-            conversationHistory.length,
-            conversationHistory
-          );
+          let responseWithContextCheck = rogerResponse.text;
+          
+          try {
+            // Call the async enhanceResponse function and await the result
+            responseWithContextCheck = await enhanceResponse(
+              rogerResponse.text,
+              userInput,
+              conversationHistory.length,
+              conversationHistory
+            );
+          } catch (enhanceError) {
+            console.error("Error enhancing response:", enhanceError);
+            // Continue with original response if enhancement fails
+          }
           
           // Check for repetition in recent responses
           if (checkForResponseRepetition(responseWithContextCheck, recentResponses)) {
