@@ -13,6 +13,12 @@ export interface HallucinationPreventionOptions {
   enableReasoning: boolean; 
   enableDetection: boolean;
   reasoningThreshold: number;
+  detectionSensitivity?: number;
+  enableTokenLevelDetection?: boolean;
+  enableNLIVerification?: boolean;
+  enableReranking?: boolean;
+  tokenThreshold?: number;
+  entailmentThreshold?: number;
   emotionAwareness?: {
     emotions?: any;
     recentEmotions?: any;
@@ -32,3 +38,6 @@ export interface HallucinationProcessResult {
   processingTime: number;
   confidence: number;
 }
+
+// Export HallucinationCheck for wider use
+export { HallucinationCheck };
