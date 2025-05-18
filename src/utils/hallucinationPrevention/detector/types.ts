@@ -1,53 +1,50 @@
 
 /**
- * Types for hallucination detection
+ * Types for the hallucination detection system
  */
 
-// Define flag severity levels
-export type HallucinationSeverity = 'critical' | 'high' | 'medium' | 'low';
+/**
+ * Severity levels for hallucination flags
+ */
+export type HallucinationSeverity = 'low' | 'medium' | 'high' | 'critical';
 
-// Define flag types
-export type HallucinationFlagType = 
-  'false_memory' | 
-  'emotion_misidentification' | 
-  'neutral_emotion_hallucination' |
-  'factual_contradiction' | 
-  'repetition' | 
-  'incompatible_advice' |
-  'false_continuity' |
-  'critical_protocol_violation' |
-  'critical_protocol_mix' |
-  'crisis_type_mismatch' |
-  'substance_use_mishandled' |
-  'critical_suicide_repetition' |
-  'missing_crisis_resources' |
-  'critical_emotion_misidentification';
-
-// Define hallucination flag
+/**
+ * A flag indicating a potential hallucination
+ */
 export interface HallucinationFlag {
-  type: HallucinationFlagType;
-  description: string;
+  type: string;
   severity: HallucinationSeverity;
-  confidence?: number;
-  affectedText?: string;
+  description: string;
+  confidence: number;
 }
 
-// Define hallucination check result
+/**
+ * Result of token level analysis
+ */
+export interface TokenAnalysisResult {
+  problematicTokens?: string[];
+  confidenceByToken?: Record<string, number>;
+}
+
+/**
+ * Result of hallucination detection
+ */
 export interface HallucinationCheck {
   isHallucination: boolean;
   confidence: number;
-  reason?: string;
-  flags?: HallucinationFlag[];
-  corrections?: string;
+  wasHallucination?: boolean; // For backward compatibility
+  flags: HallucinationFlag[];
+  tokenLevelAnalysis?: TokenAnalysisResult;
   emotionMisidentified?: boolean;
   depressionMisidentified?: boolean;
-  tokenLevelAnalysis?: any;
-  wasHallucination?: boolean; // For backward compatibility
 }
 
-// Quick check result type
-export interface QuickCheckResult {
-  isPotentialHallucination: boolean;
-  confidence: number;
-  reason?: string;
+/**
+ * Configuration for hallucination detection
+ */
+export interface HallucinationDetectorConfig {
+  sensitivityLevel: 'low' | 'medium' | 'high';
+  enableTokenLevelDetection: boolean;
+  enableNLIVerification: boolean;
+  tokenThreshold: number;
 }

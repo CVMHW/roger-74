@@ -2,159 +2,115 @@
 /**
  * Vector Database Implementation
  * 
- * Provides efficient in-memory vector storage and retrieval with indexing
+ * A simple, memory-based vector database with indexing capabilities
  */
 
-import { VectorIndex, VectorRecord } from './types';
-import { VectorCollection } from './vectorCollection';
+import { VectorIndex, VectorRecord, SimilaritySearchOptions } from './types';
 import { findNearestNeighbors } from './utils';
+import { VectorCollection } from './vectorCollection';
 
-// The main vector database class
+/**
+ * Vector Database for storing and retrieving vector embeddings
+ */
 export class VectorDatabase {
-  private collections: VectorIndex = {};
-  private dimensions: number | null = null;
-  private indexingEnabled: boolean = false;
-  
+  private collections: Map<string, VectorCollection>;
+  private useIndexing: boolean = false;
+  private indexingThreshold: number = 1000;
+
+  constructor() {
+    this.collections = new Map();
+    console.log("VectorDatabase: Initialized");
+  }
+
   /**
-   * Create a new collection or get existing one
+   * Enable indexing for collections over a certain size
    */
-  public collection(name: string): VectorCollection {
-    if (!this.collections[name]) {
-      this.collections[name] = { 
-        records: [] 
+  enableIndexing(threshold: number = 1000): void {
+    this.useIndexing = true;
+    this.indexingThreshold = threshold;
+    console.log(`VectorDatabase: Indexing enabled for collections with > ${threshold} items`);
+  }
+
+  /**
+   * Disable indexing
+   */
+  disableIndexing(): void {
+    this.useIndexing = false;
+    console.log("VectorDatabase: Indexing disabled");
+  }
+
+  /**
+   * Check if a collection exists
+   */
+  hasCollection(collectionName: string): boolean {
+    return this.collections.has(collectionName);
+  }
+
+  /**
+   * Create a new collection
+   */
+  createCollection(collectionName: string): VectorCollection {
+    if (this.collections.has(collectionName)) {
+      console.log(`VectorDatabase: Collection '${collectionName}' already exists, returning existing collection`);
+      return this.collections.get(collectionName)!;
+    }
+
+    const collection = new VectorCollection(collectionName, {
+      useIndexing: this.useIndexing,
+      indexingThreshold: this.indexingThreshold
+    });
+    
+    this.collections.set(collectionName, collection);
+    console.log(`VectorDatabase: Created collection '${collectionName}'`);
+    return collection;
+  }
+
+  /**
+   * Get an existing collection
+   */
+  getCollection(collectionName: string): VectorCollection {
+    if (!this.collections.has(collectionName)) {
+      throw new Error(`VectorDatabase: Collection '${collectionName}' does not exist`);
+    }
+    
+    return this.collections.get(collectionName)!;
+  }
+
+  /**
+   * Delete a collection
+   */
+  deleteCollection(collectionName: string): boolean {
+    const result = this.collections.delete(collectionName);
+    if (result) {
+      console.log(`VectorDatabase: Deleted collection '${collectionName}'`);
+    } else {
+      console.log(`VectorDatabase: Collection '${collectionName}' not found for deletion`);
+    }
+    return result;
+  }
+
+  /**
+   * Get all collection names
+   */
+  getCollectionNames(): string[] {
+    return Array.from(this.collections.keys());
+  }
+
+  /**
+   * Get database stats
+   */
+  getStats(): { totalCollections: number; collectionStats: { [key: string]: { itemCount: number } } } {
+    const collectionStats: { [key: string]: { itemCount: number } } = {};
+    
+    for (const [name, collection] of this.collections.entries()) {
+      collectionStats[name] = {
+        itemCount: collection.getItemCount()
       };
-    }
-    
-    return new VectorCollection(this.collections[name].records, name, this);
-  }
-  
-  /**
-   * Enable HNSW-inspired approximate nearest neighbor indexing
-   */
-  public enableIndexing(maxConnections: number = 16): void {
-    this.indexingEnabled = true;
-    
-    // Initialize indexing for all existing collections
-    for (const name in this.collections) {
-      this.initializeIndex(name, maxConnections);
-    }
-  }
-  
-  /**
-   * Initialize the index for a collection
-   */
-  private initializeIndex(collectionName: string, maxConnections: number = 16): void {
-    const collection = this.collections[collectionName];
-    if (!collection) return;
-    
-    // Create the spatial index if it doesn't exist
-    if (!collection.spatialIndex) {
-      collection.spatialIndex = {
-        neighbors: new Map<string, string[]>(),
-        entryPoints: [],
-        maxConnections
-      };
-    }
-    
-    // Build the index if we have records
-    if (collection.records.length > 0) {
-      this.rebuildIndex(collectionName);
-    }
-  }
-  
-  /**
-   * Rebuild the index for a collection
-   */
-  public rebuildIndex(collectionName: string): void {
-    const collection = this.collections[collectionName];
-    if (!collection || !collection.spatialIndex) return;
-    
-    const { records } = collection;
-    const { neighbors, maxConnections } = collection.spatialIndex;
-    
-    // Clear existing index
-    neighbors.clear();
-    collection.spatialIndex.entryPoints = [];
-    
-    // Skip if we have too few records
-    if (records.length < 2) return;
-    
-    // For each record, find its nearest neighbors
-    for (const record of records) {
-      // Find nearest neighbors for this record
-      const nearest = findNearestNeighbors(
-        record, 
-        records.filter(r => r.id !== record.id),
-        maxConnections
-      );
-      
-      // Store the connections
-      neighbors.set(record.id, nearest.map(n => n.id));
-    }
-    
-    // Select entry points (we'll use the first record for simplicity)
-    if (records.length > 0) {
-      collection.spatialIndex.entryPoints = [records[0].id];
-    }
-    
-    console.log(`Index rebuilt for collection ${collectionName} with ${records.length} records`);
-  }
-  
-  /**
-   * List all collection names
-   */
-  public listCollections(): string[] {
-    return Object.keys(this.collections);
-  }
-  
-  /**
-   * Drop a collection
-   */
-  public dropCollection(name: string): boolean {
-    if (this.collections[name]) {
-      delete this.collections[name];
-      return true;
-    }
-    return false;
-  }
-  
-  /**
-   * Get stats about the vector database
-   */
-  public stats(): { 
-    collections: number; 
-    totalVectors: number;
-    dimensions: number | null;
-    indexingEnabled: boolean;
-    indexedCollections: number;
-  } {
-    let totalVectors = 0;
-    let indexedCollections = 0;
-    
-    for (const name in this.collections) {
-      totalVectors += this.collections[name].records.length;
-      if (this.collections[name].spatialIndex) {
-        indexedCollections++;
-      }
     }
     
     return {
-      collections: Object.keys(this.collections).length,
-      totalVectors,
-      dimensions: this.dimensions,
-      indexingEnabled: this.indexingEnabled,
-      indexedCollections
+      totalCollections: this.collections.size,
+      collectionStats
     };
-  }
-  
-  /**
-   * Set vector dimensions
-   */
-  public setDimensions(dimensions: number): void {
-    if (this.dimensions === null) {
-      this.dimensions = dimensions;
-    } else if (this.dimensions !== dimensions) {
-      console.warn(`Vector dimensions mismatch: ${this.dimensions} vs ${dimensions}`);
-    }
   }
 }

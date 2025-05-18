@@ -14,7 +14,8 @@ import {
 // Import our enhanced RAG system
 import {
   enhanceResponseWithRAG,
-  isRAGSystemReady
+  isRAGSystemReady,
+  initializeRAGSystem
 } from '../utils/hallucinationPrevention';
 
 // Import original hook implementation
@@ -23,6 +24,7 @@ import originalUseRogerianResponse from './rogerianResponse/index';
 // Import correct types
 import { HallucinationPreventionOptions } from '../types/hallucinationPrevention';
 import { MemorySystemConfig } from '../utils/memory/types';
+import { extractEmotionsFromInput } from '../utils/response/processor/emotions';
 
 /**
  * Enhanced Rogerian Response Hook with integrated memory and RAG systems
@@ -35,6 +37,14 @@ const useRogerianResponse = () => {
   // Store recent conversation history for context
   let conversationHistory: string[] = [];
   
+  // Initialize the RAG system when the hook is first used
+  if (!isRAGSystemReady()) {
+    console.log("Initializing RAG system on hook first use");
+    initializeRAGSystem().catch(error => {
+      console.error("Failed to initialize RAG system on first use:", error);
+    });
+  }
+  
   // Enhance processUserMessage with memory integration and RAG
   const enhancedProcessUserMessage = async (userInput: string) => {
     try {
@@ -46,8 +56,12 @@ const useRogerianResponse = () => {
         conversationHistory = conversationHistory.slice(-5);
       }
       
+      // Extract emotions for unified emotion handling
+      const emotionInfo = extractEmotionsFromInput(userInput);
+      
       // CRITICAL: Check for depression immediately
-      const hasDepressionIndicators = /\b(depress(ed|ion|ing)?|sad|down|blue|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible|depressed))\b/i.test(userInput.toLowerCase());
+      const hasDepressionIndicators = emotionInfo.isDepressionMentioned || 
+        /\b(depress(ed|ion|ing)?|sad|down|blue|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible|depressed))\b/i.test(userInput.toLowerCase());
       
       if (hasDepressionIndicators) {
         console.log("CRITICAL: Depression detected, ensuring appropriate response");
@@ -62,8 +76,11 @@ const useRogerianResponse = () => {
         conversationHistory = [userInput];
       }
       
-      // Store user input in memory
-      masterMemory.addMemory(userInput, 'patient', undefined, 0.8);
+      // Store user input in memory with emotion context
+      masterMemory.addMemory(userInput, 'patient', {
+        emotions: emotionInfo.emotionalContent?.hasEmotion ? [emotionInfo.emotionalContent.primaryEmotion] : undefined,
+        isDepressionMentioned: emotionInfo.isDepressionMentioned
+      }, 0.8);
       
       // Process with original hook
       const response = await originalHook.processUserMessage(userInput);
@@ -87,7 +104,8 @@ const useRogerianResponse = () => {
             enhancedText = await enhanceResponseWithRAG(
               enhancedText,
               userInput,
-              conversationHistory
+              conversationHistory,
+              emotionInfo // Pass unified emotion context to RAG
             );
           }
         } catch (ragError) {
@@ -95,8 +113,11 @@ const useRogerianResponse = () => {
         }
       }
       
-      // Track Roger's response in memory
-      masterMemory.addMemory(enhancedText, 'roger');
+      // Track Roger's response in memory with emotion context
+      masterMemory.addMemory(enhancedText, 'roger', {
+        inResponseTo: userInput,
+        userEmotions: emotionInfo.emotionalContent?.hasEmotion ? [emotionInfo.emotionalContent.primaryEmotion] : undefined
+      });
       
       // Add to conversation history
       conversationHistory.push(enhancedText);

@@ -41,3 +41,13 @@ export interface HallucinationProcessResult {
 
 // Export HallucinationCheck for wider use
 export type { HallucinationCheck };
+
+/**
+ * Memory Piece for RAG system
+ */
+export interface MemoryPiece {
+  content: string;
+  role: 'system' | 'user' | 'assistant';
+  importance: number;
+  metadata?: any;
+}

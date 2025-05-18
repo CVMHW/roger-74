@@ -2,15 +2,17 @@
 /**
  * Main hallucination prevention system
  * 
- * Enhanced with emotion-specific RAG retrieval strategies
+ * Enhanced with emotion-specific RAG retrieval strategies and
+ * integrated vector database
  */
 
 import { HallucinationPreventionOptions, HallucinationProcessResult } from '../../types/hallucinationPrevention';
 import { preventHallucinations } from './processor';
-import { checkAndFixHallucinations } from './detector/hallucination-checker';
-import { retrieveAugmentation, augmentResponseWithRetrieval } from './retrieval';
+import { checkAndFixHallucinations } from './detector';
+import { retrieveAugmentation, augmentResponseWithRetrieval, initializeRetrievalSystem } from './retrieval';
 import { createEmotionContext } from '../response/processor/emotionHandler/emotionMisidentificationHandler';
 import { extractEmotionsFromInput } from '../response/processor/emotions';
+import vectorDB from './vectorDatabase';
 
 // Track initialization status
 let isRAGInitialized = false;
@@ -24,7 +26,7 @@ export const initializeRAGSystem = async () => {
     console.log("Initializing RAG system...");
     
     // Call the retrieval system initialization
-    await retrieveAugmentation("initialize", []);
+    await initializeRetrievalSystem();
     
     isRAGInitialized = true;
     console.log("RAG system initialized successfully");
@@ -125,6 +127,9 @@ export const enhanceResponseWithRAG = async (
       augmentation
     );
     
+    // Record the exchange in the vector database for future use
+    await addConversationExchange(userInput, enhancedResponse);
+    
     console.log("RAG: Response enhanced with relevant knowledge");
     return enhancedResponse;
     
@@ -168,7 +173,7 @@ export const analyzeConversation = async (
       primaryEmotion: emotions.explicitEmotion || 
                      (emotions.emotionalContent?.hasEmotion ? emotions.emotionalContent.primaryEmotion : null),
       emotionMisidentified: hallucination.wasHallucination && 
-                           hallucination.hallucinationDetails?.emotionMisidentified
+                           hallucination.hallucinationDetails?.isEmotionMisidentification
     };
     
     return {
@@ -190,5 +195,6 @@ export {
   preventHallucinations,
   checkAndFixHallucinations,
   retrieveAugmentation,
-  augmentResponseWithRetrieval
+  augmentResponseWithRetrieval,
+  addConversationExchange
 };
