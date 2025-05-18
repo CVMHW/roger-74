@@ -1,3 +1,4 @@
+
 /**
  * Persistent Vector Storage
  * 
@@ -128,7 +129,7 @@ export const loadPersistedVectors = (
     }
     
     // Convert to vector records
-    const vectorRecords = persistedVectors.map(persisted => ({
+    const vectorRecords: VectorRecord[] = persistedVectors.map(persisted => ({
       id: persisted.id,
       text: persisted.text,
       embedding: persisted.embedding,
@@ -136,7 +137,8 @@ export const loadPersistedVectors = (
         ...persisted.metadata,
         persisted: true,
         persistedAt: persisted.timestamp
-      }
+      },
+      timestamp: persisted.timestamp // Add timestamp to match VectorRecord type
     }));
     
     // Add to collection

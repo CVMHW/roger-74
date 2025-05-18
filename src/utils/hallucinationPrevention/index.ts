@@ -6,7 +6,7 @@
  */
 
 import { initializeVectorDatabase } from './dataLoader';
-import { retrieveFactualGrounding, retrieveAugmentation, augmentResponseWithRetrieval } from './retrieval';
+import { retrieveFactualGrounding, retrieveAugmentation, augmentResponseWithRetrieval, MemoryPiece } from './retrieval';
 import { retrieveEnhanced, expandQuery, augmentResponseWithEnhancedRetrieval } from './enhancedRetrieval';
 import { performHybridSearch } from './hybridSearch';
 import { rerankResults } from './reranker';

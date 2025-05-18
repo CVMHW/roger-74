@@ -13,101 +13,77 @@ import { getRogerPersonalityInsight } from '../reflection/rogerPersonality';
 import { identifyEnhancedFeelings } from '../reflection/feelingDetection';
 import { checkForResponseRepetition, getRepetitionRecoveryResponse, processUserMessageMemory } from './enhancer/repetitionDetection';
 
-// Re-export these functions for backward compatibility
-export { checkForResponseRepetition, getRepetitionRecoveryResponse, processUserMessageMemory };
+// Import from hallucination prevention system
+import { enhanceResponseWithRAG } from '../hallucinationPrevention';
 
 /**
- * Enhances a response with vector-based knowledge, memory, and logotherapy
- * @param responseText Original response text
- * @param userInput User input that triggered the response
- * @param messageCount Number of messages in the conversation
- * @param conversationHistory Previous conversation messages
- * @param contextFlags Additional context information
- * @returns Enhanced response text
+ * Enhanced response processing with vector-based knowledge retrieval
+ * and unified hallucination prevention
  */
 export const enhanceResponse = async (
   responseText: string,
   userInput: string,
   messageCount: number,
   conversationHistory: string[] = [],
-  contextFlags?: {
+  context: {
     isEverydaySituation?: boolean;
     isSmallTalkContext?: boolean;
     isIntroductionContext?: boolean;
     isPersonalSharingContext?: boolean;
-  }
+  } = {}
 ): Promise<string> => {
   try {
-    let enhancedText = responseText;
+    console.log("ENHANCER: Processing response through unified pipeline");
     
-    // Step 1: Process through master rules (existing functionality)
-    enhancedText = processResponse(enhancedText, userInput, conversationHistory);
-    
-    // Step 2: Retrieve relevant vector knowledge with RAG
-    try {
-      const retrievalResult = await retrieveAugmentation(userInput, conversationHistory);
-      if (retrievalResult.retrievedContent.length > 0) {
-        enhancedText = await augmentResponseWithRetrieval(enhancedText, retrievalResult);
-      }
-    } catch (retrievalError) {
-      console.error("RAG enhancement error:", retrievalError);
-      // Continue with existing text if retrieval fails
+    // Skip enhancement for very short responses (likely error states)
+    if (responseText.length < 20) {
+      return responseText;
     }
     
-    // Step 3: Check if this is an early conversation or special context
-    const isEarlyConversation = messageCount < 5;
-    const isSmallTalk = contextFlags?.isSmallTalkContext || false;
-    const isPersonalSharing = contextFlags?.isPersonalSharingContext || false;
+    // First apply memory-based processing
+    let enhancedText = await processResponse(
+      responseText,
+      userInput,
+      conversationHistory
+    );
     
-    // Step 4: Add personality insights for personal sharing contexts
-    if (isPersonalSharing && !isEarlyConversation) {
+    // Next, enhance with RAG if appropriate context
+    // We avoid RAG for small talk, introductions, and very short user inputs
+    const shouldApplyRAG = !context.isSmallTalkContext && 
+                           !context.isIntroductionContext &&
+                           userInput.length > 30;
+    
+    if (shouldApplyRAG) {
       try {
-        const enhancedFeelings = identifyEnhancedFeelings(userInput);
-        const primaryFeeling = enhancedFeelings.length > 0 ? enhancedFeelings[0].detectedWord : '';
-        const personalityInsight = getRogerPersonalityInsight(userInput, primaryFeeling, messageCount > 30);
-        
-        if (personalityInsight) {
-          // Insert at an appropriate point
-          const sentences = enhancedText.split(/(?<=[.!?])\s+/);
-          if (sentences.length > 3) {
-            const insertPoint = Math.min(sentences.length - 2, Math.floor(sentences.length * 0.7));
-            enhancedText = [
-              ...sentences.slice(0, insertPoint),
-              personalityInsight,
-              ...sentences.slice(insertPoint)
-            ].join(' ');
-          } else {
-            enhancedText = `${enhancedText} ${personalityInsight}`;
-          }
-        }
-      } catch (personalityError) {
-        console.error("Personality integration error:", personalityError);
+        // Apply RAG enhancement
+        enhancedText = await enhanceResponseWithRAG(
+          enhancedText,
+          userInput,
+          conversationHistory
+        );
+      } catch (ragError) {
+        console.error("Error in RAG enhancement:", ragError);
+        // Continue with current text if RAG fails
       }
     }
     
-    // Step 5: Enhance with logotherapy perspective for non-small-talk
-    if (!isSmallTalk && !isEarlyConversation) {
-      try {
-        enhancedText = enhanceWithMeaningPerspective(enhancedText, userInput);
-      } catch (logotherapyError) {
-        console.error("Logotherapy enhancement error:", logotherapyError);
-      }
+    // Always check for repetition last
+    if (checkForResponseRepetition(enhancedText)) {
+      console.log("ENHANCER: Repetition detected, using recovery response");
+      return getRepetitionRecoveryResponse();
     }
     
-    // Step 6: Record this exchange to vector database for future reference
-    try {
-      addConversationExchange(userInput, enhancedText).catch(error => 
-        console.error("Error recording to vector database:", error)
-      );
-    } catch (recordingError) {
-      console.error("Vector recording error:", recordingError);
-    }
-    
-    // Return the enhanced response
     return enhancedText;
   } catch (error) {
-    console.error("Error in response enhancement:", error);
-    // Return original text if enhancement fails
+    console.error("Error in response enhancer:", error);
+    // Return original response if enhancement fails
     return responseText;
   }
+};
+
+// Re-export for backward compatibility
+export { 
+  processUserMessageMemory,
+  checkForResponseRepetition,
+  getRepetitionRecoveryResponse
 };
