@@ -1,4 +1,3 @@
-
 /**
  * Hallucination Prevention Retrieval
  * 
@@ -8,7 +7,9 @@
 
 import { generateEmbedding, isUsingSimulatedEmbeddings, forceReinitializeEmbeddingModel } from './vectorEmbeddings';
 import vectorDB, { VectorRecord } from './vectorDatabase';
-import { COLLECTIONS, initializeVectorDatabase, addUserMessage, addRogerResponse, createChunks } from './dataLoader';
+import { COLLECTIONS } from './dataLoader/types';
+import { initializeVectorDatabase, addUserMessage, addRogerResponse } from './dataLoader';
+import { createChunks as utilCreateChunks } from './dataLoader/utils';
 import { v4 as uuidv4 } from 'uuid';
 
 // Export the MemoryPiece interface for use in other modules
@@ -20,32 +21,8 @@ export interface MemoryPiece {
   chunks?: string[];
 }
 
-/**
- * Create chunks from content for more granular retrieval
- */
-const createChunks = (content: string, maxChunkLength: number = 100): string[] => {
-  // Simple chunking by sentences
-  const sentences = content.split(/(?<=[.!?])\s+/);
-  const chunks: string[] = [];
-  let currentChunk = '';
-  
-  for (const sentence of sentences) {
-    // If adding this sentence would exceed max length, start a new chunk
-    if (currentChunk.length + sentence.length > maxChunkLength && currentChunk.length > 0) {
-      chunks.push(currentChunk);
-      currentChunk = sentence;
-    } else {
-      currentChunk += (currentChunk ? ' ' : '') + sentence;
-    }
-  }
-  
-  // Add the last chunk if it's not empty
-  if (currentChunk) {
-    chunks.push(currentChunk);
-  }
-  
-  return chunks;
-};
+// Use the imported createChunks function
+const createChunks = utilCreateChunks;
 
 /**
  * Initialize the retrieval system

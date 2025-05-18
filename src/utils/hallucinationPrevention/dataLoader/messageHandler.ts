@@ -2,60 +2,71 @@
 /**
  * Message Handler
  * 
- * Functions to add user and Roger messages to the vector database
+ * Functions to store user messages and Roger responses in vector database
  */
 
 import { v4 as uuidv4 } from 'uuid';
 import vectorDB from '../vectorDatabase';
 import { generateEmbedding } from '../vectorEmbeddings';
 import { COLLECTIONS } from './types';
+import { createChunks } from './utils';
 
 /**
- * Add a new user message to the vector database
+ * Add a user message to the vector database
  */
-export const addUserMessage = async (content: string): Promise<string | null> => {
+export const addUserMessage = async (message: string): Promise<void> => {
   try {
-    const collection = vectorDB.collection(COLLECTIONS.USER_MESSAGES);
-    const embedding = await generateEmbedding(content);
+    if (!message || message.trim().length === 0) return;
     
-    const id = collection.insert({
+    // Generate embedding for the message
+    const embedding = await generateEmbedding(message);
+    
+    // Get the collection
+    const collection = vectorDB.collection(COLLECTIONS.USER_MESSAGES);
+    
+    // Add to collection
+    collection.insert({
       id: uuidv4(),
-      text: content,
+      text: message,
       embedding,
       metadata: {
         timestamp: Date.now(),
-        role: 'patient'
+        source: 'user',
+        chunks: createChunks(message)
       }
     });
     
-    return id;
   } catch (error) {
     console.error("Error adding user message to vector database:", error);
-    return null;
   }
 };
 
 /**
  * Add a Roger response to the vector database
  */
-export const addRogerResponse = async (content: string): Promise<string | null> => {
+export const addRogerResponse = async (response: string): Promise<void> => {
   try {
-    const collection = vectorDB.collection(COLLECTIONS.ROGER_RESPONSES);
-    const embedding = await generateEmbedding(content);
+    if (!response || response.trim().length === 0) return;
     
-    const id = collection.insert({
+    // Generate embedding for the response
+    const embedding = await generateEmbedding(response);
+    
+    // Get the collection
+    const collection = vectorDB.collection(COLLECTIONS.ROGER_RESPONSES);
+    
+    // Add to collection
+    collection.insert({
       id: uuidv4(),
-      text: content,
+      text: response,
       embedding,
       metadata: {
         timestamp: Date.now(),
-        role: 'roger'
+        source: 'roger',
+        chunks: createChunks(response)
       }
     });
     
-    return id;
   } catch (error) {
     console.error("Error adding Roger response to vector database:", error);
-    return null;
   }
 };

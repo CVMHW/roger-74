@@ -12,7 +12,8 @@ import { rogerTherapeuticKnowledge, mentalHealthFacts } from './knowledgeData';
 import { COLLECTIONS } from './types';
 
 // Re-export types and constants
-export { KnowledgeEntry, COLLECTIONS } from './types';
+export type { KnowledgeEntry } from './types';
+export { COLLECTIONS } from './types';
 export { createChunks } from './utils';
 export { addUserMessage, addRogerResponse } from './messageHandler';
 
@@ -53,4 +54,10 @@ export const initializeVectorDatabase = async (): Promise<boolean> => {
     console.error("❌ Error initializing vector database:", error);
     return false;
   }
+};
+
+// Export a default function for backward compatibility
+export default {
+  initializeVectorDatabase,
+  loadKnowledge
 };

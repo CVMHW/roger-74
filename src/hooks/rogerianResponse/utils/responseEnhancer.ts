@@ -46,7 +46,14 @@ export const enhanceResponse = (
   enhanceResponseUnified(
     responseText, 
     userInput, 
-    { messageCount, conversationHistory }
+    messageCount,
+    conversationHistory,
+    {
+      isEverydaySituation,
+      isSmallTalkContext,
+      isIntroductionContext,
+      isPersonalSharingContext
+    }
   ).catch(error => {
     console.error("Error in async response enhancement:", error);
   });
