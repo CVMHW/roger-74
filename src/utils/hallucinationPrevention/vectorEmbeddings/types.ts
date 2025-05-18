@@ -33,17 +33,21 @@ export interface EmbeddingConfig {
 // Device options for model running
 export type DeviceType = 'webgpu' | 'wasm' | 'cpu' | 'auto';
 
-// Pipeline options
+// Options for batch embedding generation
+export interface BatchEmbeddingOptions extends EmbeddingConfig {
+  batchSize?: number;
+  concurrency?: number;
+  showProgress?: boolean;
+  timeoutMs?: number;
+}
+
+// Embedding generation options (alias for backward compatibility)
+export type EmbeddingGenerationOptions = BatchEmbeddingOptions;
+
+// Pipeline options for HuggingFace transformers
 export interface PipelineOptions {
   device?: DeviceType;
   quantized?: boolean;
   revision?: string;
   progress_callback?: HuggingFaceProgressCallback;
-}
-
-// Batch embedding options
-export interface BatchEmbeddingOptions extends EmbeddingConfig {
-  batchSize?: number;
-  concurrency?: number;
-  showProgress?: boolean;
 }

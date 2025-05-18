@@ -11,8 +11,10 @@ export type {
   SimilarityResult,
   EmbeddingConfig,
   BatchEmbeddingOptions,
+  EmbeddingGenerationOptions,
   DeviceType,
-  HuggingFaceProgressCallback
+  HuggingFaceProgressCallback,
+  PipelineOptions
 } from './types';
 
 // Export utility functions

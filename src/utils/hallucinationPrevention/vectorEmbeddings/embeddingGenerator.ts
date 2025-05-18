@@ -9,7 +9,7 @@ import { generateEmbedding } from './embeddingModel';
 import { generateSimulatedEmbedding } from './simulatedEmbeddings';
 import { isUsingSimulatedEmbeddings } from './embeddingModel';
 import { EmbeddingResult, EmbeddingGenerationOptions, SimilarityResult } from './types';
-import { cosineSimilarity } from './utils';
+import { cosineSimilarity, simpleHash } from './utils';
 
 /**
  * Generate embeddings for multiple texts, with batching and timeout protection
@@ -95,7 +95,8 @@ export const findMostSimilar = async (
     const candidateResults = await generateEmbeddings(candidates);
     
     // Calculate similarity scores
-    const scores = candidateResults.map(candidate => ({
+    const scores = candidateResults.map((candidate, index) => ({
+      id: simpleHash(candidate.text),
       text: candidate.text,
       score: cosineSimilarity(queryEmbedding, candidate.embedding)
     }));

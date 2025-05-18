@@ -5,10 +5,10 @@
  * Manages the embedding model initialization and state
  */
 
-import { pipeline, PipelineType, PipelineConfig, EnvConfig } from '@huggingface/transformers';
+import { pipeline, PipelineType } from '@huggingface/transformers';
 import { detectBestAvailableDevice } from './deviceDetection';
 import { generateSimulatedEmbedding } from './simulatedEmbeddings';
-import { EmbeddingResult, HuggingFaceProgressCallback } from './types';
+import { EmbeddingResult, HuggingFaceProgressCallback, PipelineOptions } from './types';
 
 // Model state management
 let embeddingModel: any = null;
@@ -36,7 +36,7 @@ export const isUsingSimulatedEmbeddings = (): boolean => {
  * Progress callback for model loading
  * Properly typed to match HuggingFace expectations
  */
-const progressCallback: HuggingFaceProgressCallback = (progress: number | { status: string; progress: number }) => {
+const progressCallback: HuggingFaceProgressCallback = (progress: number | { status?: string; progress?: number }) => {
   let percentage: number;
   let status: string = '';
 
@@ -88,7 +88,7 @@ export const initializeEmbeddingModel = async (): Promise<void> => {
       }
 
       // Configure pipeline options with proper TypeScript types
-      const pipelineConfig: PipelineConfig = { 
+      const pipelineOptions: PipelineOptions = { 
         revision: MODEL_CONFIG.revision,
         quantized: MODEL_CONFIG.quantized,
         device,
@@ -99,7 +99,7 @@ export const initializeEmbeddingModel = async (): Promise<void> => {
       embeddingModel = await pipeline(
         "feature-extraction" as PipelineType,
         MODEL_CONFIG.modelId,
-        pipelineConfig
+        pipelineOptions
       );
       
       const loadTime = performance.now() - startTime;
