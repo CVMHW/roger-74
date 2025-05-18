@@ -9,7 +9,7 @@
 import { MemoryPiece } from './retrieval';
 import { retrieveFactualGrounding } from './retrieval';
 import { performHybridSearch } from './hybridSearch';
-import { expandQuery, generateHybridQueryExpansion, extractTerms } from './queryExpansion';
+import { expandQuery as baseExpandQuery, generateHybridQueryExpansion, extractTerms } from './queryExpansion';
 import { CrossEncoderReranker, rerankDocumentsWithCrossEncoder } from './crossEncoder';
 
 /**
@@ -80,10 +80,10 @@ export const retrieveEnhanced = async (
     const rerankedResults = await rerankDocumentsWithCrossEncoder(
       query,
       initialResults,
-      conversationContext,
       {
         topK: limit,
-        scoreThreshold: relevanceThreshold
+        scoreThreshold: relevanceThreshold,
+        useContextualFeatures: true
       }
     );
     
@@ -92,7 +92,7 @@ export const retrieveEnhanced = async (
     console.error("Error in enhanced retrieval:", error);
     // Fallback to basic retrieval
     const fallbackTopics = extractTerms(query);
-    return retrieveFactualGrounding(fallbackTopics, limit);
+    return retrieveFactualGrounding(fallbackTopics, options.limit || 5);
   }
 };
 
@@ -121,6 +121,11 @@ export const generateExpandedQuery = async (
     return initialTopics;
   }
 };
+
+/**
+ * Re-export expandQuery from queryExpansion for convenience
+ */
+export const expandQuery = baseExpandQuery;
 
 /**
  * Augment a response with the most relevant retrieved content
