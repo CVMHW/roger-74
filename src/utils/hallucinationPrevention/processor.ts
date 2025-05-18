@@ -1,14 +1,20 @@
-
 /**
  * Main hallucination prevention processor
  */
 
 import { HallucinationPreventionOptions, HallucinationProcessResult } from '../../types/hallucinationPrevention';
-import { checkAndFixHallucinations } from './detector';
+import { checkAndFixHallucinations } from './detector/hallucination-checker';
 import { applyReasoning } from './reasoner';
 import { retrieveAugmentation, augmentResponseWithRetrieval } from './retrieval';
 import { hasRepeatedContent, fixRepeatedContent } from './repetitionHandler';
-import { DEFAULT_OPTIONS } from './config';
+
+// Default options
+export const DEFAULT_OPTIONS: HallucinationPreventionOptions = {
+  enableRAG: true,
+  enableReasoning: true,
+  enableDetection: true,
+  reasoningThreshold: 0.7
+};
 
 /**
  * Comprehensive hallucination prevention processing
@@ -41,7 +47,7 @@ export const preventHallucinations = (
   };
   
   // Extract emotion awareness context if provided
-  const emotionAwareness = options.emotionAwareness || {};
+  const emotionAwareness = mergedOptions.emotionAwareness || {};
   
   // Track issues found
   const issueDetails: string[] = [];
@@ -113,61 +119,44 @@ export const preventHallucinations = (
       
       result.detectionApplied = true;
       
-      // If hallucinations detected, use the fixed version
+      // If hallucinations were detected, use the fixed version
       if (detectionResult.wasHallucination) {
         result.processedResponse = detectionResult.correctedResponse;
         result.wasRevised = true;
-        result.confidence *= detectionResult.hallucinationDetails?.confidence || 0.5;
+        result.confidence *= 0.7;
         
-        // Track detected hallucinations
-        if (detectionResult.hallucinationDetails?.flags) {
+        // Track the hallucination details
+        if (detectionResult.hallucinationDetails && detectionResult.hallucinationDetails.flags) {
           for (const flag of detectionResult.hallucinationDetails.flags) {
-            issueDetails.push(
-              `Hallucination (${flag.type}): ${flag.description} (severity: ${flag.severity})`
-            );
+            issueDetails.push(`Hallucination: ${flag.type} - ${flag.description} (${flag.severity})`);
           }
         }
       }
     }
     
-    // Stage 4: Special handling for repeated content
-    // This can happen when the model gets "stuck" in a loop
+    // Final cleanup of any remaining repetition
     if (hasRepeatedContent(result.processedResponse)) {
-      console.log("HALLUCINATION PREVENTION: Fixing repeated content");
-      
-      // Fix repeated content by keeping only unique sentences
-      const fixedResponse = fixRepeatedContent(result.processedResponse);
-      
-      if (fixedResponse !== result.processedResponse) {
-        result.processedResponse = fixedResponse;
-        result.wasRevised = true;
-        result.confidence *= 0.9;
-        issueDetails.push("Repetition detected: Fixed repeated content");
-      }
+      console.log("HALLUCINATION PREVENTION: Fixing repeated content in final pass");
+      result.processedResponse = fixRepeatedContent(result.processedResponse);
+      result.wasRevised = true;
     }
     
-    // Calculate processing time
+    // Finalize the result
     result.processingTime = performance.now() - startTime;
     
-    // Add issue details if any were found
-    if (issueDetails.length > 0) {
-      result.issueDetails = issueDetails;
-    }
-    
-    console.log(`HALLUCINATION PREVENTION: Processing complete in ${result.processingTime.toFixed(2)}ms`);
     return result;
-    
   } catch (error) {
     console.error("Error in hallucination prevention:", error);
     
-    // Calculate processing time even in error case
-    result.processingTime = performance.now() - startTime;
-    
-    // Return original response in case of error
+    // Return the original response in case of errors
     return {
-      ...result,
       processedResponse: responseText,
-      wasRevised: false
+      wasRevised: false,
+      reasoningApplied: false,
+      detectionApplied: false,
+      ragApplied: false,
+      processingTime: performance.now() - startTime,
+      confidence: 1.0
     };
   }
 };

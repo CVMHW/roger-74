@@ -1,181 +1,124 @@
-
 /**
- * Hallucination checking and fixing functionality
+ * Main hallucination check and fix function
  */
 
+import { detectHallucinations } from './hallucination-detector';
 import { HallucinationCheck } from './types';
-import { createEmotionMisidentificationFlag, createNeutralEmotionHallucinationFlag } from '../detection-flags';
-import { analyzeTokenPatterns, calculateTextStats } from '../token-analysis';
 
 /**
- * Calculate string similarity between two strings
- */
-export const calculateStringSimilarity = (str1: string, str2: string): number => {
-  // Simple implementation of string similarity
-  const s1 = str1.toLowerCase();
-  const s2 = str2.toLowerCase();
-  
-  if (s1 === s2) return 1.0;
-  if (s1.length === 0 || s2.length === 0) return 0.0;
-  
-  // Calculate intersection of words
-  const words1 = s1.split(/\s+/).filter(w => w.trim().length > 0);
-  const words2 = s2.split(/\s+/).filter(w => w.trim().length > 0);
-  
-  const wordSet1 = new Set(words1);
-  const intersection = words2.filter(word => wordSet1.has(word)).length;
-  
-  // Calculate jaccard similarity
-  return intersection / (words1.length + words2.length - intersection);
-};
-
-/**
- * Quick check for hallucination patterns
- */
-export const quickHallucinationCheck = (
-  responseText: string,
-  conversationHistory: string[]
-): { potentialIssue: boolean, hasRepeatedSentences: boolean } => {
-  // Check for repeating sentences
-  const sentences = responseText.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  let hasRepeatedSentences = false;
-  
-  for (let i = 0; i < sentences.length; i++) {
-    for (let j = i + 1; j < sentences.length; j++) {
-      if (calculateStringSimilarity(sentences[i], sentences[j]) > 0.7) {
-        hasRepeatedSentences = true;
-        break;
-      }
-    }
-    if (hasRepeatedSentences) break;
-  }
-  
-  // Check for memory references in early conversations
-  const hasMemoryReference = conversationHistory.length < 3 && 
-    /previously you|earlier you|you mentioned|as you said|we discussed|our previous session|last time we|you've been telling me/i.test(responseText);
-  
-  // Check for contradictions
-  const hasContradictoryStatements = /but actually|contrary to|in fact|on the contrary|actually|despite what I said|however|nonetheless|nevertheless|even though/i.test(responseText);
-  
-  // Check for potential neutrality statements
-  const hasNeutralityClaims = /you seem to be feeling neutral|you (don't|do not) seem to be feeling|I'm not detecting|I don't detect any strong emotions/i.test(responseText);
-  
-  return {
-    potentialIssue: hasRepeatedSentences || hasMemoryReference || hasContradictoryStatements || hasNeutralityClaims,
-    hasRepeatedSentences
-  };
-};
-
-/**
- * Main function to check and fix hallucinations
+ * Checks for hallucinations and fixes them if found
+ * 
+ * @param responseText Response text to check
+ * @param userInput User input that triggered the response 
+ * @param conversationHistory Previous conversation history
+ * @returns Object containing wasHallucination flag, corrected response, and hallucination details
  */
 export const checkAndFixHallucinations = (
   responseText: string,
   userInput: string,
-  conversationHistory: string[]
+  conversationHistory: string[] = []
 ): { 
-  correctedResponse: string;
-  wasHallucination: boolean;
-  hallucinationDetails: HallucinationCheck | null;
+  wasHallucination: boolean; 
+  correctedResponse: string; 
+  hallucinationDetails?: HallucinationCheck; 
 } => {
-  // Check if we need to run full hallucination detection
-  const quickCheck = quickHallucinationCheck(responseText, conversationHistory);
+  // Check for hallucinations
+  const hallucination = detectHallucinations(responseText, userInput, conversationHistory);
   
-  // If quick check passes and it's not a new conversation, return original
-  if (!quickCheck.potentialIssue && conversationHistory.length > 2) {
-    return { 
-      correctedResponse: responseText, 
-      wasHallucination: false,
-      hallucinationDetails: null
-    };
-  }
-  
-  // If this is a new conversation, be VERY cautious about memory claims
-  const isNewConversation = conversationHistory.length <= 2;
-  
-  // First check for repetition patterns that need immediate fixing
-  const repetitionPatterns = [
-    {
-      pattern: /(I hear (you'?re|you are) dealing with) I hear (you'?re|you are) dealing with/i,
-      replacement: '$1'
-    },
-    {
-      pattern: /(I remember (you|your|we)) I remember (you|your|we)/i,
-      replacement: '$1'
-    },
-    {
-      pattern: /(you (mentioned|said|told me)) you (mentioned|said|told me)/i,
-      replacement: '$1'
-    }
-  ];
-  
-  let fixedResponse = responseText;
-  let hasRepetitionIssue = false;
-  
-  // Apply repetition fixes first
-  for (const { pattern, replacement } of repetitionPatterns) {
-    if (pattern.test(fixedResponse)) {
-      console.warn("REPETITION DETECTED: Fixing repeated phrases");
-      fixedResponse = fixedResponse.replace(pattern, replacement);
-      hasRepetitionIssue = true;
-    }
-  }
-  
-  // SPECIAL HANDLING: Check for depression in user input
-  const hasDepressionIndicators = /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
-  
-  // Look for neutral emotion claim when depression is mentioned
-  const hasNeutralClaim = /you seem (to be feeling|to feel) neutral|you (don't|do not) seem to be feeling|I'm not detecting any strong emotions|I don't detect any strong emotions|your emotions (seem|are|appear) neutral/i.test(responseText);
-  
-  // CRITICAL: Check for depression + neutrality hallucination
-  if (hasDepressionIndicators && hasNeutralClaim) {
-    console.warn("CRITICAL: Detected neutrality claim with depression mention");
+  if (hallucination.isHallucination) {
+    let correctedResponse = responseText;
     
-    // Create emotional misidentification flag
-    const emotionMisidentifiedCheck: HallucinationCheck = {
-      isHallucination: true,
-      confidence: 0.95,
-      reason: "Claimed neutrality when depression was mentioned",
-      flags: [
-        createNeutralEmotionHallucinationFlag("depression")
-      ],
-      corrections: "I hear that you're feeling depressed. I'm here to listen and support you."
-    };
-    
-    // Replace neutral claim with depression acknowledgment
-    fixedResponse = fixedResponse.replace(
-      /you seem (to be feeling|to feel) neutral|you (don't|do not) seem to be feeling|I'm not detecting any strong emotions|I don't detect any strong emotions|your emotions (seem|are|appear) neutral/i,
-      "I hear that you're feeling depressed"
-    );
-    
-    // If acknowledgment isn't at the start, add it
-    if (!fixedResponse.toLowerCase().includes("depress")) {
-      fixedResponse = `I'm very sorry to hear that you're feeling depressed. ${fixedResponse}`;
+    // PRIORITY: Fix emotion misidentification first
+    if (hallucination.emotionMisidentified) {
+      console.log("HALLUCINATION CORRECTION: Fixing emotion misidentification");
+      
+      // Import needed for inline processing
+      const { fixEmotionMisidentification } = require('../../response/processor/emotionHandler/emotionMisidentificationHandler');
+      correctedResponse = fixEmotionMisidentification(correctedResponse, userInput);
     }
     
+    // Fix repetition issues
+    if (hallucination.flags && hallucination.flags.some(flag => flag.type === 'repetition')) {
+      console.log("HALLUCINATION CORRECTION: Fixing repetition issues");
+      
+      // Remove repeated phrases
+      const repetitionPatterns = [
+        /(I hear (you'?re|you are) dealing with).*(I hear (you'?re|you are) dealing with)/i,
+        /(I remember (you|your|we)).*(I remember (you|your|we))/i,
+        /(you (mentioned|said|told me)).*(you (mentioned|said|told me))/i,
+        /((I hear|It sounds like) you('re| are) (dealing with|feeling)).*((I hear|It sounds like) you('re| are))/i
+      ];
+      
+      for (const pattern of repetitionPatterns) {
+        const match = correctedResponse.match(pattern);
+        if (match && match[1] && match[3]) {
+          // Keep the first instance, remove the repeated one
+          correctedResponse = correctedResponse.replace(match[3], '');
+        }
+      }
+      
+      // Clean up any resulting artifacts
+      correctedResponse = correctedResponse
+        .replace(/\s{2,}/g, ' ')
+        .replace(/\. \./g, '.')
+        .replace(/,\s*\./g, '.');
+    }
+    
+    // Fix crisis protocol mixing
+    if (hallucination.flags && hallucination.flags.some(flag => 
+        flag.type === 'critical_protocol_violation' || flag.type === 'critical_protocol_mix')) {
+      console.log("HALLUCINATION CORRECTION: Fixing crisis protocol mixing");
+      
+      // If we have both crisis content and casual content, prioritize crisis
+      if (/suicide|crisis|self-harm/i.test(userInput)) {
+        // Create a crisis-focused response
+        correctedResponse = "I'm concerned about what you've shared regarding thoughts of suicide or self-harm. " +
+          "This is something to take seriously. The National Suicide Prevention Lifeline is available 24/7 at 988 " +
+          "or 1-800-273-8255. Would it be helpful to discuss what resources might be available to you right now?";
+      } else if (/eating disorder|binge|purge|anorexia|bulimia/i.test(userInput)) {
+        // Create an eating disorder focused response
+        correctedResponse = "Thank you for sharing your struggles with disordered eating. " +
+          "These are serious concerns that deserve proper support. " +
+          "The National Eating Disorders Association (NEDA) has resources that might help. " +
+          "Would you like to talk more about what you're experiencing?";
+      }
+    }
+    
+    // Fix false memory references in early conversation
+    if (hallucination.flags && hallucination.flags.some(flag => flag.type === 'false_memory')) {
+      console.log("HALLUCINATION CORRECTION: Fixing false memory references");
+      
+      correctedResponse = correctedResponse
+        .replace(/you mentioned before|you told me earlier|when we talked about|as we discussed|as you said|as you mentioned|you've told me/gi, 
+                "based on what you're sharing")
+        .replace(/we talked about|our previous conversation|earlier you said/gi, 
+                "from what I understand");
+    }
+    
+    // Fix crisis type mismatch
+    if (hallucination.flags && hallucination.flags.some(flag => flag.type === 'crisis_type_mismatch')) {
+      console.log("HALLUCINATION CORRECTION: Fixing crisis type mismatch");
+      
+      // Check which crisis is actually being discussed
+      if (/suicide|kill (myself|me)|shoot myself|self.?harm|end my life/i.test(userInput.toLowerCase())) {
+        correctedResponse = "I'm very concerned about what you've shared regarding thoughts of suicide. " +
+          "This is something to take seriously. The National Suicide Prevention Lifeline is available 24/7 at 988 " +
+          "or 1-800-273-8255. Would it help to talk about what you're going through right now?";
+      } else if (/drinking|alcohol|drunk|intoxicated|substance|beer/i.test(userInput.toLowerCase())) {
+        correctedResponse = "I hear your concerns about substance use. " +
+          "The SAMHSA National Helpline at 1-800-662-4357 provides information and treatment referrals. " +
+          "Would you like to talk about what's been going on with your drinking?";
+      }
+    }
+    
+    console.log("HALLUCINATION CORRECTION: Hallucination fixed");
     return {
-      correctedResponse: fixedResponse,
-      wasHallucination: true,
-      hallucinationDetails: emotionMisidentifiedCheck
+      wasHallucination: true, 
+      correctedResponse,
+      hallucinationDetails: hallucination
     };
   }
   
-  // Perform analysis to detect other hallucinations
-  const tokenAnalysis = analyzeTokenPatterns(responseText);
-  
-  // Create default response when no specific hallucination is detected
-  return {
-    correctedResponse: fixedResponse,
-    wasHallucination: hasRepetitionIssue,
-    hallucinationDetails: hasRepetitionIssue ? {
-      isHallucination: true,
-      confidence: 0.8,
-      reason: "Repeated phrases detected",
-      flags: [{
-        type: "repetition" as any,
-        severity: "medium" as any,
-        description: "Repeated phrases in response"
-      }]
-    } : null
-  };
+  // No hallucination detected
+  return { wasHallucination: false, correctedResponse: responseText };
 };

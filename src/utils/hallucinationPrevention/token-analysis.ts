@@ -1,71 +1,42 @@
 
 /**
- * Token analysis utilities for hallucination detection
+ * Token-level analysis for detailed hallucination detection
  */
 
 /**
- * Analyze token patterns in text
+ * Generates token-level analysis of potential hallucinations
+ * 
+ * @param text Text to analyze
+ * @returns Token-level analysis report
  */
-export const analyzeTokenPatterns = (text: string): any => {
-  // Simplified token analysis implementation
-  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  const words = text.split(/\s+/).filter(w => w.trim().length > 0);
+export const generateTokenLevelAnalysis = (text: string): any => {
+  // Simple implementation - could be expanded with more sophisticated analysis
+  const sentences = text.split(/(?<=[.!?])\s+/);
   
-  return {
+  const analysis = {
     sentenceCount: sentences.length,
-    wordCount: words.length,
-    averageSentenceLength: words.length / Math.max(1, sentences.length),
-    hasRepeatedPhrases: checkForRepeatedPhrases(text)
+    averageSentenceLength: text.length / Math.max(1, sentences.length),
+    suspiciousSentences: [] as {sentence: string, reason: string}[]
   };
-};
-
-/**
- * Check for repeated phrases in text
- */
-const checkForRepeatedPhrases = (text: string): boolean => {
-  // Get all phrases of 3+ words
-  const phrases = extractPhrases(text, 3);
   
-  // Check for duplicates
-  for (let i = 0; i < phrases.length; i++) {
-    for (let j = i + 1; j < phrases.length; j++) {
-      if (phrases[i].toLowerCase() === phrases[j].toLowerCase()) {
-        return true;
-      }
+  // Check for potential issues in each sentence
+  sentences.forEach(sentence => {
+    // Check for unusual repetition
+    if (/(I hear|It sounds like|you mentioned|you said).*(I hear|It sounds like|you mentioned|you said)/i.test(sentence)) {
+      analysis.suspiciousSentences.push({
+        sentence,
+        reason: 'Contains repeated phrases'
+      });
     }
-  }
+    
+    // Check for very short sentences (potential truncation)
+    if (sentence.length < 10 && sentence.length > 0) {
+      analysis.suspiciousSentences.push({
+        sentence,
+        reason: 'Unusually short sentence'
+      });
+    }
+  });
   
-  return false;
-};
-
-/**
- * Extract phrases of specific word count
- */
-const extractPhrases = (text: string, minWordCount: number): string[] => {
-  const words = text.split(/\s+/).filter(w => w.trim().length > 0);
-  const phrases: string[] = [];
-  
-  for (let i = 0; i <= words.length - minWordCount; i++) {
-    const phrase = words.slice(i, i + minWordCount).join(' ');
-    phrases.push(phrase);
-  }
-  
-  return phrases;
-};
-
-/**
- * Calculate statistical properties of text
- */
-export const calculateTextStats = (text: string): any => {
-  const words = text.split(/\s+/).filter(w => w.trim().length > 0);
-  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  const chars = text.replace(/\s+/g, '').length;
-  
-  return {
-    wordCount: words.length,
-    sentenceCount: sentences.length,
-    charCount: chars,
-    averageWordLength: chars / Math.max(1, words.length),
-    averageSentenceLength: words.length / Math.max(1, sentences.length)
-  };
+  return analysis;
 };

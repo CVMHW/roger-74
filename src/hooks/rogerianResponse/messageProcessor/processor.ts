@@ -182,7 +182,7 @@ export const processUserMessage = async (
     
     // 6. Process the response through master rules with conversation history
     const messageCount = conversationHistory.length;
-    let processedText = processResponseThroughMasterRules(
+    let processedText = await processResponseThroughMasterRules(
       generalResponse.text, 
       userInput, 
       conversationHistory

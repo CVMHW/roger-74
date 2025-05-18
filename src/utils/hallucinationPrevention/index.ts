@@ -7,7 +7,7 @@
 
 import { HallucinationPreventionOptions, HallucinationProcessResult } from '../../types/hallucinationPrevention';
 import { preventHallucinations } from './processor';
-import { checkAndFixHallucinations } from './detector';
+import { checkAndFixHallucinations } from './detector/hallucination-checker';
 import { retrieveAugmentation, augmentResponseWithRetrieval } from './retrieval';
 import { createEmotionContext } from '../response/processor/emotionHandler/emotionMisidentificationHandler';
 import { extractEmotionsFromInput } from '../response/processor/emotions';
@@ -110,7 +110,7 @@ export const enhanceResponseWithRAG = async (
       // If we have depression-relevant content, prioritize it
       if (depressionRelevantContent.length > 0) {
         console.log("RAG: Using depression-specific content for augmentation");
-        return augmentResponseWithRetrieval(
+        return await augmentResponseWithRetrieval(
           responseText,
           userInput,
           { ...augmentation, retrievedContent: depressionRelevantContent }
@@ -168,7 +168,7 @@ export const analyzeConversation = async (
       primaryEmotion: emotions.explicitEmotion || 
                      (emotions.emotionalContent?.hasEmotion ? emotions.emotionalContent.primaryEmotion : null),
       emotionMisidentified: hallucination.wasHallucination && 
-                           hallucination.hallucinationDetails?.isHallucination
+                           hallucination.hallucinationDetails?.emotionMisidentified
     };
     
     return {

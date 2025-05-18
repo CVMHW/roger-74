@@ -34,7 +34,7 @@ export function processCompleteResponse(
     });
     
     // Step 1: Initial strict mathematical verification
-    const verification = verifyResponseMathematically(responseText, userInput);
+    const verification = verifyResponseMathematically(responseText, userInput, conversationHistory);
     if (verification.shouldRollback) {
       console.log("PROCESSOR: Verification failed, generating fallback");
       return verification.altText || generateFallbackResponse(userInput);
@@ -48,7 +48,7 @@ export function processCompleteResponse(
     
     // CRITICALLY IMPORTANT: Check and fix emotion misidentifications
     // This must happen early in the process to avoid propagating incorrect emotional context
-    responseText = processEmotions(responseText, userInput);
+    responseText = processEmotions(responseText, userInput, emotionInfo);
     
     // If the user explicitly mentioned an emotion, ALWAYS acknowledge it
     if (emotionInfo.explicitEmotion && !responseText.includes(emotionInfo.explicitEmotion)) {
@@ -73,7 +73,7 @@ export function processCompleteResponse(
     }
     
     // Step 14: Final strict mathematical verification
-    const finalVerification = verifyResponseMathematically(responseText, userInput);
+    const finalVerification = verifyResponseMathematically(responseText, userInput, conversationHistory);
     if (finalVerification.shouldRollback) {
       console.log("PROCESSOR: Final verification failed, generating fallback");
       return finalVerification.altText || generateFallbackResponse(userInput);

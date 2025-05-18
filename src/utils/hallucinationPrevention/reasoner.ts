@@ -1,211 +1,96 @@
 
 /**
- * Reasoning System
- * 
- * Implements "chain of thought" reasoning to reduce hallucinations
- * by breaking complex responses into steps and verifying each step.
+ * Chain-of-thought reasoning for response verification
  */
 
 interface ReasoningStep {
   claim: string;
-  evidence: string[];
-  confidence: number; // 0-1
+  confidence: number;
+}
+
+interface ReasoningResult {
+  isLogicallySound: boolean;
+  verifiedResponse: string;
+  confidence: number;
+  reasoningSteps?: ReasoningStep[];
 }
 
 /**
- * Apply chain-of-thought reasoning to analyze a response
- * Verifies that logical steps are supported by evidence
+ * Applies reasoning to verify response logical consistency
  */
 export const applyReasoning = (
   responseText: string,
-  userInput: string, 
-  conversationHistory: string[]
-): {
-  verifiedResponse: string;
-  reasoningSteps: ReasoningStep[];
-  isLogicallySound: boolean;
-} => {
-  console.log("REASONING: Applying chain-of-thought verification");
-  
-  // Break response into reasoning steps
-  const steps = extractReasoningSteps(responseText);
-  
-  // Verify each step
-  const verifiedSteps = steps.map(step => 
-    verifyReasoningStep(step, userInput, conversationHistory)
-  );
-  
-  // Check if response is logically sound
-  const isLogicallySound = !verifiedSteps.some(step => step.confidence < 0.7);
-  
-  // If not logically sound, revise the response
+  userInput: string,
+  conversationHistory: string[] = []
+): ReasoningResult => {
+  // Start with assuming logical soundness
+  let isLogicallySound = true;
   let verifiedResponse = responseText;
-  if (!isLogicallySound) {
-    verifiedResponse = reviseResponse(responseText, verifiedSteps);
+  let confidence = 1.0;
+  const reasoningSteps: ReasoningStep[] = [];
+  
+  // Check for problematic patterns that indicate logical issues
+  
+  // 1. Check for contradictions in memory claims
+  if (/you (mentioned|said|told me) .* but .* you (mentioned|said|told me)/i.test(responseText)) {
+    reasoningSteps.push({
+      claim: "Response contains contradictory memory claims",
+      confidence: 0.3
+    });
+    isLogicallySound = false;
+    confidence *= 0.7;
+    
+    // Replace with a more cautious statement
+    verifiedResponse = verifiedResponse.replace(
+      /you (mentioned|said|told me) .* but .* you (mentioned|said|told me)/i,
+      "based on what you're sharing"
+    );
   }
   
-  return {
-    verifiedResponse,
-    reasoningSteps: verifiedSteps,
-    isLogicallySound
-  };
-};
-
-/**
- * Extract reasoning steps from a response
- * Breaks down claims and implied reasoning
- */
-const extractReasoningSteps = (responseText: string): ReasoningStep[] => {
-  const steps: ReasoningStep[] = [];
+  // 2. Check for contradictions within the response
+  if (/this is (.*), but it is also (.*) which contradicts/i.test(responseText)) {
+    reasoningSteps.push({
+      claim: "Response contains internal contradiction",
+      confidence: 0.2
+    });
+    isLogicallySound = false;
+    confidence *= 0.6;
+  }
   
-  // Split into sentences
-  const sentences = responseText.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  
-  // For each sentence, identify if it's making a claim
-  for (const sentence of sentences) {
-    const trimmed = sentence.trim();
+  // 3. Check for emotional inconsistencies
+  const emotionMatch = responseText.match(/you('re| are) feeling (\w+)/i);
+  if (emotionMatch) {
+    const claimedEmotion = emotionMatch[2].toLowerCase();
     
-    // Skip very short sentences and questions
-    if (trimmed.length < 15 || trimmed.endsWith("?")) continue;
-    
-    // Look for claims about the user or their situation
-    if (/you|your|feel|feeling|experiencing|situation|issue|problem|concern|mentioned/i.test(trimmed)) {
-      steps.push({
-        claim: trimmed,
-        evidence: [], // Will be filled during verification
-        confidence: 1.0 // Initial confidence
+    // Check if the claimed emotion conflicts with the user input
+    if (
+      (claimedEmotion === 'happy' && /sad|depress|upset|down|low|worried|anxious/i.test(userInput)) ||
+      (claimedEmotion === 'calm' && /anxious|worried|stress|panic|anxiet/i.test(userInput)) ||
+      (claimedEmotion === 'fine' && /not fine|not okay|not good|bad|awful|terrible/i.test(userInput))
+    ) {
+      reasoningSteps.push({
+        claim: `Response claims user feels ${claimedEmotion} which contradicts their input`,
+        confidence: 0.2
       });
+      isLogicallySound = false;
+      confidence *= 0.5;
+      
+      // Fix the emotional inconsistency
+      verifiedResponse = verifiedResponse.replace(
+        new RegExp(`you('re| are) feeling ${claimedEmotion}`, 'i'),
+        userInput.includes('depress') ? "you're feeling depressed" : 
+          userInput.includes('anxious') ? "you're feeling anxious" :
+          userInput.includes('sad') ? "you're feeling sad" : 
+          "what you're going through"
+      );
     }
   }
   
-  return steps;
-};
-
-/**
- * Verify a reasoning step against available evidence
- */
-const verifyReasoningStep = (
-  step: ReasoningStep, 
-  userInput: string, 
-  conversationHistory: string[]
-): ReasoningStep => {
-  const { claim } = step;
-  const evidence: string[] = [];
-  
-  // If the claim references what the user said
-  if (/you (?:said|mentioned|told|expressed|shared|indicated)/i.test(claim)) {
-    // Extract what user supposedly said
-    const match = claim.match(/you (?:said|mentioned|told|expressed|shared|indicated)[^\w]*([\w\s]+)/i);
-    if (match && match[1]) {
-      const allegedStatement = match[1].trim().toLowerCase();
-      
-      // Check if this exists in conversation history
-      let foundEvidence = false;
-      for (const message of conversationHistory) {
-        if (message.toLowerCase().includes(allegedStatement)) {
-          evidence.push(`User message contains: "${allegedStatement}"`);
-          foundEvidence = true;
-          break;
-        }
-      }
-      
-      // If no evidence, reduce confidence
-      if (!foundEvidence) {
-        return {
-          ...step,
-          evidence: ['No supporting evidence found in conversation history'],
-          confidence: 0.3 // Low confidence due to lack of evidence
-        };
-      }
-    }
-  }
-  
-  // If claim is about user's feelings
-  if (/you (?:feel|feeling|experiencing|are)/i.test(claim)) {
-    // Extract the feeling/state
-    const match = claim.match(/you (?:feel|feeling|experiencing|are)[^\w]*([\w\s]+)/i);
-    if (match && match[1]) {
-      const allegedFeeling = match[1].trim().toLowerCase();
-      
-      // Check if user has expressed this
-      let foundEvidence = false;
-      if (userInput.toLowerCase().includes(allegedFeeling)) {
-        evidence.push(`Current message contains: "${allegedFeeling}"`);
-        foundEvidence = true;
-      } else {
-        // Check in recent history
-        for (const message of conversationHistory.slice(-3)) {
-          if (message.toLowerCase().includes(allegedFeeling)) {
-            evidence.push(`Recent message contains: "${allegedFeeling}"`);
-            foundEvidence = true;
-            break;
-          }
-        }
-      }
-      
-      // Adjust confidence based on evidence
-      if (!foundEvidence) {
-        // Less severe confidence reduction for inferences about feelings
-        return {
-          ...step,
-          evidence: ['No direct evidence, appears to be an inference'],
-          confidence: 0.6 // Moderate confidence - inference may be reasonable
-        };
-      }
-    }
-  }
-  
-  // Default case - if we reach here, the step seems reasonable
-  if (evidence.length === 0) {
-    evidence.push('No contradicting evidence found');
-  }
-  
+  // Return the reasoning result
   return {
-    ...step,
-    evidence,
-    confidence: 0.9 // High confidence by default if nothing contradicts
+    isLogicallySound,
+    verifiedResponse,
+    confidence,
+    reasoningSteps
   };
-};
-
-/**
- * Revise response based on verified reasoning steps
- */
-const reviseResponse = (
-  originalResponse: string, 
-  verifiedSteps: ReasoningStep[]
-): string => {
-  let response = originalResponse;
-  
-  // Identify problematic steps
-  const problematicSteps = verifiedSteps.filter(step => step.confidence < 0.7);
-  
-  // Replace problematic claims with more hedged language
-  for (const step of problematicSteps) {
-    const { claim } = step;
-    
-    // Create a more hedged version of the claim
-    let replacementClaim: string;
-    
-    if (/you (?:said|mentioned|told)/i.test(claim)) {
-      // Replace definitive statements about what user said
-      replacementClaim = claim.replace(
-        /you (?:said|mentioned|told|expressed)/i,
-        "you may have indicated"
-      );
-    } else if (/you (?:feel|feeling|experiencing|are)/i.test(claim)) {
-      // Replace definitive statements about feelings
-      replacementClaim = claim.replace(
-        /you (?:feel|feeling|experiencing|are)/i,
-        "you might be feeling"
-      );
-    } else {
-      // Generic hedging
-      replacementClaim = `It seems like ${claim.toLowerCase()}`;
-    }
-    
-    // Replace the problematic claim in the response
-    response = response.replace(claim, replacementClaim);
-  }
-  
-  return response;
 };
