@@ -168,3 +168,26 @@ export const fixEmotionMisidentification = (responseText: string, userInput: str
   // Return original if no fixes were needed
   return responseText;
 };
+
+/**
+ * Adds a human touch to responses in specific social contexts
+ * @param responseText The original response text
+ * @param userInput The user's input
+ * @returns Enhanced response with human touch
+ */
+export const addHumanTouch = (responseText: string, userInput: string): string => {
+  // Check for social embarrassment specifically
+  const isEmbarrassment = /\b(embarrass(ed|ing)|awkward|humiliat(ed|ing))\b/i.test(userInput.toLowerCase());
+  
+  if (isEmbarrassment) {
+    // If response doesn't already acknowledge embarrassment
+    if (!/embarrass|awkward|humiliat/i.test(responseText.toLowerCase())) {
+      // Add empathetic acknowledgment for embarrassment
+      return `I understand that feeling embarrassed can be really difficult. ${responseText}`;
+    }
+  }
+  
+  // Add more social context handling as needed
+  
+  return responseText;
+};
