@@ -1,3 +1,4 @@
+
 /**
  * Main hallucination prevention processor
  */
@@ -38,6 +39,9 @@ export const preventHallucinations = (
     processingTime: 0,
     confidence: 1.0
   };
+  
+  // Extract emotion awareness context if provided
+  const emotionAwareness = options.emotionAwareness || {};
   
   // Track issues found
   const issueDetails: string[] = [];

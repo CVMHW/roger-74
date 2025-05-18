@@ -56,7 +56,7 @@ export const enhanceResponse = async (
     // Update context with emotion information if not already provided
     if (!context.detectedEmotions) {
       context.detectedEmotions = {
-        hasDetectedEmotion: emotionInfo.hasDetectedEmotion,
+        hasDetectedEmotion: !!emotionInfo.hasDetectedEmotion,
         primaryEmotion: emotionInfo.explicitEmotion || 
                        (emotionInfo.emotionalContent.hasEmotion ? emotionInfo.emotionalContent.primaryEmotion : null),
         emotionalIntensity: emotionInfo.emotionalContent.hasEmotion ? emotionInfo.emotionalContent.intensity : null,
@@ -75,17 +75,15 @@ export const enhanceResponse = async (
       context.detectedEmotions // Pass emotion context to processor
     );
     
-    // CRITICAL: Determine if RAG should be applied - NEW LOGIC
+    // CRITICAL: Determine if RAG should be applied - UPDATED LOGIC
     // We now ALWAYS apply RAG for emotional content, especially depression
     const shouldApplyRAG = 
-      // Always apply RAG for depression or other negative emotions regardless of length
+      // ALWAYS apply RAG for emotional content, regardless of length
       context.detectedEmotions?.isDepressionMentioned ||
       context.detectedEmotions?.hasDetectedEmotion ||
       emotionMisidentified ||
-      // Otherwise, use original conditions but with less restrictive length check (20 chars instead of 30)
-      (!context.isSmallTalkContext && 
-       !context.isIntroductionContext &&
-       userInput.length > 20);
+      // Otherwise, use less restrictive length check
+      (!context.isSmallTalkContext && userInput.length > 10);
     
     console.log("ENHANCER: Should apply RAG:", shouldApplyRAG, 
                 "Emotion detected:", context.detectedEmotions?.hasDetectedEmotion,

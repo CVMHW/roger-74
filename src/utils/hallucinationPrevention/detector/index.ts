@@ -1,16 +1,12 @@
 
 /**
- * Hallucination Detection System - Main Entry Point
+ * Hallucination Detection System
  * 
- * Exports the main detector functionality and re-exports from submodules
+ * Central module for detecting and fixing hallucinations in responses
  */
 
-import { checkAndFixHallucinations } from './hallucination-checker';
-import { detectHallucinations } from './hallucination-detector';
+// Re-export for backward compatibility
+export { checkAndFixHallucinations } from './hallucination-checker';
 
-// Re-export main functions
-export { checkAndFixHallucinations, detectHallucinations };
-
-// Re-export from submodules
-export * from './types';
-export * from './similarity-utils';
+// Export standard HallucinationCheck types
+export type { HallucinationCheck } from './types';

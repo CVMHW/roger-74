@@ -113,8 +113,7 @@ export const enhanceResponseWithRAG = async (
         return augmentResponseWithRetrieval(
           responseText,
           userInput,
-          { ...augmentation, retrievedContent: depressionRelevantContent },
-          { prioritizeEmotionalAcknowledgment: true }
+          { ...augmentation, retrievedContent: depressionRelevantContent }
         );
       }
     }
@@ -123,11 +122,7 @@ export const enhanceResponseWithRAG = async (
     const enhancedResponse = await augmentResponseWithRetrieval(
       responseText,
       userInput,
-      augmentation,
-      { 
-        prioritizeEmotionalAcknowledgment: emotions.hasDetectedEmotion,
-        emotionContext: emotions
-      }
+      augmentation
     );
     
     console.log("RAG: Response enhanced with relevant knowledge");
@@ -173,7 +168,7 @@ export const analyzeConversation = async (
       primaryEmotion: emotions.explicitEmotion || 
                      (emotions.emotionalContent?.hasEmotion ? emotions.emotionalContent.primaryEmotion : null),
       emotionMisidentified: hallucination.wasHallucination && 
-                           hallucination.hallucinationDetails?.isEmotionMisidentification
+                           hallucination.hallucinationDetails?.isHallucination
     };
     
     return {

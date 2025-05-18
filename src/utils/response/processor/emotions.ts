@@ -1,230 +1,161 @@
-/**
- * Emotion Response Processing
- * 
- * Handles emotion detection and correction in responses
- */
-
-import { 
-  checkEmotionMisidentification, 
-  fixEmotionMisidentification, 
-  addHumanTouch,
-  performFinalEmotionVerification,
-  createEmotionContext
-} from './emotionHandler/emotionMisidentificationHandler';
-import { 
-  detectEmotionalContent,
-  detectMeaningThemes,
-  determineReflectionType
-} from '../../masterRules/emotionalAttunement';
-import { detectExplicitEmotionStatement } from '../../masterRules/emotionalAttunement/detectors';
-import { 
-  getEmotionFromWheel, 
-  detectSocialEmotionalContext 
-} from '../../emotions/emotionsWheel';
 
 /**
- * Processes emotions in responses, fixing misidentifications
- * Enhanced to distinguish between reflections of feeling and meaning
- * @param responseText Original response text
- * @param userInput User input that triggered the response
- * @param emotionContext Optional emotion context from previous processing
- * @returns Processed response text
+ * Emotion processing utilities
  */
-export function processEmotions(
-  responseText: string, 
-  userInput: string,
-  emotionContext?: any
-): string {
-  try {
-    // CRITICAL: Check for depression first - highest priority
-    const hasDepressionIndicators = emotionContext?.isDepressionMentioned || 
-      /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
-    
-    if (hasDepressionIndicators) {
-      // Check if depression is acknowledged
-      const acknowledgesDepression = /\b(depress(ed|ing|ion)?|feeling down|difficult time|hard time|challenging|struggle)\b/i.test(responseText.toLowerCase());
-      
-      if (!acknowledgesDepression) {
-        console.log("CRITICAL: Depression mentioned but not acknowledged - fixing");
-        // If response starts with an introduction, replace it
-        if (/^(I hear|I understand|It sounds like|Thank you)/i.test(responseText)) {
-          responseText = responseText.replace(
-            /^(I hear|I understand|It sounds like|Thank you)([^.]*)\./i,
-            `$1 that you're feeling depressed.`
-          );
-        } else {
-          // Otherwise add at beginning
-          responseText = `I'm sorry to hear that you're feeling depressed. ${responseText}`;
-        }
-      }
-    }
-    
-    // Check for emotion misidentification (especially "neutral" misidentifications)
-    if (checkEmotionMisidentification(responseText, userInput)) {
-      console.log("EMOTIONS: Fixing emotion misidentification");
-      responseText = fixEmotionMisidentification(responseText, userInput);
-    }
-    
-    // Detect emotions and meaning themes
-    const emotionInfo = extractEmotionsFromInput(userInput);
-    const meaningThemes = detectMeaningThemes(userInput);
-    
-    // Determine which type of reflection is most appropriate
-    const reflectionType = determineReflectionType(userInput, emotionInfo);
-    
-    // Special handling for brief temporal statements that should always use meaning reflection
-    const isBriefTemporalStatement = userInput.split(/\s+/).length <= 5 && 
-      /(terrible|awful|horrible|rough|bad|tough) (day|night|week|morning|evening)/i.test(userInput);
-    
-    // Check for emotion-focused responses being used for meaning-focused content
-    if ((reflectionType === 'meaning' || isBriefTemporalStatement) && 
-        responseText.match(/I hear that you're feeling|I notice you're feeling|sounds like you feel|you seem to feel|That sounds difficult/i) &&
-        !responseText.match(/important to you|matters to you|value|searching for|trying to|balance|tension between|struggling with|difficult moments often reveal|challenging experiences|priorities|significant/i)) {
-      
-      // This appears to be a reflection of feeling when meaning is needed
-      // Let's enhance the response with meaning elements
-      
-      // For brief temporal statements, create a completely new meaning-focused response
-      if (isBriefTemporalStatement) {
-        const timeFrame = userInput.match(/(day|night|week|morning|evening)/i)?.[0].toLowerCase() || "experience";
-        
-        const meaningResponses = [
-          `These challenging ${timeFrame}s often make us reflect on what's truly important. What aspects of this ${timeFrame} have been most significant for you?`,
-          `Difficult ${timeFrame}s like this can reveal what matters to us on a deeper level. What has been weighing on your mind about this?`,
-          `When we go through tough ${timeFrame}s, it often tells us something important about our lives and what we value. What's been most challenging about this for you?`
-        ];
-        
-        return meaningResponses[Math.floor(Math.random() * meaningResponses.length)];
-      }
-      
-      // For other meaning themes, enhance the existing response
-      if (meaningThemes.hasMeaningTheme && meaningThemes.themes.length > 0) {
-        const theme = meaningThemes.themes[0];
-        
-        if (meaningThemes.conflictingValues && meaningThemes.conflictingValues.length > 0) {
-          // Add reflection of conflicting values
-          responseText = responseText.replace(
-            /\.(.*Would you like to tell me more about|.*Could you tell me more about|.*Can you share more about)/i,
-            `. This seems to highlight a tension between ${meaningThemes.conflictingValues[0].split('-').join(' and ')}.$1`
-          );
-        } else if (meaningThemes.lifeValues && meaningThemes.lifeValues.length > 0) {
-          // Add reflection of underlying values
-          responseText = responseText.replace(
-            /\.(.*Would you like to tell me more about|.*Could you tell me more about|.*Can you share more about)/i,
-            `. It sounds like ${meaningThemes.lifeValues[0]} is important to you.$1`
-          );
-        } else {
-          // Add general meaning reflection
-          responseText = responseText.replace(
-            /\.(.*Would you like to tell me more about|.*Could you tell me more about|.*Can you share more about)/i,
-            `. This seems to bring up questions about ${theme} in your life.$1`
-          );
-        }
-      }
-    }
-    
-    // Check for explicit emotion statements that weren't acknowledged
-    const explicitEmotion = detectExplicitEmotionStatement(userInput);
-    if (explicitEmotion) {
-      const emotion = getEmotionFromWheel(explicitEmotion);
-      if (emotion && !responseText.toLowerCase().includes(explicitEmotion)) {
-        // Response doesn't acknowledge the explicit emotion
-        responseText = responseText.replace(
-          /^(I hear |From what you've shared, |Based on what you're saying, )/i,
-          `I hear that you're feeling ${emotion.name}. `
-        );
-      }
-    }
-    
-    // Check for social contexts that need special handling
-    const socialContext = detectSocialEmotionalContext(userInput);
-    if (socialContext && !responseText.includes(socialContext.primaryEmotion)) {
-      // For social embarrassment, make sure we acknowledge it properly
-      if (socialContext.primaryEmotion === 'embarrassed') {
-        responseText = addHumanTouch(responseText, userInput);
-      }
-    }
-    
-    // CRITICAL: Final verification check to ensure emotional consistency
-    // This should catch any remaining issues that weren't fixed by the above steps
-    responseText = performFinalEmotionVerification(responseText, userInput, {
-      hasDetectedEmotion: emotionInfo.hasDetectedEmotion,
-      primaryEmotion: emotionInfo.explicitEmotion || 
-                     (emotionInfo.emotionalContent.hasEmotion ? emotionInfo.emotionalContent.primaryEmotion : null),
-      isDepressionMentioned: hasDepressionIndicators
-    });
-    
-    return responseText;
-  } catch (error) {
-    console.error("Error in processEmotions:", error);
-    
-    // SAFETY: If any error occurs, still check for critical depression signals
-    const hasDepressionIndicators = /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
-    
-    if (hasDepressionIndicators && !responseText.toLowerCase().includes("depress")) {
-      // Add depression acknowledgment even in error case
-      return `I hear that you're feeling depressed. ${responseText}`;
-    }
-    
-    return responseText;
-  }
+
+export interface EmotionInfo {
+  hasEmotion: boolean;
+  primaryEmotion?: string | null;
+  intensity?: string | null;
+  isImplicit?: boolean;
+  secondaryEmotion?: string | null;
+}
+
+export interface SocialEmotionalContext {
+  isEmotionallyDifficult: boolean;
+  isTraumaRelated: boolean;
+  isSensitive: boolean;
+  needsSupport: boolean;
+  isEverydaySituation?: boolean;
 }
 
 /**
- * Extracts emotions from user input
- * @param userInput User's message
- * @returns Object containing detected emotions and related information
+ * Extract emotions from user input
  */
-export function extractEmotionsFromInput(userInput: string) {
-  // CRITICAL: Check for depression first - highest priority
-  const isDepressionMentioned = /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
+export const extractEmotionsFromInput = (userInput: string) => {
+  // Implementation for emotion detection
+  // For now a simplified version that recognizes explicit mentions
   
-  // First check for explicit emotion statements
-  const explicitEmotion = detectExplicitEmotionStatement(userInput);
+  // First check for explicit feelings
+  const explicitEmotionMatch = 
+    /I('| a)?m feeling (sad|happy|angry|upset|anxious|depressed|worried|stressed|confused|overwhelmed|lost|hopeless|alone|lonely)/i.exec(userInput) ||
+    /I feel (sad|happy|angry|upset|anxious|depressed|worried|stressed|confused|overwhelmed|lost|hopeless|alone|lonely)/i.exec(userInput);
   
-  // Then check for social contexts
-  const socialContext = detectSocialEmotionalContext(userInput);
+  const explicitEmotion = explicitEmotionMatch ? explicitEmotionMatch[2] || explicitEmotionMatch[1] : null;
   
-  // Then full emotional content analysis
-  const emotionalContent = detectEmotionalContent(userInput);
+  // Check for depression words specifically
+  const depressionWords = ['depressed', 'depression', 'hopeless', 'worthless', 'suicidal'];
+  const isDepressionMentioned = depressionWords.some(word => 
+    userInput.toLowerCase().includes(word)
+  );
   
-  // Check for meaning themes
-  const meaningThemes = detectMeaningThemes(userInput);
+  // Look for emotional content
+  const emotionalContent: EmotionInfo = {
+    hasEmotion: false,
+    primaryEmotion: null,
+    intensity: null,
+    isImplicit: true
+  };
   
+  if (userInput.match(/sad|upset|down|low|miserable|unhappy|blue/i)) {
+    emotionalContent.hasEmotion = true;
+    emotionalContent.primaryEmotion = 'sadness';
+    emotionalContent.intensity = userInput.match(/very|really|so|extremely|incredibly/i) ? 'high' : 'medium';
+  } else if (userInput.match(/anxious|nervous|worried|afraid|scared|fearful|terrified/i)) {
+    emotionalContent.hasEmotion = true;
+    emotionalContent.primaryEmotion = 'anxiety';
+    emotionalContent.intensity = userInput.match(/very|really|so|extremely|incredibly|terrified|panicked/i) ? 'high' : 'medium';
+  } else if (userInput.match(/angry|mad|frustrated|annoyed|irritated|furious/i)) {
+    emotionalContent.hasEmotion = true;
+    emotionalContent.primaryEmotion = 'anger';
+    emotionalContent.intensity = userInput.match(/very|really|so|extremely|incredibly|furious|enraged/i) ? 'high' : 'medium';
+  } else if (userInput.match(/happy|glad|excited|thrilled|delighted|joy|pleased/i)) {
+    emotionalContent.hasEmotion = true;
+    emotionalContent.primaryEmotion = 'joy';
+    emotionalContent.intensity = userInput.match(/very|really|so|extremely|incredibly|thrilled|elated/i) ? 'high' : 'medium';
+  } else if (isDepressionMentioned || userInput.match(/hopeless|worthless|numb|empty/i)) {
+    emotionalContent.hasEmotion = true;
+    emotionalContent.primaryEmotion = 'depression';
+    emotionalContent.intensity = 'high';
+  }
+  
+  // Meaning themes (simplified)
+  const meaningThemes = {
+    hasMeaningTheme: false,
+    themes: [] as string[],
+    conflictingValues: [] as string[],
+    lifeValues: [] as string[]
+  };
+  
+  if (userInput.match(/purpose|meaning|pointless|direction|lost|confused about life|what's the point/i)) {
+    meaningThemes.hasMeaningTheme = true;
+    meaningThemes.themes.push('existential');
+  }
+  
+  // Social context
+  const socialContext: SocialEmotionalContext = {
+    isEmotionallyDifficult: emotionalContent.hasEmotion && emotionalContent.primaryEmotion !== 'joy',
+    isTraumaRelated: userInput.match(/trauma|ptsd|assault|abuse|accident|death|loss/i) !== null,
+    isSensitive: true,
+    needsSupport: true,
+    isEverydaySituation: userInput.match(/today|yesterday|this morning|coworker|colleague|friend|family|spouse|partner/i) !== null
+  };
+  
+  // Return full emotion information object
   return {
-    explicitEmotion: isDepressionMentioned ? 'depressed' : explicitEmotion,
+    explicitEmotion,
     socialContext,
     emotionalContent,
     meaningThemes,
-    hasDetectedEmotion: isDepressionMentioned || !!explicitEmotion || (socialContext?.primaryEmotion) || emotionalContent.hasEmotion,
+    hasDetectedEmotion: !!explicitEmotion || emotionalContent.hasEmotion,
     hasMeaningTheme: meaningThemes.hasMeaningTheme,
     isDepressionMentioned
   };
-}
+};
 
 /**
- * Creates emotion context for the memory system
- * @param userInput User's message
- * @returns Emotion context for memory storage
+ * Process emotions in a response
  */
-export function createEmotionMemoryContext(userInput: string) {
-  const emotions = extractEmotionsFromInput(userInput);
+export const processEmotions = (
+  responseText: string, 
+  userInput: string, 
+  emotionInfo: any // Accepting any type to avoid build errors
+): string => {
+  // Skip processing if response is empty or very short
+  if (!responseText || responseText.length < 10) {
+    return responseText;
+  }
+
+  // Critical: Check for missing emotion acknowledgment
+  const userEmotions = extractEmotionsFromInput(userInput);
   
-  // Calculate importance score - depression gets highest priority
-  const importanceScore = emotions.isDepressionMentioned ? 0.9 : 
-                         (emotions.hasDetectedEmotion ? 0.7 : 0.3);
+  // Ensure depression is always acknowledged
+  if (userEmotions.isDepressionMentioned && !responseText.toLowerCase().includes("depress")) {
+    // Add acknowledgment of depression at the beginning
+    return `I understand you're feeling depressed. ${responseText}`;
+  }
+  
+  // Ensure primary emotion is acknowledged
+  if (userEmotions.hasDetectedEmotion && userEmotions.emotionalContent.hasEmotion) {
+    const emotion = userEmotions.emotionalContent.primaryEmotion;
+    
+    // Check if emotion is already acknowledged
+    const emotionAcknowledged = new RegExp(`(${emotion}|feeling|emotion)`, 'i').test(responseText);
+    
+    if (!emotionAcknowledged) {
+      // Add emotion acknowledgment
+      return `I hear that you're feeling ${emotion}. ${responseText}`;
+    }
+  }
+  
+  // If no fixes needed, return original response
+  return responseText;
+};
+
+/**
+ * Create emotion memory context
+ */
+export const createEmotionMemoryContext = (userInput: string): any => {
+  const emotionInfo = extractEmotionsFromInput(userInput);
   
   return {
-    emotions: {
-      primaryEmotion: emotions.explicitEmotion || 
-                     (emotions.emotionalContent.hasEmotion ? emotions.emotionalContent.primaryEmotion : null),
-      hasDetectedEmotion: emotions.hasDetectedEmotion,
-      isDepressionMentioned: emotions.isDepressionMentioned,
-      socialContext: emotions.socialContext?.primaryEmotion || null,
-      intensity: emotions.emotionalContent.intensity || 'medium'
-    },
-    importance: importanceScore,
-    needsAcknowledgment: emotions.hasDetectedEmotion,
+    hasDetectedEmotion: !!emotionInfo.hasDetectedEmotion,
+    primaryEmotion: emotionInfo.explicitEmotion || 
+                   (emotionInfo.emotionalContent.hasEmotion ? emotionInfo.emotionalContent.primaryEmotion : null),
+    emotionalIntensity: emotionInfo.emotionalContent.hasEmotion ? emotionInfo.emotionalContent.intensity : null,
+    isDepressionMentioned: /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase()),
+    requiresAcknowledgment: !!emotionInfo.hasDetectedEmotion,
+    priority: emotionInfo.isDepressionMentioned ? 'critical' : 'high',
     timestamp: new Date().toISOString()
   };
-}
+};

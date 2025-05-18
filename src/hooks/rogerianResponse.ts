@@ -14,7 +14,6 @@ import {
 // Import our enhanced RAG system
 import {
   enhanceResponseWithRAG,
-  retrieveRelevantContent,
   isRAGSystemReady
 } from '../utils/hallucinationPrevention';
 

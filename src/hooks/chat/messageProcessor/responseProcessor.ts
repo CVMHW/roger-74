@@ -40,67 +40,67 @@ export const processResponse = async ({
   }
   
   // Process user input to generate Roger's response after appropriate delay
-  setTimeout(() => {
-    processUserMessage(userInput)
-      .then(rogerResponse => {
-        try {
-          // Use master rules to process response with conversation context
-          const responseWithContextCheck = processResponseThroughMasterRules(
-            rogerResponse.text,
-            userInput,
-            conversationHistory
+  setTimeout(async () => {
+    try {
+      const rogerResponse = await processUserMessage(userInput);
+      
+      try {
+        // Use master rules to process response with conversation context - ensure we await result
+        const responseWithContextCheck = await processResponseThroughMasterRules(
+          rogerResponse.text,
+          userInput,
+          conversationHistory
+        );
+        
+        // Update the response with enhanced text that has contextual awareness
+        const updatedResponse = {
+          ...rogerResponse,
+          text: responseWithContextCheck
+        };
+        
+        // Add the response to history to prevent future repetition
+        updateRogerResponseHistory(responseWithContextCheck);
+        
+        // Check if this is a crisis-related response and store it for deception detection
+        handleCrisisMessage(userInput, updatedResponse);
+        
+        // Add the empty response message first (will be updated during typing simulation)
+        setMessages(prevMessages => [...prevMessages, updatedResponse]);
+        
+        // Set up to request location after this message if needed
+        if (updatedResponse.concernType && 
+            isLocationDataNeeded(updatedResponse.concernType) && 
+            !activeLocationConcern) {
+          
+          setActiveLocationConcern({
+            concernType: updatedResponse.concernType,
+            messageId: updatedResponse.id,
+            askedForLocation: false
+          });
+        }
+        
+        // Add response to conversation history for better context
+        conversationHistory.push(responseWithContextCheck);
+        
+        // Simulate typing with a callback to update the message text
+        simulateTypingResponse(responseWithContextCheck, (text) => {
+          setMessages(prevMessages => 
+            prevMessages.map(msg => 
+              msg.id === updatedResponse.id ? { ...msg, text } : msg
+            )
           );
           
-          // Update the response with enhanced text that has contextual awareness
-          const updatedResponse = {
-            ...rogerResponse,
-            text: responseWithContextCheck
-          };
-          
-          // Add the response to history to prevent future repetition
-          updateRogerResponseHistory(responseWithContextCheck);
-          
-          // Check if this is a crisis-related response and store it for deception detection
-          handleCrisisMessage(userInput, updatedResponse);
-          
-          // Add the empty response message first (will be updated during typing simulation)
-          setMessages(prevMessages => [...prevMessages, updatedResponse]);
-          
-          // Set up to request location after this message if needed
-          if (updatedResponse.concernType && 
-              isLocationDataNeeded(updatedResponse.concernType) && 
-              !activeLocationConcern) {
-            
-            setActiveLocationConcern({
-              concernType: updatedResponse.concernType,
-              messageId: updatedResponse.id,
-              askedForLocation: false
-            });
-          }
-          
-          // Add response to conversation history for better context
-          conversationHistory.push(responseWithContextCheck);
-          
-          // Simulate typing with a callback to update the message text
-          simulateTypingResponse(responseWithContextCheck, (text) => {
-            setMessages(prevMessages => 
-              prevMessages.map(msg => 
-                msg.id === updatedResponse.id ? { ...msg, text } : msg
-              )
-            );
-            
-            // Clear the processing context once response is complete
-            setProcessingContext(null);
-          });
-        } catch (innerError) {
-          console.error("Error processing Roger's response:", innerError);
-          handleErrorResponse(isCritical, setMessages, simulateTypingResponse, setProcessingContext);
-        }
-      })
-      .catch(error => {
-        console.error("Error generating response:", error);
+          // Clear the processing context once response is complete
+          setProcessingContext(null);
+        });
+      } catch (innerError) {
+        console.error("Error processing Roger's response:", innerError);
         handleErrorResponse(isCritical, setMessages, simulateTypingResponse, setProcessingContext);
-      });
+      }
+    } catch (error) {
+      console.error("Error generating response:", error);
+      handleErrorResponse(isCritical, setMessages, simulateTypingResponse, setProcessingContext);
+    }
   }, responseDelay);
 };
 

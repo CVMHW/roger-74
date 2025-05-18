@@ -82,7 +82,8 @@ export const processResponse = async (
         enableRAG: true,
         enableReasoning: true,
         enableDetection: true,
-        contextData: {
+        // Use proper context format for hallucination prevention
+        emotionAwareness: {
           emotions,
           recentEmotions,
           hasConsistentDepression: recentEmotions.hasConsistentDepression
