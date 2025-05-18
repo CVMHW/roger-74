@@ -1,51 +1,49 @@
 
 /**
- * Vector Embeddings Utilities
- * 
- * Helper functions for vector embeddings
+ * Utility functions for vector embeddings
  */
 
 /**
- * Simple hash function for strings
+ * Calculate cosine similarity between two vectors
  */
-export const simpleHash = (str: string): number => {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
+export const cosineSimilarity = (vecA: number[], vecB: number[]): number => {
+  try {
+    if (!vecA || !vecB || vecA.length !== vecB.length || vecA.length === 0) {
+      console.error("Invalid vectors for cosine similarity calculation");
+      return 0;
+    }
+    
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    
+    for (let i = 0; i < vecA.length; i++) {
+      dotProduct += vecA[i] * vecB[i];
+      normA += vecA[i] * vecA[i];
+      normB += vecB[i] * vecB[i];
+    }
+    
+    if (normA === 0 || normB === 0) {
+      return 0;
+    }
+    
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+  } catch (error) {
+    console.error("Error calculating cosine similarity:", error);
+    return 0;
   }
-  return Math.abs(hash);
 };
 
 /**
- * Calculate cosine similarity between two embeddings
+ * Generate a simple hash from a string
+ * Used to create ID for results
  */
-export const cosineSimilarity = (embedding1: number[], embedding2: number[]): number => {
-  if (!embedding1 || !embedding2 || embedding1.length !== embedding2.length) {
-    return 0;
+export const simpleHash = (text: string): number => {
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    const char = text.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
   }
-  
-  // Calculate dot product
-  let dotProduct = 0;
-  let magnitude1 = 0;
-  let magnitude2 = 0;
-  
-  for (let i = 0; i < embedding1.length; i++) {
-    dotProduct += embedding1[i] * embedding2[i];
-    magnitude1 += embedding1[i] * embedding1[i];
-    magnitude2 += embedding2[i] * embedding2[i];
-  }
-  
-  magnitude1 = Math.sqrt(magnitude1);
-  magnitude2 = Math.sqrt(magnitude2);
-  
-  const magnitudeProduct = magnitude1 * magnitude2;
-  
-  // Guard against division by zero
-  if (magnitudeProduct === 0) {
-    return 0;
-  }
-  
-  return dotProduct / magnitudeProduct;
+  return Math.abs(hash);
 };

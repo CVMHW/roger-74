@@ -96,7 +96,7 @@ export const findMostSimilar = async (
     
     // Calculate similarity scores
     const scores = candidateResults.map((candidate, index) => ({
-      id: simpleHash(candidate.text),
+      id: simpleHash(candidate.text).toString(), // Convert the hash to a string to match SimilarityResult
       text: candidate.text,
       score: cosineSimilarity(queryEmbedding, candidate.embedding)
     }));
