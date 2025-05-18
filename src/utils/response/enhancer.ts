@@ -13,8 +13,16 @@ import { getRogerPersonalityInsight } from '../reflection/rogerPersonality';
 import { identifyEnhancedFeelings } from '../reflection/feelingDetection';
 import { checkForResponseRepetition, getRepetitionRecoveryResponse, processUserMessageMemory } from './enhancer/repetitionDetection';
 
-// Import from hallucination prevention system
+// Import from hallucination prevention system with explicit type annotations
 import { enhanceResponseWithRAG } from '../hallucinationPrevention';
+
+// Types for context object
+interface EnhancementContext {
+  isEverydaySituation?: boolean;
+  isSmallTalkContext?: boolean;
+  isIntroductionContext?: boolean;
+  isPersonalSharingContext?: boolean;
+}
 
 /**
  * Enhanced response processing with vector-based knowledge retrieval
@@ -25,12 +33,7 @@ export const enhanceResponse = async (
   userInput: string,
   messageCount: number,
   conversationHistory: string[] = [],
-  context: {
-    isEverydaySituation?: boolean;
-    isSmallTalkContext?: boolean;
-    isIntroductionContext?: boolean;
-    isPersonalSharingContext?: boolean;
-  } = {}
+  context: EnhancementContext = {}
 ): Promise<string> => {
   try {
     console.log("ENHANCER: Processing response through unified pipeline");

@@ -1,4 +1,3 @@
-
 /**
  * Persistent Vector Storage
  * 
@@ -23,6 +22,67 @@ const STORAGE_KEYS = {
   VECTOR_DATA: 'roger_vector_store_data',
   INDEX_DATA: 'roger_vector_store_index',
   LAST_UPDATE: 'roger_vector_store_updated',
+  COLLECTION_STATS: 'roger_vector_store_stats',
+};
+
+// Storage limits and configurations
+const STORAGE_CONFIG = {
+  MAX_RECORDS_TOTAL: 500,
+  MAX_RECORDS_PER_COLLECTION: 100,
+  COMPRESSION_ENABLED: false, // Future: enable compression for larger storage
+  EXPIRATION_DAYS: 7, // Expire old records after a week
+};
+
+/**
+ * Check if localStorage is available and working
+ */
+const isLocalStorageAvailable = (): boolean => {
+  try {
+    const testKey = '__test_storage__';
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+/**
+ * Get storage stats for vectors
+ */
+export const getVectorStorageStats = (): Record<string, any> => {
+  try {
+    if (!isLocalStorageAvailable()) return {};
+    
+    const statsStr = localStorage.getItem(STORAGE_KEYS.COLLECTION_STATS);
+    if (!statsStr) return {};
+    
+    return JSON.parse(statsStr);
+  } catch (error) {
+    console.error('Error getting vector storage stats:', error);
+    return {};
+  }
+};
+
+/**
+ * Update storage stats
+ */
+const updateStorageStats = (collections: Record<string, number>) => {
+  try {
+    if (!isLocalStorageAvailable()) return;
+    
+    const lastUpdate = Date.now();
+    const stats = {
+      collections,
+      lastUpdate,
+      totalRecords: Object.values(collections).reduce((sum, val) => sum + val, 0)
+    };
+    
+    localStorage.setItem(STORAGE_KEYS.COLLECTION_STATS, JSON.stringify(stats));
+    localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, lastUpdate.toString());
+  } catch (error) {
+    console.error('Error updating storage stats:', error);
+  }
 };
 
 /**
@@ -33,6 +93,11 @@ export const persistVectors = (
   records: VectorRecord[]
 ): void => {
   try {
+    if (!isLocalStorageAvailable()) {
+      console.warn('LocalStorage not available, skipping vector persistence');
+      return;
+    }
+    
     // Get existing data
     const existingData = getPersistedVectors();
     
@@ -41,25 +106,33 @@ export const persistVectors = (
       record => record.collectionName !== collectionName
     );
     
-    // Prepare to persist new records for this collection (up to 100 per collection)
-    const collectionRecords = records.slice(0, 100).map(record => ({
-      id: record.id,
-      text: record.text,
-      embedding: record.embedding,
-      metadata: record.metadata,
-      collectionName,
-      timestamp: Date.now()
-    }));
+    // Filter expired records
+    const currentTime = Date.now();
+    const expirationTime = STORAGE_CONFIG.EXPIRATION_DAYS * 24 * 60 * 60 * 1000; // days to ms
+    const validOtherCollections = otherCollections.filter(
+      record => (currentTime - record.timestamp) < expirationTime
+    );
+    
+    // Prepare to persist new records for this collection (up to max per collection)
+    const collectionRecords = records
+      .slice(0, STORAGE_CONFIG.MAX_RECORDS_PER_COLLECTION)
+      .map(record => ({
+        id: record.id,
+        text: record.text,
+        embedding: record.embedding,
+        metadata: record.metadata,
+        collectionName,
+        timestamp: Date.now()
+      }));
     
     // Combine records but limit total storage
-    const combinedRecords = [...otherCollections, ...collectionRecords];
+    const combinedRecords = [...validOtherCollections, ...collectionRecords];
     
     // If combined size is too large, keep only the most recent records
-    const MAX_RECORDS = 500;
-    const finalRecords = combinedRecords.length > MAX_RECORDS
+    const finalRecords = combinedRecords.length > STORAGE_CONFIG.MAX_RECORDS_TOTAL
       ? combinedRecords
           .sort((a, b) => b.timestamp - a.timestamp)
-          .slice(0, MAX_RECORDS)
+          .slice(0, STORAGE_CONFIG.MAX_RECORDS_TOTAL)
       : combinedRecords;
     
     // Store combined records
@@ -68,11 +141,13 @@ export const persistVectors = (
       JSON.stringify(finalRecords)
     );
     
-    // Update last update timestamp
-    localStorage.setItem(
-      STORAGE_KEYS.LAST_UPDATE,
-      Date.now().toString()
-    );
+    // Update storage stats
+    const collectionCounts = finalRecords.reduce((counts, record) => {
+      counts[record.collectionName] = (counts[record.collectionName] || 0) + 1;
+      return counts;
+    }, {} as Record<string, number>);
+    
+    updateStorageStats(collectionCounts);
     
     console.log(`Persisted ${collectionRecords.length} vectors for ${collectionName}`);
   } catch (error) {
@@ -85,6 +160,8 @@ export const persistVectors = (
  */
 export const getPersistedVectors = (): PersistedVectorRecord[] => {
   try {
+    if (!isLocalStorageAvailable()) return [];
+    
     const storedData = localStorage.getItem(STORAGE_KEYS.VECTOR_DATA);
     if (!storedData) {
       return [];
@@ -121,6 +198,12 @@ export const loadPersistedVectors = (
   addToCollection: (records: VectorRecord[]) => void
 ): boolean => {
   try {
+    // Check localStorage availability
+    if (!isLocalStorageAvailable()) {
+      console.warn('LocalStorage not available, skipping vector loading');
+      return false;
+    }
+    
     // Get persisted vectors for this collection
     const persistedVectors = getPersistedVectorsForCollection(collectionName);
     
@@ -138,7 +221,7 @@ export const loadPersistedVectors = (
         persisted: true,
         persistedAt: persisted.timestamp
       },
-      timestamp: persisted.timestamp // Add timestamp to match VectorRecord type
+      timestamp: persisted.timestamp
     }));
     
     // Add to collection
@@ -157,11 +240,36 @@ export const loadPersistedVectors = (
  */
 export const clearPersistedVectors = (): void => {
   try {
+    if (!isLocalStorageAvailable()) return;
+    
     localStorage.removeItem(STORAGE_KEYS.VECTOR_DATA);
     localStorage.removeItem(STORAGE_KEYS.INDEX_DATA);
     localStorage.removeItem(STORAGE_KEYS.LAST_UPDATE);
+    localStorage.removeItem(STORAGE_KEYS.COLLECTION_STATS);
     console.log('Cleared persisted vectors');
   } catch (error) {
     console.error('Error clearing persisted vectors:', error);
+  }
+};
+
+/**
+ * Check if we have recent persisted vectors
+ */
+export const hasRecentPersistedVectors = (): boolean => {
+  try {
+    if (!isLocalStorageAvailable()) return false;
+    
+    const lastUpdate = localStorage.getItem(STORAGE_KEYS.LAST_UPDATE);
+    if (!lastUpdate) return false;
+    
+    const lastUpdateTime = parseInt(lastUpdate, 10);
+    const currentTime = Date.now();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    
+    // Consider vectors recent if updated in the last day
+    return (currentTime - lastUpdateTime) < oneDayMs;
+  } catch (error) {
+    console.error('Error checking for recent vectors:', error);
+    return false;
   }
 };

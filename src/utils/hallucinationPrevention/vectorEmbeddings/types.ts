@@ -1,30 +1,49 @@
 
 /**
- * Vector Embeddings Types
- * 
- * Type definitions for vector embedding functionality
+ * Type definitions for vector embeddings system
  */
 
-import { PretrainedOptions } from '@huggingface/transformers';
-
-// Define interface for embedding results
+// Result from embedding generation
 export interface EmbeddingResult {
-  text: string;
   embedding: number[];
-  metadata?: any;
+  text: string;
+  processTime?: number;
 }
 
-// Define type for embedding generation options
-export interface EmbeddingGenerationOptions {
-  batchSize?: number;
-  timeoutMs?: number;
-}
-
-// Define type for similarity search results
+// Result from similarity calculation
 export interface SimilarityResult {
+  id: string;
   text: string;
   score: number;
+  metadata?: Record<string, any>;
 }
 
-// Re-export the HuggingFace progress callback type for convenience
-export type HuggingFaceProgressCallback = PretrainedOptions['progress_callback'];
+// Progress callback for HuggingFace transformers
+export type HuggingFaceProgressCallback = 
+  (progress: number | { status?: string; progress?: number }) => void;
+
+// Configuration for embedding generation
+export interface EmbeddingConfig {
+  pooling?: 'mean' | 'max' | 'cls';
+  normalize?: boolean;
+  truncation?: boolean;
+  maxLength?: number;
+}
+
+// Device options for model running
+export type DeviceType = 'webgpu' | 'wasm' | 'cpu' | 'auto';
+
+// Pipeline options
+export interface PipelineOptions {
+  device?: DeviceType;
+  quantized?: boolean;
+  revision?: string;
+  progress_callback?: HuggingFaceProgressCallback;
+}
+
+// Batch embedding options
+export interface BatchEmbeddingOptions extends EmbeddingConfig {
+  batchSize?: number;
+  concurrency?: number;
+  showProgress?: boolean;
+}

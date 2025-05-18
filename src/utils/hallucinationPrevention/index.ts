@@ -13,7 +13,11 @@ import { rerankResults } from './reranker';
 import { persistVectors, loadPersistedVectors, getPersistedVectors } from './persistentVectorStore';
 import vectorDB from './vectorDatabase';
 import { COLLECTIONS } from './dataLoader/types';
-import { isUsingSimulatedEmbeddings, forceReinitializeEmbeddingModel } from './vectorEmbeddings';
+import { 
+  isUsingSimulatedEmbeddings, 
+  forceReinitializeEmbeddingModel, 
+  initializeEmbeddingSystem 
+} from './vectorEmbeddings';
 
 // Track initialization status
 let isInitialized = false;
@@ -49,25 +53,26 @@ export const initializeRAGSystem = async (): Promise<boolean> => {
     // Try to load persisted vectors first
     console.log("Loading persisted vectors...");
     
-    const factsLoaded = loadPersistedVectors(COLLECTIONS.FACTS, (records) => {
-      const collection = vectorDB.collection(COLLECTIONS.FACTS);
-      records.forEach(record => collection.insert(record));
-    });
+    // Load vectors from persistent storage with proper error handling
+    const loadCollection = async (collectionName: string): Promise<boolean> => {
+      try {
+        return loadPersistedVectors(collectionName, (records) => {
+          const collection = vectorDB.collection(collectionName);
+          records.forEach(record => collection.insert(record));
+        });
+      } catch (error) {
+        console.error(`Error loading collection ${collectionName}:`, error);
+        return false;
+      }
+    };
     
-    const knowledgeLoaded = loadPersistedVectors(COLLECTIONS.ROGER_KNOWLEDGE, (records) => {
-      const collection = vectorDB.collection(COLLECTIONS.ROGER_KNOWLEDGE);
-      records.forEach(record => collection.insert(record));
-    });
-    
-    const userMsgLoaded = loadPersistedVectors(COLLECTIONS.USER_MESSAGES, (records) => {
-      const collection = vectorDB.collection(COLLECTIONS.USER_MESSAGES);
-      records.forEach(record => collection.insert(record));
-    });
-    
-    const rogerRespLoaded = loadPersistedVectors(COLLECTIONS.ROGER_RESPONSES, (records) => {
-      const collection = vectorDB.collection(COLLECTIONS.ROGER_RESPONSES);
-      records.forEach(record => collection.insert(record));
-    });
+    // Load all collections in parallel for better performance
+    const [factsLoaded, knowledgeLoaded, userMsgLoaded, rogerRespLoaded] = await Promise.all([
+      loadCollection(COLLECTIONS.FACTS),
+      loadCollection(COLLECTIONS.ROGER_KNOWLEDGE),
+      loadCollection(COLLECTIONS.USER_MESSAGES),
+      loadCollection(COLLECTIONS.ROGER_RESPONSES)
+    ]);
     
     console.log("Persisted vectors loaded:", { 
       factsLoaded, knowledgeLoaded, userMsgLoaded, rogerRespLoaded 
@@ -77,17 +82,21 @@ export const initializeRAGSystem = async (): Promise<boolean> => {
     const dbInitialized = await initializeVectorDatabase();
     
     // Persist all vectors from database to localStorage
-    for (const collectionName of [
+    await Promise.all([
       COLLECTIONS.FACTS,
       COLLECTIONS.ROGER_KNOWLEDGE,
       COLLECTIONS.USER_MESSAGES,
       COLLECTIONS.ROGER_RESPONSES
-    ]) {
-      const collection = vectorDB.collection(collectionName);
-      if (collection.size() > 0) {
-        persistVectors(collectionName, collection.getAll());
+    ].map(async (collectionName) => {
+      try {
+        const collection = vectorDB.collection(collectionName);
+        if (collection.size() > 0) {
+          persistVectors(collectionName, collection.getAll());
+        }
+      } catch (error) {
+        console.error(`Error persisting collection ${collectionName}:`, error);
       }
-    }
+    }));
     
     isInitialized = true;
     isInitializing = false;

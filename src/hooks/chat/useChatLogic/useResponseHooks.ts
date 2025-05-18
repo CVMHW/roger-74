@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { MessageType } from '../../../components/Message';
 import { enhanceResponse } from '../../../utils/response/enhancer';
@@ -7,8 +6,16 @@ import { isLocationDataNeeded } from '../../../utils/messageUtils';
 import { containsCriticalKeywords } from '../messageProcessor/detectionUtils';
 import { handleErrorResponse } from './useErrorHandling';
 
-// Import our new enhanced RAG system
+// Import our enhanced RAG system
 import { enhanceResponseWithRAG } from '../../../utils/hallucinationPrevention';
+
+// Type for response context
+interface ResponseContext {
+  isEverydaySituation?: boolean;
+  isSmallTalkContext?: boolean;
+  isIntroductionContext?: boolean;
+  isPersonalSharingContext?: boolean;
+}
 
 /**
  * Hook that combines and orchestrates various response-related hooks
@@ -61,6 +68,13 @@ export const useResponseHooks = (
         setMessages(prevMessages => [...prevMessages, rogerResponse]);
         
         try {
+          // Determine response context for enhancement decisions
+          const responseContext: ResponseContext = {
+            isSmallTalkContext: userInput.length < 50 && /\b(hi|hello|hey|how are you|what's up|good morning|afternoon|evening)\b/i.test(userInput),
+            isIntroductionContext: conversationHistory.length < 3,
+            isPersonalSharingContext: /\b(i feel|i am feeling|i'm feeling|i felt|makes me feel|i'm|i am|i've been|i have been)\b/i.test(userInput)
+          };
+          
           // Use unified enhancement pipeline for comprehensive response processing
           // Now with async support for vector operations
           let responseWithContextCheck = rogerResponse.text;
@@ -71,7 +85,8 @@ export const useResponseHooks = (
               rogerResponse.text,
               userInput,
               conversationHistory.length,
-              conversationHistory
+              conversationHistory,
+              responseContext
             );
             
             // Further enhance with our new RAG system

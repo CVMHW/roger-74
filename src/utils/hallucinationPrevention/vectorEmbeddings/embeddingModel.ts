@@ -5,7 +5,7 @@
  * Manages the embedding model initialization and state
  */
 
-import { pipeline, PipelineType } from '@huggingface/transformers';
+import { pipeline, PipelineType, PipelineConfig, EnvConfig } from '@huggingface/transformers';
 import { detectBestAvailableDevice } from './deviceDetection';
 import { generateSimulatedEmbedding } from './simulatedEmbeddings';
 import { EmbeddingResult, HuggingFaceProgressCallback } from './types';
@@ -18,11 +18,36 @@ let modelInitializationPromise: Promise<void> | null = null;
 let initAttempts = 0;
 const MAX_INIT_ATTEMPTS = 3;
 
+// Model configuration
+const MODEL_CONFIG = {
+  modelId: "Xenova/all-MiniLM-L6-v2", // Browser-optimized embedding model
+  revision: "main",
+  quantized: true, // Use quantized model for better performance
+};
+
 /**
  * Check if we're using simulated embeddings
  */
 export const isUsingSimulatedEmbeddings = (): boolean => {
   return isUsingSimulation;
+};
+
+/**
+ * Progress callback for model loading
+ * Properly typed to match HuggingFace expectations
+ */
+const progressCallback: HuggingFaceProgressCallback = (progress: number | { status: string; progress: number }) => {
+  let percentage: number;
+  let status: string = '';
+
+  if (typeof progress === 'number') {
+    percentage = Math.round(progress * 100);
+  } else {
+    percentage = Math.round((progress.progress || 0) * 100);
+    status = progress.status || '';
+  }
+
+  console.log(`Model loading ${status}: ${percentage}%`);
 };
 
 /**
@@ -61,26 +86,20 @@ export const initializeEmbeddingModel = async (): Promise<void> => {
         const memoryInfo = (performance as any).memory;
         console.log(`Memory before model load: ${Math.round(memoryInfo.usedJSHeapSize / (1024 * 1024))}MB / ${Math.round(memoryInfo.jsHeapSizeLimit / (1024 * 1024))}MB`);
       }
+
+      // Configure pipeline options with proper TypeScript types
+      const pipelineConfig: PipelineConfig = { 
+        revision: MODEL_CONFIG.revision,
+        quantized: MODEL_CONFIG.quantized,
+        device,
+        progress_callback: progressCallback
+      };
       
       // Create a feature-extraction pipeline with a browser-compatible model
-      // Using a model explicitly designed for browser environments
       embeddingModel = await pipeline(
         "feature-extraction" as PipelineType,
-        "Xenova/all-MiniLM-L6-v2", // More browser-friendly model with public access
-        { 
-          revision: "main",
-          device, // Now using the properly typed device value
-          progress_callback: (progressInfo: any) => {
-            // Handle progress in a type-safe way
-            const percentage = typeof progressInfo === 'number' 
-              ? Math.round(progressInfo * 100)
-              : progressInfo.progress 
-                ? Math.round(progressInfo.progress * 100) 
-                : 0;
-            
-            console.log(`Model loading progress: ${percentage}%`);
-          }
-        }
+        MODEL_CONFIG.modelId,
+        pipelineConfig
       );
       
       const loadTime = performance.now() - startTime;
@@ -175,8 +194,24 @@ export const generateEmbedding = async (text: string): Promise<number[]> => {
     const processingTime = performance.now() - startTime;
     console.log(`Generated embedding in ${Math.round(processingTime)}ms for "${text.substring(0, 20)}..."`);
     
-    // Handle different output formats (some models return {data: Float32Array}, others return Float32Array directly)
-    const embedArray = result.data ? Array.from(result.data) : Array.isArray(result) ? result : Array.from(result);
+    // Handle different output formats more explicitly with TypeScript typing
+    let embedArray: number[] = [];
+    
+    if (result) {
+      if (result.data && result.data instanceof Float32Array) {
+        embedArray = Array.from(result.data);
+      } else if (result.data && Array.isArray(result.data)) {
+        embedArray = result.data;
+      } else if (result instanceof Float32Array) {
+        embedArray = Array.from(result);
+      } else if (Array.isArray(result)) {
+        embedArray = result;
+      }
+    }
+    
+    if (embedArray.length === 0) {
+      throw new Error("Could not extract embedding array from result");
+    }
     
     return embedArray;
     
