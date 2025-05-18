@@ -7,6 +7,7 @@
 
 import { MemoryItem, MemoryContext, MemorySearchParams, MemoryRetrievalResult } from '../types';
 import { DEFAULT_MEMORY_CONFIG } from '../config';
+import { optimizeMemory } from '../../hallucinationPrevention/memoryPruning';
 
 // In-memory storage for working memory
 let workingMemoryStore: MemoryItem[] = [];
@@ -50,37 +51,21 @@ export const addToWorkingMemory = (
 };
 
 /**
- * Intelligent pruning of working memory
- * Considers importance, recency, and access patterns
+ * Intelligent pruning of working memory using advanced pruning algorithm
  */
 const intelligentPrune = (): void => {
-  // Calculate a "retention score" for each item
-  const scoredItems = workingMemoryStore.map(item => {
-    // Base score from importance
-    let score = item.importance || 0.5;
-    
-    // Adjust for recency (0-1 scale)
-    const ageMs = Date.now() - item.timestamp;
-    const recencyScore = Math.max(0, 1 - (ageMs / (30 * 60 * 1000))); // 30 minutes is "old"
-    
-    // Adjust for access frequency
-    const accessCount = item.metadata?.accessCount || 0;
-    const accessScore = Math.min(1, accessCount / 5); // 5+ accesses is max score
-    
-    // Combine scores with weights
-    const combinedScore = (score * 0.5) + (recencyScore * 0.3) + (accessScore * 0.2);
-    
-    return {
-      item,
-      score: combinedScore
-    };
+  // Use our advanced memory pruning system
+  workingMemoryStore = optimizeMemory(workingMemoryStore, {
+    maxItems: DEFAULT_MEMORY_CONFIG.workingMemoryCapacity,
+    preserveImportantItems: true,
+    importanceMinValue: 0.7,
+    preserveRecentItems: true,
+    recentItemsCount: 5,
+    preserveRoles: ['roger'],  // Prioritize keeping Roger's responses
+    recencyWeight: 0.4,
+    importanceWeight: 0.4,
+    accessWeight: 0.2
   });
-  
-  // Sort by score (descending) and keep the top items
-  const sortedItems = scoredItems.sort((a, b) => b.score - a.score);
-  workingMemoryStore = sortedItems
-    .slice(0, DEFAULT_MEMORY_CONFIG.workingMemoryCapacity)
-    .map(scored => scored.item);
 };
 
 /**

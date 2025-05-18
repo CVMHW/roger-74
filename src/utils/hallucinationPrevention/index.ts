@@ -26,6 +26,7 @@ import {
   isEmbeddingSystemReady,
   getEmbeddingCacheStats
 } from './vectorEmbeddings';
+import { rerankDocumentsWithCrossEncoder } from './crossEncoder';
 
 // Track initialization status
 let isInitialized = false;
@@ -252,7 +253,9 @@ export const retrieveRelevantContent = async (
     const retrievedContent = await retrieveEnhanced(query, expandedTopics, {
       limit: 5,
       rerank: true,
-      conversationContext: conversationHistory
+      conversationContext: conversationHistory,
+      useQueryExpansion: true,
+      useHybridSearch: true
     });
     
     return {
@@ -283,12 +286,12 @@ export const generateExpandedQuery = async (
   initialTopics: string[] = []
 ): Promise<string[]> => {
   // Import dynamically to avoid circular dependencies
-  const enhancedRetrieval = await import('./enhancedRetrieval');
-  return enhancedRetrieval.generateExpandedQuery(query, initialTopics);
+  return expandQuery(query, initialTopics);
 };
 
 /**
  * Enhanced response augmentation with advanced RAG
+ * Uses both retrieval quality improvements and better integration techniques
  */
 export const enhanceResponseWithRAG = async (
   responseText: string,
@@ -303,11 +306,26 @@ export const enhanceResponseWithRAG = async (
       return responseText;
     }
     
-    // Augment the response with retrieved content
+    // Apply sophisticated cross-encoder reranking
+    const rerankedContent = await rerankDocumentsWithCrossEncoder(
+      userInput, 
+      retrievedContent,
+      conversationHistory,
+      { 
+        topK: 3, 
+        useContextualFeatures: true
+      }
+    );
+    
+    if (rerankedContent.length === 0) {
+      return responseText;
+    }
+    
+    // Augment the response with retrieved content using advanced techniques
     return augmentResponseWithEnhancedRetrieval(
       responseText,
       userInput,
-      retrievedContent
+      rerankedContent
     );
   } catch (error) {
     console.error("Error enhancing response with RAG:", error);
