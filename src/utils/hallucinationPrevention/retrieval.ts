@@ -4,18 +4,9 @@
  * Enhanced with vector database integration
  */
 
-import { MemoryPiece } from '../../types/hallucinationPrevention';
+import { MemoryPiece, RetrievalResult, VectorSearchResult } from './types';
 import vectorDB from './vectorDatabase';
 import { generateEmbedding } from './vectorEmbeddings';
-import { addConversationExchange } from './conversationTracker';
-
-// For type checking
-export interface RetrievalResult {
-  retrievedContent: string[];
-  confidence: number;
-  sources?: string[];
-  metadata?: any;
-}
 
 /**
  * Initialize the retrieval system
@@ -36,10 +27,10 @@ export const initializeRetrievalSystem = async (): Promise<boolean> => {
     }
     
     // Load initial data if needed
-    const emotionsCollection = vectorDB.collection('emotions');
+    const emotionsCollection = vectorDB.getCollection('emotions');
     
     // Add some basic emotion data if collection is empty
-    if (emotionsCollection.itemCount() === 0) {
+    if (emotionsCollection.size() === 0) {
       console.log("Initializing emotions data in vector database");
       
       // Add depression data
@@ -47,6 +38,7 @@ export const initializeRetrievalSystem = async (): Promise<boolean> => {
       emotionsCollection.addItem({
         id: "emotion_depression",
         vector: depressionEmbedding,
+        text: "Depression is a serious condition characterized by persistent sadness, hopelessness, and loss of interest in activities",
         metadata: {
           emotion: "depression",
           description: "Depression is a serious condition characterized by persistent sadness, hopelessness, and loss of interest in activities",
@@ -59,6 +51,7 @@ export const initializeRetrievalSystem = async (): Promise<boolean> => {
       emotionsCollection.addItem({
         id: "emotion_anxiety",
         vector: anxietyEmbedding,
+        text: "Anxiety involves feelings of worry, nervousness, or unease about something with an uncertain outcome",
         metadata: {
           emotion: "anxiety",
           description: "Anxiety involves feelings of worry, nervousness, or unease about something with an uncertain outcome",
@@ -87,15 +80,15 @@ export const retrieveAugmentation = async (
     const queryEmbedding = await generateEmbedding(userInput);
     
     // First check emotions collection for highly relevant emotional content
-    const emotionsCollection = vectorDB.collection('emotions');
+    const emotionsCollection = vectorDB.getCollection('emotions');
     const emotionalMatches = emotionsCollection.search(queryEmbedding, 2);
     
     // Then search knowledge base
-    const knowledgeCollection = vectorDB.collection('knowledge');
+    const knowledgeCollection = vectorDB.getCollection('knowledge');
     const knowledgeMatches = knowledgeCollection.search(queryEmbedding, 3);
     
     // Finally get conversation history context
-    const historyCollection = vectorDB.collection('conversation_history');
+    const historyCollection = vectorDB.getCollection('conversation_history');
     const historyMatches = historyCollection.search(queryEmbedding, 2);
     
     // Combine all retrieved content
@@ -103,22 +96,22 @@ export const retrieveAugmentation = async (
     
     // Add emotional content first (highest priority)
     emotionalMatches.forEach(match => {
-      if (match.score > 0.7 && match.item.metadata?.description) {
-        retrievedContent.push(match.item.metadata.description);
+      if (match.score > 0.7 && (match.record.metadata?.description || match.record.text)) {
+        retrievedContent.push(match.record.metadata?.description || match.record.text || "");
       }
     });
     
     // Add knowledge content
     knowledgeMatches.forEach(match => {
-      if (match.score > 0.6 && match.item.metadata?.content) {
-        retrievedContent.push(match.item.metadata.content);
+      if (match.score > 0.6 && (match.record.metadata?.content || match.record.text)) {
+        retrievedContent.push(match.record.metadata?.content || match.record.text || "");
       }
     });
     
     // Add conversation history content
     historyMatches.forEach(match => {
-      if (match.score > 0.8 && match.item.metadata?.content) {
-        retrievedContent.push(match.item.metadata.content);
+      if (match.score > 0.8 && (match.record.metadata?.content || match.record.text)) {
+        retrievedContent.push(match.record.metadata?.content || match.record.text || "");
       }
     });
     
@@ -180,7 +173,7 @@ export const retrieveSimilarResponses = async (
     const queryEmbedding = await generateEmbedding(userInput);
     
     // Search conversation history for assistant responses
-    const historyCollection = vectorDB.collection('conversation_history');
+    const historyCollection = vectorDB.getCollection('conversation_history');
     const matches = historyCollection.search(queryEmbedding, count * 2, {
       filter: (record) => record.metadata?.role === 'assistant'
     });
@@ -189,7 +182,7 @@ export const retrieveSimilarResponses = async (
     return matches
       .filter(match => match.score > 0.7)
       .slice(0, count)
-      .map(match => match.item.metadata?.content || "")
+      .map(match => match.record.metadata?.content || match.record.text || "")
       .filter(content => content.length > 0);
   } catch (error) {
     console.error("Error retrieving similar responses:", error);
@@ -209,19 +202,16 @@ export const retrieveFactualGrounding = async (
     const topicEmbedding = await generateEmbedding(topic);
     
     // Search knowledge base
-    const knowledgeCollection = vectorDB.collection('knowledge');
+    const knowledgeCollection = vectorDB.getCollection('knowledge');
     const matches = knowledgeCollection.search(topicEmbedding, count);
     
     // Extract the content
     return matches
       .filter(match => match.score > 0.65)
-      .map(match => match.item.metadata?.content || "")
+      .map(match => match.record.metadata?.content || match.record.text || "")
       .filter(content => content.length > 0);
   } catch (error) {
     console.error("Error retrieving factual grounding:", error);
     return [];
   }
 };
-
-// Re-export the addConversationExchange function to satisfy imports elsewhere
-export { addConversationExchange };

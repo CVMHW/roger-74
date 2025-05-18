@@ -1,96 +1,76 @@
 
 /**
- * Integration of RAG with Rogerian Counseling
- * 
- * Connects vector database knowledge with Rogerian counseling principles
+ * Integration with Rogerian therapy approach
  */
-
-import { retrieveFactualGrounding } from '../retrieval';
-import { identifyEnhancedFeelings } from '../../reflection/feelingDetection';
+import { retrieveSimilarResponses } from '../retrieval';
 
 /**
- * Enhance a Rogerian response with relevant knowledge
+ * Enhance a Rogerian response with RAG capabilities
+ * 
+ * @param responseText Original response
+ * @param userInput User input
+ * @param conversationHistory Full conversation history
+ * @returns Enhanced response
  */
-export const enhanceRogerianResponse = (
-  response: string,
+export const enhanceRogerianResponse = async (
+  responseText: string,
   userInput: string,
-  messageCount: number
-): string => {
+  conversationHistory: string[]
+): Promise<string> => {
   try {
-    // Skip enhancement for very early messages (first 2)
-    if (messageCount < 3) return response;
+    // Get similar previous responses
+    const similarResponses = await retrieveSimilarResponses(userInput, 3);
     
-    // Extract feelings and topics from user input
-    const enhancedFeelings = identifyEnhancedFeelings(userInput);
-    const feelings = enhancedFeelings.map(f => f.category);
-    
-    // Extract keywords from user input
-    const keywords = extractKeywords(userInput);
-    
-    // Combine feelings and keywords for search topics
-    const searchTopics = [...feelings, ...keywords];
-    
-    // Retrieve relevant knowledge
-    const groundingFacts = retrieveFactualGrounding(searchTopics, 3);
-    
-    if (groundingFacts.length === 0) return response;
-    
-    // Select most relevant fact based on importance and score
-    const sortedFacts = groundingFacts.sort((a, b) => b.importance - a.importance);
-    const selectedFact = sortedFacts[0];
-    
-    if (!selectedFact) return response;
-    
-    // Insert knowledge at appropriate point for Rogerian approach
-    const sentences = response.split(/(?<=[.!?])\s+/);
-    
-    if (sentences.length <= 2) {
-      // For short responses, append with transition
-      return `${response} This connects to what we know about ${selectedFact.content}`;
+    // If we found relevant responses, use them to enhance
+    if (similarResponses && similarResponses.length > 0) {
+      // Extract patterns from similar responses
+      const patterns = extractPatterns(similarResponses);
+      
+      // Blend the patterns with the current response
+      return blendRogerianPatterns(responseText, patterns);
     }
     
-    // For longer responses, insert before conclusion with Rogerian transition
-    const insertPoint = Math.floor(sentences.length * 0.7);
-    
-    const beginning = sentences.slice(0, insertPoint).join(' ');
-    const end = sentences.slice(insertPoint).join(' ');
-    
-    // Use Rogerian phrasing
-    const transitions = [
-      "I wonder if it might be helpful to consider that ",
-      "Some people have found that ",
-      "I'm reminded that ",
-      "It might be worth reflecting on the idea that ",
-      "This reminds me of what we understand about "
-    ];
-    
-    const transition = transitions[Math.floor(Math.random() * transitions.length)];
-    
-    return `${beginning} ${transition}${selectedFact.content} ${end}`;
+    return responseText;
   } catch (error) {
     console.error("Error enhancing Rogerian response:", error);
-    return response;
+    return responseText;
   }
 };
 
 /**
- * Extract keywords from user input
+ * Extract common patterns from similar responses
  */
-function extractKeywords(text: string): string[] {
-  // Simple keyword extraction
-  const words = text.toLowerCase()
-    .replace(/[^\w\s]/g, '')
-    .split(/\s+/)
-    .filter(word => word.length > 3)
-    .filter(word => !commonWords.includes(word));
+function extractPatterns(responses: string[]): string[] {
+  // Simple implementation - just return unique sentences
+  const sentences: string[] = [];
   
-  return [...new Set(words)]; // Remove duplicates
+  responses.forEach(response => {
+    const responseSentences = response.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    responseSentences.forEach(sentence => {
+      if (!sentences.includes(sentence.trim())) {
+        sentences.push(sentence.trim());
+      }
+    });
+  });
+  
+  return sentences;
 }
 
-// Common words to filter out
-const commonWords = [
-  "this", "that", "these", "those", "with", "from", "about",
-  "have", "what", "when", "where", "which", "whom", "whose",
-  "your", "their", "they", "then", "than", "been", "were", 
-  "being", "would", "could", "should", "there", "here", "some"
-];
+/**
+ * Blend patterns with the current response
+ */
+function blendRogerianPatterns(responseText: string, patterns: string[]): string {
+  // Simple implementation - just ensure we don't repeat ourselves
+  if (patterns.length === 0) return responseText;
+  
+  // Check if response already contains any of the patterns
+  for (const pattern of patterns) {
+    if (responseText.includes(pattern)) {
+      return responseText;
+    }
+  }
+  
+  // Add a relevant pattern if it doesn't exist yet
+  const selectedPattern = patterns[0];
+  return `${responseText} ${selectedPattern}`;
+}

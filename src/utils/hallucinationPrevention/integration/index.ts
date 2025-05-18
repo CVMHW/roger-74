@@ -1,17 +1,20 @@
+
 /**
  * Integration module for hallucination prevention system
  */
 
-// Update imports to use the exported functions from the main index
+// Import the correct functions
 import { 
+  retrieveAugmentation, 
+  augmentResponseWithRetrieval,
+  retrieveSimilarResponses
+} from '../retrieval';
+import { addConversationExchange } from '../conversationTracker';
+
+// Export them
+export { 
   retrieveAugmentation, 
   augmentResponseWithRetrieval,
   addConversationExchange,
   retrieveSimilarResponses
-} from '../index';
-
-export { 
-  retrieveAugmentation, 
-  augmentResponseWithRetrieval,
-  addConversationExchange 
 };

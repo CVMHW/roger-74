@@ -5,6 +5,7 @@
  */
 import { extractEmotionsFromInput } from '../response/processor/emotions';
 import { retrieveAugmentation, augmentResponseWithRetrieval } from './retrieval';
+import { addConversationExchange } from './conversationTracker';
 
 /**
  * Enhanced RAG response processing
@@ -87,6 +88,9 @@ export const enhanceResponseWithRAG = async (
       userInput,
       augmentation
     );
+    
+    // Record the exchange in the vector database for future use
+    await addConversationExchange(userInput, enhancedResponse);
     
     console.log("RAG: Response enhanced with relevant knowledge");
     return enhancedResponse;

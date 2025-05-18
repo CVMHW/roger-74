@@ -2,18 +2,20 @@
 /**
  * Process records for storage or retrieval
  */
-const processRecordsForStorage = (records: any[]): any[] => {
+import { VectorRecord } from './vectorDatabase/types';
+
+const processRecordsForStorage = (records: any[]): VectorRecord[] => {
   return records.map(record => ({
     id: record.id,
     vector: record.vector || record.embedding || [], // Ensure vector is set
-    text: record.text,
+    text: record.text || "",
     metadata: record.metadata || {},
     timestamp: record.timestamp || Date.now()
   }));
 };
 
 // Update this function to properly set vector property
-export const loadPersistedVectors = async (): Promise<any[]> => {
+export const loadPersistedVectors = async (): Promise<VectorRecord[]> => {
   try {
     // Mock implementation
     const storedData = [

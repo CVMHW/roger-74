@@ -19,7 +19,5 @@ export { findNearestNeighbors } from './utils';
 import { VectorDatabase } from './vectorDatabase';
 const vectorDB = new VectorDatabase();
 
-// Enable indexing by default for large collections
-vectorDB.enableIndexing(16);
-
+// Export default instance
 export default vectorDB;

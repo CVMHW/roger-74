@@ -1,92 +1,64 @@
 
 /**
- * Integration of RAG with Crisis Response
- * 
- * Connects vector database knowledge with crisis resources and responses
+ * Integration with crisis detection and response
  */
-
-import { retrieveFactualGrounding } from '../retrieval';
-import { isSuicidalIdeation, isEmergency } from '../../masterRules/safety/safetyUtils';
+import { retrieveSimilarResponses, retrieveFactualGrounding } from '../retrieval';
 
 /**
- * Enhance crisis response with accurate resources from vector database
+ * Enhance a crisis response with RAG capabilities
+ * 
+ * @param responseText Original response
+ * @param crisisType Type of crisis detected
+ * @param severity Severity level (1-10)
+ * @returns Enhanced response
  */
-export const enhanceCrisisResponse = (
-  response: string,
-  userInput: string
-): string => {
+export const enhanceCrisisResponse = async (
+  responseText: string,
+  crisisType: string,
+  severity: number
+): Promise<string> => {
   try {
-    // Check if this is a crisis situation
-    const isEmergencySituation = isEmergency(userInput);
-    const isSuicidal = isSuicidalIdeation(userInput);
-    
-    if (!isEmergencySituation && !isSuicidal) {
-      return response; // Not a crisis situation, return original
+    // For high severity crises, focus on immediate safety resources
+    if (severity > 7) {
+      const resources = await retrieveFactualGrounding(`${crisisType} crisis resources`, 1);
+      if (resources && resources.length > 0) {
+        return `${responseText}\n\nImportant resources that might help: ${resources[0]}`;
+      }
     }
     
-    // Define search topics based on crisis type
-    let searchTopics: string[] = ['crisis', 'emergency', 'help'];
+    // For lower severity, gather similar successful responses
+    const similarResponses = await retrieveSimilarResponses(`${crisisType} support`, 2);
     
-    if (isSuicidal) {
-      searchTopics = [...searchTopics, 'suicide', 'suicidal', 'prevention', 'hotline'];
+    // If we found relevant responses, blend them
+    if (similarResponses && similarResponses.length > 0) {
+      return blendCrisisResponses(responseText, similarResponses);
     }
     
-    // Add keywords from user input
-    const keywords = extractCrisisKeywords(userInput);
-    searchTopics = [...searchTopics, ...keywords];
-    
-    // Retrieve crisis resources
-    const resources = retrieveFactualGrounding(searchTopics, 5);
-    
-    if (resources.length === 0) {
-      return response; // No resources found, return original
-    }
-    
-    // Ensure we always include the National Suicide Prevention Lifeline for suicidal content
-    if (isSuicidal) {
-      return ensureSuicideHotline(response);
-    }
-    
-    // For other crises, add factual resources
-    let enhancedResponse = response;
-    
-    // Add the most relevant resource
-    const resource = resources[0].content;
-    if (!enhancedResponse.includes(resource)) {
-      enhancedResponse = `${enhancedResponse}\n\nImportant resource: ${resource}`;
-    }
-    
-    return enhancedResponse;
-    
+    return responseText;
   } catch (error) {
     console.error("Error enhancing crisis response:", error);
-    return response;
+    return responseText;
   }
 };
 
 /**
- * Ensure the suicide hotline is included in the response
+ * Blend successful crisis responses
  */
-function ensureSuicideHotline(response: string): string {
-  const hotlineInfo = "National Suicide Prevention Lifeline: 988 or 1-800-273-8255. Available 24/7.";
+function blendCrisisResponses(responseText: string, similarResponses: string[]): string {
+  // Simple implementation - just ensure we have the most important elements
   
-  if (response.includes("988") || response.includes("1-800-273-8255")) {
-    return response; // Already includes hotline
+  // Check if the response already contains important validation language
+  const hasValidation = /understand|hear you|must be|difficult|challenging|you're feeling/i.test(responseText);
+  
+  if (!hasValidation && similarResponses.length > 0) {
+    // Find a validation phrase we could add
+    for (const response of similarResponses) {
+      const validationMatch = response.match(/(I understand [^.]+\.|I hear you[^.]+\.|That must be [^.]+\.)/);
+      if (validationMatch) {
+        return `${validationMatch[0]} ${responseText}`;
+      }
+    }
   }
   
-  return `${response}\n\n${hotlineInfo}`;
-}
-
-/**
- * Extract crisis-related keywords from text
- */
-function extractCrisisKeywords(text: string): string[] {
-  const crisisKeywords = [
-    'emergency', 'crisis', 'suicide', 'kill', 'die', 'death', 'harm',
-    'hurt', 'pain', 'overdose', 'dangerous', 'weapon', 'gun', 'knife',
-    'threat', 'threatened', 'violence', 'violent', 'abuse', 'danger'
-  ];
-  
-  const words = text.toLowerCase().split(/\W+/);
-  return words.filter(word => crisisKeywords.includes(word));
+  return responseText;
 }
