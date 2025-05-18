@@ -2,7 +2,23 @@
 /**
  * Integration with crisis detection and response
  */
-import { retrieveSimilarResponses, retrieveFactualGrounding } from '../retrieval';
+import { retrieveSimilarResponses } from '../retrieval';
+
+/**
+ * Retrieves factual grounding for crisis situations
+ * Wrapper to handle string vs string[] parameter differences
+ */
+const retrieveFactualGrounding = async (query: string, limit = 3): Promise<string[]> => {
+  try {
+    // Import dynamically to avoid circular dependencies
+    const { retrieveAugmentation } = await import('../retrieval');
+    const result = await retrieveAugmentation(query, [], limit);
+    return result?.retrievedContent || [];
+  } catch (error) {
+    console.error("Error retrieving factual grounding:", error);
+    return [];
+  }
+};
 
 /**
  * Enhance a crisis response with RAG capabilities
