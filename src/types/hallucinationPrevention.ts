@@ -3,7 +3,7 @@
  * Types for hallucination prevention system
  */
 
-import { HallucinationCheck } from '../utils/hallucinationPrevention/detector/types';
+import type { HallucinationCheck } from '../utils/hallucinationPrevention/detector/types';
 
 /**
  * Options for hallucination prevention system

@@ -1,3 +1,4 @@
+
 /**
  * Core hallucination detection functionality
  */
@@ -263,8 +264,9 @@ export const detectHallucinations = (
   // Return results with emotion checks prioritized
   return {
     flags,
-    confidence, // Fixed from confidenceScore
-    wasHallucination: isHallucination,
+    confidence,
+    isHallucination,
+    wasHallucination: isHallucination, // For backward compatibility
     emotionMisidentified: hasMisidentifiedEmotion,
     depressionMisidentified: emotionInfo.isDepressionMentioned && 
       (!/\b(depress(ed|ing|ion)?|feeling down|difficult time|hard time|challenging|struggle)\b/i.test(responseText.toLowerCase()))
@@ -287,7 +289,7 @@ export const checkAndFixHallucinations = (
   // Check for hallucinations
   const hallucination = detectHallucinations(responseText, userInput, conversationHistory);
   
-  if (hallucination.wasHallucination) {
+  if (hallucination.isHallucination) {
     let correctedResponse = responseText;
     
     // PRIORITY: Fix emotion misidentification first
@@ -379,7 +381,7 @@ export const checkAndFixHallucinations = (
       correctedResponse,
       hallucinationDetails: {
         flags: hallucination.flags,
-        confidence: hallucination.confidence, // Fixed from confidenceScore
+        confidence: hallucination.confidence,
         isEmotionMisidentification: hallucination.emotionMisidentified
       }
     };
