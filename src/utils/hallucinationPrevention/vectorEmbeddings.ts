@@ -5,7 +5,7 @@
  * Implements proper text embeddings for semantic search
  */
 
-import { pipeline } from '@huggingface/transformers';
+import { pipeline, PipelineType, PreTrainedOptions } from '@huggingface/transformers';
 
 // Define interface for embedding results
 export interface EmbeddingResult {
@@ -13,6 +13,9 @@ export interface EmbeddingResult {
   embedding: number[];
   metadata?: any;
 }
+
+// Define the type for progress callback to match HuggingFace's type
+type HuggingFaceProgressCallback = (info: { progress: number, loaded: number, total: number }) => void;
 
 let embeddingModel: any = null;
 let isUsingSimulation = false;
@@ -24,7 +27,7 @@ const MAX_INIT_ATTEMPTS = 3;
 /**
  * Detect the best available device for running models
  */
-export const detectBestAvailableDevice = async (): Promise<string> => {
+export const detectBestAvailableDevice = async (): Promise<"webgpu" | "wasm" | "cpu" | "auto"> => {
   try {
     // Check for WebGPU support
     if ('gpu' in navigator) {
@@ -98,18 +101,24 @@ export const initializeEmbeddingModel = async (): Promise<void> => {
       }
       
       // Create a feature-extraction pipeline with a browser-compatible model
-      // Using a smaller model better suited for browser environments
+      // Using a model explicitly designed for browser environments
       embeddingModel = await pipeline(
-        "feature-extraction",
-        "Xenova/all-MiniLM-L6-v2", // More browser-friendly model
+        "feature-extraction" as PipelineType,
+        "Xenova/all-MiniLM-L6-v2", // More browser-friendly model with public access
         { 
           revision: "main",
-          device: device,
-          progress_callback: (progress: number) => {
-            const percentage = Math.round(progress * 100);
+          device, // Now using the properly typed device value
+          progress_callback: (progressInfo: any) => {
+            // Handle progress in a type-safe way
+            const percentage = typeof progressInfo === 'number' 
+              ? Math.round(progressInfo * 100)
+              : progressInfo.progress 
+                ? Math.round(progressInfo.progress * 100) 
+                : 0;
+            
             console.log(`Model loading progress: ${percentage}%`);
           }
-        }
+        } as PreTrainedOptions
       );
       
       const loadTime = performance.now() - startTime;

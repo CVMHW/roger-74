@@ -1,4 +1,3 @@
-
 /**
  * Response enhancer
  * 
@@ -36,6 +35,110 @@ let lastInitAttempt = 0;
 const INIT_COOLDOWN_MS = 60000; // 1 minute cooldown between init attempts
 
 /**
+ * Natural language content blending patterns for seamless insertion
+ */
+const contentBlendingPatterns = [
+  { 
+    type: "introduction", 
+    patterns: [
+      "As we discuss this, it's worth noting that ",
+      "I understand your concern. In Rogerian therapy, ",
+      "That's an important point. From a person-centered perspective, "
+    ] 
+  },
+  { 
+    type: "elaboration", 
+    patterns: [
+      "To elaborate on that, ",
+      "Building on what you've shared, ",
+      "This connects to the concept of "
+    ] 
+  },
+  { 
+    type: "insight", 
+    patterns: [
+      "This reminds me that ",
+      "An insight from person-centered therapy is that ",
+      "What's helpful to understand is that "
+    ] 
+  }
+];
+
+/**
+ * Select an appropriate blending pattern for content integration
+ */
+const selectBlendingPattern = (content: string, type: string = "insight"): string => {
+  const patternGroup = contentBlendingPatterns.find(p => p.type === type) || contentBlendingPatterns[0];
+  const index = Math.floor(Math.random() * patternGroup.patterns.length);
+  return patternGroup.patterns[index];
+};
+
+/**
+ * Format a knowledge snippet for integration into a response
+ */
+const formatKnowledgeForIntegration = (knowledge: string): string => {
+  // Shorten if too long
+  let formattedKnowledge = knowledge.length > 120 
+    ? knowledge.substring(0, 120).trim() + "..." 
+    : knowledge;
+  
+  // Remove specific formatting that might make it sound like a citation
+  formattedKnowledge = formattedKnowledge
+    .replace(/^In Rogerian therapy,?\s/i, '')
+    .replace(/^According to Carl Rogers,?\s/i, '')
+    .replace(/^Research shows that\s/i, '');
+  
+  // Ensure it doesn't end with a period if we're going to continue the sentence
+  if (formattedKnowledge.endsWith('.')) {
+    formattedKnowledge = formattedKnowledge.slice(0, -1);
+  }
+  
+  return formattedKnowledge.trim();
+};
+
+/**
+ * Integrate knowledge content naturally into a response
+ */
+const integrateKnowledgeNaturally = (
+  response: string, 
+  knowledge: string, 
+  confidence: number
+): string => {
+  // Don't integrate if confidence is too low
+  if (confidence < 0.3) return response;
+  
+  // Format the knowledge for integration
+  const formattedKnowledge = formatKnowledgeForIntegration(knowledge);
+  
+  // Determine where to place the content (beginning, middle, or end)
+  const sentences = response.split(/(?<=[.!?])\s+/);
+  
+  // If response is very short, just append
+  if (sentences.length <= 1) {
+    const blendingPattern = selectBlendingPattern(formattedKnowledge, "introduction");
+    return `${response} ${blendingPattern}${formattedKnowledge}.`;
+  }
+  
+  // For longer responses, find a good insertion point
+  if (sentences.length >= 3) {
+    const insertIndex = Math.floor(sentences.length * 0.66); // Insert around 2/3 of the way through
+    
+    // Choose blending pattern based on position
+    const blendingPattern = selectBlendingPattern(formattedKnowledge, "elaboration");
+    
+    // Insert the knowledge at the chosen position
+    const firstPart = sentences.slice(0, insertIndex).join(' ');
+    const secondPart = sentences.slice(insertIndex).join(' ');
+    
+    return `${firstPart} ${blendingPattern}${formattedKnowledge}. ${secondPart}`;
+  }
+  
+  // Default: append to the end with an introductory phrase
+  const blendingPattern = selectBlendingPattern(formattedKnowledge, "insight");
+  return `${response} ${blendingPattern}${formattedKnowledge}.`;
+};
+
+/**
  * Initialize the RAG system if not already initialized
  */
 const ensureRAGSystemInitialized = async (): Promise<boolean> => {
@@ -59,6 +162,12 @@ const ensureRAGSystemInitialized = async (): Promise<boolean> => {
     if (isUsingSimulatedEmbeddings()) {
       console.log("⚠️ Attempting to switch from simulated to real embeddings...");
       await forceReinitializeEmbeddingModel();
+    }
+    
+    // Track memory usage if available
+    if ('memory' in performance) {
+      const memoryInfo = (performance as any).memory;
+      console.log(`���� Memory usage: ${Math.round(memoryInfo.usedJSHeapSize / (1024 * 1024))}MB / ${Math.round(memoryInfo.jsHeapSizeLimit / (1024 * 1024))}MB`);
     }
     
     // Initialize the retrieval system (includes vector database)
@@ -226,7 +335,12 @@ export const enhanceResponse = async (
         const retrievalResult = await retrieveAugmentation(userInput, conversationHistory);
         
         if (retrievalResult.confidence > 0.3) {
-          enhancedResponse = await augmentResponseWithRetrieval(enhancedResponse, retrievalResult);
+          // Use improved natural integration of knowledge content
+          enhancedResponse = integrateKnowledgeNaturally(
+            enhancedResponse, 
+            retrievalResult.content, 
+            retrievalResult.confidence
+          );
           console.log(`RAG augmentation applied with confidence: ${retrievalResult.confidence.toFixed(2)}`);
         } else {
           // Fallback to reranker if retrieval confidence is low
