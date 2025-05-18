@@ -7,10 +7,14 @@
  */
 
 import { initializeRetrievalSystem } from './retrieval';
-import { isUsingSimulatedEmbeddings, forceReinitializeEmbeddingModel, detectBestAvailableDevice } from './vectorEmbeddings';
+import { 
+  isUsingSimulatedEmbeddings, 
+  forceReinitializeEmbeddingModel, 
+  detectBestAvailableDevice 
+} from './vectorEmbeddings';
 import vectorDB from './vectorDatabase';
 
-// Export all components
+// Export all components from the refactored structure
 export * from './vectorEmbeddings';
 export * from './vectorReranker';
 export * from './retrieval';
@@ -101,7 +105,7 @@ const populateKnowledgeBase = async (): Promise<boolean> => {
     // Clear existing data
     knowledgeCollection.clear();
     
-    // Import all knowledge embeddings from sample data
+    // Import generateEmbeddings from our refactored module
     const { generateEmbeddings } = await import('./vectorEmbeddings');
     
     // Generate embeddings for all entries
