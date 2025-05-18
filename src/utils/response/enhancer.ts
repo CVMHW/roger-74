@@ -1,4 +1,3 @@
-
 /**
  * Response Enhancer
  * 
@@ -12,6 +11,8 @@ import { enhanceWithMeaningPerspective } from '../logotherapy/logotherapyIntegra
 import { getRogerPersonalityInsight } from '../reflection/rogerPersonality';
 import { identifyEnhancedFeelings } from '../reflection/feelingDetection';
 import { checkForResponseRepetition, getRepetitionRecoveryResponse, processUserMessageMemory } from './enhancer/repetitionDetection';
+import { extractEmotionsFromInput } from './processor/emotions';
+import { checkEmotionMisidentification } from './processor/emotionHandler/emotionMisidentificationHandler';
 
 // Import from hallucination prevention system with explicit type annotations
 import { enhanceResponseWithRAG } from '../hallucinationPrevention';
@@ -22,6 +23,12 @@ interface EnhancementContext {
   isSmallTalkContext?: boolean;
   isIntroductionContext?: boolean;
   isPersonalSharingContext?: boolean;
+  detectedEmotions?: {
+    hasDetectedEmotion: boolean;
+    primaryEmotion?: string | null;
+    emotionalIntensity?: string | null;
+    isDepressionMentioned?: boolean;
+  };
 }
 
 /**
@@ -43,26 +50,55 @@ export const enhanceResponse = async (
       return responseText;
     }
     
+    // CRITICAL: Extract emotions from user input first - this is now done early in the pipeline
+    const emotionInfo = extractEmotionsFromInput(userInput);
+    
+    // Update context with emotion information if not already provided
+    if (!context.detectedEmotions) {
+      context.detectedEmotions = {
+        hasDetectedEmotion: emotionInfo.hasDetectedEmotion,
+        primaryEmotion: emotionInfo.explicitEmotion || 
+                       (emotionInfo.emotionalContent.hasEmotion ? emotionInfo.emotionalContent.primaryEmotion : null),
+        emotionalIntensity: emotionInfo.emotionalContent.hasEmotion ? emotionInfo.emotionalContent.intensity : null,
+        isDepressionMentioned: /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase())
+      };
+    }
+    
+    // Check for emotion misidentification EARLY in the pipeline
+    const emotionMisidentified = checkEmotionMisidentification(responseText, userInput);
+    
     // First apply memory-based processing
     let enhancedText = await processResponse(
       responseText,
       userInput,
-      conversationHistory
+      conversationHistory,
+      context.detectedEmotions // Pass emotion context to processor
     );
     
-    // Next, enhance with RAG if appropriate context
-    // We avoid RAG for small talk, introductions, and very short user inputs
-    const shouldApplyRAG = !context.isSmallTalkContext && 
-                           !context.isIntroductionContext &&
-                           userInput.length > 30;
+    // CRITICAL: Determine if RAG should be applied - NEW LOGIC
+    // We now ALWAYS apply RAG for emotional content, especially depression
+    const shouldApplyRAG = 
+      // Always apply RAG for depression or other negative emotions regardless of length
+      context.detectedEmotions?.isDepressionMentioned ||
+      context.detectedEmotions?.hasDetectedEmotion ||
+      emotionMisidentified ||
+      // Otherwise, use original conditions but with less restrictive length check (20 chars instead of 30)
+      (!context.isSmallTalkContext && 
+       !context.isIntroductionContext &&
+       userInput.length > 20);
+    
+    console.log("ENHANCER: Should apply RAG:", shouldApplyRAG, 
+                "Emotion detected:", context.detectedEmotions?.hasDetectedEmotion,
+                "Depression mentioned:", context.detectedEmotions?.isDepressionMentioned);
     
     if (shouldApplyRAG) {
       try {
-        // Apply RAG enhancement
+        // Apply RAG enhancement with emotional context
         enhancedText = await enhanceResponseWithRAG(
           enhancedText,
           userInput,
-          conversationHistory
+          conversationHistory,
+          context.detectedEmotions // Pass emotion context to RAG
         );
       } catch (ragError) {
         console.error("Error in RAG enhancement:", ragError);
@@ -70,7 +106,7 @@ export const enhanceResponse = async (
       }
     }
     
-    // Always check for repetition last
+    // CRITICAL: Always check for repetition last
     if (checkForResponseRepetition(enhancedText)) {
       console.log("ENHANCER: Repetition detected, using recovery response");
       return getRepetitionRecoveryResponse();

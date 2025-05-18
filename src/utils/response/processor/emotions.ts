@@ -1,11 +1,16 @@
-
 /**
  * Emotion Response Processing
  * 
  * Handles emotion detection and correction in responses
  */
 
-import { checkEmotionMisidentification, fixEmotionMisidentification, addHumanTouch } from './emotionHandler/emotionMisidentificationHandler';
+import { 
+  checkEmotionMisidentification, 
+  fixEmotionMisidentification, 
+  addHumanTouch,
+  performFinalEmotionVerification,
+  createEmotionContext
+} from './emotionHandler/emotionMisidentificationHandler';
 import { 
   detectEmotionalContent,
   detectMeaningThemes,
@@ -22,23 +27,52 @@ import {
  * Enhanced to distinguish between reflections of feeling and meaning
  * @param responseText Original response text
  * @param userInput User input that triggered the response
+ * @param emotionContext Optional emotion context from previous processing
  * @returns Processed response text
  */
-export function processEmotions(responseText: string, userInput: string): string {
+export function processEmotions(
+  responseText: string, 
+  userInput: string,
+  emotionContext?: any
+): string {
   try {
-    // First check if there's an emotion misidentification (especially "neutral" misidentifications)
+    // CRITICAL: Check for depression first - highest priority
+    const hasDepressionIndicators = emotionContext?.isDepressionMentioned || 
+      /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
+    
+    if (hasDepressionIndicators) {
+      // Check if depression is acknowledged
+      const acknowledgesDepression = /\b(depress(ed|ing|ion)?|feeling down|difficult time|hard time|challenging|struggle)\b/i.test(responseText.toLowerCase());
+      
+      if (!acknowledgesDepression) {
+        console.log("CRITICAL: Depression mentioned but not acknowledged - fixing");
+        // If response starts with an introduction, replace it
+        if (/^(I hear|I understand|It sounds like|Thank you)/i.test(responseText)) {
+          responseText = responseText.replace(
+            /^(I hear|I understand|It sounds like|Thank you)([^.]*)\./i,
+            `$1 that you're feeling depressed.`
+          );
+        } else {
+          // Otherwise add at beginning
+          responseText = `I'm sorry to hear that you're feeling depressed. ${responseText}`;
+        }
+      }
+    }
+    
+    // Check for emotion misidentification (especially "neutral" misidentifications)
     if (checkEmotionMisidentification(responseText, userInput)) {
+      console.log("EMOTIONS: Fixing emotion misidentification");
       responseText = fixEmotionMisidentification(responseText, userInput);
     }
     
     // Detect emotions and meaning themes
-    const emotionInfo = detectEmotionalContent(userInput);
+    const emotionInfo = extractEmotionsFromInput(userInput);
     const meaningThemes = detectMeaningThemes(userInput);
     
     // Determine which type of reflection is most appropriate
     const reflectionType = determineReflectionType(userInput, emotionInfo);
     
-    // NEW: Special handling for brief temporal statements that should always use meaning reflection
+    // Special handling for brief temporal statements that should always use meaning reflection
     const isBriefTemporalStatement = userInput.split(/\s+/).length <= 5 && 
       /(terrible|awful|horrible|rough|bad|tough) (day|night|week|morning|evening)/i.test(userInput);
     
@@ -111,9 +145,27 @@ export function processEmotions(responseText: string, userInput: string): string
       }
     }
     
+    // CRITICAL: Final verification check to ensure emotional consistency
+    // This should catch any remaining issues that weren't fixed by the above steps
+    responseText = performFinalEmotionVerification(responseText, userInput, {
+      hasDetectedEmotion: emotionInfo.hasDetectedEmotion,
+      primaryEmotion: emotionInfo.explicitEmotion || 
+                     (emotionInfo.emotionalContent.hasEmotion ? emotionInfo.emotionalContent.primaryEmotion : null),
+      isDepressionMentioned: hasDepressionIndicators
+    });
+    
     return responseText;
   } catch (error) {
     console.error("Error in processEmotions:", error);
+    
+    // SAFETY: If any error occurs, still check for critical depression signals
+    const hasDepressionIndicators = /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
+    
+    if (hasDepressionIndicators && !responseText.toLowerCase().includes("depress")) {
+      // Add depression acknowledgment even in error case
+      return `I hear that you're feeling depressed. ${responseText}`;
+    }
+    
     return responseText;
   }
 }
@@ -124,6 +176,9 @@ export function processEmotions(responseText: string, userInput: string): string
  * @returns Object containing detected emotions and related information
  */
 export function extractEmotionsFromInput(userInput: string) {
+  // CRITICAL: Check for depression first - highest priority
+  const isDepressionMentioned = /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
+  
   // First check for explicit emotion statements
   const explicitEmotion = detectExplicitEmotionStatement(userInput);
   
@@ -137,11 +192,39 @@ export function extractEmotionsFromInput(userInput: string) {
   const meaningThemes = detectMeaningThemes(userInput);
   
   return {
-    explicitEmotion,
+    explicitEmotion: isDepressionMentioned ? 'depressed' : explicitEmotion,
     socialContext,
     emotionalContent,
     meaningThemes,
-    hasDetectedEmotion: !!(explicitEmotion || (socialContext?.primaryEmotion) || emotionalContent.hasEmotion),
-    hasMeaningTheme: meaningThemes.hasMeaningTheme
+    hasDetectedEmotion: isDepressionMentioned || !!explicitEmotion || (socialContext?.primaryEmotion) || emotionalContent.hasEmotion,
+    hasMeaningTheme: meaningThemes.hasMeaningTheme,
+    isDepressionMentioned
+  };
+}
+
+/**
+ * Creates emotion context for the memory system
+ * @param userInput User's message
+ * @returns Emotion context for memory storage
+ */
+export function createEmotionMemoryContext(userInput: string) {
+  const emotions = extractEmotionsFromInput(userInput);
+  
+  // Calculate importance score - depression gets highest priority
+  const importanceScore = emotions.isDepressionMentioned ? 0.9 : 
+                         (emotions.hasDetectedEmotion ? 0.7 : 0.3);
+  
+  return {
+    emotions: {
+      primaryEmotion: emotions.explicitEmotion || 
+                     (emotions.emotionalContent.hasEmotion ? emotions.emotionalContent.primaryEmotion : null),
+      hasDetectedEmotion: emotions.hasDetectedEmotion,
+      isDepressionMentioned: emotions.isDepressionMentioned,
+      socialContext: emotions.socialContext?.primaryEmotion || null,
+      intensity: emotions.emotionalContent.intensity || 'medium'
+    },
+    importance: importanceScore,
+    needsAcknowledgment: emotions.hasDetectedEmotion,
+    timestamp: new Date().toISOString()
   };
 }

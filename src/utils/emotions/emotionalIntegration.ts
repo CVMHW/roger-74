@@ -7,12 +7,23 @@
  */
 
 import { emotionsWheel, getEmotionFromWheel, detectSocialEmotionalContext } from './emotionsWheel';
-import { processEmotions, extractEmotionsFromInput } from '../response/processor/emotions';
+import { 
+  processEmotions, 
+  extractEmotionsFromInput,
+  createEmotionMemoryContext
+} from '../response/processor/emotions';
 import { calculateMinimumResponseTime } from '../masterRules';
+import { 
+  checkEmotionMisidentification,
+  fixEmotionMisidentification,
+  performFinalEmotionVerification,
+  createEmotionContext
+} from '../response/processor/emotionHandler/emotionMisidentificationHandler';
 
 /**
  * Integrates emotions with memory systems
  * Call this before storing memories to ensure emotional context is preserved
+ * ENHANCED with higher importance for depression and explicit emotions
  * 
  * @param userInput User's original message
  * @param responseText Roger's response to the input
@@ -21,6 +32,14 @@ import { calculateMinimumResponseTime } from '../masterRules';
 export const integrateEmotionsWithMemory = (userInput: string, responseText: string) => {
   // Extract emotions from user input
   const emotions = extractEmotionsFromInput(userInput);
+  
+  // Determine memory importance - prioritize depression
+  const isDepressionMentioned = emotions.isDepressionMentioned || 
+    /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
+  
+  const memoryImportance = isDepressionMentioned ? 0.95 : // Critical - highest priority
+                           emotions.hasDetectedEmotion ? 0.8 : // High importance for any emotion
+                           0.5; // Medium importance for non-emotional content
   
   // Create the memory object with emotional context
   return {
@@ -37,14 +56,18 @@ export const integrateEmotionsWithMemory = (userInput: string, responseText: str
         type: emotions.socialContext.primaryEmotion,
         intensity: emotions.socialContext.intensity,
         description: emotions.socialContext.description
-      } : null
+      } : null,
+      isDepressionMentioned,
+      requiresAcknowledgment: emotions.hasDetectedEmotion || isDepressionMentioned
     },
+    memoryImportance, // Add importance score for prioritization
+    requiresConsistentEmotionalFollowup: emotions.hasDetectedEmotion || isDepressionMentioned,
     timestamp: new Date().toISOString()
   };
 };
 
 /**
- * Integrates emotions with hallucination prevention systems
+ * Enhanced integration with hallucination prevention systems
  * Ensures that emotional misidentifications don't turn into hallucinations
  * 
  * @param responseText Response to check
@@ -56,23 +79,35 @@ export const integrateEmotionsWithHallucinationPrevention = (responseText: strin
   const emotions = extractEmotionsFromInput(userInput);
   
   // Check for emotion misidentification in the response
-  const claimsNeutral = /you('re| are) feeling neutral|feeling neutral|hear you're feeling neutral/i.test(responseText);
+  const emotionMisidentified = checkEmotionMisidentification(responseText, userInput);
   
-  // If response claims neutral but we detected emotion, this is a potential hallucination
-  const potentialHallucination = claimsNeutral && emotions.hasDetectedEmotion;
+  // Check specifically for depression misidentification
+  const hasDepressionIndicators = emotions.isDepressionMentioned || 
+    /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
+  
+  const depressionMisidentified = hasDepressionIndicators && 
+    (!/\b(depress(ed|ing|ion)?|feeling down|difficult time|hard time|challenging|struggle)\b/i.test(responseText.toLowerCase()) ||
+     /you'?re feeling (neutral|fine|good|okay|alright|well)/i.test(responseText));
   
   return {
-    potentialHallucination,
-    emotionMismatch: potentialHallucination,
+    emotionMisidentified,
+    depressionMisidentified,
+    emotionDetectionConfidence: emotions.hasDetectedEmotion ? 0.9 : 0.6,
     detectedEmotions: emotions,
-    riskLevel: potentialHallucination ? 'high' : 'low',
-    recommendedFix: potentialHallucination ? 
-      `Acknowledge that the user is feeling ${emotions.explicitEmotion || emotions.emotionalContent.primaryEmotion}` : null
+    riskLevel: depressionMisidentified ? 'critical' : 
+               emotionMisidentified ? 'high' : 'low',
+    recommendedFix: depressionMisidentified ? 
+      `Acknowledge that the user is feeling depressed` : 
+      (emotionMisidentified && emotions.explicitEmotion) ?
+      `Acknowledge that the user is feeling ${emotions.explicitEmotion}` : null,
+    priorityLevel: depressionMisidentified ? 1 : // Highest priority
+                   emotionMisidentified ? 2 : 
+                   3 // Normal priority
   };
 };
 
 /**
- * Integrates emotions with therapeutic approaches (Rogerian and logotherapy)
+ * ENHANCED integration with therapeutic approaches (Rogerian and logotherapy)
  * 
  * @param userInput User's original message
  * @returns Object with recommended therapeutic approaches based on emotional content
@@ -85,6 +120,32 @@ export const integrateEmotionsWithTherapeuticApproaches = (userInput: string) =>
   let recommendedApproach = 'rogerian'; // Default to Rogerian
   let logotherapyStrength = 0; // 0-10 scale
   
+  // Check for critical depression signals first - always prioritize Rogerian for depression
+  const hasDepressionIndicators = emotions.isDepressionMentioned || 
+    /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
+  
+  if (hasDepressionIndicators) {
+    recommendedApproach = 'rogerian';
+    logotherapyStrength = 2; // Very minimal logotherapy, focus on feelings first
+    
+    // Further customize based on whether meaning themes are present
+    if (emotions.meaningThemes && emotions.meaningThemes.hasMeaningTheme) {
+      // If depression + meaning themes, use a slightly blended approach
+      logotherapyStrength = 3; // Still prioritize Rogerian (7/10) but add some meaning (3/10)
+    }
+    
+    return {
+      recommendedApproach,
+      logotherapyStrength,
+      rogerianStrength: 10 - logotherapyStrength,
+      emotionalContext: emotions,
+      requiresEmotionalAcknowledgment: true,
+      criticalEmotionalState: true, // Flag for special handling
+      therapeuticPriority: 'emotional_safety'
+    };
+  }
+  
+  // If not depression, process normally
   // If existential themes are present, lean toward logotherapy
   const existentialPatterns = /meaning|purpose|point|empty|life|death|existence|why/i;
   if (existentialPatterns.test(userInput)) {
@@ -110,45 +171,15 @@ export const integrateEmotionsWithTherapeuticApproaches = (userInput: string) =>
     logotherapyStrength,
     rogerianStrength: 10 - logotherapyStrength,
     emotionalContext: emotions,
-    requiresEmotionalAcknowledgment: emotions.hasDetectedEmotion
+    requiresEmotionalAcknowledgment: emotions.hasDetectedEmotion,
+    criticalEmotionalState: false,
+    therapeuticPriority: emotions.hasDetectedEmotion ? 'emotional_awareness' : 'meaning_exploration'
   };
 };
 
 /**
- * Integrates emotions with grammar correction
- * Ensures that emotional acknowledgments aren't grammatically modified
- * 
- * @param responseText Response to check for grammar
- * @param userInput Original user input for context
- * @returns Safe-to-modify sections of the response
- */
-export const integrateEmotionsWithGrammar = (responseText: string, userInput: string) => {
-  // Find emotional acknowledgment phrases that should be preserved
-  const acknowledgmentPatterns = [
-    /I hear that you're feeling \w+/i,
-    /It sounds like you're feeling \w+/i,
-    /I can tell this is making you feel \w+/i,
-    /That must be \w+ for you/i
-  ];
-  
-  // Check if response contains acknowledgments
-  const acknowledgments = acknowledgmentPatterns
-    .map(pattern => responseText.match(pattern))
-    .filter(Boolean)
-    .map(match => match?.[0] || '');
-  
-  return {
-    hasAcknowledgments: acknowledgments.length > 0,
-    acknowledgments,
-    safeToModify: acknowledgments.reduce((text, ack) => 
-      text.replace(ack, '{{PRESERVE}}' + ack + '{{/PRESERVE}}'), 
-      responseText
-    )
-  };
-};
-
-/**
- * Master integration function that connects emotions across all systems
+ * ENHANCED Master integration function that connects emotions across all systems
+ * Now with better priority handling and emotion context preservation
  * 
  * @param userInput User's message
  * @param responseText Roger's response
@@ -158,41 +189,69 @@ export const integrateEmotionsAcrossAllSystems = (
   userInput: string,
   responseText: string
 ) => {
-  // Step 1: Extract emotions
+  // Step 1: Extract emotions with special attention to depression
   const emotions = extractEmotionsFromInput(userInput);
+  const hasDepressionIndicators = emotions.isDepressionMentioned || 
+    /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
+  
+  // Create emotion context object for sharing across systems
+  const emotionContext = {
+    hasDetectedEmotion: emotions.hasDetectedEmotion || hasDepressionIndicators,
+    primaryEmotion: hasDepressionIndicators ? 'depressed' : 
+                   emotions.explicitEmotion || 
+                   (emotions.emotionalContent.hasEmotion ? emotions.emotionalContent.primaryEmotion : null),
+    emotionalIntensity: hasDepressionIndicators ? 'high' :
+                       (emotions.emotionalContent.hasEmotion ? emotions.emotionalContent.intensity : null),
+    isDepressionMentioned: hasDepressionIndicators,
+    requiresAcknowledgment: emotions.hasDetectedEmotion || hasDepressionIndicators,
+    priority: hasDepressionIndicators ? 'critical' : 
+             emotions.hasDetectedEmotion ? 'high' : 'normal',
+    timestamp: new Date().toISOString()
+  };
   
   // Step 2: Process the response to fix any emotion misidentifications
-  const processedResponse = processEmotions(responseText, userInput);
+  const processedResponse = processEmotions(responseText, userInput, emotionContext);
   
   // Step 3: Integrate with all systems
   const memoryIntegration = integrateEmotionsWithMemory(userInput, processedResponse);
   const hallucinationIntegration = integrateEmotionsWithHallucinationPrevention(processedResponse, userInput);
   const therapeuticIntegration = integrateEmotionsWithTherapeuticApproaches(userInput);
-  const grammarIntegration = integrateEmotionsWithGrammar(processedResponse, userInput);
   
-  // Step 4: Calculate appropriate response time
+  // Step 4: Perform final verification
+  const finalResponse = performFinalEmotionVerification(processedResponse, userInput, emotionContext);
+  
+  // Step 5: Calculate appropriate response time with emotional context
   let responseTimeComplexity = 4; // Medium complexity by default
-  if (userInput.length > 100) responseTimeComplexity = 6;
-  if (userInput.length > 200) responseTimeComplexity = 8;
+  if (userInput.length > 80) responseTimeComplexity = 6;
+  if (userInput.length > 150) responseTimeComplexity = 8;
   
   const emotionalWeight = emotions.hasDetectedEmotion ? 
     (emotions.emotionalContent.intensity === 'high' ? 8 : 
      emotions.emotionalContent.intensity === 'medium' ? 5 : 3) : 2;
   
-  const responseTime = calculateMinimumResponseTime(responseTimeComplexity, emotionalWeight);
+  // Give extra time for depression
+  const depressionBonus = hasDepressionIndicators ? 2 : 0;
+  
+  const responseTime = calculateMinimumResponseTime(
+    responseTimeComplexity, 
+    emotionalWeight + depressionBonus
+  );
   
   // Return the complete integration object
   return {
     emotions,
-    processedResponse,
+    emotionContext,
+    processedResponse: finalResponse,
     memoryIntegration,
     hallucinationIntegration,
     therapeuticIntegration,
-    grammarIntegration,
     responseTime,
-    shouldUseEmotionAcknowledgment: emotions.hasDetectedEmotion,
-    requiredAcknowledgment: emotions.explicitEmotion || 
-      (emotions.emotionalContent.hasEmotion ? emotions.emotionalContent.primaryEmotion : null)
+    shouldUseEmotionAcknowledgment: emotions.hasDetectedEmotion || hasDepressionIndicators,
+    requiredAcknowledgment: hasDepressionIndicators ? 'depressed' : 
+                          (emotions.explicitEmotion || 
+                           (emotions.emotionalContent.hasEmotion ? emotions.emotionalContent.primaryEmotion : null)),
+    priorityLevel: hasDepressionIndicators ? 'critical' : 
+                   emotions.hasDetectedEmotion ? 'high' : 'normal'
   };
 };
 
@@ -207,4 +266,61 @@ export const getEmotionDescription = (emotion: string): string => {
   // Return description or generate one based on emotion properties
   return entry.description || 
     `Feeling ${entry.intensity === 'high' ? 'strongly ' : ''}${entry.name}`;
+};
+
+/**
+ * Creates a lookback mechanism to check recent emotional states
+ * @param recentUserInputs Array of recent user messages
+ * @returns Analysis of emotional state over time
+ */
+export const createEmotionalLookback = (recentUserInputs: string[]) => {
+  if (!recentUserInputs || recentUserInputs.length === 0) {
+    return { hasConsistentPattern: false };
+  }
+  
+  // Process emotions for each message
+  const emotionTracking = recentUserInputs.map(input => {
+    const emotions = extractEmotionsFromInput(input);
+    const hasDepressionIndicators = emotions.isDepressionMentioned || 
+      /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(input.toLowerCase());
+    
+    return {
+      hasEmotion: emotions.hasDetectedEmotion,
+      primaryEmotion: hasDepressionIndicators ? 'depressed' : 
+                     emotions.explicitEmotion || 
+                     (emotions.emotionalContent.hasEmotion ? emotions.emotionalContent.primaryEmotion : null),
+      isDepressionMentioned: hasDepressionIndicators
+    };
+  });
+  
+  // Check for consistent emotional patterns
+  const depressionCount = emotionTracking.filter(entry => entry.isDepressionMentioned).length;
+  const hasConsistentDepression = depressionCount >= 2; // Two or more mentions of depression
+  
+  // Count emotions to find most common
+  const emotionCounts: Record<string, number> = {};
+  emotionTracking.forEach(entry => {
+    if (entry.primaryEmotion) {
+      emotionCounts[entry.primaryEmotion] = (emotionCounts[entry.primaryEmotion] || 0) + 1;
+    }
+  });
+  
+  // Find the most common emotion
+  let mostCommonEmotion = null;
+  let highestCount = 0;
+  
+  Object.entries(emotionCounts).forEach(([emotion, count]) => {
+    if (count > highestCount) {
+      mostCommonEmotion = emotion;
+      highestCount = count;
+    }
+  });
+  
+  return {
+    hasConsistentPattern: hasConsistentDepression || highestCount >= 2,
+    mostCommonEmotion,
+    hasConsistentDepression,
+    emotionTracking,
+    requiresPrioritization: hasConsistentDepression
+  };
 };

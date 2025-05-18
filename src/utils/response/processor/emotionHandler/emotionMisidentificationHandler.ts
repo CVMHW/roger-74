@@ -1,4 +1,3 @@
-
 // This is a new file to handle emotion misidentification
 
 /**
@@ -8,6 +7,26 @@
  * @returns Boolean indicating if misidentification was detected
  */
 export const checkEmotionMisidentification = (responseText: string, userInput: string): boolean => {
+  // ENHANCED: Prioritize checking for depression and serious negative emotions first
+  // Check for depression or serious negative emotions specifically - HIGH PRIORITY
+  const hasDepressionIndicators = /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
+  
+  if (hasDepressionIndicators) {
+    // If depression is mentioned, any claim of neutrality or positive emotion is a misidentification
+    const claimsNeutralOrPositive = /you'?re feeling (neutral|fine|good|okay|alright|well)/i.test(responseText);
+    if (claimsNeutralOrPositive) {
+      console.log("CRITICAL MISIDENTIFICATION: Depression mentioned but response claims neutral/positive emotion");
+      return true;
+    }
+    
+    // Check if depression is explicitly acknowledged
+    const acknowledgesDepression = /\b(depress(ed|ing|ion)?|feeling down|difficult time|hard time|challenging|struggle)\b/i.test(responseText.toLowerCase());
+    if (!acknowledgesDepression) {
+      console.log("CRITICAL: Depression mentioned but not acknowledged");
+      return true;
+    }
+  }
+  
   // Check if response claims neutral when user expressed negative emotions
   const claimsNeutral = /you'?re feeling neutral|you seem neutral|neutral tone/i.test(responseText);
   
@@ -41,20 +60,18 @@ export const checkEmotionMisidentification = (responseText: string, userInput: s
     new RegExp(`feeling ${statedEmotion}|you'?re ${statedEmotion}|you feel ${statedEmotion}`, 'i').test(responseText) : 
     false;
   
-  // Critical depression check
-  const mentionsDepression = /\b(depress(ed|ing|ion)?|feeling down|feeling low)\b/i.test(userInput.toLowerCase());
-  const acknowledgesDepression = /\b(depress(ed|ing|ion)?|feeling down|difficult time)\b/i.test(responseText.toLowerCase());
-  
-  if (mentionsDepression && !acknowledgesDepression) {
-    console.log("CRITICAL: Depression mentioned but not acknowledged");
-    return true;
-  }
+  // NEW: Check for time-limited emotional statements that should still be acknowledged
+  const temporalEmotionalStatements = /\b(terrible|awful|horrible|rough|bad|tough) (day|night|week|morning|evening)/i.test(userInput);
+  const acknowledgedTemporalEmotion = temporalEmotionalStatements ? 
+    /difficult|challenging|hard|tough|sorry to hear|sounds (difficult|challenging|hard|tough)/i.test(responseText) : 
+    true; // Default to true if no temporal statement
   
   // Return true if any misidentification is detected
   return (
     (claimsNeutral && hasNegativeEmotions) || 
     (claimsNegative && hasPositiveEmotions && !hasNegativeEmotions) ||
-    (statedEmotion && !acknowledgedStatedEmotion)
+    (statedEmotion && !acknowledgedStatedEmotion) ||
+    (temporalEmotionalStatements && !acknowledgedTemporalEmotion)
   );
 };
 
@@ -65,16 +82,40 @@ export const checkEmotionMisidentification = (responseText: string, userInput: s
  * @returns Fixed response text
  */
 export const fixEmotionMisidentification = (responseText: string, userInput: string): string => {
-  // Fix response that claims neutral when user expressed negative emotions
-  if (/you'?re feeling neutral|you seem neutral|neutral tone/i.test(responseText)) {
-    // Check for depression specifically
-    if (/\b(depress(ed|ing|ion)?|feeling down|feeling low)\b/i.test(userInput.toLowerCase())) {
-      return responseText.replace(
-        /you'?re feeling neutral|you seem neutral|neutral tone/i,
+  // ENHANCED: Prioritize fixing depression misidentification first
+  const hasDepressionIndicators = /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
+  
+  if (hasDepressionIndicators) {
+    // If claims neutral or positive when depression is mentioned
+    if (/you'?re feeling (neutral|fine|good|okay|alright|well)/i.test(responseText)) {
+      console.log("FIXING CRITICAL MISIDENTIFICATION: Depression mentioned but response claims neutral/positive");
+      
+      // Replace with acknowledgment of depression
+      responseText = responseText.replace(
+        /you'?re feeling (neutral|fine|good|okay|alright|well)/i,
         "you're feeling depressed"
       );
     }
     
+    // If depression isn't acknowledged anywhere, add an acknowledgment
+    if (!/\b(depress(ed|ing|ion)?|feeling down|difficult time|hard time|challenging|struggle)\b/i.test(responseText.toLowerCase())) {
+      // If the response starts with a greeting or acknowledgment, add after it
+      if (/^(I hear|I understand|It sounds like|Thank you for sharing)/i.test(responseText)) {
+        responseText = responseText.replace(
+          /^(I hear|I understand|It sounds like|Thank you for sharing)([^.]*)\./i,
+          `$1 that you're feeling depressed.`
+        );
+      } else {
+        // Otherwise add at the beginning
+        responseText = `I'm sorry to hear that you're feeling depressed. ${responseText}`;
+      }
+    }
+    
+    return responseText;
+  }
+  
+  // Fix response that claims neutral when user expressed negative emotions
+  if (/you'?re feeling neutral|you seem neutral|neutral tone/i.test(responseText)) {
     // Check for sadness
     if (/\b(sad|upset|hurt|down)\b/i.test(userInput.toLowerCase())) {
       return responseText.replace(
@@ -148,20 +189,24 @@ export const fixEmotionMisidentification = (responseText: string, userInput: str
     }
   }
   
-  // Special handling for depression mentions that aren't acknowledged
-  if (/\b(depress(ed|ing|ion)?|feeling down|feeling low)\b/i.test(userInput.toLowerCase()) &&
-      !/\b(depress(ed|ing|ion)?|feeling down|difficult time)\b/i.test(responseText.toLowerCase())) {
+  // NEW: Handle time-limited emotional statements that should still be acknowledged
+  const temporalEmotionalMatch = userInput.match(/\b(terrible|awful|horrible|rough|bad|tough) (day|night|week|morning|evening)/i);
+  if (temporalEmotionalMatch && 
+      !/difficult|challenging|hard|tough|sorry to hear|sounds (difficult|challenging|hard|tough)/i.test(responseText)) {
+    
+    const emotionType = temporalEmotionalMatch[1].toLowerCase();
+    const timeFrame = temporalEmotionalMatch[2].toLowerCase();
     
     // Find a place to insert the acknowledgment
     if (/^I hear|^I understand|^It sounds like/i.test(responseText)) {
       // Replace existing acknowledgment
       return responseText.replace(
         /^(I hear|I understand|It sounds like)([^.]*)\./i,
-        `$1 that you're feeling depressed.`
+        `$1 you're having a ${emotionType} ${timeFrame}.`
       );
     } else {
       // Add acknowledgment at beginning
-      return `I'm sorry to hear that you're feeling depressed. ${responseText}`;
+      return `I'm sorry to hear you're having a ${emotionType} ${timeFrame}. ${responseText}`;
     }
   }
   
@@ -190,4 +235,83 @@ export const addHumanTouch = (responseText: string, userInput: string): string =
   // Add more social context handling as needed
   
   return responseText;
+};
+
+/**
+ * Performs a final verification on responses to ensure emotional consistency
+ * This is called at the very end of the response pipeline
+ * 
+ * @param responseText The final response text
+ * @param userInput The original user input
+ * @param emotionContext Optional emotion context from earlier processing
+ * @returns Verified response text, with any final fixes applied
+ */
+export const performFinalEmotionVerification = (
+  responseText: string, 
+  userInput: string,
+  emotionContext?: {
+    hasDetectedEmotion?: boolean;
+    primaryEmotion?: string | null;
+    isDepressionMentioned?: boolean;
+  }
+): string => {
+  // CRITICAL: Check for depression acknowledgment as highest priority
+  const hasDepressionIndicators = emotionContext?.isDepressionMentioned || 
+    /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
+  
+  if (hasDepressionIndicators) {
+    // If depression isn't acknowledged anywhere in the final response, add an acknowledgment
+    if (!/\b(depress(ed|ing|ion)?|feeling down|difficult time|hard time|challenging|struggle)\b/i.test(responseText.toLowerCase())) {
+      console.log("FINAL VERIFICATION: Adding missing depression acknowledgment");
+      return `I hear that you're feeling depressed. ${responseText}`;
+    }
+  }
+  
+  // Check for any remaining emotion misidentifications
+  if (checkEmotionMisidentification(responseText, userInput)) {
+    console.log("FINAL VERIFICATION: Fixing emotion misidentification");
+    return fixEmotionMisidentification(responseText, userInput);
+  }
+  
+  // Return the original response if no issues found
+  return responseText;
+};
+
+/**
+ * Creates an emotion context object for integration with other systems
+ * 
+ * @param userInput The user's input message
+ * @returns Emotion context object for use in memory and RAG systems
+ */
+export const createEmotionContext = (userInput: string): any => {
+  // Check for depression specifically
+  const isDepressionMentioned = /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
+  
+  // Check for direct emotion statements
+  const directEmotionStatements = [
+    /\bI'?m feeling (\w+)/i,
+    /\bI feel (\w+)/i,
+    /feeling (\w+)/i,
+    /\bI'?m (\w+)/i
+  ];
+  
+  // Extract directly stated emotions
+  let statedEmotion: string | null = null;
+  for (const pattern of directEmotionStatements) {
+    const match = userInput.match(pattern);
+    if (match && match[1]) {
+      statedEmotion = match[1].toLowerCase();
+      break;
+    }
+  }
+  
+  // Create context object
+  return {
+    hasDetectedEmotion: isDepressionMentioned || !!statedEmotion,
+    primaryEmotion: isDepressionMentioned ? 'depressed' : statedEmotion,
+    isDepressionMentioned,
+    emotionalIntensity: isDepressionMentioned ? 'high' : 'medium',
+    timestamp: new Date().toISOString(),
+    requiredAcknowledgment: isDepressionMentioned || !!statedEmotion
+  };
 };
