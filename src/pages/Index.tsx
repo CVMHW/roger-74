@@ -183,7 +183,7 @@ const Index = () => {
           </div>
           <div className="text-center text-gray-600 text-sm">
             <p>© {new Date().getFullYear()} Cuyahoga Valley Mindful Health and Wellness</p>
-            <p className="mt-1">Roger is a Peer Support companion trained by professionals. He is not a substitute for professional mental health services.</p>
+            <p className="mt-1">Roger is a Peer Support companion in-training. He is not a substitute for professional mental health services. Click our Crisis Resources & Support tab for immediate assistance.</p>
           </div>
         </div>
       </footer>
