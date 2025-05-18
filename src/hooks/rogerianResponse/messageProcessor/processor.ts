@@ -41,7 +41,7 @@ export const processUserMessage = async (
     // Key enhancement: Check for depression and emotional content first
     // This needs to happen before any other processing
     if (/depress(ed|ion|ing)|sad|down|blue|low|hopeless|worthless|empty|numb/i.test(userInput.toLowerCase())) {
-      console.log("EMOTION DETECTION: Depression mentioned - prioritizing response");
+      console.log("EMOTION DETECTION: Depression mentioned - prioritizing compassionate response");
       
       // Make sure we update the stage first
       updateStage();

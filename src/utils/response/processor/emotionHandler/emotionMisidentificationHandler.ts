@@ -29,9 +29,9 @@ export const checkEmotionMisidentification = (
     return false;
   }
   
-  // Improved detection of emotional content
-  // Explicitly check for depression mentions first - highest priority
-  if (/depress(ed|ion|ing)|sad|down|blue|low|hopeless|worthless|empty|numb/i.test(userInput)) {
+  // Improved detection of emotional content - prioritize depression detection
+  // Explicitly check for depression mentions FIRST - highest priority
+  if (/depress(ed|ion|ing)|sad|down|blue|low|hopeless|worthless|empty|numb/i.test(userInput.toLowerCase())) {
     console.log("EMOTION DETECTION: Depression mentioned but not recognized");
     return true;
   }

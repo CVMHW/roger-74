@@ -7,7 +7,7 @@
 
 import { initializeVectorDatabase } from './dataLoader';
 import { retrieveFactualGrounding, retrieveAugmentation, augmentResponseWithRetrieval, MemoryPiece } from './retrieval';
-import { retrieveEnhanced, expandQuery, augmentResponseWithEnhancedRetrieval } from './enhancedRetrieval';
+import { retrieveEnhanced, expandQuery, augmentResponseWithEnhancedRetrieval, generateExpandedQuery } from './enhancedRetrieval';
 import { performHybridSearch } from './hybridSearch';
 import { rerankResults, retrieveWithReranking, rerankWithCrossAttention } from './reranker';
 import { 
@@ -27,7 +27,7 @@ import {
   getEmbeddingCacheStats
 } from './vectorEmbeddings';
 import { rerankDocumentsWithCrossEncoder } from './crossEncoder';
-import { extractTerms } from './queryExpansion';
+import { extractTerms, QueryExpansionResult, QueryExpansionOptions } from './queryExpansion';
 
 // Track initialization status
 let isInitialized = false;
@@ -278,24 +278,6 @@ export const retrieveRelevantContent = async (
       content: retrieveFactualGrounding(topics, 3),
       expandedTopics: topics
     };
-  }
-};
-
-/**
- * Generate expanded query with advanced techniques
- * Wrapper around the function from enhancedRetrieval
- */
-export const generateExpandedQuery = async (
-  query: string,
-  initialTopics: string[] = []
-): Promise<string[]> => {
-  try {
-    return await import('./enhancedRetrieval').then(module => 
-      module.generateExpandedQuery(query, initialTopics)
-    );
-  } catch (error) {
-    console.error("Error in generateExpandedQuery:", error);
-    return initialTopics;
   }
 };
 

@@ -63,8 +63,7 @@ export const retrieveEnhanced = async (
       initialResults = await performHybridSearch(
         query, 
         expandedTopics,
-        limit * 3, // Retrieve more for better reranking
-        relevanceThreshold
+        limit * 3 // Retrieve more for better reranking
       );
     } else {
       // Fallback to basic retrieval
