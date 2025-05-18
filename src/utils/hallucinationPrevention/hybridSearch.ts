@@ -1,4 +1,3 @@
-
 /**
  * Hybrid Search Implementation
  * 
@@ -11,7 +10,7 @@ import vectorDB from './vectorDatabase';
 import { COLLECTIONS } from './dataLoader/types';
 import { createChunks } from './dataLoader/utils';
 import { v4 as uuidv4 } from 'uuid';
-import { MemoryPiece } from './retrieval';
+import { MemoryPiece } from './memoryTypes';
 
 // Hybrid search result with combined scoring
 interface HybridSearchResult {
@@ -27,13 +26,15 @@ interface HybridSearchResult {
  */
 export const performHybridSearch = async (
   query: string,
-  collections: string[] = [COLLECTIONS.FACTS, COLLECTIONS.ROGER_KNOWLEDGE],
+  collections: string[] | string = [COLLECTIONS.FACTS, COLLECTIONS.ROGER_KNOWLEDGE],
   options: {
     limit?: number;
     vectorWeight?: number;
     keywordWeight?: number;
   } = {}
 ): Promise<MemoryPiece[]> => {
+  // Use array of collections if string is passed
+  const collectionsArray = Array.isArray(collections) ? collections : [collections];
   const {
     limit = 10,
     vectorWeight = 0.7,
@@ -42,10 +43,10 @@ export const performHybridSearch = async (
   
   try {
     // 1. Vector-based search
-    const vectorResults = await performVectorSearch(query, collections);
+    const vectorResults = await performVectorSearch(query, collectionsArray);
     
     // 2. Keyword-based search
-    const keywordResults = performKeywordSearch(query, collections);
+    const keywordResults = performKeywordSearch(query, collectionsArray);
     
     // 3. Combine and score results
     const combinedResults = combineSearchResults(
@@ -55,7 +56,7 @@ export const performHybridSearch = async (
       keywordWeight
     );
     
-    // 4. Return top results
+    // 4. Return top results as MemoryPiece objects
     return combinedResults
       .slice(0, limit)
       .map(result => ({
@@ -74,7 +75,7 @@ export const performHybridSearch = async (
   } catch (error) {
     console.error("Error in hybrid search:", error);
     // If hybrid search fails, fall back to simple keyword search
-    return performKeywordSearch(query, collections)
+    return performKeywordSearch(query, collectionsArray)
       .slice(0, limit)
       .map(result => ({
         content: result.content,

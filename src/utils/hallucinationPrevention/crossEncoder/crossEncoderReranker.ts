@@ -1,4 +1,3 @@
-
 /**
  * Cross-Encoder Reranker Implementation
  * 
@@ -6,7 +5,7 @@
  * to improve retrieval quality beyond bi-encoder similarity.
  */
 
-import { MemoryPiece } from '../retrieval';
+import { MemoryPiece } from '../memoryTypes';
 
 /**
  * Options for cross-encoder reranking

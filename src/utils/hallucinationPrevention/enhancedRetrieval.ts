@@ -6,7 +6,7 @@
  * to achieve optimal retrieval performance
  */
 
-import { MemoryPiece } from './retrieval';
+import { MemoryPiece } from './memoryTypes';
 import { retrieveFactualGrounding } from './retrieval';
 import { performHybridSearch } from './hybridSearch';
 import { expandQuery as baseExpandQuery, generateHybridQueryExpansion, extractTerms } from './queryExpansion';
@@ -63,11 +63,16 @@ export const retrieveEnhanced = async (
       initialResults = await performHybridSearch(
         query, 
         expandedTopics,
-        { limit: limit * 3 } // Fixed: Pass object with limit property instead of just a number
+        { limit: limit * 3 }
       );
     } else {
-      // Fallback to basic retrieval
-      initialResults = retrieveFactualGrounding(expandedTopics, limit * 2);
+      // Convert string array to MemoryPiece array
+      const groundingTexts = await retrieveFactualGrounding(expandedTopics, limit * 2);
+      initialResults = groundingTexts.map(content => ({
+        content,
+        role: 'system',
+        importance: 0.7
+      }));
     }
     
     // Early return if no results or reranking disabled
@@ -91,7 +96,13 @@ export const retrieveEnhanced = async (
     console.error("Error in enhanced retrieval:", error);
     // Fallback to basic retrieval
     const fallbackTopics = extractTerms(query);
-    return retrieveFactualGrounding(fallbackTopics, options.limit || 5);
+    // Convert string array to MemoryPiece array
+    const groundingTexts = await retrieveFactualGrounding(fallbackTopics, options.limit || 5);
+    return groundingTexts.map(content => ({
+      content,
+      role: 'system',
+      importance: 0.5
+    }));
   }
 };
 

@@ -6,7 +6,8 @@
  * using proper vector embeddings and similarity calculations
  */
 
-import { retrieveFactualGrounding, MemoryPiece } from './retrieval';
+import { MemoryPiece } from './memoryTypes';
+import { retrieveFactualGrounding } from './retrieval';
 import { 
   generateEmbedding, 
   cosineSimilarity, 
@@ -154,7 +155,14 @@ export const retrieveAndRerankMemories = async (
 ): Promise<MemoryPiece[]> => {
   try {
     // 1. Initial retrieval using topics
-    const retrievedMemories = retrieveFactualGrounding(topics, limit * 2);
+    const retrievedTexts = await retrieveFactualGrounding(topics, limit * 2);
+    
+    // Convert to MemoryPiece array
+    const retrievedMemories: MemoryPiece[] = retrievedTexts.map(content => ({
+      content,
+      role: 'system',
+      importance: 0.7
+    }));
     
     // 2. Reranking with vector similarity
     const rerankedMemories = await rerankWithVectorSimilarity(query, retrievedMemories, {

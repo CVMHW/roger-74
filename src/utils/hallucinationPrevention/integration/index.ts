@@ -7,9 +7,9 @@
 import { 
   retrieveAugmentation, 
   augmentResponseWithRetrieval,
-  retrieveSimilarResponses
+  retrieveSimilarResponses,
+  addConversationExchange
 } from '../retrieval';
-import { addConversationExchange } from '../conversationTracker';
 
 // Export them
 export { 

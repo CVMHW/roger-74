@@ -4,9 +4,12 @@
  * Enhanced with vector database integration
  */
 
-import { MemoryPiece, RetrievalResult, VectorSearchResult } from './types';
+import { RetrievalResult } from './memoryTypes';
 import vectorDB from './vectorDatabase';
 import { generateEmbedding } from './vectorEmbeddings';
+
+// Re-export the MemoryPiece type for other modules to use
+export * from './memoryTypes';
 
 /**
  * Initialize the retrieval system
@@ -162,6 +165,55 @@ export const augmentResponseWithRetrieval = async (
 };
 
 /**
+ * Add a conversation exchange to memory
+ */
+export const addConversationExchange = async (
+  userInput: string,
+  responseText: string
+): Promise<boolean> => {
+  try {
+    // Generate embeddings
+    const userEmbedding = await generateEmbedding(userInput);
+    const responseEmbedding = await generateEmbedding(responseText);
+    
+    // Get history collection
+    const historyCollection = vectorDB.getCollection('conversation_history');
+    
+    // Add user message
+    const userMessageId = `user_message_${Date.now()}`;
+    historyCollection.addItem({
+      id: userMessageId,
+      vector: userEmbedding,
+      text: userInput,
+      metadata: {
+        role: 'user',
+        timestamp: Date.now(),
+        source: 'conversation'
+      }
+    });
+    
+    // Add assistant response
+    const assistantMessageId = `assistant_response_${Date.now()}`;
+    historyCollection.addItem({
+      id: assistantMessageId,
+      vector: responseEmbedding,
+      text: responseText,
+      metadata: {
+        role: 'assistant',
+        timestamp: Date.now(),
+        source: 'conversation',
+        relatedTo: userMessageId
+      }
+    });
+    
+    return true;
+  } catch (error) {
+    console.error("Error storing conversation exchange:", error);
+    return false;
+  }
+};
+
+/**
  * Find similar previous responses to aid in consistent answering
  */
 export const retrieveSimilarResponses = async (
@@ -194,10 +246,14 @@ export const retrieveSimilarResponses = async (
  * Retrieve factual grounding for a topic
  */
 export const retrieveFactualGrounding = async (
-  topic: string,
+  topics: string[],
   count: number = 3
 ): Promise<string[]> => {
   try {
+    // Using the first topic as the main query for now
+    // In a more advanced implementation, we could combine multiple topics
+    const topic = Array.isArray(topics) ? topics[0] : topics;
+    
     // Generate embedding for topic
     const topicEmbedding = await generateEmbedding(topic);
     

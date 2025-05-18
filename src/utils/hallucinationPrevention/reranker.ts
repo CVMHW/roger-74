@@ -1,4 +1,3 @@
-
 /**
  * Cross-Encoder Reranking System
  * 
@@ -7,7 +6,7 @@
  */
 
 import { generateEmbedding, cosineSimilarity, isUsingSimulatedEmbeddings } from './vectorEmbeddings';
-import { MemoryPiece } from './retrieval';
+import { MemoryPiece } from './memoryTypes';
 
 interface RerankerOptions {
   topK?: number;

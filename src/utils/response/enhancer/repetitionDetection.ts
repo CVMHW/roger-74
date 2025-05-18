@@ -6,7 +6,7 @@
  * and providing recovery mechanisms
  */
 
-import { MemoryPiece } from '../../hallucinationPrevention/retrieval';
+import { MemoryPiece } from '../../hallucinationPrevention/memoryTypes';
 import { addMemory } from '../../memory/memoryController';
 
 // Store recent responses
