@@ -27,7 +27,7 @@ export const detectHallucinations = (
   console.log("HALLUCINATION DETECTOR: Analyzing response for potential hallucinations");
   
   const flags = [];
-  let confidenceScore = 1.0; // Start with high confidence
+  let confidence = 1.0; // Start with high confidence
   
   // CRITICAL: NEW EMOTIONAL MISIDENTIFICATION CHECK - highest priority
   // Check if the response misidentifies emotions, especially depression
@@ -44,7 +44,7 @@ export const detectHallucinations = (
         severity: 'critical',
         description: 'Depression mentioned but not acknowledged or misidentified as neutral'
       });
-      confidenceScore -= 0.9; // Severe penalty
+      confidence -= 0.9; // Severe penalty
     }
   }
   
@@ -56,7 +56,7 @@ export const detectHallucinations = (
       severity: 'high',
       description: 'Response misidentifies user\'s emotional state'
     });
-    confidenceScore -= 0.7; // Substantial penalty
+    confidence -= 0.7; // Substantial penalty
   }
   
   // CRITICAL: CRISIS DETECTION WITH VECTOR-BASED PATTERN RECOGNITION
@@ -72,7 +72,7 @@ export const detectHallucinations = (
         severity: 'critical',
         description: 'Mixing crisis response with casual/social content'
       });
-      confidenceScore -= 0.9; // Severe penalty for this dangerous mixture
+      confidence -= 0.9; // Severe penalty for this dangerous mixture
     }
   }
   
@@ -87,7 +87,7 @@ export const detectHallucinations = (
         severity: 'critical',
         description: 'Response about eating disorders when user is discussing suicide'
       });
-      confidenceScore -= 0.9;
+      confidence -= 0.9;
     }
   }
   
@@ -101,7 +101,7 @@ export const detectHallucinations = (
         severity: 'high',
         description: 'Substance use concern addressed as eating disorder'
       });
-      confidenceScore -= 0.7;
+      confidence -= 0.7;
     }
   }
   
@@ -116,7 +116,7 @@ export const detectHallucinations = (
         severity: 'critical',
         description: 'Critical repetition in suicide response'
       });
-      confidenceScore -= 0.9; // Severe penalty for this dangerous hallucination
+      confidence -= 0.9; // Severe penalty for this dangerous hallucination
     }
     
     // Verify that suicide response contains appropriate crisis resources
@@ -126,7 +126,7 @@ export const detectHallucinations = (
         severity: 'critical',
         description: 'Suicide response missing appropriate crisis resources'
       });
-      confidenceScore -= 0.8;
+      confidence -= 0.8;
     }
   }
   
@@ -157,7 +157,7 @@ export const detectHallucinations = (
         severity: 'critical',
         description: 'Critical protocol mixing between eating disorder response and casual food content'
       });
-      confidenceScore -= 0.9; // Severe penalty for this dangerous hallucination
+      confidence -= 0.9; // Severe penalty for this dangerous hallucination
     }
   }
   
@@ -185,7 +185,7 @@ export const detectHallucinations = (
         severity: 'high',
         description: 'Repeated phrases in response indicating model confusion'
       });
-      confidenceScore -= 0.7; // Heavy penalty for dangerous repetition
+      confidence -= 0.7; // Heavy penalty for dangerous repetition
     }
   }
   
@@ -198,7 +198,7 @@ export const detectHallucinations = (
         severity: 'critical', // This is a critical issue
         description: 'False memory reference in early conversation'
       });
-      confidenceScore -= 0.8; // Severe penalty for this dangerous hallucination
+      confidence -= 0.8; // Severe penalty for this dangerous hallucination
     }
   }
   
@@ -207,35 +207,35 @@ export const detectHallucinations = (
   flags.push(...memoryFlags);
   
   // Reduce confidence based on memory flags (most critical)
-  confidenceScore -= memoryFlags.length * 0.25;
+  confidence -= memoryFlags.length * 0.25;
   
   // Check for logical errors and contradictions
   const logicalFlags = detectLogicalErrors(responseText, conversationHistory);
   flags.push(...logicalFlags);
   
   // Reduce confidence based on logical flags
-  confidenceScore -= logicalFlags.length * 0.2;
+  confidence -= logicalFlags.length * 0.2;
   
   // Check for false continuity claims
   const continuityFlags = detectFalseContinuity(responseText, conversationHistory);
   flags.push(...continuityFlags);
   
   // Reduce confidence based on continuity flags
-  confidenceScore -= continuityFlags.length * 0.3;
+  confidence -= continuityFlags.length * 0.3;
   
   // Detect token-level issues using probabilistic analysis
   const tokenFlags = detectTokenLevelIssues(responseText, userInput, conversationHistory);
   flags.push(...tokenFlags);
   
   // Reduce confidence based on token-level flags
-  confidenceScore -= tokenFlags.length * 0.15;
+  confidence -= tokenFlags.length * 0.15;
   
   // Detect repeated content (a sign of model confusion)
   const repetitionFlags = detectRepeatedContent(responseText);
   flags.push(...repetitionFlags);
   
   // Reduce confidence based on repetition flags (very important)
-  confidenceScore -= repetitionFlags.length * 0.35;
+  confidence -= repetitionFlags.length * 0.35;
   
   // Extra check for hallucinations in short conversations
   if (conversationHistory.length <= 2) {
@@ -246,15 +246,15 @@ export const detectHallucinations = (
         severity: 'high',
         description: 'False reference to previous conversation in a new chat'
       });
-      confidenceScore -= 0.4;
+      confidence -= 0.4;
     }
   }
   
   // Bound confidence between 0 and 1
-  confidenceScore = Math.max(0, Math.min(1, confidenceScore));
+  confidence = Math.max(0, Math.min(1, confidence));
   
   // Determine if this should be flagged as hallucination
-  const isHallucination = confidenceScore < 0.6 || 
+  const isHallucination = confidence < 0.6 || 
                          flags.some(flag => flag.severity === 'high' || flag.severity === 'critical');
   
   // Generate token-level analysis result
@@ -263,7 +263,7 @@ export const detectHallucinations = (
   // Return results with emotion checks prioritized
   return {
     flags,
-    confidenceScore,
+    confidence, // Fixed from confidenceScore
     wasHallucination: isHallucination,
     emotionMisidentified: hasMisidentifiedEmotion,
     depressionMisidentified: emotionInfo.isDepressionMentioned && 
@@ -379,7 +379,7 @@ export const checkAndFixHallucinations = (
       correctedResponse,
       hallucinationDetails: {
         flags: hallucination.flags,
-        confidence: hallucination.confidenceScore,
+        confidence: hallucination.confidence, // Fixed from confidenceScore
         isEmotionMisidentification: hallucination.emotionMisidentified
       }
     };

@@ -40,4 +40,4 @@ export interface HallucinationProcessResult {
 }
 
 // Export HallucinationCheck for wider use
-export { HallucinationCheck };
+export type { HallucinationCheck };
