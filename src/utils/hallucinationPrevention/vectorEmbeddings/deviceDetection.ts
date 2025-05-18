@@ -62,13 +62,14 @@ export const detectBestAvailableDevice = async (): Promise<DeviceType> => {
  * Get available memory info if possible
  * Returns undefined if not available
  */
-export const getAvailableMemory = (): { total: number; used: number } | undefined => {
+export const getAvailableMemory = (): { total: number; used: number; available?: number } | undefined => {
   try {
     if ('memory' in performance) {
       const memInfo = (performance as any).memory;
       return {
         total: memInfo.jsHeapSizeLimit,
-        used: memInfo.usedJSHeapSize
+        used: memInfo.usedJSHeapSize,
+        available: memInfo.jsHeapSizeLimit - memInfo.usedJSHeapSize
       };
     }
     return undefined;

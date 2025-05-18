@@ -95,7 +95,8 @@ const cleanupEmbeddingCache = (forceCleanup = false): void => {
   
   // Check available memory before cleanup
   const memoryInfo = getAvailableMemory();
-  const lowMemory = memoryInfo && memoryInfo.available < LOW_MEMORY_THRESHOLD_MB;
+  const lowMemory = memoryInfo && (memoryInfo.available !== undefined) && 
+                   (memoryInfo.available < LOW_MEMORY_THRESHOLD_MB * 1024 * 1024);
   
   // Determine how aggressive the cleanup should be
   const cleanupPercentage = forceCleanup ? 0.5 : 

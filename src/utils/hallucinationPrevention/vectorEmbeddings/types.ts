@@ -39,6 +39,8 @@ export interface BatchEmbeddingOptions extends EmbeddingConfig {
   concurrency?: number;
   showProgress?: boolean;
   timeoutMs?: number;
+  forceFresh?: boolean;
+  parallelLimit?: number;
 }
 
 // Embedding generation options (alias for backward compatibility)
