@@ -8,7 +8,7 @@
 
 import { emotionsWheel, getEmotionFromWheel, detectSocialEmotionalContext } from '../../../emotions/emotionsWheel';
 
-// Import everyday situation handlers - using correct function names
+// Import everyday situation handlers
 import { 
   detectEverydayFrustration as detectEverydaySituation,
   generateEverydayFrustrationResponse 
@@ -29,6 +29,13 @@ export const checkEmotionMisidentification = (
     return false;
   }
   
+  // Improved detection of emotional content
+  // Explicitly check for depression mentions first - highest priority
+  if (/depress(ed|ion|ing)|sad|down|blue|low|hopeless|worthless|empty|numb/i.test(userInput)) {
+    console.log("EMOTION DETECTION: Depression mentioned but not recognized");
+    return true;
+  }
+  
   // First check for explicit emotion mentions
   const emotionWords: string[] = [];
   
@@ -47,12 +54,14 @@ export const checkEmotionMisidentification = (
   );
   
   if (mentionedEmotions.length > 0) {
+    console.log("EMOTION DETECTION: Explicit emotions mentioned:", mentionedEmotions);
     return true; // User explicitly mentioned an emotion but we said "neutral"
   }
   
   // Check for social emotional contexts
   const socialContext = detectSocialEmotionalContext(userInput);
   if (socialContext) {
+    console.log("EMOTION DETECTION: Social emotional context detected:", socialContext);
     return true;
   }
   
@@ -68,12 +77,18 @@ export const checkEmotionMisidentification = (
     /sucks|sucked|terrible|went wrong|not great|problem|wasn't good/i,
     /ruined|screwed up|messed up|failed|blew it|disaster/i,
     // Add social situation indicators
-    /cute (girl|guy|person)|date|flirt|hitting on|talk to|first impression/i,
     /rejected|turned down|stood up|ghosted|dumped|broke up/i
   ];
   
   // If input mentions any negative emotions but response claims neutral, it's a misidentification
-  return negativeEmotionPatterns.some(pattern => pattern.test(userInput));
+  for (const pattern of negativeEmotionPatterns) {
+    if (pattern.test(userInput)) {
+      console.log("EMOTION DETECTION: Negative emotion pattern matched:", pattern);
+      return true;
+    }
+  }
+  
+  return false;
 };
 
 /**
@@ -86,6 +101,18 @@ export const fixEmotionMisidentification = (
   response: string,
   userInput: string
 ): string => {
+  // Special case for depression - highest priority
+  if (/depress(ed|ion|ing)|feeling down/i.test(userInput.toLowerCase())) {
+    console.log("EMOTION CORRECTION: Fixing depression misidentification");
+    
+    // Create a compassionate response for depression
+    return response
+      .replace(/you('re| are) feeling neutral|I hear you're feeling neutral|From what you've shared, I hear you're feeling neutral/i, 
+               "I hear that you're feeling depressed")
+      .replace(/Would you like to tell me more about what happened\?/i, 
+               "That sounds really difficult. Would you like to share more about what's been going on for you?");
+  }
+  
   // First check for explicitly mentioned emotions
   const emotionWords: string[] = [];
   
@@ -119,38 +146,33 @@ export const fixEmotionMisidentification = (
     }
   }
   
-  // For social embarrassment with spilling a drink
-  if (/spill(ed)?.*drink.*girl|spill(ed)?.*on.*girl/i.test(userInput)) {
+  // For sad emotions specifically (our most common case)
+  if (/sad|down|upset|blue/i.test(userInput)) {
+    console.log("EMOTION CORRECTION: Fixing sadness misidentification");
     return response
-      .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "That sounds really embarrassing")
-      .replace(/Would you like to tell me more about what happened\?/i, "Social moments like that can be tough. How did she react when it happened?");
-  }
-  
-  // For general embarrassment or social awkwardness
-  if (/embarrass(ing|ed)?|awkward|uncomfortable/i.test(userInput)) {
-    return response
-      .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "That sounds embarrassing")
-      .replace(/Would you like to tell me more about what happened\?/i, "Those kinds of moments can make anyone feel self-conscious. How are you handling it?");
+      .replace(/you('re| are) feeling neutral|I hear you're feeling neutral|From what you've shared, I hear you're feeling neutral/i, 
+               "I hear that you're feeling sad")
+      .replace(/Would you like to tell me more about what happened\?/i, 
+               "I'm sorry to hear you're going through this. Would you like to share more about what's making you feel sad?");
   }
   
   // If we found an emotion entry, use it to correct the response
   if (emotionEntry) {
+    console.log("EMOTION CORRECTION: Using emotion from wheel:", emotionEntry.name);
     return response
-      .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, `I hear that you're feeling ${emotionEntry.name}`)
-      .replace(/Would you like to tell me more about what happened\?/i, `Would you like to share more about what's making you feel ${emotionEntry.name}?`);
-  }
-  
-  // For sad emotions specifically (our main case)
-  if (/sad|down|upset|blue/i.test(userInput)) {
-    return response
-      .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "I hear that you're feeling sad")
-      .replace(/Would you like to tell me more about what happened\?/i, "Would you like to share more about what's making you feel that way?");
+      .replace(/you('re| are) feeling neutral|I hear you're feeling neutral|From what you've shared, I hear you're feeling neutral/i, 
+               `I hear that you're feeling ${emotionEntry.name}`)
+      .replace(/Would you like to tell me more about what happened\?/i, 
+               `Would you like to share more about what's making you feel ${emotionEntry.name}?`);
   }
   
   // For general negative emotions without specifics
+  console.log("EMOTION CORRECTION: Using general negative emotion correction");
   return response
-    .replace(/you('re| are) feeling neutral|From what you've shared, I hear you're feeling neutral/i, "That sounds difficult")
-    .replace(/Would you like to tell me more about what happened\?/i, "Can you tell me more about how that made you feel?");
+    .replace(/you('re| are) feeling neutral|I hear you're feeling neutral|From what you've shared, I hear you're feeling neutral/i, 
+             "That sounds difficult")
+    .replace(/Would you like to tell me more about what happened\?/i, 
+             "Can you tell me more about how that made you feel?");
 };
 
 /**
@@ -166,8 +188,19 @@ export const addHumanTouch = (
     return response;
   }
   
+  // For depression or sadness
+  if (/depress(ed|ion)|sad|down|blue|low|lonely/i.test(userInput)) {
+    const empathyPhrases = [
+      "I'm really sorry to hear that. ",
+      "That sounds really tough. ",
+      "That can be really hard to go through. "
+    ];
+    const randomPhrase = empathyPhrases[Math.floor(Math.random() * empathyPhrases.length)];
+    response = randomPhrase + response;
+  }
+  
   // For social embarrassment
-  if (/spill(ed)?.*drink|spill(ed)?.*girl|embarrass/i.test(userInput)) {
+  else if (/spill(ed)?.*drink|spill(ed)?.*girl|embarrass/i.test(userInput)) {
     const socialPhrases = [
       "Oh man, that's definitely awkward. ",
       "I totally understand feeling embarrassed. ",

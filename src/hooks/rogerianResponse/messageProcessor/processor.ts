@@ -1,3 +1,4 @@
+
 import { ConcernType } from '../../../utils/reflection/reflectionTypes';
 import { MessageType } from '../../../components/Message';
 import { createMessage } from '../../../utils/messageUtils';
@@ -11,9 +12,12 @@ import { processMentalHealthConcerns } from '../processors/mentalHealthProcessor
 import { processGeneralMessage } from '../processors/generalMessageProcessor';
 import { correctGrammar } from '../../../utils/response/processor/grammarCorrection';
 import { selectResponseApproach } from '../../../utils/response/processor/approachSelector';
+import { checkEmotionMisidentification, fixEmotionMisidentification } from '../../../utils/response/processor/emotionHandler/emotionMisidentificationHandler';
+import { integrateEmotionsAcrossAllSystems } from '../../../utils/emotions/emotionalIntegration';
 
 /**
  * Processes user messages and generates appropriate responses
+ * with enhanced emotion detection and response quality
  */
 export const processUserMessage = async (
   userInput: string,
@@ -32,6 +36,25 @@ export const processUserMessage = async (
         "I'm here to listen. What would you like to talk about today?", 
         'roger'
       ));
+    }
+    
+    // Key enhancement: Check for depression and emotional content first
+    // This needs to happen before any other processing
+    if (/depress(ed|ion|ing)|sad|down|blue|low|hopeless|worthless|empty|numb/i.test(userInput.toLowerCase())) {
+      console.log("EMOTION DETECTION: Depression mentioned - prioritizing response");
+      
+      // Make sure we update the stage first
+      updateStage();
+      
+      // Create a custom compassionate response for depression
+      const customResponse = "I'm really sorry to hear that you're feeling depressed. That sounds really difficult. Would you like to tell me more about what you've been experiencing?";
+      
+      // Use the baseProcessUserMessage with our custom response
+      return baseProcessUserMessage(
+        userInput,
+        () => customResponse,
+        () => detectConcerns(userInput)
+      );
     }
     
     // CRITICAL - Check if user just shared something but Roger is about to ask "what's going on"
@@ -162,6 +185,12 @@ export const processUserMessage = async (
       userInput, 
       conversationHistory
     );
+    
+    // 7. CRITICAL: Check and fix any emotion misidentification
+    if (checkEmotionMisidentification(processedText, userInput)) {
+      console.log("EMOTION CORRECTION: Fixing misidentified emotion in response");
+      processedText = fixEmotionMisidentification(processedText, userInput);
+    }
     
     // Apply grammar correction to the final processed response, with user input for length adjustment
     processedText = correctGrammar(processedText, userInput);

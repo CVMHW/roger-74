@@ -89,12 +89,20 @@ export const useResponseHooks = (
               responseContext
             );
             
-            // Further enhance with our new RAG system
-            responseWithContextCheck = await enhanceResponseWithRAG(
-              responseWithContextCheck,
-              userInput,
-              conversationHistory
-            );
+            // Further enhance with our new RAG system if the message is substantive
+            if (userInput.length > 30) {
+              console.log("RAG: Enhancing response with vector knowledge");
+              try {
+                responseWithContextCheck = await enhanceResponseWithRAG(
+                  responseWithContextCheck,
+                  userInput,
+                  conversationHistory
+                );
+              } catch (ragError) {
+                console.error("Error in RAG enhancement:", ragError);
+                // Continue with previous response if RAG enhancement fails
+              }
+            }
           } catch (enhanceError) {
             console.error("Error enhancing response:", enhanceError);
             // Continue with original response if enhancement fails
