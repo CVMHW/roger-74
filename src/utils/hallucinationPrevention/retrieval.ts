@@ -8,7 +8,7 @@
 
 import { generateEmbedding, isUsingSimulatedEmbeddings, forceReinitializeEmbeddingModel } from './vectorEmbeddings';
 import vectorDB, { VectorRecord } from './vectorDatabase';
-import { COLLECTIONS, initializeVectorDatabase, addUserMessage, addRogerResponse } from './dataLoader';
+import { COLLECTIONS, initializeVectorDatabase, addUserMessage, addRogerResponse, createChunks } from './dataLoader';
 import { v4 as uuidv4 } from 'uuid';
 
 // Export the MemoryPiece interface for use in other modules
