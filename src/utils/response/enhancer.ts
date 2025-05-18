@@ -1,3 +1,4 @@
+
 /**
  * Response enhancer
  * 
@@ -19,11 +20,44 @@ import {
 import { 
   retrieveAugmentation,
   augmentResponseWithRetrieval,
-  getPatientSentiment
+  getPatientSentiment,
+  initializeRetrievalSystem,
+  addConversationExchange
 } from '../hallucinationPrevention/retrieval';
 import {
-  isUsingSimulatedEmbeddings
+  isUsingSimulatedEmbeddings,
+  forceReinitializeEmbeddingModel
 } from '../hallucinationPrevention/vectorEmbeddings';
+
+// Initialization flag to ensure we only try to initialize once
+let ragSystemInitialized = false;
+
+/**
+ * Initialize the RAG system if not already initialized
+ */
+const ensureRAGSystemInitialized = async (): Promise<boolean> => {
+  if (ragSystemInitialized) {
+    return !isUsingSimulatedEmbeddings();
+  }
+  
+  try {
+    // If using simulated embeddings, try to reinitialize the model first
+    if (isUsingSimulatedEmbeddings()) {
+      console.log("⚠️ Attempting to switch from simulated to real embeddings...");
+      await forceReinitializeEmbeddingModel();
+    }
+    
+    // Initialize the retrieval system (includes vector database)
+    const success = await initializeRetrievalSystem();
+    ragSystemInitialized = true;
+    
+    return success && !isUsingSimulatedEmbeddings();
+  } catch (error) {
+    console.error("Failed to initialize RAG system:", error);
+    ragSystemInitialized = true; // Mark as initialized to avoid repeated attempts
+    return false;
+  }
+};
 
 /**
  * Records user message to memory systems
@@ -111,7 +145,10 @@ export const enhanceResponse = async (
   contextInfo: any = {}
 ): Promise<string> => {
   try {
+    // Ensure the RAG system is initialized
+    const isUsingRealEmbeddings = await ensureRAGSystemInitialized();
     console.log("Response enhancer status:", getEmbeddingSystemStatus());
+    console.log(`RAG system using real embeddings: ${isUsingRealEmbeddings}`);
     
     // Check if this is a crisis situation - if so, don't modify the response
     if (checkForCrisisContent(userInput)) {
@@ -160,16 +197,25 @@ export const enhanceResponse = async (
     const topics = extractTopics(userInput);
     
     // Process through RAG system to ground in facts
-    let enhancedResponse = hallucinationResult.text; // Use text property instead of processedResponse
+    let enhancedResponse = hallucinationResult.text;
     
     try {
-      // Use new RAG augmentation
-      const retrievalResult = await retrieveAugmentation(userInput, conversationHistory);
-      
-      if (retrievalResult.confidence > 0.3) {
-        enhancedResponse = await augmentResponseWithRetrieval(enhancedResponse, retrievalResult);
+      if (isUsingRealEmbeddings) {
+        console.log("Using real embeddings for RAG augmentation");
+        
+        // Use RAG augmentation with real embeddings
+        const retrievalResult = await retrieveAugmentation(userInput, conversationHistory);
+        
+        if (retrievalResult.confidence > 0.3) {
+          enhancedResponse = await augmentResponseWithRetrieval(enhancedResponse, retrievalResult);
+          console.log(`RAG augmentation applied with confidence: ${retrievalResult.confidence.toFixed(2)}`);
+        } else {
+          // Fallback to reranker if retrieval confidence is low
+          enhancedResponse = await augmentResponseWithReranking(enhancedResponse, userInput);
+          console.log("Fallback to reranker for RAG augmentation");
+        }
       } else {
-        // Fallback to reranker if retrieval confidence is low
+        console.log("Using fallback reranking for RAG augmentation");
         enhancedResponse = await augmentResponseWithReranking(enhancedResponse, userInput);
       }
     } catch (error) {
@@ -181,6 +227,11 @@ export const enhanceResponse = async (
       enhancedResponse,
       userInput,
       conversationHistory
+    );
+    
+    // Store the conversation exchange in the vector database for future reference
+    addConversationExchange(userInput, processedResponse).catch(error => 
+      console.error("Error storing conversation in vector database:", error)
     );
     
     // Return the final enhanced response

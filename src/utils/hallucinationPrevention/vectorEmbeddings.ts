@@ -16,40 +16,66 @@ export interface EmbeddingResult {
 
 let embeddingModel: any = null;
 let isUsingSimulation = false;
+let modelInitialized = false;
+let modelInitializationPromise: Promise<void> | null = null;
 
 /**
  * Initialize the embedding model
  * Uses a small but effective model suitable for browser environments
  */
 export const initializeEmbeddingModel = async (): Promise<void> => {
-  try {
-    console.log("Initializing embedding model from Hugging Face...");
-    
-    // Create a feature-extraction pipeline with a small, efficient model
-    embeddingModel = await pipeline(
-      "feature-extraction",
-      "mixedbread-ai/mxbai-embed-xsmall-v1"
-    );
-    
-    // Test the model with a simple example
-    const testEmbedding = await embeddingModel("Test embedding", { 
-      pooling: "mean", 
-      normalize: true 
-    });
-    
-    if (testEmbedding && testEmbedding.data) {
-      console.log("✅ Embedding model successfully initialized and tested");
-      isUsingSimulation = false;
-      return;
-    } else {
-      throw new Error("Model initialized but test embedding failed");
-    }
-  } catch (error) {
-    console.error("❌ Failed to initialize embedding model:", error);
-    console.warn("⚠️ Falling back to simulated embeddings");
-    embeddingModel = null;
-    isUsingSimulation = true;
+  // If we already have a pending initialization, return that promise
+  if (modelInitializationPromise) {
+    return modelInitializationPromise;
   }
+  
+  // Create a new initialization promise
+  modelInitializationPromise = (async () => {
+    try {
+      console.log("🔄 Initializing embedding model from Hugging Face...");
+      
+      // Create a feature-extraction pipeline with a small, efficient model
+      // Specify WebGPU if available, otherwise fall back to CPU
+      embeddingModel = await pipeline(
+        "feature-extraction",
+        "mixedbread-ai/mxbai-embed-small-v1", // Using better model
+        { 
+          quantized: false, // Avoid quantization issues
+          revision: "main",
+          progress_callback: (progress) => {
+            console.log(`Model loading progress: ${Math.round(progress * 100)}%`);
+          }
+        }
+      );
+      
+      // Test the model with a simple example
+      const testResult = await embeddingModel("Test embedding", { 
+        pooling: "mean", 
+        normalize: true 
+      });
+      
+      if (testResult && testResult.data) {
+        console.log("✅ Embedding model successfully initialized and tested");
+        console.log(`📐 Embedding size: ${testResult.data.length}`);
+        isUsingSimulation = false;
+        modelInitialized = true;
+        return;
+      } else {
+        throw new Error("Model initialized but test embedding failed");
+      }
+    } catch (error) {
+      console.error("❌ Failed to initialize embedding model:", error);
+      console.warn("⚠️ Falling back to simulated embeddings");
+      embeddingModel = null;
+      isUsingSimulation = true;
+      modelInitialized = false;
+    } finally {
+      // Reset the initialization promise once we're done
+      modelInitializationPromise = null;
+    }
+  })();
+  
+  return modelInitializationPromise;
 };
 
 /**
@@ -57,11 +83,11 @@ export const initializeEmbeddingModel = async (): Promise<void> => {
  */
 export const generateEmbedding = async (text: string): Promise<number[]> => {
   try {
-    if (!embeddingModel) {
-      // Initialize model if not already done
+    // If model not initialized, try initializing
+    if (!modelInitialized) {
       await initializeEmbeddingModel();
       
-      // If still not available, use fallback
+      // If still not available after initialization attempt, use fallback
       if (!embeddingModel) {
         console.log("Using simulated embedding fallback");
         return generateSimulatedEmbedding(text);
@@ -164,6 +190,26 @@ export const generateSimulatedEmbedding = (text: string): number[] => {
 };
 
 /**
+ * Force reinitialize embedding model
+ * Useful when you suspect the model has failed
+ */
+export const forceReinitializeEmbeddingModel = async (): Promise<boolean> => {
+  console.log("🔄 Force reinitializing embedding model...");
+  embeddingModel = null;
+  modelInitialized = false;
+  isUsingSimulation = false;
+  modelInitializationPromise = null;
+  
+  try {
+    await initializeEmbeddingModel();
+    return !isUsingSimulation;
+  } catch (error) {
+    console.error("Failed to reinitialize embedding model:", error);
+    return false;
+  }
+};
+
+/**
  * Check if we're using simulated embeddings
  */
 export const isUsingSimulatedEmbeddings = (): boolean => {
@@ -253,4 +299,3 @@ initializeEmbeddingModel().then(() => {
 }).catch(error => 
   console.error("Error initializing embedding model on import:", error)
 );
-

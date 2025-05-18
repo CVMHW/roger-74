@@ -3,11 +3,13 @@
  * Hallucination Prevention Retrieval
  * 
  * This module provides functions for retrieving relevant information
- * with enhanced chunking and vector search capabilities.
+ * with vector-based search capabilities.
  */
 
-import { searchMemory } from '../memory/memoryController';
-import { findMostSimilar } from './vectorEmbeddings';
+import { generateEmbedding, isUsingSimulatedEmbeddings, forceReinitializeEmbeddingModel } from './vectorEmbeddings';
+import vectorDB, { VectorRecord } from './vectorDatabase';
+import { COLLECTIONS, initializeVectorDatabase, addUserMessage, addRogerResponse } from './dataLoader';
+import { v4 as uuidv4 } from 'uuid';
 
 // Export the MemoryPiece interface for use in other modules
 export interface MemoryPiece {
@@ -46,34 +48,82 @@ const createChunks = (content: string, maxChunkLength: number = 100): string[] =
 };
 
 /**
- * Retrieve facts from memory to ground responses with chunking
+ * Initialize the retrieval system
+ */
+export const initializeRetrievalSystem = async (): Promise<boolean> => {
+  // First ensure we have real embeddings if possible
+  if (isUsingSimulatedEmbeddings()) {
+    console.log("⚠️ Using simulated embeddings, attempting to reinitialize...");
+    await forceReinitializeEmbeddingModel();
+  }
+  
+  // Initialize the vector database
+  return await initializeVectorDatabase();
+};
+
+/**
+ * Retrieve facts from vector database to ground responses
  */
 export const retrieveFactualGrounding = (
   topics: string[],
   limit: number = 3
 ): MemoryPiece[] => {
   try {
-    // Search memory for relevant facts
-    const memories = searchMemory({
-      keywords: topics,
-      limit
-    });
+    const results: MemoryPiece[] = [];
     
-    // Convert to MemoryPiece objects with chunking
-    return memories.map(memory => {
-      // Create chunks for longer content
-      const chunks = memory.content.length > 150 ? 
-        createChunks(memory.content) : 
-        [memory.content];
+    // First try vector search
+    const factsCollection = vectorDB.collection(COLLECTIONS.FACTS);
+    const rogerCollection = vectorDB.collection(COLLECTIONS.ROGER_KNOWLEDGE);
+    
+    // If collections are empty, initialize the database
+    if (factsCollection.size() === 0 || rogerCollection.size() === 0) {
+      console.log("Vector collections are empty, initializing...");
+      // We'll continue with the search anyway, but trigger initialization
+      initializeVectorDatabase().catch(error => console.error("Error initializing database:", error));
+    }
+    
+    // Search using all topics
+    for (const topic of topics) {
+      if (topic.trim().length < 3) continue;
       
-      return {
-        content: memory.content,
-        role: memory.role,
-        metadata: memory.metadata,
-        importance: memory.importance || 0.5,
-        chunks
-      };
-    });
+      // Generate embedding for the topic
+      generateEmbedding(topic).then(async (embedding) => {
+        try {
+          // Search in facts collection
+          const factResults = factsCollection.findSimilar(embedding, { 
+            limit: Math.ceil(limit / 2),
+            scoreThreshold: 0.65
+          });
+          
+          // Search in Roger knowledge collection
+          const knowledgeResults = rogerCollection.findSimilar(embedding, { 
+            limit: Math.ceil(limit / 2),
+            scoreThreshold: 0.65
+          });
+          
+          // Process and add results
+          [...factResults, ...knowledgeResults].forEach(result => {
+            // Create chunks for longer content
+            const chunks = result.record.text.length > 150 ? 
+              createChunks(result.record.text) : 
+              [result.record.text];
+            
+            results.push({
+              content: result.record.text,
+              role: 'system',
+              metadata: { ...result.record.metadata, score: result.score },
+              importance: (result.record.metadata?.importance || 0.5) * result.score,
+              chunks
+            });
+          });
+        } catch (error) {
+          console.error("Error in vector search for topic:", topic, error);
+        }
+      }).catch(error => console.error("Error generating embedding for topic:", topic, error));
+    }
+    
+    // Return what we found so far (vector search will continue asynchronously)
+    return results;
   } catch (error) {
     console.error("Error retrieving factual grounding:", error);
     return [];
@@ -88,35 +138,21 @@ export const retrievePatientPhrasing = async (
   limit: number = 2
 ): Promise<string[]> => {
   try {
-    // First get all patient memories
-    const memories = searchMemory({
-      role: 'patient',
-      limit: 10 // Get more than we need for semantic filtering
+    // Generate embedding for query
+    const embedding = await generateEmbedding(query);
+    
+    // Search in user messages collection
+    const userCollection = vectorDB.collection(COLLECTIONS.USER_MESSAGES);
+    const results = userCollection.findSimilar(embedding, { 
+      limit,
+      scoreThreshold: 0.6
     });
     
-    // Extract contents
-    const contents = memories.map(memory => memory.content);
-    
-    // Use semantic search to find most relevant
-    const mostSimilar = await findMostSimilar(query, contents, limit);
-    
-    // Return the most semantically similar phrases
-    return mostSimilar.map(result => result.text);
+    // Return the texts of matching records
+    return results.map(result => result.record.text);
   } catch (error) {
     console.error("Error retrieving patient phrasing:", error);
-    
-    // Fallback to basic keyword search
-    const topics = query.toLowerCase()
-      .split(/\W+/)
-      .filter(word => word.length > 3);
-      
-    const memories = searchMemory({
-      keywords: topics,
-      role: 'patient',
-      limit
-    });
-    
-    return memories.map(memory => memory.content);
+    return [];
   }
 };
 
@@ -125,29 +161,30 @@ export const retrievePatientPhrasing = async (
  */
 export const hasTopicBeenDiscussed = async (topic: string): Promise<boolean> => {
   try {
-    // Get all memories
-    const memories = searchMemory({
-      limit: 15
+    // Generate embedding for topic
+    const embedding = await generateEmbedding(topic);
+    
+    // Search in user and Roger collections
+    const userCollection = vectorDB.collection(COLLECTIONS.USER_MESSAGES);
+    const rogerCollection = vectorDB.collection(COLLECTIONS.ROGER_RESPONSES);
+    
+    // Check user messages
+    const userResults = userCollection.findSimilar(embedding, { 
+      limit: 1,
+      scoreThreshold: 0.75
     });
     
-    // Extract contents
-    const contents = memories.map(memory => memory.content);
+    // Check Roger responses
+    const rogerResults = rogerCollection.findSimilar(embedding, { 
+      limit: 1,
+      scoreThreshold: 0.75
+    });
     
-    // Use semantic search to find most relevant
-    const mostSimilar = await findMostSimilar(topic, contents, 1);
-    
-    // Check if the similarity score is high enough
-    return mostSimilar.length > 0 && mostSimilar[0].score > 0.7;
+    // Return true if we found matching results in either collection
+    return userResults.length > 0 || rogerResults.length > 0;
   } catch (error) {
     console.error("Error checking topic discussion history:", error);
-    
-    // Fallback to basic keyword search
-    const memories = searchMemory({
-      keywords: [topic],
-      limit: 1
-    });
-    
-    return memories.length > 0;
+    return false;
   }
 };
 
@@ -159,35 +196,21 @@ export const retrieveSimilarResponses = async (
   limit: number = 2
 ): Promise<string[]> => {
   try {
-    // First get Roger's memories
-    const memories = searchMemory({
-      role: 'roger',
-      limit: 10 // Get more than we need for semantic filtering
+    // Generate embedding for query
+    const embedding = await generateEmbedding(query);
+    
+    // Search in Roger responses collection
+    const rogerCollection = vectorDB.collection(COLLECTIONS.ROGER_RESPONSES);
+    const results = rogerCollection.findSimilar(embedding, { 
+      limit,
+      scoreThreshold: 0.65
     });
     
-    // Extract contents
-    const contents = memories.map(memory => memory.content);
-    
-    // Use semantic search to find most relevant
-    const mostSimilar = await findMostSimilar(query, contents, limit);
-    
-    // Return the most semantically similar responses
-    return mostSimilar.map(result => result.text);
+    // Return the texts of matching records
+    return results.map(result => result.record.text);
   } catch (error) {
     console.error("Error retrieving similar responses:", error);
-    
-    // Fallback to basic keyword search
-    const topics = query.toLowerCase()
-      .split(/\W+/)
-      .filter(word => word.length > 3);
-      
-    const memories = searchMemory({
-      keywords: topics,
-      role: 'roger',
-      limit
-    });
-    
-    return memories.map(memory => memory.content);
+    return [];
   }
 };
 
@@ -195,19 +218,34 @@ export const retrieveSimilarResponses = async (
  * Get patient sentiment on topics using semantic search
  */
 export const getPatientSentiment = async (query: string): Promise<Record<string, string>> => {
-  const sentiments: Record<string, string> = {};
+  const sentiments: Record<string, string> = {
+    overall: 'neutral',
+    depression: 'not_detected',
+    anxiety: 'not_detected',
+    anger: 'not_detected'
+  };
   
   try {
-    // Get patient memories
-    const memories = await retrievePatientPhrasing(query, 5);
+    // Get recent patient messages
+    const userCollection = vectorDB.collection(COLLECTIONS.USER_MESSAGES);
+    const allUserMessages = userCollection.getAll();
+    
+    // Sort by timestamp (most recent first) and take the last 5
+    const recentMessages = allUserMessages
+      .sort((a, b) => (b.metadata?.timestamp || 0) - (a.metadata?.timestamp || 0))
+      .slice(0, 5)
+      .map(record => record.text);
+    
+    // Add current query to the list
+    const allMessages = [query, ...recentMessages];
     
     // Simple sentiment detection
     let positive = 0;
     let negative = 0;
     let neutral = 0;
     
-    for (const memory of memories) {
-      const content = memory.toLowerCase();
+    for (const message of allMessages) {
+      const content = message.toLowerCase();
       
       // Check for positive emotions
       if (/\b(good|great|like|love|happy|enjoy|excited|glad|pleased|hopeful)\b/i.test(content)) {
@@ -234,7 +272,7 @@ export const getPatientSentiment = async (query: string): Promise<Record<string,
       sentiments['overall'] = 'neutral';
     }
     
-    // Check for specific emotions
+    // Check for specific emotions in the current query
     if (/\b(depress(ed|ion)|hopeless|meaningless|empty)\b/i.test(query)) {
       sentiments['depression'] = 'detected';
     }
@@ -266,30 +304,42 @@ export const retrieveAugmentation = async (
   confidence: number;
 }> => {
   try {
-    // Extract potential topics from user input
-    const topics = userInput
-      .toLowerCase()
-      .split(/\W+/)
-      .filter(word => word.length > 3)
-      .slice(0, 7);
+    // Generate embedding for user input
+    const embedding = await generateEmbedding(userInput);
     
-    // Get all memories
-    const memories = searchMemory({
-      limit: 20 // Get more memories than needed for semantic filtering
-    });
+    // Search across all collections for relevant content
+    const searchCollections = [
+      COLLECTIONS.ROGER_KNOWLEDGE,
+      COLLECTIONS.FACTS,
+      COLLECTIONS.ROGER_RESPONSES
+    ];
     
-    // Extract content from memories
-    const allContent = memories.map(memory => memory.content);
+    let results: { record: VectorRecord; score: number }[] = [];
     
-    // Use semantic search to find most relevant content
-    const mostSimilar = await findMostSimilar(userInput, allContent, 3);
+    for (const collectionName of searchCollections) {
+      const collection = vectorDB.collection(collectionName);
+      
+      const collectionResults = collection.findSimilar(embedding, {
+        limit: 3,
+        scoreThreshold: 0.65
+      });
+      
+      results = [...results, ...collectionResults];
+    }
+    
+    // Sort by score (highest first)
+    results.sort((a, b) => b.score - a.score);
+    
+    // Take top results
+    const topResults = results.slice(0, 3);
     
     // Extract content
-    const retrievedContent = mostSimilar.map(result => result.text);
+    const retrievedContent = topResults.map(result => result.record.text);
     
     // Calculate confidence based on similarity scores
-    const avgSimilarity = mostSimilar.reduce((sum, item) => sum + item.score, 0) / 
-                          (mostSimilar.length || 1);
+    const avgSimilarity = topResults.reduce((sum, item) => sum + item.score, 0) / 
+                          (topResults.length || 1);
+    
     const confidence = Math.min(0.9, avgSimilarity);
     
     return {
@@ -299,14 +349,9 @@ export const retrieveAugmentation = async (
   } catch (error) {
     console.error("Error retrieving augmentation:", error);
     
-    // Fallback to basic retrieval
-    const factualMemories = retrieveFactualGrounding(
-      userInput.toLowerCase().split(/\W+/).filter(word => word.length > 3).slice(0, 5)
-    );
-    
     return { 
-      retrievedContent: factualMemories.map(memory => memory.content),
-      confidence: factualMemories.length > 0 ? 0.5 : 0
+      retrievedContent: [],
+      confidence: 0
     };
   }
 };
@@ -337,7 +382,8 @@ export const augmentResponseWithRetrieval = async (
       return response;
     }
     
-    // Find best semantic integration point using findMostSimilar
+    // Generate embeddings for better integration point detection
+    const memoryEmbedding = await generateEmbedding(memory);
     const sentences = response.split(/(?<=[.!?])\s+/);
     
     // Skip integration for very short responses
@@ -347,28 +393,91 @@ export const augmentResponseWithRetrieval = async (
     }
     
     // For longer responses, find best place to insert
-    // TODO: For real implementation, use vector similarity to find best insertion point
-    const insertPoint = Math.floor(sentences.length / 3);
+    let bestSentenceIndex = Math.floor(sentences.length / 3); // Default
+    let highestSimilarity = -1;
     
-    // Create natural integration
-    return [
-      ...sentences.slice(0, insertPoint),
-      `As I recall, ${memory}`,
-      ...sentences.slice(insertPoint)
+    try {
+      // Find the sentence most similar to the memory
+      for (let i = 0; i < sentences.length; i++) {
+        if (sentences[i].length < 10) continue; // Skip very short sentences
+        
+        const sentenceEmbedding = await generateEmbedding(sentences[i]);
+        
+        // Calculate similarity using cosine similarity
+        let dotProduct = 0;
+        let mag1 = 0;
+        let mag2 = 0;
+        
+        for (let j = 0; j < memoryEmbedding.length; j++) {
+          dotProduct += memoryEmbedding[j] * sentenceEmbedding[j];
+          mag1 += memoryEmbedding[j] * memoryEmbedding[j];
+          mag2 += sentenceEmbedding[j] * sentenceEmbedding[j];
+        }
+        
+        const similarity = dotProduct / (Math.sqrt(mag1) * Math.sqrt(mag2) || 1);
+        
+        if (similarity > highestSimilarity) {
+          highestSimilarity = similarity;
+          bestSentenceIndex = i;
+        }
+      }
+    } catch (error) {
+      console.error("Error finding best insertion point:", error);
+      // Continue with default insertion point
+    }
+    
+    // Create natural transition phrases based on content
+    let transitionPhrase = "Based on what we've discussed, ";
+    
+    if (memory.toLowerCase().includes("feeling") || memory.toLowerCase().includes("emotion")) {
+      transitionPhrase = "Connecting with your feelings, ";
+    } else if (memory.toLowerCase().includes("think") || memory.toLowerCase().includes("thought")) {
+      transitionPhrase = "Building on your thoughts, ";
+    } else if (memory.toLowerCase().includes("situation") || memory.toLowerCase().includes("experience")) {
+      transitionPhrase = "Considering your situation, ";
+    }
+    
+    // Insert the memory with the transition phrase
+    const enhancedResponse = [
+      ...sentences.slice(0, bestSentenceIndex),
+      `${transitionPhrase}${memory}`,
+      ...sentences.slice(bestSentenceIndex)
     ].join(' ');
+    
+    return enhancedResponse;
   } catch (error) {
     console.error("Error augmenting response with retrieval:", error);
     return response;
   }
 };
 
+/**
+ * Add a conversation exchange to the vector database
+ */
+export const addConversationExchange = async (
+  userMessage: string,
+  rogerResponse: string
+): Promise<void> => {
+  try {
+    // Add user message to vector DB
+    await addUserMessage(userMessage);
+    
+    // Add Roger response to vector DB
+    await addRogerResponse(rogerResponse);
+  } catch (error) {
+    console.error("Error adding conversation exchange to vector database:", error);
+  }
+};
+
 // Export all retrieval functions
 export default {
+  initializeRetrievalSystem,
   retrieveFactualGrounding,
   retrievePatientPhrasing,
   hasTopicBeenDiscussed,
   retrieveSimilarResponses,
   getPatientSentiment,
   retrieveAugmentation,
-  augmentResponseWithRetrieval
+  augmentResponseWithRetrieval,
+  addConversationExchange
 };

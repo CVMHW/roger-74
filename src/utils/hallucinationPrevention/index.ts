@@ -2,58 +2,46 @@
 /**
  * Hallucination Prevention System
  * 
- * Integrates multiple techniques to prevent hallucinations:
- * 1. Retrieval-Augmented Generation (RAG)
- * 2. Reasoning & Chain-of-Thought
- * 3. Fact checking & Hallucination detection
- * 4. Token-level verification
- * 5. Natural Language Inference (NLI)
- * 6. Response re-ranking
- * 7. Advanced repetition prevention (NEW)
+ * This is the main entry point for the hallucination prevention system
+ * which includes the RAG (Retrieval Augmented Generation) capabilities
  */
 
-import { HallucinationProcessResult } from '../../types/hallucinationPrevention';
-import { preventHallucinations } from './processor';
-import { DEFAULT_OPTIONS } from './config';
-import { detectHarmfulRepetitions, fixHarmfulRepetitions } from '../response/processor/repetitionPrevention';
+import { initializeRetrievalSystem } from './retrieval';
+import { isUsingSimulatedEmbeddings, forceReinitializeEmbeddingModel } from './vectorEmbeddings';
+import vectorDB from './vectorDatabase';
 
-// Export the main function
-export { preventHallucinations };
-
-// Export the default options
-export { DEFAULT_OPTIONS };
-
-// Export the needed types - using "export type" syntax for proper TypeScript isolatedModules support
-export type { HallucinationProcessResult };
-
-// Export all sub-module functions
-export * from './detector';
-export * from './reasoner';
+// Export all components
+export * from './vectorEmbeddings';
+export * from './vectorReranker';
 export * from './retrieval';
-export * from './repetitionHandler';
 
-// Export integrated repetition prevention system (NEW)
-export { detectHarmfulRepetitions, fixHarmfulRepetitions };
-
-/**
- * Enhanced hallucination prevention with integrated repetition detection
- */
-export const preventHallucinationsWithRepetitionCheck = (
-  responseText: string,
-  userInput: string,
-  conversationHistory: string[] = []
-): string => {
-  // First check for repetition issues
-  const repetitionCheck = detectHarmfulRepetitions(responseText);
-  
-  // If repetition detected, fix it first
-  if (repetitionCheck.hasRepetition) {
-    responseText = fixHarmfulRepetitions(responseText);
+// Initialize the RAG system
+export const initializeRAGSystem = async (): Promise<boolean> => {
+  try {
+    console.log("🌟 Initializing RAG system...");
+    
+    // If using simulated embeddings, try to reinitialize the model
+    if (isUsingSimulatedEmbeddings()) {
+      console.log("Attempting to switch from simulated to real embeddings...");
+      await forceReinitializeEmbeddingModel();
+    }
+    
+    // Initialize the retrieval system
+    const success = await initializeRetrievalSystem();
+    
+    // Get vector database stats
+    const stats = vectorDB.stats();
+    console.log(`Vector database stats: ${JSON.stringify(stats)}`);
+    
+    return success;
+  } catch (error) {
+    console.error("Failed to initialize RAG system:", error);
+    return false;
   }
-  
-  // Then apply standard hallucination prevention
-  const result = preventHallucinations(responseText, userInput, conversationHistory);
-  
-  // Return the processed response text, not the whole result object
-  return result.processedResponse;
+};
+
+// Export the system initialization function
+export default {
+  initializeRAGSystem,
+  isUsingSimulatedEmbeddings
 };
