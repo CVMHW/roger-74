@@ -27,6 +27,7 @@ import {
   getEmbeddingCacheStats
 } from './vectorEmbeddings';
 import { rerankDocumentsWithCrossEncoder } from './crossEncoder';
+import { extractTerms } from './queryExpansion';
 
 // Track initialization status
 let isInitialized = false;
@@ -246,8 +247,11 @@ export const retrieveRelevantContent = async (
       await initializeRAGSystem();
     }
     
-    // Extract and expand topics from query
-    const expandedTopics = await generateExpandedQuery(query, expandQuery(query));
+    // Extract topics from query
+    const initialTopics = extractTerms(query);
+    
+    // Expand topics using query expansion
+    const expandedTopics = await generateExpandedQuery(query, initialTopics);
     
     // Use enhanced retrieval with hybrid search and reranking
     const retrievedContent = await retrieveEnhanced(query, expandedTopics, {
@@ -279,14 +283,20 @@ export const retrieveRelevantContent = async (
 
 /**
  * Generate expanded query with advanced techniques
- * Re-export from enhancedRetrieval for convenience
+ * Wrapper around the function from enhancedRetrieval
  */
 export const generateExpandedQuery = async (
   query: string,
   initialTopics: string[] = []
 ): Promise<string[]> => {
-  // Import dynamically to avoid circular dependencies
-  return expandQuery(query, initialTopics);
+  try {
+    return await import('./enhancedRetrieval').then(module => 
+      module.generateExpandedQuery(query, initialTopics)
+    );
+  } catch (error) {
+    console.error("Error in generateExpandedQuery:", error);
+    return initialTopics;
+  }
 };
 
 /**
@@ -310,8 +320,7 @@ export const enhanceResponseWithRAG = async (
     const rerankedContent = await rerankDocumentsWithCrossEncoder(
       userInput, 
       retrievedContent,
-      conversationHistory,
-      { 
+      {
         topK: 3, 
         useContextualFeatures: true
       }

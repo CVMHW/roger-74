@@ -125,7 +125,7 @@ export const generateExpandedQuery = async (
 /**
  * Re-export expandQuery from queryExpansion for convenience
  */
-export const expandQuery = baseExpandQuery;
+export { baseExpandQuery as expandQuery };
 
 /**
  * Augment a response with the most relevant retrieved content
