@@ -100,7 +100,7 @@ const Index = () => {
       href="https://cvmhw.com" 
       target="_blank" 
       rel="noopener noreferrer" 
-      className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-cvmhw-purple to-cvmhw-blue text-white text-sm font-medium rounded-md hover:from-cvmhw-blue hover:to-cvmhw-purple transition-all duration-200 shadow-sm"
+      className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white text-sm font-medium rounded-md hover:from-cvmhw-blue hover:to-cvmhw-blue transition-all duration-200 shadow-sm"
     >
       <div className="relative w-5 h-5">
         <img 
@@ -142,7 +142,7 @@ const Index = () => {
                     onError={handleImageError}
                   />
                 </div>
-                <CardTitle className="text-xl font-semibold text-cvmhw-purple">Welcome from Roger at Cuyahoga Valley Mindful Health & Wellness</CardTitle>
+                <CardTitle className="text-xl font-semibold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent">Welcome from Roger at Cuyahoga Valley Mindful Health & Wellness</CardTitle>
               </div>
               <CardDescription>Your Peer Mental Health Support Companion</CardDescription>
             </CardHeader>
@@ -158,8 +158,8 @@ const Index = () => {
                 <ExternalCrisisLink />
               </div>
               
-              <div className="flex items-center mt-2 p-2 bg-blue-50 rounded-md border border-blue-100">
-                <div className="rounded-full bg-gradient-to-br from-cvmhw-purple via-cvmhw-blue to-cvmhw-pink h-8 w-8 flex items-center justify-center mr-3">
+              <div className="flex items-center mt-2 p-2 bg-gradient-to-r from-blue-50 to-cvmhw-light/30 rounded-md border border-cvmhw-light">
+                <div className="rounded-full bg-gradient-to-br from-cvmhw-blue via-cvmhw-purple to-cvmhw-pink h-8 w-8 flex items-center justify-center mr-3">
                   <span className="text-white font-bold">R</span>
                 </div>
                 <p className="text-sm text-gray-600 flex-1">
@@ -213,7 +213,7 @@ const Index = () => {
                           onError={handleImageError}
                         />
                       </div>
-                      <CardTitle className="text-xl font-semibold gradient-text">About Cuyahoga Valley Mindful Health and Wellness</CardTitle>
+                      <CardTitle className="text-xl font-semibold bg-gradient-to-r from-cvmhw-blue via-cvmhw-purple to-cvmhw-pink bg-clip-text text-transparent">About Cuyahoga Valley Mindful Health and Wellness</CardTitle>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -225,7 +225,7 @@ const Index = () => {
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                       <div className="flex items-start space-x-3">
-                        <BookOpen className="text-cvmhw-purple h-6 w-6 mt-1" />
+                        <BookOpen className="text-cvmhw-blue h-6 w-6 mt-1" />
                         <div>
                           <h3 className="font-medium text-cvmhw-blue">Evidence-Based Approaches</h3>
                           <p className="text-sm text-gray-600">Our therapists use cognitive-processing therapy, mindfulness techniques, and play therapy.</p>
@@ -249,7 +249,7 @@ const Index = () => {
                       </div>
                       
                       <div className="flex items-start space-x-3">
-                        <Shield className="text-cvmhw-orange h-6 w-6 mt-1" />
+                        <Shield className="text-cvmhw-blue h-6 w-6 mt-1" />
                         <div>
                           <h3 className="font-medium text-cvmhw-blue">Veteran Services</h3>
                           <p className="text-sm text-gray-600">Specialized support for veterans dealing with military adjustment and PTSD.</p>
@@ -257,7 +257,7 @@ const Index = () => {
                       </div>
                       
                       <div className="flex items-start space-x-3">
-                        <Star className="text-cvmhw-purple h-6 w-6 mt-1" />
+                        <Star className="text-cvmhw-blue h-6 w-6 mt-1" />
                         <div>
                           <h3 className="font-medium text-cvmhw-blue">Child & Family Services</h3>
                           <p className="text-sm text-gray-600">Play therapy and family counseling for children as young as 4 years old.</p>
@@ -323,7 +323,7 @@ const Index = () => {
                 onError={handleImageError}
               />
             </div>
-            <span className="font-medium text-cvmhw-purple">Cuyahoga Valley Mindful Health and Wellness</span>
+            <span className="font-medium bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent">Cuyahoga Valley Mindful Health and Wellness</span>
           </div>
           
           {/* External Crisis Link in Footer */}
