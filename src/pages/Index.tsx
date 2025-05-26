@@ -1,9 +1,11 @@
+
 import React from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
 import CrisisResources from '../components/CrisisResources';
 import BetaWatermark from '../components/BetaWatermark';
 import LegalDisclaimer from '../components/LegalDisclaimer';
+import ExternalCrisisLink from '../components/ExternalCrisisLink';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Image, Users, Award, BookOpen, Heart, Shield, Star, Calendar, Info } from 'lucide-react';
@@ -38,18 +40,24 @@ const Index = () => {
               <CardDescription>Your Peer Mental Health Support Companion</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600">
+              <p className="text-gray-600 mb-4">
                 I'm Roger, your Peer Support companion at Cuyahoga Valley Mindful Health and Wellness. 
                 I'm here to chat with you while you wait for your therapist. I'm not a licensed professional, 
                 but I can provide a listening ear and supportive perspective as I continue my training under professional guidance.
               </p>
+              
+              {/* External Crisis Resources Link */}
+              <div className="mb-4">
+                <ExternalCrisisLink />
+              </div>
+              
               <div className="flex items-center mt-2 p-2 bg-blue-50 rounded-md border border-blue-100">
                 <div className="rounded-full bg-gradient-to-br from-cvmhw-purple via-cvmhw-blue to-cvmhw-pink h-8 w-8 flex items-center justify-center mr-3">
                   <span className="text-white font-bold">R</span>
                 </div>
                 <p className="text-sm text-gray-600">
                   <span className="font-medium">Remember:</span> Our conversation is meant to provide Peer Support only. 
-                  If you need immediate assistance, please use the crisis resources below.
+                  If you need immediate assistance, please use the crisis resources above or below.
                 </p>
               </div>
             </CardContent>
@@ -183,6 +191,12 @@ const Index = () => {
             </div>
             <span className="font-medium text-cvmhw-purple">Cuyahoga Valley Mindful Health and Wellness</span>
           </div>
+          
+          {/* External Crisis Link in Footer */}
+          <div className="flex justify-center mb-3">
+            <ExternalCrisisLink variant="footer" />
+          </div>
+          
           <div className="text-center text-gray-600 text-sm">
             <p>© {new Date().getFullYear()} Cuyahoga Valley Mindful Health and Wellness</p>
             <p className="mt-1">Roger is a Peer Support companion in-training. He is not a substitute for professional mental health services. Click our Crisis Resources & Support tab for immediate assistance.</p>

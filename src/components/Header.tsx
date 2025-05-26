@@ -3,6 +3,7 @@ import React from 'react';
 import { BookOpen } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import BetaBadge from './BetaBadge';
+import ExternalCrisisLink from './ExternalCrisisLink';
 
 const Header = () => {
   return (
@@ -29,7 +30,8 @@ const Header = () => {
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
+            <ExternalCrisisLink variant="header" />
             <ThemeToggle />
             <div className="flex items-center space-x-2">
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-cvmhw-purple via-cvmhw-blue to-cvmhw-pink flex items-center justify-center">
