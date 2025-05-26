@@ -16,7 +16,7 @@ import {
 } from '../../../../utils/crisis/crisisAuditLogger';
 
 /**
- * Enhanced crisis detection with comprehensive audit logging
+ * Enhanced crisis detection with comprehensive audit logging for all crisis types
  */
 export const handleEnhancedCrisisDetection = async (
   userInput: string,
@@ -38,11 +38,18 @@ export const handleEnhancedCrisisDetection = async (
     let crisisType = crisisTypes[0];
     let severity: 'low' | 'medium' | 'high' | 'critical' = 'medium';
     
-    // Always prioritize suicide if it's one of the detected types
+    // Prioritize crisis types by severity
     if (crisisTypes.includes('suicide')) {
       crisisType = 'suicide';
       severity = 'critical';
     } else if (crisisTypes.includes('self-harm')) {
+      crisisType = 'self-harm';
+      severity = 'high';
+    } else if (crisisTypes.includes('eating-disorder')) {
+      crisisType = 'eating-disorder';
+      severity = 'high';
+    } else if (crisisTypes.includes('substance-use')) {
+      crisisType = 'substance-use';
       severity = 'high';
     }
     
@@ -59,7 +66,7 @@ export const handleEnhancedCrisisDetection = async (
       rogerResponse: response,
       detectionMethod: 'multi-crisis-detection',
       userAgent: navigator.userAgent,
-      ipAddress: 'client-side' // Would need server-side for real IP
+      ipAddress: 'client-side'
     };
     
     // Log crisis event and send email notification
@@ -75,19 +82,17 @@ export const handleEnhancedCrisisDetection = async (
     // Return specific crisis response
     return createMessage(response, 'roger', crisisType as any);
   }
-  
-  // CRISIS DETECTION - HIGHEST PRIORITY with audit logging
-  if (/suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)|don'?t want to (live|be alive)|take my (own )?life/i.test(userInput.toLowerCase())) {
-    console.log("CRITICAL PRIORITY: Detected suicide or self-harm indicators");
-    
-    // Update stage
+
+  // SPECIFIC PATTERN DETECTION with individual audit logging
+
+  // SUICIDE DETECTION - HIGHEST PRIORITY
+  if (/suicid|kill (myself|me)|end (my|this) life|don'?t want to (live|be alive)|take my (own )?life/i.test(userInput.toLowerCase())) {
+    console.log("CRITICAL PRIORITY: Detected suicide indicators");
     updateStage();
     
-    // Use crisis response
-    const response = "I'm very concerned about what you're sharing regarding thoughts of suicide or self-harm. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room. Would you like me to provide additional resources?";
+    const response = "I'm very concerned about what you're sharing regarding thoughts of suicide. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room. Would you like me to provide additional resources?";
     
-    // Create audit entry for direct suicide detection
-    const auditEntry: CrisisAuditEntry = {
+    await logCrisisEvent({
       timestamp: new Date().toISOString(),
       sessionId: getCurrentSessionId(),
       userInput: userInput,
@@ -97,19 +102,55 @@ export const handleEnhancedCrisisDetection = async (
       detectionMethod: 'regex-pattern-matching',
       userAgent: navigator.userAgent,
       ipAddress: 'client-side'
-    };
+    });
     
-    // Log crisis event and send email notification
-    await logCrisisEvent(auditEntry);
+    recordToMemorySystems(userInput, response, "CRISIS:SUICIDE");
+    return createMessage(response, 'roger', 'crisis');
+  }
+
+  // SELF-HARM DETECTION - HIGH PRIORITY
+  if (/harm (myself|me)|cut (myself|me)|hurt (myself|me)|self.harm|cutting|self.injur/i.test(userInput.toLowerCase())) {
+    console.log("HIGH PRIORITY: Detected self-harm indicators");
+    updateStage();
     
-    try {
-      // Record to memory systems with crisis tag
-      recordToMemorySystems(userInput, response, "CRISIS:SUICIDE");
-    } catch (error) {
-      console.error("Error recording to memory systems:", error);
-    }
+    const response = "I'm very concerned about what you're sharing regarding self-harm. Your safety is important, and it would be beneficial to speak with a crisis professional who can provide immediate support. The 988 Suicide & Crisis Lifeline (call or text 988) is available 24/7. Would it be possible for you to reach out to them today?";
     
-    // Return immediate crisis response
+    await logCrisisEvent({
+      timestamp: new Date().toISOString(),
+      sessionId: getCurrentSessionId(),
+      userInput: userInput,
+      crisisType: 'self-harm',
+      severity: 'high',
+      rogerResponse: response,
+      detectionMethod: 'self-harm-pattern-detection',
+      userAgent: navigator.userAgent,
+      ipAddress: 'client-side'
+    });
+    
+    recordToMemorySystems(userInput, response, "CRISIS:SELF-HARM");
+    return createMessage(response, 'roger', 'crisis');
+  }
+
+  // SUBSTANCE ABUSE DETECTION - HIGH PRIORITY
+  if (/overdose|addicted|withdrawal|relapse|heroin|cocaine|meth|substance abuse|can't stop (drinking|using)|alcoholic|drug problem/i.test(userInput.toLowerCase())) {
+    console.log("HIGH PRIORITY: Detected substance abuse indicators");
+    updateStage();
+    
+    const response = "I'm concerned about what you're sharing regarding substance use. This situation sounds serious, and it's important that you speak with a healthcare professional. The SAMHSA National Helpline (1-800-662-4357) provides free, confidential, 24/7 treatment referral and information. Would it help to discuss resources available to you?";
+    
+    await logCrisisEvent({
+      timestamp: new Date().toISOString(),
+      sessionId: getCurrentSessionId(),
+      userInput: userInput,
+      crisisType: 'substance-use',
+      severity: 'high',
+      rogerResponse: response,
+      detectionMethod: 'substance-abuse-pattern-detection',
+      userAgent: navigator.userAgent,
+      ipAddress: 'client-side'
+    });
+    
+    recordToMemorySystems(userInput, response, "CRISIS:SUBSTANCE-USE");
     return createMessage(response, 'roger', 'crisis');
   }
   

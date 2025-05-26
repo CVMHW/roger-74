@@ -1,4 +1,3 @@
-
 /**
  * Crisis Response Coordinator
  * 
@@ -59,16 +58,10 @@ const getSubstanceUseCrisisResponse = (): string => {
   return "I'm concerned about what you're sharing regarding substance use. This situation sounds serious, and it's important that you speak with a healthcare professional. The SAMHSA National Helpline (1-800-662-4357) provides free, confidential, 24/7 treatment referral and information. Would it help to discuss resources available to you?";
 };
 
-/**
- * Get a response for general crisis situations
- */
 const getGeneralCrisisResponse = (): string => {
   return "I'm concerned about what you're sharing. This sounds like a difficult situation that would benefit from immediate professional support. The 988 Suicide & Crisis Lifeline (call or text 988) can provide guidance and resources. Would it be helpful if I shared some additional support options?";
 };
 
-/**
- * Get a crisis response based on a concern type from the reflection system
- */
 export const getCrisisResponseFromConcernType = (concernType: ConcernType | CrisisType): string => {
   switch (concernType) {
     case 'crisis':
@@ -85,9 +78,6 @@ export const getCrisisResponseFromConcernType = (concernType: ConcernType | Cris
   }
 };
 
-/**
- * Get resources for a specific crisis type with updated Ohio/Regional information
- */
 export const getCrisisResources = (crisisType: CrisisType | ConcernType): string => {
   switch (crisisType) {
     case 'suicide':
@@ -127,9 +117,6 @@ export const getCrisisResources = (crisisType: CrisisType | ConcernType): string
   }
 };
 
-/**
- * Get local crisis resources based on region
- */
 export const getLocalCrisisResources = (region: 'summit' | 'stark' | 'cuyahoga' | 'ashtabula' | 'general' = 'general'): string => {
   switch (region) {
     case 'summit':
