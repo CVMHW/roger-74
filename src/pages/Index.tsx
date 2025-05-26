@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -106,7 +107,7 @@ const Index = () => {
           onError={handleImageError}
         />
       </div>
-      <span>Visit CVMHW.com</span>
+      <span>Visit CVMHW</span>
     </a>
   );
 
