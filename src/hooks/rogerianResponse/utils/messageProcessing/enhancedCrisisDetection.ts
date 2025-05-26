@@ -1,5 +1,4 @@
 
-
 /**
  * Enhanced Crisis Detection with Audit Logging and Location Awareness
  */
@@ -15,7 +14,7 @@ import {
   getCurrentSessionId,
   CrisisAuditEntry 
 } from '../../../../utils/crisis/crisisAuditLogger';
-import { extractLocationFromText } from '../../../../utils/crisis/locationDetection';
+import { extractLocationFromText, getBrowserLocation } from '../../../../utils/crisis/locationDetection';
 
 /**
  * Enhanced crisis detection with comprehensive audit logging and location awareness
@@ -30,13 +29,24 @@ export const handleEnhancedCrisisDetection = async (
   }
 
   // Extract location information from user input
-  const locationInfo = extractLocationFromText(userInput);
+  let locationInfo = extractLocationFromText(userInput);
+  
+  // If no location in text, try browser geolocation
+  if (!locationInfo) {
+    try {
+      locationInfo = await getBrowserLocation();
+      console.log("ENHANCED CRISIS: Got browser location:", locationInfo);
+    } catch (error) {
+      console.log('Could not get browser location:', error);
+    }
+  }
 
   // ENHANCED: MULTI-CRISIS DETECTION with audit logging and location awareness
   const crisisTypes = detectMultipleCrisisTypes(userInput);
   
   if (crisisTypes.length > 0) {
     console.log("ENHANCED CRISIS DETECTION: Found crisis types:", crisisTypes);
+    console.log("ENHANCED CRISIS DETECTION: Location info:", locationInfo);
     
     // Update stage
     updateStage();
@@ -66,6 +76,8 @@ export const handleEnhancedCrisisDetection = async (
       hasAskedForLocation
     );
     
+    console.log("ENHANCED CRISIS DETECTION: Response data:", responseData);
+    
     // Create audit entry
     const auditEntry: CrisisAuditEntry = {
       timestamp: new Date().toISOString(),
@@ -90,7 +102,7 @@ export const handleEnhancedCrisisDetection = async (
       console.error("Error recording to memory systems:", error);
     }
     
-    // Return specific crisis response
+    // Return specific crisis response with location-enhanced content
     return createMessage(responseData.response, 'roger', crisisType as any);
   }
 
