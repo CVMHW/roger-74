@@ -280,13 +280,13 @@ const handleCrisisRefusal = (userInput: string): MessageType | null => {
     // Roger's personality-driven responses with escalating gentle pushiness and phone number requests
     let rogerResponse = "";
     
-    if (refusalData.refusalCount === 1) {
+    if (refusalData && refusalData.refusalCount === 1) {
       // Level 1: Understanding but structured introduction to smaller steps
       rogerResponse = "I hear that you're not ready to reach out to those resources right now, and that's understandable. Sometimes it takes time to feel ready for that step. I tend to notice that when people are struggling, having someone who just listens can be valuable too. At the same time, I'm wondering if there might be smaller steps that could feel more manageable - maybe just learning about what's available, without any commitment to use them right now?";
-    } else if (refusalData.refusalCount === 2) {
+    } else if (refusalData && refusalData.refusalCount === 2) {
       // Level 2: Roger's detail-oriented nature kicks in with gentle exploration + phone number request
       rogerResponse = "I understand those resources don't feel right for you at this moment. That's okay - sometimes the timing has to feel right. I'm curious though, and forgive me if this seems like I'm being persistent, but I tend to want to understand what specifically feels concerning about reaching out. Is it the idea of talking to someone new, or worrying about what they might say, or something else entirely? Sometimes understanding the 'what' behind the hesitation can help us figure out what might actually feel supportive. Also, would you be comfortable sharing a phone number where someone could reach you if needed? Not for immediate use, just to have that option available.";
-    } else if (refusalData.refusalCount === 3) {
+    } else if (refusalData && refusalData.refusalCount === 3) {
       // Level 3: Structured Roger with gentle but firmer concern + stronger phone number request
       rogerResponse = "I can see that reaching out for professional help doesn't feel like the right step for you right now, and I've heard you say that a few times now. I respect that, and I want you to know I'm not trying to pressure you. At the same time, I'm sitting here feeling genuinely concerned about you, and I tend to be the kind of person who wants to make sure we've really explored all the options. Would you be willing to help me understand what would need to be different for seeking help to feel okay? And honestly, I'm wondering if you'd consider sharing a phone number - not because you have to call anyone, but because having that direct connection available could be important if things feel different later.";
     } else {
