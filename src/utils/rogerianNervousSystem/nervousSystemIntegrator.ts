@@ -1,4 +1,3 @@
-
 /**
  * Roger's Comprehensive Nervous System Integrator
  * 
@@ -21,7 +20,7 @@ import { handleRefinedCrisisDetection } from '../../hooks/rogerianResponse/utils
 /**
  * Comprehensive context for Roger's nervous system
  */
-interface RogerNervousSystemContext {
+export interface RogerNervousSystemContext {
   userInput: string;
   conversationHistory: string[];
   messageCount: number;
@@ -75,7 +74,11 @@ export const processRogerianNervousSystem = async (
   
   // PHASE 1: CRISIS DETECTION (HIGHEST PRIORITY)
   let crisisResponse = null;
-  let crisisContext = { isCrisisDetected: false };
+  let crisisContext = { 
+    isCrisisDetected: false,
+    crisisType: undefined as string | undefined,
+    severity: undefined as SeverityLevel | undefined
+  };
   
   if (updateStage) {
     try {
@@ -83,7 +86,7 @@ export const processRogerianNervousSystem = async (
       if (crisisResponse) {
         crisisContext = {
           isCrisisDetected: true,
-          crisisType: crisisResponse.type,
+          crisisType: crisisResponse.concernType as string,
           severity: 'critical' as SeverityLevel
         };
         systemsEngaged.push('crisis-detection');
@@ -92,7 +95,7 @@ export const processRogerianNervousSystem = async (
         // Record in memory with highest priority
         masterMemory.addMemory(userInput, 'patient', { 
           crisis: true, 
-          crisisType: crisisResponse.type 
+          crisisType: crisisResponse.concernType 
         }, 1.0);
         
         return {
@@ -145,7 +148,7 @@ export const processRogerianNervousSystem = async (
   }, 0.8);
   systemsEngaged.push('memory-storage');
 
-  const relevantMemories = masterMemory.searchMemories(userInput, 5);
+  const relevantMemories = masterMemory.searchMemory(userInput, 5);
   const conversationThemes = extractConversationThemes(conversationHistory);
   
   const memoryContext = {

@@ -23,6 +23,12 @@ export {
   type RogerNervousSystemContext 
 } from './nervousSystemIntegrator';
 
+// Export the unified RAG pipeline
+export {
+  processUnifiedRAGPipeline,
+  enhanceWithUnifiedPipeline
+} from './pipeline/ragPipelineIntegrator';
+
 // Export individual system components for direct access if needed
 export { enhanceResponseWithRAG } from '../hallucinationPrevention/ragEnhancement';
 export { processResponse } from '../response/processor';
@@ -44,7 +50,7 @@ export type {
 } from '../reflection/reflectionTypes';
 
 /**
- * Quick access function for the complete Roger experience
+ * Quick access function for the complete Roger experience with unified RAG pipeline
  * This is the main entry point that should be used by the chat system
  */
 export const processWithRogerNervousSystem = async (
@@ -54,7 +60,7 @@ export const processWithRogerNervousSystem = async (
   messageCount: number = 0,
   updateStage?: () => void
 ) => {
-  const result = await processRogerianNervousSystem(
+  const result = await enhanceWithUnifiedPipeline(
     originalResponse,
     userInput,
     conversationHistory,
@@ -62,8 +68,5 @@ export const processWithRogerNervousSystem = async (
     updateStage
   );
   
-  console.log(`🧠 ROGER'S NERVOUS SYSTEM: Processed with ${result.systemsEngaged.length} systems engaged:`, 
-    result.systemsEngaged.join(', '));
-  
-  return result.enhancedResponse;
+  return result;
 };
