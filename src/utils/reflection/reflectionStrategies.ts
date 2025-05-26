@@ -6,6 +6,33 @@
 import { DevelopmentalStage, FeelingCategory } from './reflectionTypes';
 
 /**
+ * Detect developmental stage from message content
+ */
+export const detectDevelopmentalStage = (message: string): DevelopmentalStage => {
+  const lowerMessage = message.toLowerCase();
+  
+  // Look for age indicators
+  if (/\b(mom|mommy|dad|daddy|toy|playground|school)\b/i.test(lowerMessage)) {
+    return 'child';
+  }
+  
+  if (/\b(high school|teenager|teen|homework|parents)\b/i.test(lowerMessage)) {
+    return 'adolescent';
+  }
+  
+  if (/\b(college|university|career|job)\b/i.test(lowerMessage)) {
+    return 'young-adult';
+  }
+  
+  if (/\b(retirement|grandchild|elderly|senior)\b/i.test(lowerMessage)) {
+    return 'older-adult';
+  }
+  
+  // Default to adult
+  return 'adult';
+};
+
+/**
  * Get reflection strategy based on developmental stage
  */
 export const getReflectionStrategy = (stage: DevelopmentalStage): {
@@ -14,25 +41,11 @@ export const getReflectionStrategy = (stage: DevelopmentalStage): {
   techniques: string[];
 } => {
   switch (stage) {
-    case 'infant_toddler':
-      return {
-        approach: 'Simple and concrete',
-        language: 'Very basic words',
-        techniques: ['Simple validation', 'Basic emotion naming']
-      };
-      
-    case 'young_child':
+    case 'child':
       return {
         approach: 'Play-based and concrete',
         language: 'Simple, clear words',
         techniques: ['Emotion naming', 'Simple reflections', 'Validation']
-      };
-      
-    case 'middle_childhood':
-      return {
-        approach: 'Structured and educational',
-        language: 'Age-appropriate vocabulary',
-        techniques: ['Feeling identification', 'Problem-solving', 'Validation']
       };
       
     case 'adolescent':
@@ -43,7 +56,6 @@ export const getReflectionStrategy = (stage: DevelopmentalStage): {
       };
       
     case 'young-adult':
-    case 'young_adult':
       return {
         approach: 'Goal-oriented and supportive',
         language: 'Professional but warm',
@@ -85,12 +97,9 @@ export const generateAgeAppropriateReflection = (
   
   // Base reflections by developmental stage
   const baseReflections = {
-    'infant_toddler': `You feel ${feeling}.`,
-    'young_child': `It sounds like you're feeling ${feeling}.`,
-    'middle_childhood': `I can see that you're feeling ${feeling} about this.`,
+    'child': `You feel ${feeling}.`,
     'adolescent': `It seems like you're experiencing ${feeling} right now.`,
     'young-adult': `I hear that you're feeling ${feeling} about this situation.`,
-    'young_adult': `I hear that you're feeling ${feeling} about this situation.`,
     'adult': `From what you're sharing, it sounds like you're feeling ${feeling}.`,
     'older-adult': `I understand that you're feeling ${feeling} about this.`
   };

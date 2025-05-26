@@ -3,7 +3,7 @@
  * Core reflection principles as described by Rogers
  */
 
-import { ReflectionPrinciple } from '../core/types';
+import { ReflectionPrinciple } from '../reflectionTypes';
 
 export const reflectionPrinciples: ReflectionPrinciple[] = [
   {
@@ -23,12 +23,6 @@ export const reflectionPrinciples: ReflectionPrinciple[] = [
     contraindications: [
       "Avoid when client is not ready for emotional exploration",
       "Don't use when safety concerns need immediate addressing"
-    ],
-    implementation: [
-      "Listen carefully to the client's words and emotional tone",
-      "Reflect back both content and feelings",
-      "Use tentative language to check understanding",
-      "Stay within the client's frame of reference"
     ]
   },
   {
@@ -47,12 +41,6 @@ export const reflectionPrinciples: ReflectionPrinciple[] = [
     contraindications: [
       "Avoid when client is not ready for emotional exploration",
       "Don't use when safety concerns need immediate addressing"
-    ],
-    implementation: [
-      "Identify the core emotion being expressed",
-      "Use phrases like 'It sounds like...' or 'I hear that...'",
-      "Keep the reflection brief and focused",
-      "Pause after reflecting to allow client response"
     ]
   }
 ];

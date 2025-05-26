@@ -66,11 +66,7 @@ export type DevelopmentalStage =
   | 'adolescent' 
   | 'young-adult' 
   | 'adult' 
-  | 'older-adult'
-  | 'infant_toddler'
-  | 'young_child'
-  | 'middle_childhood'
-  | 'young_adult';
+  | 'older-adult';
 
 // Updated FeelingCategory to be a simple string-based category
 export type FeelingCategory = 
@@ -135,5 +131,4 @@ export interface ReflectionPrinciple {
   applications: string[];
   contraindications: string[];
   examples?: string[];
-  implementation?: string[];
 }

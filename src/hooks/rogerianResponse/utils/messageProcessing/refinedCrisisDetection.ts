@@ -23,7 +23,7 @@ import {
   extractPhoneNumber 
 } from '../../../../utils/crisis/phoneNumberCollection';
 
-// Severity assessment levels - updated to include 'low'
+// Severity assessment levels - includes all levels
 type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 
 // Non-crisis patterns that should NOT trigger crisis response
