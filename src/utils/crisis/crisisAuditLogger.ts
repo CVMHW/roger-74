@@ -1,3 +1,4 @@
+
 /**
  * Crisis Audit Logger with Email Notifications
  * 
@@ -14,7 +15,7 @@ export interface CrisisAuditEntry {
   detectionMethod: string;
   userAgent?: string;
   ipAddress?: string;
-  emailFailed?: boolean; // Add this optional property
+  emailFailed?: boolean;
 }
 
 /**
@@ -49,7 +50,7 @@ export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => 
 };
 
 /**
- * Send crisis email notification to psychologist
+ * Send crisis email notification to psychologist using EmailJS
  */
 const sendCrisisEmailNotification = async (entry: CrisisAuditEntry): Promise<void> => {
   const emailBody = `
@@ -78,7 +79,7 @@ This is an automated alert from Roger AI Crisis Detection System
 Cuyahoga Valley Mindful Health and Wellness
   `;
 
-  // Using EmailJS service (requires setup)
+  // Using your configured EmailJS service
   try {
     const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
@@ -86,34 +87,42 @@ Cuyahoga Valley Mindful Health and Wellness
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        service_id: 'service_crisis_alerts', // Would need to be configured
-        template_id: 'template_crisis_alert',
-        user_id: 'your_emailjs_user_id', // Would need to be configured
+        service_id: 'service_fqqp3ta', // Your actual service ID
+        template_id: 'template_crisis_alert', // You'll need to create this template in EmailJS
+        user_id: 'YOUR_EMAILJS_PUBLIC_KEY', // You'll need to add your public key here
         template_params: {
           to_email: 'cvmindfulhealthandwellness@outlook.com',
           from_name: 'Roger AI Crisis System',
-          subject: `CRISIS ALERT: ${entry.crisisType} - ${entry.severity} severity`,
+          subject: `🚨 CRISIS ALERT: ${entry.crisisType} - ${entry.severity} severity`,
           message: emailBody,
           timestamp: entry.timestamp,
           crisis_type: entry.crisisType,
-          severity: entry.severity
+          severity: entry.severity,
+          session_id: entry.sessionId,
+          user_input: entry.userInput,
+          roger_response: entry.rogerResponse
         }
       })
     });
 
     if (!response.ok) {
-      throw new Error(`Email send failed: ${response.status}`);
+      throw new Error(`EmailJS send failed: ${response.status} - ${response.statusText}`);
     }
+
+    const result = await response.json();
+    console.log('Crisis email sent successfully:', result);
+    
   } catch (error) {
-    console.error('Failed to send crisis email:', error);
+    console.error('Failed to send crisis email via EmailJS:', error);
+    
     // Fallback: try using mailto (opens user's email client)
-    const subject = encodeURIComponent(`CRISIS ALERT: ${entry.crisisType} - ${entry.severity} severity`);
+    const subject = encodeURIComponent(`🚨 CRISIS ALERT: ${entry.crisisType} - ${entry.severity} severity`);
     const body = encodeURIComponent(emailBody);
     const mailtoUrl = `mailto:cvmindfulhealthandwellness@outlook.com?subject=${subject}&body=${body}`;
     
-    // This will only work if user has email client configured
     try {
       window.open(mailtoUrl, '_blank');
+      console.log('Opened mailto fallback for crisis notification');
     } catch (mailtoError) {
       console.error('Mailto fallback also failed:', mailtoError);
       throw error;
