@@ -162,9 +162,7 @@ export const processRogerianNervousSystem = async (
   systemsEngaged.push('integrated-analysis');
 
   // PHASE 5: PERSONALITY INSIGHTS
-  const personalityInsight = getRogerPersonalityInsight(
-    userInput
-  );
+  const personalityInsight = getRogerPersonalityInsight(userInput);
   
   const personalityInsights = {
     shouldIncludeInsight: !!personalityInsight && Math.random() > 0.6,
