@@ -126,6 +126,13 @@ const assessSeverityLevel = (userInput: string): { level: SeverityLevel; reasoni
 };
 
 /**
+ * Check if severity level indicates crisis intervention is needed
+ */
+const isCrisisLevel = (level: SeverityLevel): boolean => {
+  return level === 'medium' || level === 'high' || level === 'critical';
+};
+
+/**
  * Enhanced crisis detection with improved severity assessment
  */
 export const handleRefinedCrisisDetection = async (
@@ -166,13 +173,13 @@ export const handleRefinedCrisisDetection = async (
   console.log("REFINED CRISIS DETECTION: Severity assessment:", severityAssessment);
 
   // Only proceed with crisis response for medium, high, or critical levels
-  if (severityAssessment.level === 'low') {
+  if (!isCrisisLevel(severityAssessment.level)) {
     console.log("REFINED CRISIS DETECTION: Non-crisis level detected, skipping crisis response");
     return null;
   }
 
-  // PRIORITY 3: Check for crisis refusal patterns (only for medium+ severity)
-  if (severityAssessment.level !== 'low') {
+  // PRIORITY 3: Check for crisis refusal patterns (only for crisis levels)
+  if (isCrisisLevel(severityAssessment.level)) {
     const refusalResponse = handleCrisisRefusal(userInput);
     if (refusalResponse) {
       return refusalResponse;
@@ -195,7 +202,7 @@ export const handleRefinedCrisisDetection = async (
   // ENHANCED: MULTI-CRISIS DETECTION with refined severity assessment
   const crisisTypes = detectMultipleCrisisTypes(userInput);
   
-  if (crisisTypes.length > 0 && severityAssessment.level !== 'low') {
+  if (crisisTypes.length > 0 && isCrisisLevel(severityAssessment.level)) {
     console.log("REFINED CRISIS DETECTION: Found crisis types:", crisisTypes);
     console.log("REFINED CRISIS DETECTION: Severity level:", severityAssessment.level);
     console.log("REFINED CRISIS DETECTION: Location info:", locationInfo);
