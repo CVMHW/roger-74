@@ -1,3 +1,4 @@
+
 /**
  * Roger's Comprehensive Nervous System Integrator
  * 
@@ -120,7 +121,7 @@ export const processRogerianNervousSystem = async (
 
   // PHASE 2: EMOTIONAL ANALYSIS
   const emotionInfo = extractEmotionsFromInput(userInput);
-  const enhancedFeelings = identifyEnhancedFeelings(userInput);
+  const enhancedFeelings = identifyEnhancedFeelings(userInput); // Fixed: using only 1 argument
   systemsEngaged.push('emotion-analysis');
   
   const emotionalContext = {
@@ -233,7 +234,7 @@ export const processRogerianNervousSystem = async (
     }
   }
 
-  // PHASE 8: PERSONALITY INTEGRATION - Fixed function call
+  // PHASE 8: PERSONALITY INTEGRATION
   if (personalityInsights.shouldIncludeInsight && personalityInsights.insight) {
     enhancedResponse = integratePersonalityInsight(enhancedResponse, personalityInsights.insight);
     systemsEngaged.push('personality-integration');
@@ -300,7 +301,6 @@ const extractConversationThemes = (history: string[]): string[] => {
 
 /**
  * Integrate personality insight into response
- * Fixed function signature to match usage
  */
 const integratePersonalityInsight = (response: string, insight: string): string => {
   const sentences = response.split(/(?<=[.!?])\s+/);
