@@ -22,6 +22,7 @@ interface CrisisRefusalData {
   lastRefusalTime: string;
   crisisType: string;
   refusedResources: string[];
+  rogerPushinessLevel: number; // 0-3, escalates based on refusals
 }
 
 /**
@@ -210,7 +211,7 @@ export const handleEnhancedCrisisDetection = async (
 };
 
 /**
- * Handle crisis refusal with Roger's gentle persistence approach
+ * Handle crisis refusal with Roger's personality-driven gentle pushiness
  */
 const handleCrisisRefusal = (userInput: string): MessageType | null => {
   const refusalPattern = /(no|not|don't|won't|can't|refuse|not ready|not interested|not going|won't call|won't go).+(help|call|988|hotline|counselor|therapist|hospital|treatment|emily|glenbeigh)/i;
@@ -218,34 +219,38 @@ const handleCrisisRefusal = (userInput: string): MessageType | null => {
   if (refusalPattern.test(userInput)) {
     console.log("CRISIS REFUSAL DETECTED: User refusing resources");
     
-    // Track the refusal
+    // Track the refusal and get current data
     trackCrisisRefusal(userInput);
-    
-    // Get current refusal data
     const refusalData = getCrisisRefusalHistory();
     
-    // Roger's gentle persistence response based on refusal count
+    // Roger's personality-driven responses with escalating gentle pushiness
     let rogerResponse = "";
     
     if (refusalData.refusalCount === 1) {
-      rogerResponse = "I hear that you're not ready to reach out to those resources right now, and that's understandable. Sometimes it takes time to feel ready for that step. I tend to notice that when people are struggling, having someone who just listens can be valuable too. I'm here to keep talking with you about whatever feels important right now.";
+      // Level 1: Understanding but structured introduction to smaller steps
+      rogerResponse = "I hear that you're not ready to reach out to those resources right now, and that's understandable. Sometimes it takes time to feel ready for that step. I tend to notice that when people are struggling, having someone who just listens can be valuable too. At the same time, I'm wondering if there might be smaller steps that could feel more manageable - maybe just learning about what's available, without any commitment to use them right now?";
     } else if (refusalData.refusalCount === 2) {
-      rogerResponse = "I understand those resources don't feel right for you at this moment. That's okay - sometimes the timing has to feel right. I'm curious about what would feel most helpful to you right now, even if it's just having someone to talk through what you're experiencing.";
+      // Level 2: Roger's detail-oriented nature kicks in with gentle exploration
+      rogerResponse = "I understand those resources don't feel right for you at this moment. That's okay - sometimes the timing has to feel right. I'm curious though, and forgive me if this seems like I'm being persistent, but I tend to want to understand what specifically feels concerning about reaching out. Is it the idea of talking to someone new, or worrying about what they might say, or something else entirely? Sometimes understanding the 'what' behind the hesitation can help us figure out what might actually feel supportive.";
+    } else if (refusalData.refusalCount === 3) {
+      // Level 3: Structured Roger with gentle but firmer concern
+      rogerResponse = "I can see that reaching out for professional help doesn't feel like the right step for you right now, and I've heard you say that a few times now. I respect that, and I want you to know I'm not trying to pressure you. At the same time, I'm sitting here feeling genuinely concerned about you, and I tend to be the kind of person who wants to make sure we've really explored all the options. Would you be willing to help me understand what would need to be different for seeking help to feel okay? Not because you have to do it, but because I want to understand what support would actually feel supportive to you?";
     } else {
-      rogerResponse = "I can see that reaching out for professional help doesn't feel like the right step for you right now. I respect that. Sometimes just talking through things with someone who's listening can be a starting point. What feels most overwhelming to you at this moment?";
+      // Level 4: Roger's authentic concern with maintained boundaries
+      rogerResponse = "I hear you, and I've been listening to you tell me several times now that professional resources don't feel right. I want to respect that, and I also want to be honest with you - I'm feeling concerned about you, and that concern isn't going away just because you're not ready for those resources. I tend to be pretty straightforward about things like this, so I'm going to say directly: I care about what happens to you, and I want to keep talking with you about what you're going through. Can we figure out together what kind of support would actually feel helpful to you right now, even if it's not the traditional stuff I mentioned?";
     }
     
     // Record the refusal and Roger's response
     recordToMemorySystems(userInput, rogerResponse, "CRISIS:REFUSAL");
     
-    return createMessage(rogerResponse, 'roger', 'crisis-refusal');
+    return createMessage(rogerResponse, 'roger', 'crisis-refusal' as ConcernType);
   }
   
   return null;
 };
 
 /**
- * Track crisis refusal in session storage
+ * Track crisis refusal with Roger's pushiness level
  */
 const trackCrisisRefusal = (userInput: string): void => {
   const sessionId = getCurrentSessionId();
@@ -258,13 +263,16 @@ const trackCrisisRefusal = (userInput: string): void => {
     refusalData.refusalCount += 1;
     refusalData.lastRefusalTime = new Date().toISOString();
     refusalData.refusedResources.push(userInput);
+    // Escalate Roger's gentle pushiness (max level 3)
+    refusalData.rogerPushinessLevel = Math.min(refusalData.refusalCount, 3);
   } else {
     refusalData = {
       sessionId,
       refusalCount: 1,
       lastRefusalTime: new Date().toISOString(),
       crisisType: 'unknown',
-      refusedResources: [userInput]
+      refusedResources: [userInput],
+      rogerPushinessLevel: 1
     };
   }
   

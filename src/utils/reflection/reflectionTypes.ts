@@ -1,6 +1,60 @@
 
-// This file is now just a re-export of the core types to maintain backward compatibility
-// All type definitions have been moved to core/types.ts
+/**
+ * Types for reflection and concern detection system
+ */
 
-export * from './core/types';
-export * from './core/feelingCategories';
+export type ConcernType = 
+  | 'crisis'
+  | 'crisis-refusal'
+  | 'tentative-harm'
+  | 'eating-disorder'
+  | 'substance-use'
+  | 'depression'
+  | 'anxiety'
+  | 'self-harm'
+  | 'suicide'
+  | 'mental-health'
+  | 'emotional-distress'
+  | 'relationship-issues'
+  | 'family-problems'
+  | 'work-stress'
+  | 'academic-pressure'
+  | 'financial-stress'
+  | 'grief-loss'
+  | 'trauma'
+  | 'adjustment-difficulties'
+  | 'social-isolation'
+  | 'low-self-esteem'
+  | 'anger-management'
+  | 'sleep-issues'
+  | 'concentration-problems'
+  | 'decision-making-difficulties'
+  | 'life-transitions'
+  | 'identity-issues'
+  | 'spiritual-concerns'
+  | 'health-anxiety'
+  | 'social-anxiety'
+  | 'perfectionism'
+  | 'procrastination'
+  | 'conflict-resolution'
+  | 'communication-issues'
+  | 'boundary-setting'
+  | 'assertiveness'
+  | 'time-management'
+  | 'stress-management'
+  | 'coping-strategies'
+  | 'personal-growth'
+  | 'self-care'
+  | 'mindfulness'
+  | 'wellness'
+  | null;
+
+export interface ReflectionData {
+  primaryConcern: ConcernType;
+  secondaryConcerns: ConcernType[];
+  emotionalTone: 'positive' | 'neutral' | 'negative' | 'mixed';
+  urgencyLevel: 'low' | 'medium' | 'high' | 'critical';
+  supportNeeded: boolean;
+  resourcesRecommended: string[];
+  followUpSuggested: boolean;
+}
