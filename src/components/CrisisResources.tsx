@@ -86,60 +86,64 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
             </p>
             
             <ResourceCategory 
-              title="Summit County"
-              resources={[
-                { label: "Summit County Mobile Crisis", phone: "330-434-9144" },
-                { label: "Akron-Children's Crisis Line", phone: "330-543-7472" }
-              ]}
-            />
-            
-            <ResourceCategory 
-              title="Stark County"
-              resources={[
-                { label: "Stark County Mobile Crisis", phone: "330-452-6000" },
-                { label: "Homeless Hotline Stark County", phone: "330-452-4363" }
-              ]}
-            />
-            
-            <ResourceCategory 
-              title="Cuyahoga County"
-              resources={[
-                { label: "Cuyahoga County Mobile Crisis (Emergency)", phone: "216-623-6555" },
-                { label: "Homeless Hotline Cuyahoga County", phone: "216-674-6700" },
-                { label: "Cleveland Project DAWN Expanded Mobile Unit (Emergency)", phone: "216-387-6290" },
-                { label: "Cleveland Emergency Medical Services (Emergency)", phone: "216-664-2555" },
-                { label: "Cleveland Emily Program Eating Disorders Residential Admissions", phone: "888-272-0836" },
-                { label: "Cleveland Windsor-Laurelwood Residential Psychiatric Hospital", phone: "440-953-3000" },
-                { label: "Cleveland Highland Springs Residential Psychiatric Hospital", phone: "216-302-3070" },
-                { label: "Cleveland Bluestone Residential Pediatric Psychiatric Hospital", phone: "216-200-5030" },
-                { label: "Cleveland Veteran's Affairs Louis Stokes Mental Healthcare", phone: "216-791-3800", extension: "61035" },
-                { label: "Cuyahoga County Catholic Charities (Non-Emergency)", phone: "216-334-2900" }
-              ]}
-            />
-            
-            <ResourceCategory 
-              title="Ohio State & National"
+              title="Ohio/National Crisis Support"
               resources={[
                 { label: "National Suicide Prevention Hotline", phone: "988", isPrimary: true },
-                { label: "Ohio Gambling Hotline", phone: "888-532-3500" },
-                { label: "Ohio Veteran Crisis Line", phone: "800-273-8255" },
+                { label: "National Suicide Prevention Hotline (Alternative)", phone: "1-800-273-8255" },
+                { label: "Ohio Veteran Crisis Line", phone: "1-800-273-8255" },
                 { label: "Ohio Crisis Text Line", phone: "Text 241-241" },
                 { label: "Trevor Project LGBTQ+ Sensitive Crisis Emergencies", phone: "866-488-7386" },
                 { label: "Ohio Trans Lifeline", phone: "877-565-8860" },
                 { label: "Domestic Violence Lifeline", phone: "330-453-7233" },
                 { label: "Opiate Hotline", phone: "330-453-4357" },
+                { label: "Ohio Gambling Hotline", phone: "1-888-532-3500" },
                 { label: "United Way of Ohio", phone: "211" }
               ]}
             />
             
             <ResourceCategory 
-              title="Ashtabula County"
+              title="Akron/Canton Crisis Support"
               resources={[
-                { label: "Ashtabula County 24/7 Substance Use Disorder Crisis Hotline", phone: "800-577-7849" },
-                { label: "Ashtabula Rape Crisis Center Hotline", phone: "440-354-7364" },
-                { label: "Ashtabula County Children Services 24/7 Hotline", phone: "888-998-1811" },
-                { label: "Ashtabula Homesafe Domestic Violence Hotline", phone: "800-952-2873" },
-                { label: "Ashtabula Catholic Charities (Non-Emergency)", phone: "440-992-2121" }
+                { label: "Summit County Mobile Crisis", phone: "330-434-9144" },
+                { label: "Akron Children's Crisis Line", phone: "330-543-7472" },
+                { label: "Stark County Mobile Crisis", phone: "330-452-6000" },
+                { label: "Homeless Hotline Stark County", phone: "330-452-4363" },
+                { label: "Homeless Hotline Summit County", phone: "330-615-0577" }
+              ]}
+            />
+            
+            <ResourceCategory 
+              title="Ashtabula/Jefferson Crisis Support"
+              resources={[
+                { label: "Ashtabula County 24/7 Substance Use Disorder Crisis Hotline", phone: "1-800-577-7849" },
+                { label: "Ashtabula Rape Crisis Center Hotline", phone: "1-440-354-7364" },
+                { label: "Ashtabula County Children Services 24/7 Hotline", phone: "1-888-998-1811" },
+                { label: "Ashtabula Homesafe Domestic Violence Hotline", phone: "1-800-952-2873" },
+                { label: "Ashtabula Frontline Services", phone: "1-440-381-8347" },
+                { label: "Ashtabula Catholic Charities (Non-Emergency)", phone: "1-440-992-2121" },
+                { label: "Ashtabula Samaritan House (Non-Emergency)", phone: "1-440-992-3178" },
+                { label: "Rock Creek Glenbeigh Substance Abuse Hospital", phone: "1-877-487-5126" },
+                { label: "Ashtabula County Regional Medical Center Hospital", phone: "1-440-997-2262" },
+                { label: "Chardon Ravenwood Psychiatric Hospital & Outpatient Clinic", phone: "1-440-285-4552" }
+              ]}
+            />
+            
+            <ResourceCategory 
+              title="Cleveland/Mentor/Chardon Crisis Support"
+              resources={[
+                { label: "Cuyahoga County Mobile Crisis (Emergency)", phone: "1-216-623-6555" },
+                { label: "Cleveland Frontline Services", phone: "1-216-623-6555" },
+                { label: "Homeless Hotline Cuyahoga County", phone: "1-216-674-6700" },
+                { label: "Cleveland Project DAWN Expanded Mobile Unit (Emergency)", phone: "1-216-387-6290" },
+                { label: "Cleveland Emergency Medical Services (Emergency)", phone: "1-216-664-2555" },
+                { label: "Cleveland Emily Program Eating Disorders Residential Hospital Admissions", phone: "1-888-272-0836" },
+                { label: "Cleveland Windsor-Laurelwood Residential Psychiatric Hospital Admissions", phone: "1-440-953-3000" },
+                { label: "Cleveland Highland Springs Residential Psychiatric Hospital Admissions", phone: "1-216-302-3070" },
+                { label: "Cleveland Bluestone Residential Pediatric Psychiatric Hospital Admissions", phone: "1-216-200-5030" },
+                { label: "Cleveland Veteran's Affairs Louis Stokes Mental Healthcare", phone: "1-216-791-3800", extension: "61035" },
+                { label: "Cuyahoga County Catholic Charities (Non-Emergency)", phone: "1-216-334-2900" },
+                { label: "Lake County Frontline Services", phone: "1-440-381-8347" },
+                { label: "Chardon Ravenwood Psychiatric Hospital & Outpatient Clinic", phone: "1-440-285-4552" }
               ]}
             />
           </div>

@@ -1,3 +1,4 @@
+
 /**
  * Crisis Response Coordinator
  * 
@@ -85,7 +86,7 @@ export const getCrisisResponseFromConcernType = (concernType: ConcernType | Cris
 };
 
 /**
- * Get resources for a specific crisis type
+ * Get resources for a specific crisis type with updated Ohio/Regional information
  */
 export const getCrisisResources = (crisisType: CrisisType | ConcernType): string => {
   switch (crisisType) {
@@ -94,27 +95,68 @@ export const getCrisisResources = (crisisType: CrisisType | ConcernType): string
     case 'self-harm':
     case 'tentative-harm':
       return "- National Suicide Prevention Lifeline: 988 or 1-800-273-8255\n" +
-             "- Crisis Text Line: Text HOME to 741741\n" +
-             "- Veterans Crisis Line: 988 then press 1\n" +
+             "- Crisis Text Line: Text 241-241\n" +
+             "- Ohio Veteran Crisis Line: 1-800-273-8255\n" +
+             "- Summit County Mobile Crisis: 330-434-9144\n" +
+             "- Stark County Mobile Crisis: 330-452-6000\n" +
+             "- Cuyahoga County Mobile Crisis: 1-216-623-6555\n" +
              "- Your nearest emergency room\n" +
              "- 911 for immediate danger";
     
     case 'eating-disorder':
-      return "- National Eating Disorders Association (NEDA) Helpline: 1-800-931-2237\n" +
+      return "- Cleveland Emily Program Eating Disorders Residential Hospital: 1-888-272-0836\n" +
+             "- National Eating Disorders Association (NEDA) Helpline: 1-800-931-2237\n" +
              "- NEDA Crisis Text Line: Text 'NEDA' to 741741\n" +
              "- The Emily Program: 1-888-364-5977\n" +
              "- Eating Recovery Center: 1-877-825-8584";
     
     case 'substance-use':
-      return "- SAMHSA National Helpline: 1-800-662-4357\n" +
+      return "- Ashtabula County 24/7 Substance Use Disorder Crisis Hotline: 1-800-577-7849\n" +
+             "- SAMHSA National Helpline: 1-800-662-4357\n" +
+             "- Opiate Hotline: 330-453-4357\n" +
+             "- Rock Creek Glenbeigh Substance Abuse Hospital: 1-877-487-5126\n" +
              "- Alcoholics Anonymous: http://aa.org\n" +
-             "- Narcotics Anonymous: http://na.org\n" +
-             "- National Drug Helpline: 1-844-289-0879";
+             "- Narcotics Anonymous: http://na.org";
     
     default:
       return "- National Crisis Hotline: 988\n" +
-             "- Crisis Text Line: Text HOME to 741741\n" +
+             "- Crisis Text Line: Text 241-241\n" +
+             "- United Way of Ohio: 211\n" +
              "- Your nearest emergency room\n" +
+             "- 911 for immediate emergency";
+  }
+};
+
+/**
+ * Get local crisis resources based on region
+ */
+export const getLocalCrisisResources = (region: 'summit' | 'stark' | 'cuyahoga' | 'ashtabula' | 'general' = 'general'): string => {
+  switch (region) {
+    case 'summit':
+      return "- Summit County Mobile Crisis: 330-434-9144\n" +
+             "- Akron Children's Crisis Line: 330-543-7472\n" +
+             "- Homeless Hotline Summit County: 330-615-0577";
+    
+    case 'stark':
+      return "- Stark County Mobile Crisis: 330-452-6000\n" +
+             "- Homeless Hotline Stark County: 330-452-4363";
+    
+    case 'cuyahoga':
+      return "- Cuyahoga County Mobile Crisis: 1-216-623-6555\n" +
+             "- Cleveland Emergency Medical Services: 1-216-664-2555\n" +
+             "- Homeless Hotline Cuyahoga County: 1-216-674-6700\n" +
+             "- Cleveland Project DAWN Expanded Mobile Unit: 1-216-387-6290";
+    
+    case 'ashtabula':
+      return "- Ashtabula County 24/7 Substance Use Disorder Crisis Hotline: 1-800-577-7849\n" +
+             "- Ashtabula Rape Crisis Center Hotline: 1-440-354-7364\n" +
+             "- Ashtabula County Children Services 24/7 Hotline: 1-888-998-1811\n" +
+             "- Ashtabula Homesafe Domestic Violence Hotline: 1-800-952-2873";
+    
+    default:
+      return "- National Suicide Prevention Lifeline: 988\n" +
+             "- Crisis Text Line: Text 241-241\n" +
+             "- United Way of Ohio: 211\n" +
              "- 911 for immediate emergency";
   }
 };
