@@ -60,6 +60,8 @@ export const processWithRogerNervousSystem = async (
   messageCount: number = 0,
   updateStage?: () => void
 ) => {
+  const { enhanceWithUnifiedPipeline } = await import('./pipeline/ragPipelineIntegrator');
+  
   const result = await enhanceWithUnifiedPipeline(
     originalResponse,
     userInput,
