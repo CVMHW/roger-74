@@ -63,7 +63,7 @@ const useRogerianResponse = (): RogerianResponseHook => {
   } = useResponseCompliance();
   const { calculateResponseTime, simulateTypingResponse, isTyping } = useTypingEffect();
   
-  // Hook for response generation
+  // Hook for response generation - fix the function signature
   const { generateResponse } = useResponseGenerator({
     conversationStage,
     messageCount,
@@ -71,6 +71,12 @@ const useRogerianResponse = (): RogerianResponseHook => {
     adaptiveResponseFn: generateAdaptiveResponse,
     conversationHistory
   });
+  
+  // Create a wrapper for generateResponse to match expected signature
+  const generateResponseWrapper = useCallback((input: string) => {
+    const concernType = detectConcerns(input);
+    return generateResponse(input, concernType);
+  }, [generateResponse, detectConcerns]);
   
   // Hook for response processing
   const { processUserMessage: baseProcessUserMessage } = useResponseProcessing({
@@ -97,7 +103,7 @@ const useRogerianResponse = (): RogerianResponseHook => {
       messageCount,
       updateStage,
       detectConcerns,
-      generateResponse,
+      generateResponse: generateResponseWrapper,
       baseProcessUserMessage,
       clientPreferences
     });
@@ -108,7 +114,7 @@ const useRogerianResponse = (): RogerianResponseHook => {
     messageCount,
     updateStage,
     detectConcerns,
-    generateResponse,
+    generateResponseWrapper,
     baseProcessUserMessage,
     clientPreferences
   ]);

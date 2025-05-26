@@ -1,4 +1,3 @@
-
 /**
  * Crisis Audit Logger with Email Notifications
  * 
@@ -15,6 +14,7 @@ export interface CrisisAuditEntry {
   detectionMethod: string;
   userAgent?: string;
   ipAddress?: string;
+  emailFailed?: boolean; // Add this optional property
 }
 
 /**
