@@ -86,9 +86,15 @@ export interface TraumaResponseAnalysis {
   triggersIdentified: string[];
   copingMechanisms: string[];
   requiresSpecializedCare: boolean;
-  dominant4F?: string;
-  secondary4F?: string;
-  angerLevel?: number;
+  dominant4F?: {
+    type: 'freeze' | 'fawn' | 'fight' | 'flight';
+    intensity: 'mild' | 'moderate' | 'severe' | 'extreme';
+  };
+  secondary4F?: {
+    type: 'freeze' | 'fawn' | 'fight' | 'flight';
+    intensity: 'mild' | 'moderate' | 'severe' | 'extreme';
+  };
+  angerLevel?: 'calm' | 'irritated' | 'angry' | 'enraged';
 }
 
 export interface ReflectionPhrases {
@@ -96,6 +102,7 @@ export interface ReflectionPhrases {
   phrases: string[];
   appropriateUse: string[];
   opening?: string[];
+  closing?: string[];
 }
 
 export interface ReflectionPrinciple {

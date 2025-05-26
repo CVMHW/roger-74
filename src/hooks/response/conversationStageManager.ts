@@ -1,9 +1,6 @@
 
 import { useState } from 'react';
-import { ConversationStage as ReflectionConversationStage } from '../../utils/reflection/reflectionTypes';
-
-// Using the extended ConversationStage type from reflectionTypes
-export type ConversationStage = ReflectionConversationStage;
+import { ConversationStage } from '../../utils/reflection/reflectionTypes';
 
 interface UseConversationStageParams {
   initialStage?: ConversationStage;
@@ -11,7 +8,7 @@ interface UseConversationStageParams {
 }
 
 export const useConversationStage = ({
-  initialStage = 'initial',
+  initialStage = 'opening',
   earlyThreshold = 10
 }: UseConversationStageParams = {}) => {
   const [conversationStage, setConversationStage] = useState<ConversationStage>(initialStage);
@@ -24,12 +21,12 @@ export const useConversationStage = ({
     setMessageCount(newMessageCount);
     
     // Update conversation stage based on message count
-    if (conversationStage === 'initial') {
-      setConversationStage('early');
+    if (conversationStage === 'opening') {
+      setConversationStage('exploration');
       // Mark that an introduction has been made after the first message
       setIntroductionMade(true);
-    } else if (conversationStage === 'early' && newMessageCount >= earlyThreshold) {
-      setConversationStage('established');
+    } else if (conversationStage === 'exploration' && newMessageCount >= earlyThreshold) {
+      setConversationStage('deepening');
     }
   };
 

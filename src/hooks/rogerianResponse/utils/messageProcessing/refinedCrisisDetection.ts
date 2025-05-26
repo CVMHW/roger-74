@@ -174,7 +174,7 @@ export const handleRefinedCrisisDetection = async (
   }
 
   // PRIORITY 3: Check for crisis refusal patterns (only for moderate+ severity)
-  if (severityAssessment.level !== 'minor') {
+  if (severityAssessment.level !== 'minor' && severityAssessment.level !== 'mild') {
     const refusalResponse = handleCrisisRefusal(userInput);
     if (refusalResponse) {
       return refusalResponse;
@@ -197,7 +197,7 @@ export const handleRefinedCrisisDetection = async (
   // ENHANCED: MULTI-CRISIS DETECTION with refined severity assessment
   const crisisTypes = detectMultipleCrisisTypes(userInput);
   
-  if (crisisTypes.length > 0 && severityAssessment.level !== 'minor') {
+  if (crisisTypes.length > 0 && severityAssessment.level !== 'minor' && severityAssessment.level !== 'mild') {
     console.log("REFINED CRISIS DETECTION: Found crisis types:", crisisTypes);
     console.log("REFINED CRISIS DETECTION: Severity level:", severityAssessment.level);
     console.log("REFINED CRISIS DETECTION: Location info:", locationInfo);
