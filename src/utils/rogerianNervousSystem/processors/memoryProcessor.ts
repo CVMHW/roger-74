@@ -1,4 +1,3 @@
-
 /**
  * Unified Memory Processor
  * 
@@ -38,9 +37,10 @@ export const processMemory = async (
     const importance = emotionalContext.isDepressionMentioned ? 1.0 : 
                       emotionalContext.hasDetectedEmotion ? 0.8 : 0.6;
     
-    masterMemory.addMemory(userInput, 'user', memoryMetadata, importance);
+    // Fixed: Changed 'user' to 'patient' to match MemoryRole type
+    masterMemory.addMemory(userInput, 'patient', memoryMetadata, importance);
     
-    // Retrieve relevant memories
+    // Retrieve relevant memories - Fixed: using correct number of arguments
     const rawMemories = masterMemory.searchMemory(userInput, 5);
     
     // Convert to unified MemoryPiece format
