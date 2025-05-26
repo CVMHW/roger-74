@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -9,7 +10,9 @@ import UserConsentDialog from '../components/UserConsentDialog';
 import FloatingCrisisButton from '../components/FloatingCrisisButton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Image, Users, Award, BookOpen, Heart, Shield, Star, Calendar, Info } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Image, Users, Award, BookOpen, Heart, Shield, Star, Calendar, Info, CreditCard } from 'lucide-react';
 
 const Index = () => {
   const [showConsentDialog, setShowConsentDialog] = useState(false);
@@ -41,6 +44,51 @@ const Index = () => {
     e.currentTarget.src = '/placeholder.svg';
     e.currentTarget.classList.remove('logo-pulse');
   };
+
+  const insuranceProviders = [
+    'Aetna',
+    'Amerihealth Caritas', 
+    'Anthem Ohio',
+    'Anthem BCBS',
+    'Beacon Health',
+    'Buckeye',
+    'Buckeye Ambetter',
+    'Carelon',
+    'Caresource',
+    'Cigna',
+    'Frontpath',
+    'Medical Mutual',
+    'Molina',
+    'OptumHealth',
+    'Paramount',
+    'UHC Choice',
+    'UHC Corporate',
+    'UHC Medicaid'
+  ];
+
+  const InsuranceButton = () => (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className="flex items-center gap-2">
+          <CreditCard size={16} />
+          <span>Insurance Accepted</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-4 bg-white border border-gray-200 shadow-lg">
+        <h3 className="font-semibold text-cvmhw-purple mb-3">Insurance Providers Accepted</h3>
+        <div className="grid grid-cols-1 gap-1 max-h-60 overflow-y-auto">
+          {insuranceProviders.map((provider, index) => (
+            <div key={index} className="text-sm text-gray-700 py-1 border-b border-gray-100 last:border-b-0">
+              {provider}
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-gray-500 mt-3">
+          Contact us to verify coverage and benefits for your specific plan.
+        </p>
+      </PopoverContent>
+    </Popover>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-cvmhw-light to-white relative">
@@ -90,10 +138,13 @@ const Index = () => {
                 <div className="rounded-full bg-gradient-to-br from-cvmhw-purple via-cvmhw-blue to-cvmhw-pink h-8 w-8 flex items-center justify-center mr-3">
                   <span className="text-white font-bold">R</span>
                 </div>
-                <p className="text-sm text-gray-600">
-                  <span className="font-medium">Remember:</span> Our conversation is meant to provide Peer Support only. 
-                  If you need immediate assistance, please use the crisis resources above or below.
+                <p className="text-sm text-gray-600 flex-1">
+                  <span className="font-medium">Remember:</span> Roger is a peer support companion, not a licensed therapist. 
+                  For immediate crisis support, please use the resources below.
                 </p>
+                <div className="ml-3">
+                  <InsuranceButton />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -198,15 +249,18 @@ const Index = () => {
                     </div>
                   </CardContent>
                   <CardFooter className="border-t pt-4 text-sm text-gray-500">
-                    <a 
-                      href="https://calendly.com/ericmriesterer/" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="flex items-center gap-2 text-cvmhw-blue hover:text-cvmhw-purple transition-colors"
-                    >
-                      <Calendar size={16} />
-                      <span>Schedule an appointment online</span>
-                    </a>
+                    <div className="flex items-center justify-between w-full">
+                      <a 
+                        href="https://calendly.com/ericmriesterer/" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="flex items-center gap-2 text-cvmhw-blue hover:text-cvmhw-purple transition-colors"
+                      >
+                        <Calendar size={16} />
+                        <span>Schedule an appointment online</span>
+                      </a>
+                      <InsuranceButton />
+                    </div>
                   </CardFooter>
                 </Card>
               </TabsContent>
