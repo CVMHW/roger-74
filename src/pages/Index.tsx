@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -184,7 +185,7 @@ const Index = () => {
               <TabsList className="w-full mb-2">
                 <TabsTrigger className="w-1/2" value="chat">
                   <div className="flex items-center">
-                    <Heart size={18} className="mr-2 text-cvmhw-pink" />
+                    <Heart size={18} className="mr-2 text-cvmhw-pink fill-cvmhw-pink" />
                     <span>Chat with Roger</span>
                   </div>
                 </TabsTrigger>
@@ -232,7 +233,7 @@ const Index = () => {
                       </div>
                       
                       <div className="flex items-start space-x-3">
-                        <Heart className="text-cvmhw-pink h-6 w-6 mt-1" />
+                        <Heart className="text-cvmhw-pink fill-cvmhw-pink h-6 w-6 mt-1" />
                         <div>
                           <h3 className="font-medium text-cvmhw-blue">Compassionate Care</h3>
                           <p className="text-sm text-gray-600">Creating a safe, supportive environment where clients of all ages can feel heard.</p>
@@ -248,7 +249,7 @@ const Index = () => {
                       </div>
                       
                       <div className="flex items-start space-x-3">
-                        <Shield className="text-cvmhw-blue h-6 w-6 mt-1" />
+                        <Shield className="text-cvmhw-orange fill-cvmhw-orange h-6 w-6 mt-1" />
                         <div>
                           <h3 className="font-medium text-cvmhw-blue">Veteran Services</h3>
                           <p className="text-sm text-gray-600">Specialized support for veterans dealing with military adjustment and PTSD.</p>
@@ -298,7 +299,7 @@ const Index = () => {
           {!hasConsented && (
             <Card className="shadow-md border-gray-300 border mb-6">
               <CardContent className="p-6 text-center">
-                <Shield size={48} className="mx-auto text-cvmhw-blue mb-4" />
+                <Shield size={48} className="mx-auto text-cvmhw-orange fill-cvmhw-orange mb-4" />
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">
                   Please Review Important Information
                 </h3>
