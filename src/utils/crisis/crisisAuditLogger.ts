@@ -87,9 +87,9 @@ Cuyahoga Valley Mindful Health and Wellness
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        service_id: 'service_fqqp3ta', // Your actual service ID
-        template_id: 'template_crisis_alert', // You'll need to create this template in EmailJS
-        user_id: 'YOUR_EMAILJS_PUBLIC_KEY', // You'll need to add your public key here
+        service_id: 'service_fqqp3ta',
+        template_id: 'template_crisis_alert', // You'll need to create this template
+        user_id: 'REPLACE_WITH_YOUR_EMAILJS_PUBLIC_KEY', // Replace with your actual public key
         template_params: {
           to_email: 'cvmindfulhealthandwellness@outlook.com',
           from_name: 'Roger AI Crisis System',
