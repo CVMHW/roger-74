@@ -1,3 +1,4 @@
+
 /**
  * Unified Memory Processor
  * 
@@ -18,7 +19,7 @@ export const processMemory = async (
   console.log("MEMORY PROCESSOR: Processing memory context");
   
   try {
-    // Check for new conversation
+    // Check for new conversation - Fixed: using correct number of arguments
     const isNewConversation = masterMemory.isNewConversation(userInput);
     
     if (isNewConversation) {
@@ -41,7 +42,11 @@ export const processMemory = async (
     masterMemory.addMemory(userInput, 'patient', memoryMetadata, importance);
     
     // Retrieve relevant memories - Fixed: using correct number of arguments
-    const rawMemories = masterMemory.searchMemory(userInput, 5);
+    const rawMemories = masterMemory.searchMemory({
+      query: userInput,
+      limit: 5,
+      minImportance: 0.3
+    });
     
     // Convert to unified MemoryPiece format
     const relevantMemories: MemoryPiece[] = rawMemories.map(memory => ({
