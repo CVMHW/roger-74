@@ -1,11 +1,11 @@
 
 /**
- * Enhanced process user message with crisis audit logging
+ * Enhanced process user message with refined crisis detection
  */
 
 import { MessageType } from '../../../components/Message';
 import { ConcernType } from '../../../utils/reflection/reflectionTypes';
-import { handleEnhancedCrisisDetection } from './messageProcessing/enhancedCrisisDetection';
+import { handleRefinedCrisisDetection } from './messageProcessing/refinedCrisisDetection';
 import { processSafetyConcerns } from '../processors/safetyProcessor';
 
 interface ProcessUserMessageDependencies {
@@ -21,7 +21,7 @@ interface ProcessUserMessageDependencies {
 }
 
 /**
- * Enhanced process user message with comprehensive crisis detection and audit logging
+ * Enhanced process user message with refined crisis detection and audit logging
  */
 export const processUserMessage = async (
   userInput: string,
@@ -42,8 +42,8 @@ export const processUserMessage = async (
   // Update conversation history first
   updateConversationHistory(userInput);
 
-  // CRITICAL: Enhanced crisis detection with audit logging (HIGHEST PRIORITY)
-  const crisisResponse = await handleEnhancedCrisisDetection(userInput, updateStage);
+  // CRITICAL: Refined crisis detection with severity assessment (HIGHEST PRIORITY)
+  const crisisResponse = await handleRefinedCrisisDetection(userInput, updateStage);
   if (crisisResponse) {
     return crisisResponse;
   }

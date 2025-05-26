@@ -55,7 +55,19 @@ export type ConcernType =
   | 'pet-illness'
   | 'weather-related'
   | 'cultural-adjustment'
+  | 'minor-illness'
+  | 'pet-loss'
   | null;
+
+export type ConversationStage = 'opening' | 'exploration' | 'deepening' | 'resolution' | 'closing';
+
+export type DevelopmentalStage = 'child' | 'adolescent' | 'young-adult' | 'adult' | 'older-adult';
+
+export interface FeelingCategory {
+  primary: string;
+  secondary: string[];
+  intensity: number;
+}
 
 export interface ReflectionData {
   primaryConcern: ConcernType;
@@ -74,30 +86,16 @@ export interface TraumaResponseAnalysis {
   triggersIdentified: string[];
   copingMechanisms: string[];
   requiresSpecializedCare: boolean;
-}
-
-export interface FeelingCategory {
-  primary: string;
-  secondary: string[];
-  intensity: number;
-}
-
-export interface DevelopmentalStage {
-  stage: 'child' | 'adolescent' | 'young-adult' | 'adult' | 'older-adult';
-  characteristics: string[];
-  appropriateResponses: string[];
-}
-
-export interface ConversationStage {
-  stage: 'opening' | 'exploration' | 'deepening' | 'resolution' | 'closing';
-  markers: string[];
-  transitions: string[];
+  dominant4F?: string;
+  secondary4F?: string;
+  angerLevel?: number;
 }
 
 export interface ReflectionPhrases {
   category: string;
   phrases: string[];
   appropriateUse: string[];
+  opening?: string[];
 }
 
 export interface ReflectionPrinciple {
@@ -105,4 +103,5 @@ export interface ReflectionPrinciple {
   description: string;
   applications: string[];
   contraindications: string[];
+  examples?: string[];
 }
