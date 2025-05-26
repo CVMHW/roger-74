@@ -61,7 +61,16 @@ export type ConcernType =
 
 export type ConversationStage = 'opening' | 'exploration' | 'deepening' | 'resolution' | 'closing';
 
-export type DevelopmentalStage = 'child' | 'adolescent' | 'young-adult' | 'adult' | 'older-adult';
+export type DevelopmentalStage = 
+  | 'child' 
+  | 'adolescent' 
+  | 'young-adult' 
+  | 'adult' 
+  | 'older-adult'
+  | 'infant_toddler'
+  | 'young_child'
+  | 'middle_childhood'
+  | 'young_adult';
 
 // Updated FeelingCategory to be a simple string-based category
 export type FeelingCategory = 
@@ -104,6 +113,7 @@ export interface ReflectionPhrases {
   appropriateUse: string[];
   opening?: string[];
   closing?: string[];
+  sad?: string[]; // Add the missing 'sad' property
 }
 
 export interface ReflectionPrinciple {
@@ -112,4 +122,5 @@ export interface ReflectionPrinciple {
   applications: string[];
   contraindications: string[];
   examples?: string[];
+  implementation?: string; // Add the missing 'implementation' property
 }

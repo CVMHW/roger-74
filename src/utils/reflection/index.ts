@@ -1,28 +1,46 @@
 
-// Export all reflection utilities from a single entry point
+/**
+ * Main export for reflection utilities
+ * Centralized exports to avoid naming conflicts
+ */
 
-// Core types and categories
-export * from './core/types';
-export * from './core/feelingCategories';
-export * from './core/emotionMappers';
+// Export core types from reflectionTypes (primary source)
+export type { 
+  ConcernType, 
+  ConversationStage, 
+  DevelopmentalStage,
+  TraumaResponseAnalysis,
+  ReflectionPhrases,
+  ReflectionPrinciple,
+  FeelingCategory
+} from './reflectionTypes';
 
-// Child emotion utilities
-export * from './children/childEmotionsWheel';
-export * from './children/childEmotionCategories';
+// Export specialized types that don't conflict
+export type { 
+  PatientMemory,
+  ContextAwareReflection,
+  ChildEmotionCategory,
+  ChildWheelEmotionData
+} from './core/types';
 
-// Generators and response builders
-export * from './generators/contextAwareGenerator';
-export * from './generators/minimalResponseHandler';
+// Export functions and utilities
+export { 
+  identifyFeelings,
+  identifyEnhancedFeelings,
+  detectAgeAppropriateEmotions,
+  extractContextualElements,
+  recordToMemory,
+  getAllMemory,
+  getContextualMemory
+} from './feelingDetection';
+
+// Export feeling categories data
+export { 
+  FEELING_WORDS,
+  feelingCategories
+} from './core/feelingCategories';
+
+// Export other utilities
 export * from './generators/reflectionResponseGenerator';
-
-// Main data exports
-export * from './data/contextAwareReflections';
-export * from './feelingDetection';
-
-// Core principles
 export * from './principles/reflectionPrinciples';
-
-// Legacy exports for backward compatibility
-export * from './reflectionTypes';
-export * from './feelingCategories';
-export * from './reflectionGenerators';
+export * from './reflectionStrategies';

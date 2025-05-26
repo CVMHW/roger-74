@@ -96,7 +96,7 @@ export const generateConversationStarterResponse = (stage: DevelopmentalStage): 
     starters = middleChildhoodStarters;
   } else if (stage === 'adolescent') {
     starters = adolescentStarters;
-  } else if (stage === 'young_adult') {
+  } else if (stage === 'young_adult' || stage === 'young-adult') {
     starters = youngAdultStarters;
   } else {
     starters = adultStarters; // Default to adult
