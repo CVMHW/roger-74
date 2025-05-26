@@ -63,11 +63,11 @@ export type ConversationStage = 'opening' | 'exploration' | 'deepening' | 'resol
 
 export type DevelopmentalStage = 'child' | 'adolescent' | 'young-adult' | 'adult' | 'older-adult';
 
-export interface FeelingCategory {
-  primary: string;
-  secondary: string[];
-  intensity: number;
-}
+// Updated FeelingCategory to be a simple string-based category
+export type FeelingCategory = 
+  | "angry" | "happy" | "sad" | "anxious" | "confused" 
+  | "hurt" | "embarrassed" | "guilty" | "ashamed" | "afraid" 
+  | "hopeful" | "lonely" | "overwhelmed" | "relieved" | "neutral";
 
 export interface ReflectionData {
   primaryConcern: ConcernType;
@@ -95,6 +95,7 @@ export interface TraumaResponseAnalysis {
     intensity: 'mild' | 'moderate' | 'severe' | 'extreme';
   };
   angerLevel?: 'calm' | 'irritated' | 'angry' | 'enraged';
+  hybrid?: boolean;
 }
 
 export interface ReflectionPhrases {

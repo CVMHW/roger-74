@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
-import { ConversationStage } from '../../utils/reflection/reflectionTypes';
+
+export type ConversationStage = 'opening' | 'exploration' | 'deepening' | 'resolution' | 'closing';
 
 interface UseConversationStageParams {
   initialStage?: ConversationStage;

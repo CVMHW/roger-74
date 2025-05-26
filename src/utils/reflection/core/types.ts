@@ -1,5 +1,5 @@
 
-import { FeelingCategory } from './feelingCategories';
+import { FeelingCategory } from '../reflectionTypes';
 
 // Re-export from main types to avoid conflicts
 export type { 
@@ -8,7 +8,8 @@ export type {
   DevelopmentalStage,
   TraumaResponseAnalysis,
   ReflectionPhrases,
-  ReflectionPrinciple
+  ReflectionPrinciple,
+  FeelingCategory
 } from '../reflectionTypes';
 
 // Define the structure for patient memory
@@ -45,6 +46,3 @@ export interface ChildWheelEmotionData {
   simpleDescription?: string;
   relatedFeelings?: string[];
 }
-
-// Re-export FeelingCategory for backward compatibility
-export type { FeelingCategory };

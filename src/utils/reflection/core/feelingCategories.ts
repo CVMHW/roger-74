@@ -3,6 +3,12 @@
  * Core feeling categories used across the reflection system
  */
 
+// Define the FeelingCategory type as a union of string literals
+export type FeelingCategory = 
+  | "angry" | "happy" | "sad" | "anxious" | "confused" 
+  | "hurt" | "embarrassed" | "guilty" | "ashamed" | "afraid" 
+  | "hopeful" | "lonely" | "overwhelmed" | "relieved" | "neutral";
+
 // Define the feeling categories and their associated words
 export const FEELING_WORDS: Record<FeelingCategory, string[]> = {
   angry: ["angry", "mad", "furious", "annoyed", "irritated", "frustrated"],
@@ -18,14 +24,9 @@ export const FEELING_WORDS: Record<FeelingCategory, string[]> = {
   hopeful: ["hopeful", "optimistic", "encouraged", "positive", "expectant"],
   lonely: ["lonely", "isolated", "abandoned", "forsaken", "solitary", "alone"],
   overwhelmed: ["overwhelmed", "swamped", "overloaded", "stressed", "burdened", "flooded"],
-  relieved: ["relieved", "unburdened", "calmed", "reassured", "eased", "comforted"]
+  relieved: ["relieved", "unburdened", "calmed", "reassured", "eased", "comforted"],
+  neutral: ["neutral", "calm", "okay", "fine", "stable", "balanced"]
 };
-
-// Define the FeelingCategory type
-export type FeelingCategory = 
-  | "angry" | "happy" | "sad" | "anxious" | "confused" 
-  | "hurt" | "embarrassed" | "guilty" | "ashamed" | "afraid" 
-  | "hopeful" | "lonely" | "overwhelmed" | "relieved";
 
 // Export for backward compatibility
 export const feelingCategories = FEELING_WORDS;
