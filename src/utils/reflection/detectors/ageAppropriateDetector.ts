@@ -18,9 +18,13 @@ export const detectAgeAppropriateEmotions = (text: string, stage: DevelopmentalS
   emotions: string[];
   childFriendly: boolean;
 } => {
-  const isChild = stage !== 'adult' && 
-                 stage !== 'young-adult' &&
-                 stage !== 'young_adult';
+  // Determine if this is a child stage (any non-adult stage)
+  const isChild = stage === 'child' || 
+                 stage === 'adolescent' ||
+                 stage === 'infant_toddler' ||
+                 stage === 'young_child' ||
+                 stage === 'middle_childhood';
+                 
   const enhancedFeelings = identifyEnhancedFeelings(text);
   
   if (isChild) {

@@ -7,7 +7,7 @@
  */
 
 import { checkForCrisisContent, detectMultipleCrisisTypes, CrisisType } from '../../../chat/crisisDetection';
-import { ConcernType } from '../../../../utils/reflection/reflectionTypes';
+import { ConcernType, SeverityLevel } from '../../../../utils/reflection/reflectionTypes';
 import { createMessage } from '../../../../utils/messageUtils';
 import { MessageType } from '../../../../components/Message';
 import { getCrisisResponseWithLocationInquiry } from '../../../../utils/crisis/crisisResponseCoordinator';
@@ -22,9 +22,6 @@ import {
   handlePhoneNumberCollection,
   extractPhoneNumber 
 } from '../../../../utils/crisis/phoneNumberCollection';
-
-// Severity assessment levels - includes all levels
-type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 
 // Non-crisis patterns that should NOT trigger crisis response
 const NON_CRISIS_PATTERNS = {

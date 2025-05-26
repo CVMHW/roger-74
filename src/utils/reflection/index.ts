@@ -12,6 +12,7 @@ export type {
   TraumaResponseAnalysis,
   ReflectionPhrases,
   ReflectionPrinciple,
+  SeverityLevel,
   FeelingCategory
 } from './reflectionTypes';
 

@@ -42,10 +42,19 @@ export const getReflectionStrategy = (stage: DevelopmentalStage): {
 } => {
   switch (stage) {
     case 'child':
+    case 'infant_toddler':
+    case 'young_child':
       return {
         approach: 'Play-based and concrete',
         language: 'Simple, clear words',
         techniques: ['Emotion naming', 'Simple reflections', 'Validation']
+      };
+      
+    case 'middle_childhood':
+      return {
+        approach: 'Structured and supportive',
+        language: 'Clear but more sophisticated',
+        techniques: ['Skill building', 'Problem solving', 'Validation']
       };
       
     case 'adolescent':
@@ -56,6 +65,7 @@ export const getReflectionStrategy = (stage: DevelopmentalStage): {
       };
       
     case 'young-adult':
+    case 'young_adult':
       return {
         approach: 'Goal-oriented and supportive',
         language: 'Professional but warm',
@@ -96,15 +106,29 @@ export const generateAgeAppropriateReflection = (
   const strategy = getReflectionStrategy(stage);
   
   // Base reflections by developmental stage
-  const baseReflections = {
-    'child': `You feel ${feeling}.`,
-    'adolescent': `It seems like you're experiencing ${feeling} right now.`,
-    'young-adult': `I hear that you're feeling ${feeling} about this situation.`,
-    'adult': `From what you're sharing, it sounds like you're feeling ${feeling}.`,
-    'older-adult': `I understand that you're feeling ${feeling} about this.`
+  const getBaseReflection = (stage: DevelopmentalStage, feeling: FeelingCategory): string => {
+    switch (stage) {
+      case 'child':
+      case 'infant_toddler':
+      case 'young_child':
+        return `You feel ${feeling}.`;
+      case 'middle_childhood':
+        return `It looks like you're feeling ${feeling} right now.`;
+      case 'adolescent':
+        return `It seems like you're experiencing ${feeling} right now.`;
+      case 'young-adult':
+      case 'young_adult':
+        return `I hear that you're feeling ${feeling} about this situation.`;
+      case 'adult':
+        return `From what you're sharing, it sounds like you're feeling ${feeling}.`;
+      case 'older-adult':
+        return `I understand that you're feeling ${feeling} about this.`;
+      default:
+        return `From what you're sharing, it sounds like you're feeling ${feeling}.`;
+    }
   };
   
-  let reflection = baseReflections[stage] || baseReflections['adult'];
+  let reflection = getBaseReflection(stage, feeling);
   
   // Add context if provided
   if (context) {

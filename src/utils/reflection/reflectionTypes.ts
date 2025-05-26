@@ -61,12 +61,20 @@ export type ConcernType =
 
 export type ConversationStage = 'opening' | 'exploration' | 'deepening' | 'resolution' | 'closing';
 
+// Updated to match actual usage across the system
 export type DevelopmentalStage = 
   | 'child' 
   | 'adolescent' 
-  | 'young-adult' 
+  | 'young-adult'
+  | 'young_adult'  // Keep both for compatibility
   | 'adult' 
-  | 'older-adult';
+  | 'older-adult'
+  | 'infant_toddler'
+  | 'young_child'
+  | 'middle_childhood';
+
+// Severity levels that match crisis detection system
+export type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 
 // Updated FeelingCategory to be a simple string-based category
 export type FeelingCategory = 
@@ -78,7 +86,7 @@ export interface ReflectionData {
   primaryConcern: ConcernType;
   secondaryConcerns: ConcernType[];
   emotionalTone: 'positive' | 'neutral' | 'negative' | 'mixed';
-  urgencyLevel: 'low' | 'medium' | 'high' | 'critical';
+  urgencyLevel: SeverityLevel;
   supportNeeded: boolean;
   resourcesRecommended: string[];
   followUpSuggested: boolean;
@@ -87,17 +95,17 @@ export interface ReflectionData {
 export interface TraumaResponseAnalysis {
   hasPTSDIndicators: boolean;
   traumaType: string;
-  severity: 'mild' | 'moderate' | 'severe';
+  severity: SeverityLevel;
   triggersIdentified: string[];
   copingMechanisms: string[];
   requiresSpecializedCare: boolean;
   dominant4F?: {
     type: 'freeze' | 'fawn' | 'fight' | 'flight';
-    intensity: 'mild' | 'moderate' | 'severe' | 'extreme';
+    intensity: SeverityLevel;
   };
   secondary4F?: {
     type: 'freeze' | 'fawn' | 'fight' | 'flight';
-    intensity: 'mild' | 'moderate' | 'severe' | 'extreme';
+    intensity: SeverityLevel;
   };
   angerLevel?: 'calm' | 'irritated' | 'angry' | 'enraged';
   hybrid?: boolean;

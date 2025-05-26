@@ -1,3 +1,4 @@
+
 import { DevelopmentalStage } from './reflectionTypes';
 
 /**
@@ -88,18 +89,31 @@ export const generateConversationStarterResponse = (stage: DevelopmentalStage): 
   // Select the appropriate set of starters based on stage
   let starters;
   
-  if (stage === 'infant_toddler') {
-    starters = infantToddlerStarters;
-  } else if (stage === 'young_child') {
-    starters = youngChildStarters;
-  } else if (stage === 'middle_childhood') {
-    starters = middleChildhoodStarters;
-  } else if (stage === 'adolescent') {
-    starters = adolescentStarters;
-  } else if (stage === 'young_adult' || stage === 'young-adult') {
-    starters = youngAdultStarters;
-  } else {
-    starters = adultStarters; // Default to adult
+  switch (stage) {
+    case 'infant_toddler':
+      starters = infantToddlerStarters;
+      break;
+    case 'young_child':
+      starters = youngChildStarters;
+      break;
+    case 'middle_childhood':
+      starters = middleChildhoodStarters;
+      break;
+    case 'adolescent':
+      starters = adolescentStarters;
+      break;
+    case 'young_adult':
+    case 'young-adult':
+      starters = youngAdultStarters;
+      break;
+    case 'child':
+      starters = youngChildStarters; // Map child to young_child
+      break;
+    case 'older-adult':
+      starters = adultStarters; // Use adult starters for older adults
+      break;
+    default:
+      starters = adultStarters; // Default to adult
   }
   
   // Randomly select a conversation starter from the appropriate set

@@ -1,5 +1,5 @@
 
-import { FeelingCategory } from '../reflectionTypes';
+import { FeelingCategory as BaseFeelingCategory } from '../reflectionTypes';
 
 // Re-export from main types to avoid conflicts
 export type { 
@@ -9,8 +9,11 @@ export type {
   TraumaResponseAnalysis,
   ReflectionPhrases,
   ReflectionPrinciple,
-  FeelingCategory
+  SeverityLevel
 } from '../reflectionTypes';
+
+// Use alias to avoid naming conflict
+export type FeelingCategory = BaseFeelingCategory;
 
 // Define the structure for patient memory
 export interface PatientMemory {
