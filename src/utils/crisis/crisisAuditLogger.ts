@@ -23,15 +23,18 @@ export interface CrisisAuditEntry {
  */
 export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => {
   try {
+    console.log('CRISIS AUDIT: Starting crisis event logging', entry);
+    
     // Store in local storage for immediate backup
     const existingLogs = getStoredCrisisLogs();
     existingLogs.push(entry);
     localStorage.setItem('crisis_audit_logs', JSON.stringify(existingLogs));
+    console.log('CRISIS AUDIT: Stored locally successfully');
     
     // Send email notification to psychologist
     await sendCrisisEmailNotification(entry);
     
-    console.log('CRISIS AUDIT: Event logged and email sent', {
+    console.log('CRISIS AUDIT: Event logged and email sent successfully', {
       timestamp: entry.timestamp,
       crisisType: entry.crisisType,
       severity: entry.severity
@@ -43,6 +46,7 @@ export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => 
       const existingLogs = getStoredCrisisLogs();
       existingLogs.push({ ...entry, emailFailed: true });
       localStorage.setItem('crisis_audit_logs', JSON.stringify(existingLogs));
+      console.log('CRISIS AUDIT: Stored locally with email failure flag');
     } catch (storageError) {
       console.error('CRISIS AUDIT CRITICAL: Failed to store locally', storageError);
     }
@@ -53,6 +57,8 @@ export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => 
  * Send crisis email notification to psychologist using EmailJS
  */
 const sendCrisisEmailNotification = async (entry: CrisisAuditEntry): Promise<void> => {
+  console.log('CRISIS EMAIL: Starting email notification process');
+  
   const emailBody = `
 CRISIS DETECTION ALERT - Roger AI
 
@@ -79,52 +85,65 @@ This is an automated alert from Roger AI Crisis Detection System
 Cuyahoga Valley Mindful Health and Wellness
   `;
 
+  const emailJSData = {
+    service_id: 'service_fqqp3ta',
+    template_id: 'template_crisis_alert',
+    user_id: 'eFkOj3YAK3s86h8hL',
+    template_params: {
+      to_email: 'cvmindfulhealthandwellness@outlook.com',
+      from_name: 'Roger AI Crisis System',
+      subject: `🚨 CRISIS ALERT: ${entry.crisisType} - ${entry.severity} severity`,
+      message: emailBody,
+      timestamp: entry.timestamp,
+      crisis_type: entry.crisisType,
+      severity: entry.severity,
+      session_id: entry.sessionId,
+      user_input: entry.userInput,
+      roger_response: entry.rogerResponse
+    }
+  };
+
+  console.log('CRISIS EMAIL: Prepared EmailJS data:', emailJSData);
+
   // Using your configured EmailJS service
   try {
+    console.log('CRISIS EMAIL: Sending request to EmailJS API...');
+    
     const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        service_id: 'service_fqqp3ta',
-        template_id: 'template_crisis_alert', // You'll need to create this template
-        user_id: 'eFkOj3YAK3s86h8hL', // Your actual public key
-        template_params: {
-          to_email: 'cvmindfulhealthandwellness@outlook.com',
-          from_name: 'Roger AI Crisis System',
-          subject: `🚨 CRISIS ALERT: ${entry.crisisType} - ${entry.severity} severity`,
-          message: emailBody,
-          timestamp: entry.timestamp,
-          crisis_type: entry.crisisType,
-          severity: entry.severity,
-          session_id: entry.sessionId,
-          user_input: entry.userInput,
-          roger_response: entry.rogerResponse
-        }
-      })
+      body: JSON.stringify(emailJSData)
     });
 
+    console.log('CRISIS EMAIL: EmailJS response status:', response.status);
+    console.log('CRISIS EMAIL: EmailJS response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
-      throw new Error(`EmailJS send failed: ${response.status} - ${response.statusText}`);
+      const errorText = await response.text();
+      console.error('CRISIS EMAIL: EmailJS error response:', errorText);
+      throw new Error(`EmailJS send failed: ${response.status} - ${response.statusText} - ${errorText}`);
     }
 
     const result = await response.json();
-    console.log('Crisis email sent successfully:', result);
+    console.log('CRISIS EMAIL: EmailJS success response:', result);
+    console.log('✅ Crisis email sent successfully to cvmindfulhealthandwellness@outlook.com');
     
   } catch (error) {
-    console.error('Failed to send crisis email via EmailJS:', error);
+    console.error('CRISIS EMAIL: Failed to send crisis email via EmailJS:', error);
     
-    // Fallback: try using mailto (opens user's email client)
+    // Enhanced fallback: try using mailto (opens user's email client)
     const subject = encodeURIComponent(`🚨 CRISIS ALERT: ${entry.crisisType} - ${entry.severity} severity`);
     const body = encodeURIComponent(emailBody);
     const mailtoUrl = `mailto:cvmindfulhealthandwellness@outlook.com?subject=${subject}&body=${body}`;
     
     try {
+      console.log('CRISIS EMAIL: Attempting mailto fallback...');
       window.open(mailtoUrl, '_blank');
-      console.log('Opened mailto fallback for crisis notification');
+      console.log('CRISIS EMAIL: Opened mailto fallback for crisis notification');
     } catch (mailtoError) {
-      console.error('Mailto fallback also failed:', mailtoError);
+      console.error('CRISIS EMAIL: Mailto fallback also failed:', mailtoError);
       throw error;
     }
   }
