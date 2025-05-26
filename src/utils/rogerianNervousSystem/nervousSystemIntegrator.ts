@@ -11,7 +11,7 @@ import { processMemory } from './processors/memoryProcessor';
 import { processRAG } from './processors/ragProcessor';
 import { processPersonality } from './processors/personalityProcessor';
 import { EmotionalContext, CrisisContext, MemoryContext, RAGContext, SmallTalkContext, PersonalityInsights } from './core/types';
-import { identifyEnhancedFeelings } from '../../reflection/feelingDetection';
+import { identifyEnhancedFeelings } from '../reflection/feelingDetection';
 
 /**
  * Unified context type for the entire nervous system
