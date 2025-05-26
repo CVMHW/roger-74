@@ -71,22 +71,25 @@ const Index = () => {
   const InsuranceButton = () => (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2">
+        <Button variant="outline" size="sm" className="flex items-center gap-2 border-cvmhw-blue/30 text-cvmhw-blue hover:bg-cvmhw-light/20 hover:text-cvmhw-purple transition-colors">
           <CreditCard size={16} />
           <span>Insurance Accepted</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-4 bg-white border border-gray-200 shadow-lg">
-        <h3 className="font-semibold text-cvmhw-purple mb-3">Insurance Providers Accepted</h3>
+      <PopoverContent className="w-80 p-4 bg-gradient-to-b from-white to-cvmhw-light/30 border border-cvmhw-blue/20 shadow-lg">
+        <h3 className="font-semibold text-cvmhw-purple mb-3 flex items-center gap-2">
+          <Heart size={16} className="text-cvmhw-pink" />
+          Insurance Providers Accepted
+        </h3>
         <div className="grid grid-cols-1 gap-1 max-h-60 overflow-y-auto">
           {insuranceProviders.map((provider, index) => (
-            <div key={index} className="text-sm text-gray-700 py-1 border-b border-gray-100 last:border-b-0">
+            <div key={index} className="text-sm text-gray-700 py-1.5 px-2 rounded hover:bg-cvmhw-light/40 transition-colors border-b border-cvmhw-blue/10 last:border-b-0">
               {provider}
             </div>
           ))}
         </div>
-        <p className="text-xs text-gray-500 mt-3">
-          Contact us to verify coverage and benefits for your specific plan.
+        <p className="text-xs text-gray-600 mt-3 p-2 bg-cvmhw-light/30 rounded-md">
+          💙 Contact us to verify coverage and benefits for your specific plan.
         </p>
       </PopoverContent>
     </Popover>
