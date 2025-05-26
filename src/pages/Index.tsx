@@ -71,24 +71,24 @@ const Index = () => {
   const InsuranceButton = () => (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2 border-cvmhw-blue/30 text-cvmhw-blue hover:bg-cvmhw-light/20 hover:text-cvmhw-purple transition-colors">
+        <Button variant="outline" size="sm" className="flex items-center gap-2 border-cvmhw-light bg-cvmhw-light/20 text-cvmhw-blue hover:bg-cvmhw-light/40 hover:border-cvmhw-blue transition-colors">
           <CreditCard size={16} />
           <span>Insurance Accepted</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-4 bg-gradient-to-b from-white to-cvmhw-light/30 border border-cvmhw-blue/20 shadow-lg">
-        <h3 className="font-semibold text-cvmhw-purple mb-3 flex items-center gap-2">
+      <PopoverContent className="w-80 p-4 bg-gradient-to-b from-cvmhw-light/50 to-white border border-cvmhw-light shadow-lg">
+        <h3 className="font-semibold text-cvmhw-blue mb-3 flex items-center gap-2">
           <Heart size={16} className="text-cvmhw-pink" />
           Insurance Providers Accepted
         </h3>
         <div className="grid grid-cols-1 gap-1 max-h-60 overflow-y-auto">
           {insuranceProviders.map((provider, index) => (
-            <div key={index} className="text-sm text-gray-700 py-1.5 px-2 rounded hover:bg-cvmhw-light/40 transition-colors border-b border-cvmhw-blue/10 last:border-b-0">
+            <div key={index} className="text-sm text-gray-700 py-1.5 px-2 rounded hover:bg-cvmhw-light/60 transition-colors border-b border-cvmhw-light/50 last:border-b-0">
               {provider}
             </div>
           ))}
         </div>
-        <p className="text-xs text-gray-600 mt-3 p-2 bg-cvmhw-light/30 rounded-md">
+        <p className="text-xs text-gray-600 mt-3 p-2 bg-cvmhw-light/40 rounded-md">
           💙 Contact us to verify coverage and benefits for your specific plan.
         </p>
       </PopoverContent>
