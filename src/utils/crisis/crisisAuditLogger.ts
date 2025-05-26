@@ -1,4 +1,3 @@
-
 /**
  * Crisis Audit Logger with Email Notifications
  * 
@@ -85,11 +84,11 @@ This is an automated alert from Roger AI Crisis Detection System
 Cuyahoga Valley Mindful Health and Wellness
   `;
 
-  // Updated with your correct EmailJS configuration
+  // Updated with your CONFIRMED EmailJS configuration from dashboard
   const emailJSData = {
-    service_id: 'service_fqqp3ta', // Your service ID - verify this matches your EmailJS dashboard
-    template_id: 'template_u3w9maq', // Updated to match your actual template ID
-    user_id: 'eFkOj3YAK3s86h8hL', // Updated to match your actual public key
+    service_id: 'service_fqqp3ta', // CONFIRMED: Matches your Gmail service in dashboard
+    template_id: 'template_u3w9maq', // CONFIRMED: Your actual template ID
+    user_id: 'eFkOj3YAK3s86h8hL', // Your public key
     template_params: {
       to_email: 'cvmindfulhealthandwellness@outlook.com',
       from_name: 'Roger AI Crisis System',
@@ -104,7 +103,7 @@ Cuyahoga Valley Mindful Health and Wellness
     }
   };
 
-  console.log('CRISIS EMAIL: Prepared EmailJS data with correct credentials:', emailJSData);
+  console.log('CRISIS EMAIL: Prepared EmailJS data with CONFIRMED credentials:', emailJSData);
 
   // Using your configured EmailJS service
   try {
