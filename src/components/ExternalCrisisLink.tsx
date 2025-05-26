@@ -22,11 +22,11 @@ const ExternalCrisisLink: React.FC<ExternalCrisisLinkProps> = ({
         onClick={handleClick}
         variant="outline"
         size="sm"
-        className={`bg-gradient-to-r from-blue-50 to-cvmhw-light border-cvmhw-blue text-cvmhw-purple hover:from-cvmhw-light hover:to-blue-100 transition-all duration-200 ${className}`}
+        className={`bg-gradient-to-r from-cvmhw-light to-blue-50 border-cvmhw-blue text-cvmhw-blue hover:from-cvmhw-blue hover:to-cvmhw-purple hover:text-white transition-all duration-300 shadow-md ${className}`}
       >
-        <Shield size={16} className="mr-2 text-cvmhw-blue" />
+        <Shield size={16} className="mr-2 text-cvmhw-pink" />
         <span className="font-medium">Crisis Resources</span>
-        <ExternalLink size={14} className="ml-1 text-cvmhw-blue" />
+        <ExternalLink size={14} className="ml-1" />
       </Button>
     );
   }
