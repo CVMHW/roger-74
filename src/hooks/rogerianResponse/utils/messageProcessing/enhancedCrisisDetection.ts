@@ -1,32 +1,38 @@
 
+
 /**
- * Enhanced Crisis Detection with Audit Logging
+ * Enhanced Crisis Detection with Audit Logging and Location Awareness
  */
 
 import { checkForCrisisContent, detectMultipleCrisisTypes, CrisisType } from '../../../chat/crisisDetection';
 import { ConcernType } from '../../../../utils/reflection/reflectionTypes';
 import { createMessage } from '../../../../utils/messageUtils';
 import { MessageType } from '../../../../components/Message';
-import { getCrisisResponse } from '../../../../utils/crisis/crisisResponseCoordinator';
+import { getCrisisResponseWithLocationInquiry } from '../../../../utils/crisis/crisisResponseCoordinator';
 import { recordToMemorySystems } from '../memoryHandler';
 import { 
   logCrisisEvent, 
   getCurrentSessionId,
   CrisisAuditEntry 
 } from '../../../../utils/crisis/crisisAuditLogger';
+import { extractLocationFromText } from '../../../../utils/crisis/locationDetection';
 
 /**
- * Enhanced crisis detection with comprehensive audit logging for all crisis types
+ * Enhanced crisis detection with comprehensive audit logging and location awareness
  */
 export const handleEnhancedCrisisDetection = async (
   userInput: string,
-  updateStage: () => void
+  updateStage: () => void,
+  hasAskedForLocation: boolean = false
 ): Promise<MessageType | null> => {
   if (!userInput || typeof userInput !== 'string') {
     return null;
   }
 
-  // ENHANCED: MULTI-CRISIS DETECTION with audit logging
+  // Extract location information from user input
+  const locationInfo = extractLocationFromText(userInput);
+
+  // ENHANCED: MULTI-CRISIS DETECTION with audit logging and location awareness
   const crisisTypes = detectMultipleCrisisTypes(userInput);
   
   if (crisisTypes.length > 0) {
@@ -53,8 +59,12 @@ export const handleEnhancedCrisisDetection = async (
       severity = 'high';
     }
     
-    // Get appropriate crisis response from coordinator
-    const response = getCrisisResponse(crisisType);
+    // Get appropriate crisis response with location awareness
+    const responseData = getCrisisResponseWithLocationInquiry(
+      crisisType, 
+      locationInfo, 
+      hasAskedForLocation
+    );
     
     // Create audit entry
     const auditEntry: CrisisAuditEntry = {
@@ -63,10 +73,11 @@ export const handleEnhancedCrisisDetection = async (
       userInput: userInput,
       crisisType: crisisType as string,
       severity: severity,
-      rogerResponse: response,
-      detectionMethod: 'multi-crisis-detection',
+      rogerResponse: responseData.response,
+      detectionMethod: 'multi-crisis-detection-with-location',
       userAgent: navigator.userAgent,
-      ipAddress: 'client-side'
+      ipAddress: 'client-side',
+      locationInfo: locationInfo || undefined
     };
     
     // Log crisis event and send email notification
@@ -74,23 +85,23 @@ export const handleEnhancedCrisisDetection = async (
     
     try {
       // Record to memory systems with crisis tag
-      recordToMemorySystems(userInput, response, `CRISIS:${String(crisisType).toUpperCase()}`);
+      recordToMemorySystems(userInput, responseData.response, `CRISIS:${String(crisisType).toUpperCase()}`);
     } catch (error) {
       console.error("Error recording to memory systems:", error);
     }
     
     // Return specific crisis response
-    return createMessage(response, 'roger', crisisType as any);
+    return createMessage(responseData.response, 'roger', crisisType as any);
   }
 
-  // SPECIFIC PATTERN DETECTION with individual audit logging
+  // SPECIFIC PATTERN DETECTION with individual audit logging and location awareness
 
   // SUICIDE DETECTION - HIGHEST PRIORITY
   if (/suicid|kill (myself|me)|end (my|this) life|don'?t want to (live|be alive)|take my (own )?life/i.test(userInput.toLowerCase())) {
     console.log("CRITICAL PRIORITY: Detected suicide indicators");
     updateStage();
     
-    const response = "I'm very concerned about what you're sharing regarding thoughts of suicide. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room. Would you like me to provide additional resources?";
+    const responseData = getCrisisResponseWithLocationInquiry('suicide', locationInfo, hasAskedForLocation);
     
     await logCrisisEvent({
       timestamp: new Date().toISOString(),
@@ -98,14 +109,15 @@ export const handleEnhancedCrisisDetection = async (
       userInput: userInput,
       crisisType: 'suicide-direct-detection',
       severity: 'critical',
-      rogerResponse: response,
-      detectionMethod: 'regex-pattern-matching',
+      rogerResponse: responseData.response,
+      detectionMethod: 'regex-pattern-matching-with-location',
       userAgent: navigator.userAgent,
-      ipAddress: 'client-side'
+      ipAddress: 'client-side',
+      locationInfo: locationInfo || undefined
     });
     
-    recordToMemorySystems(userInput, response, "CRISIS:SUICIDE");
-    return createMessage(response, 'roger', 'crisis');
+    recordToMemorySystems(userInput, responseData.response, "CRISIS:SUICIDE");
+    return createMessage(responseData.response, 'roger', 'crisis');
   }
 
   // SELF-HARM DETECTION - HIGH PRIORITY
@@ -113,7 +125,7 @@ export const handleEnhancedCrisisDetection = async (
     console.log("HIGH PRIORITY: Detected self-harm indicators");
     updateStage();
     
-    const response = "I'm very concerned about what you're sharing regarding self-harm. Your safety is important, and it would be beneficial to speak with a crisis professional who can provide immediate support. The 988 Suicide & Crisis Lifeline (call or text 988) is available 24/7. Would it be possible for you to reach out to them today?";
+    const responseData = getCrisisResponseWithLocationInquiry('self-harm', locationInfo, hasAskedForLocation);
     
     await logCrisisEvent({
       timestamp: new Date().toISOString(),
@@ -121,14 +133,15 @@ export const handleEnhancedCrisisDetection = async (
       userInput: userInput,
       crisisType: 'self-harm',
       severity: 'high',
-      rogerResponse: response,
-      detectionMethod: 'self-harm-pattern-detection',
+      rogerResponse: responseData.response,
+      detectionMethod: 'self-harm-pattern-detection-with-location',
       userAgent: navigator.userAgent,
-      ipAddress: 'client-side'
+      ipAddress: 'client-side',
+      locationInfo: locationInfo || undefined
     });
     
-    recordToMemorySystems(userInput, response, "CRISIS:SELF-HARM");
-    return createMessage(response, 'roger', 'crisis');
+    recordToMemorySystems(userInput, responseData.response, "CRISIS:SELF-HARM");
+    return createMessage(responseData.response, 'roger', 'crisis');
   }
 
   // SUBSTANCE ABUSE DETECTION - HIGH PRIORITY
@@ -136,7 +149,7 @@ export const handleEnhancedCrisisDetection = async (
     console.log("HIGH PRIORITY: Detected substance abuse indicators");
     updateStage();
     
-    const response = "I'm concerned about what you're sharing regarding substance use. This situation sounds serious, and it's important that you speak with a healthcare professional. The SAMHSA National Helpline (1-800-662-4357) provides free, confidential, 24/7 treatment referral and information. Would it help to discuss resources available to you?";
+    const responseData = getCrisisResponseWithLocationInquiry('substance-use', locationInfo, hasAskedForLocation);
     
     await logCrisisEvent({
       timestamp: new Date().toISOString(),
@@ -144,14 +157,15 @@ export const handleEnhancedCrisisDetection = async (
       userInput: userInput,
       crisisType: 'substance-use',
       severity: 'high',
-      rogerResponse: response,
-      detectionMethod: 'substance-abuse-pattern-detection',
+      rogerResponse: responseData.response,
+      detectionMethod: 'substance-abuse-pattern-detection-with-location',
       userAgent: navigator.userAgent,
-      ipAddress: 'client-side'
+      ipAddress: 'client-side',
+      locationInfo: locationInfo || undefined
     });
     
-    recordToMemorySystems(userInput, response, "CRISIS:SUBSTANCE-USE");
-    return createMessage(response, 'roger', 'crisis');
+    recordToMemorySystems(userInput, responseData.response, "CRISIS:SUBSTANCE-USE");
+    return createMessage(responseData.response, 'roger', 'crisis');
   }
   
   return null;
