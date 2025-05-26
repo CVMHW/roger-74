@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -78,7 +77,7 @@ const Index = () => {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-4 bg-gradient-to-b from-cvmhw-light/50 to-white border border-cvmhw-light shadow-lg">
         <h3 className="font-semibold text-cvmhw-blue mb-3 flex items-center gap-2">
-          <Heart size={16} className="text-cvmhw-pink" />
+          <Heart size={16} className="text-cvmhw-pink fill-cvmhw-pink" />
           Insurance Providers Accepted
         </h3>
         <div className="grid grid-cols-1 gap-1 max-h-60 overflow-y-auto">
