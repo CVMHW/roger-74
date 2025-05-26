@@ -24,7 +24,7 @@ const ExternalCrisisLink: React.FC<ExternalCrisisLinkProps> = ({
         size="sm"
         className={`bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white border-0 hover:shadow-lg transition-all duration-300 shadow-md ${className}`}
       >
-        <Shield size={16} className="mr-2 text-cvmhw-orange" />
+        <Shield size={16} className="mr-2 text-cvmhw-orange fill-cvmhw-orange" />
         <span className="font-medium">Crisis Resources</span>
         <ExternalLink size={14} className="ml-1" />
       </Button>
@@ -39,7 +39,7 @@ const ExternalCrisisLink: React.FC<ExternalCrisisLinkProps> = ({
         size="sm"
         className={`bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white border-0 hover:shadow-lg transition-all duration-300 shadow-md ${className}`}
       >
-        <Heart size={16} className="mr-2 text-cvmhw-orange" />
+        <Heart size={16} className="mr-2 text-cvmhw-orange fill-cvmhw-orange" />
         <span className="font-medium">Full Crisis Resources & Videos</span>
         <ExternalLink size={14} className="ml-1" />
       </Button>
@@ -52,7 +52,7 @@ const ExternalCrisisLink: React.FC<ExternalCrisisLinkProps> = ({
       onClick={handleClick}
       className={`w-full bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple hover:from-cvmhw-purple hover:to-cvmhw-blue text-white transition-all duration-300 shadow-md hover:shadow-lg ${className}`}
     >
-      <Heart size={18} className="mr-2 text-cvmhw-orange" />
+      <Heart size={18} className="mr-2 text-cvmhw-orange fill-cvmhw-orange" />
       <span className="font-medium">View Complete Crisis Resources & Therapeutic Videos</span>
       <ExternalLink size={16} className="ml-2" />
     </Button>
