@@ -22,7 +22,7 @@ const ExternalCrisisLink: React.FC<ExternalCrisisLinkProps> = ({
         onClick={handleClick}
         variant="outline"
         size="sm"
-        className={`bg-gradient-to-r from-cvmhw-light to-blue-50 border-cvmhw-blue text-cvmhw-blue hover:from-cvmhw-blue hover:to-cvmhw-purple hover:text-white transition-all duration-300 shadow-md ${className}`}
+        className={`bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white border-0 hover:shadow-lg transition-all duration-300 shadow-md ${className}`}
       >
         <Shield size={16} className="mr-2 text-cvmhw-pink" />
         <span className="font-medium">Crisis Resources</span>
@@ -37,7 +37,7 @@ const ExternalCrisisLink: React.FC<ExternalCrisisLinkProps> = ({
         onClick={handleClick}
         variant="outline"
         size="sm"
-        className={`bg-gradient-to-r from-cvmhw-light to-blue-50 border-cvmhw-blue text-cvmhw-blue hover:from-cvmhw-blue hover:to-cvmhw-purple hover:text-white transition-all duration-300 shadow-md ${className}`}
+        className={`bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white border-0 hover:shadow-lg transition-all duration-300 shadow-md ${className}`}
       >
         <Heart size={16} className="mr-2 text-cvmhw-pink" />
         <span className="font-medium">Full Crisis Resources & Videos</span>
