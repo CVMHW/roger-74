@@ -163,8 +163,7 @@ export const processRogerianNervousSystem = async (
 
   // PHASE 5: PERSONALITY INSIGHTS
   const personalityInsight = getRogerPersonalityInsight(
-    userInput,
-    emotionalContext.primaryEmotion || ''
+    userInput
   );
   
   const personalityInsights = {
