@@ -1,8 +1,9 @@
-
 import React from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
 import CrisisResources from '../components/CrisisResources';
+import BetaWatermark from '../components/BetaWatermark';
+import LegalDisclaimer from '../components/LegalDisclaimer';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Image, Users, Award, BookOpen, Heart, Shield, Star, Calendar, Info } from 'lucide-react';
@@ -14,8 +15,9 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-cvmhw-light to-white">
+    <div className="min-h-screen bg-gradient-to-b from-cvmhw-light to-white relative">
       <Header />
+      <BetaWatermark />
       
       <main className="container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
@@ -186,6 +188,7 @@ const Index = () => {
             <p className="mt-1">Roger is a Peer Support companion in-training. He is not a substitute for professional mental health services. Click our Crisis Resources & Support tab for immediate assistance.</p>
           </div>
         </div>
+        <LegalDisclaimer />
       </footer>
     </div>
   );

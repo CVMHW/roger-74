@@ -2,6 +2,7 @@
 import React from 'react';
 import { BookOpen } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import BetaBadge from './BetaBadge';
 
 const Header = () => {
   return (
@@ -30,10 +31,18 @@ const Header = () => {
           </div>
           <div className="flex items-center space-x-2">
             <ThemeToggle />
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-cvmhw-purple via-cvmhw-blue to-cvmhw-pink flex items-center justify-center">
-              <span className="text-white font-medium text-lg">R</span>
+            <div className="flex items-center space-x-2">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-cvmhw-purple via-cvmhw-blue to-cvmhw-pink flex items-center justify-center">
+                <span className="text-white font-medium text-lg">R</span>
+              </div>
+              <div className="flex flex-col items-start">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-cvmhw-blue">Roger.AI</span>
+                  <BetaBadge />
+                </div>
+                <span className="text-xs text-gray-500">Peer Support Beta</span>
+              </div>
             </div>
-            <span className="font-medium text-cvmhw-blue">Roger.AI</span>
           </div>
         </div>
       </div>
