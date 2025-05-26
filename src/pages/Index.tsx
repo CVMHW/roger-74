@@ -71,9 +71,9 @@ const Index = () => {
   const InsuranceButton = () => (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2 border-cvmhw-light bg-cvmhw-light/20 text-cvmhw-blue hover:bg-cvmhw-light/40 hover:border-cvmhw-blue transition-colors">
+        <Button variant="outline" size="sm" className="flex items-center gap-2 bg-gradient-to-r from-cvmhw-blue to-cvmhw-light text-white border-0 hover:from-cvmhw-light hover:to-cvmhw-blue hover:text-cvmhw-blue transition-all duration-300 shadow-md">
           <CreditCard size={16} />
-          <span>Insurance Accepted</span>
+          <span className="font-medium">Insurance Accepted</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-4 bg-gradient-to-b from-cvmhw-light/50 to-white border border-cvmhw-light shadow-lg">

@@ -55,8 +55,8 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
             </div>
           </div>
           <div className="flex items-center">
-            <div className={`mr-3 ${forceOpen ? 'bg-red-50' : 'bg-cvmhw-light'} p-1.5 rounded-full border ${forceOpen ? 'border-red-300' : 'border-cvmhw-blue'}`}>
-              <span className={`text-xs font-medium whitespace-nowrap ${forceOpen ? 'text-red-700' : 'text-cvmhw-purple'}`}>
+            <div className={`mr-3 ${forceOpen ? 'bg-red-50' : 'bg-gradient-to-r from-cvmhw-light to-blue-50'} p-1.5 rounded-full border ${forceOpen ? 'border-red-300' : 'border-cvmhw-blue'}`}>
+              <span className={`text-xs font-medium whitespace-nowrap ${forceOpen ? 'text-red-700' : 'bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent'}`}>
                 {isOpen ? 'Click to hide resources' : 'Click to view resources'}
               </span>
             </div>

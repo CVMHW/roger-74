@@ -37,10 +37,10 @@ const ExternalCrisisLink: React.FC<ExternalCrisisLinkProps> = ({
         onClick={handleClick}
         variant="outline"
         size="sm"
-        className={`bg-white border-cvmhw-blue text-cvmhw-purple hover:bg-cvmhw-light transition-colors ${className}`}
+        className={`bg-gradient-to-r from-cvmhw-light to-blue-50 border-cvmhw-blue text-cvmhw-blue hover:from-cvmhw-blue hover:to-cvmhw-purple hover:text-white transition-all duration-300 shadow-md ${className}`}
       >
         <Heart size={16} className="mr-2 text-cvmhw-pink" />
-        <span>Full Crisis Resources & Videos</span>
+        <span className="font-medium">Full Crisis Resources & Videos</span>
         <ExternalLink size={14} className="ml-1" />
       </Button>
     );
