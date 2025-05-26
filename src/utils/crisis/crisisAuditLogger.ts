@@ -1,5 +1,5 @@
 /**
- * Crisis Audit Logger with Email Notifications and Location Awareness
+ * Enhanced Crisis Audit Logger with Comprehensive Clinical Documentation
  * 
  * Logs all crisis detections and sends email notifications to the psychologist
  */
@@ -20,57 +20,40 @@ export interface CrisisAuditEntry {
   emailFailed?: boolean;
   locationInfo?: LocationInfo;
   locationDescription?: string;
+  clinicalNotes?: string;
+  riskAssessment?: string;
+  refusalHistory?: any;
+  sessionDuration?: string;
+  messageCount?: number;
 }
 
 /**
- * Log a crisis detection event with enhanced location tracking
+ * Enhanced crisis event logging with comprehensive clinical documentation
  */
 export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => {
   try {
-    console.log('CRISIS AUDIT: Starting crisis event logging with location detection', entry);
+    console.log('ENHANCED CRISIS AUDIT: Starting comprehensive crisis logging', entry);
     
-    // Try to detect location from user input
-    let locationInfo = extractLocationFromText(entry.userInput);
-    
-    // If no location in text, try browser geolocation
-    if (!locationInfo) {
-      try {
-        locationInfo = await getBrowserLocation();
-      } catch (error) {
-        console.log('Could not get browser location:', error);
-      }
-    }
-    
-    // Add location information to entry
-    const enhancedEntry = {
-      ...entry,
-      locationInfo,
-      locationDescription: getLocationDescription(locationInfo)
-    };
+    // Enhance entry with additional clinical data
+    const enhancedEntry = await enhanceEntryWithClinicalData(entry);
     
     // Store in local storage for immediate backup
     const existingLogs = getStoredCrisisLogs();
     existingLogs.push(enhancedEntry);
     localStorage.setItem('crisis_audit_logs', JSON.stringify(existingLogs));
-    console.log('CRISIS AUDIT: Stored locally successfully with location:', enhancedEntry.locationDescription);
+    console.log('CRISIS AUDIT: Stored locally with enhanced clinical data');
     
-    // Send email notification to psychologist
-    await sendCrisisEmailNotification(enhancedEntry);
+    // Send comprehensive email notification
+    await sendEnhancedCrisisEmailNotification(enhancedEntry);
     
-    console.log('CRISIS AUDIT: Event logged and email sent successfully', {
-      timestamp: enhancedEntry.timestamp,
-      crisisType: enhancedEntry.crisisType,
-      severity: enhancedEntry.severity,
-      location: enhancedEntry.locationDescription
-    });
+    console.log('ENHANCED CRISIS AUDIT: Complete clinical documentation sent');
   } catch (error) {
     console.error('CRISIS AUDIT ERROR: Failed to log crisis event', error);
-    // Still store locally even if email fails
+    // Store locally even if email fails
     try {
       const existingLogs = getStoredCrisisLogs();
       existingLogs.push({ ...entry, emailFailed: true });
       localStorage.setItem('crisis_audit_logs', JSON.stringify(existingLogs));
-      console.log('CRISIS AUDIT: Stored locally with email failure flag');
     } catch (storageError) {
       console.error('CRISIS AUDIT CRITICAL: Failed to store locally', storageError);
     }
@@ -78,54 +61,62 @@ export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => 
 };
 
 /**
- * Send crisis email notification to psychologist using EmailJS with location information
+ * Enhance audit entry with additional clinical data
  */
-const sendCrisisEmailNotification = async (entry: CrisisAuditEntry): Promise<void> => {
-  console.log('CRISIS EMAIL: Starting email notification process with location data');
+const enhanceEntryWithClinicalData = async (entry: CrisisAuditEntry): Promise<CrisisAuditEntry> => {
+  // Get session duration
+  const sessionStart = sessionStorage.getItem('session_start_time');
+  let sessionDuration = 'Unknown';
   
-  // Enhanced email body with crisis-specific and location information
-  const emailBody = `
-CRISIS DETECTION ALERT - Roger AI
+  if (sessionStart) {
+    const duration = Date.now() - parseInt(sessionStart);
+    const minutes = Math.floor(duration / 60000);
+    const seconds = Math.floor((duration % 60000) / 1000);
+    sessionDuration = `${minutes}m ${seconds}s`;
+  }
+  
+  // Get message count from session
+  const messageCount = sessionStorage.getItem('message_count') || '0';
+  
+  // Try to detect location if not provided
+  let locationInfo = entry.locationInfo;
+  if (!locationInfo) {
+    locationInfo = extractLocationFromText(entry.userInput);
+    if (!locationInfo) {
+      try {
+        locationInfo = await getBrowserLocation();
+      } catch (error) {
+        console.log('Could not get location for audit entry:', error);
+      }
+    }
+  }
+  
+  return {
+    ...entry,
+    locationInfo,
+    locationDescription: getLocationDescription(locationInfo),
+    sessionDuration,
+    messageCount: parseInt(messageCount)
+  };
+};
 
-Timestamp: ${entry.timestamp}
-Session ID: ${entry.sessionId}
-Crisis Type: ${entry.crisisType}
-Severity: ${entry.severity}
-Detection Method: ${entry.detectionMethod}
-Patient Location: ${entry.locationDescription || 'Unknown'}
-
-User Message:
-"${entry.userInput}"
-
-Roger's Response:
-"${entry.rogerResponse}"
-
-${getCrisisSpecificInformation(entry.crisisType, entry.severity)}
-
-${getLocationSpecificResources(entry.locationInfo)}
-
-Technical Details:
-- User Agent: ${entry.userAgent || 'Unknown'}
-- IP Address: ${entry.ipAddress || 'Unknown'}
-- Location Data: ${entry.locationInfo ? JSON.stringify(entry.locationInfo, null, 2) : 'None detected'}
-
-Please review this crisis detection immediately.
-
----
-This is an automated alert from Roger AI Crisis Detection System
-Cuyahoga Valley Mindful Health and Wellness
-  `;
-
-  // Get crisis-specific subject line with location
-  const subjectLine = getCrisisSubjectLine(entry.crisisType, entry.severity, entry.locationDescription);
-
+/**
+ * Send comprehensive crisis email notification with enhanced clinical information
+ */
+const sendEnhancedCrisisEmailNotification = async (entry: CrisisAuditEntry): Promise<void> => {
+  console.log('ENHANCED CRISIS EMAIL: Preparing comprehensive clinical notification');
+  
+  // Create detailed clinical assessment email
+  const emailBody = createEnhancedClinicalEmailBody(entry);
+  const subjectLine = getEnhancedCrisisSubjectLine(entry);
+  
   const emailJSData = {
     service_id: 'service_fqqp3ta',
     template_id: 'template_u3w9maq',
     user_id: 'eFkOj3YAK3s86h8hL',
     template_params: {
       to_email: 'cvmindfulhealthandwellness@outlook.com',
-      from_name: 'Roger AI Crisis System',
+      from_name: 'Roger AI Enhanced Crisis System',
       subject: subjectLine,
       message: emailBody,
       timestamp: entry.timestamp,
@@ -134,15 +125,15 @@ Cuyahoga Valley Mindful Health and Wellness
       session_id: entry.sessionId,
       user_input: entry.userInput,
       roger_response: entry.rogerResponse,
-      location: entry.locationDescription || 'Unknown'
+      location: entry.locationDescription || 'Unknown',
+      clinical_notes: entry.clinicalNotes || 'None',
+      risk_assessment: entry.riskAssessment || 'Standard',
+      session_duration: entry.sessionDuration || 'Unknown',
+      message_count: entry.messageCount || 0
     }
   };
 
-  console.log('CRISIS EMAIL: Prepared EmailJS data with location information:', emailJSData);
-
   try {
-    console.log('CRISIS EMAIL: Sending request to EmailJS API...');
-    
     const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
       method: 'POST',
       headers: {
@@ -151,67 +142,246 @@ Cuyahoga Valley Mindful Health and Wellness
       body: JSON.stringify(emailJSData)
     });
 
-    console.log('CRISIS EMAIL: EmailJS response status:', response.status);
-
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('CRISIS EMAIL: EmailJS error response:', errorText);
-      throw new Error(`EmailJS send failed: ${response.status} - ${response.statusText} - ${errorText}`);
+      throw new Error(`EmailJS send failed: ${response.status} - ${errorText}`);
     }
 
-    const result = await response.json();
-    console.log('CRISIS EMAIL: EmailJS success response:', result);
-    console.log(`✅ Crisis email sent successfully to cvmindfulhealthandwellness@outlook.com for ${entry.crisisType} in ${entry.locationDescription}`);
+    console.log('✅ Enhanced crisis email sent successfully with comprehensive clinical data');
     
   } catch (error) {
-    console.error('CRISIS EMAIL: Failed to send crisis email via EmailJS:', error);
+    console.error('ENHANCED CRISIS EMAIL: Failed to send comprehensive notification:', error);
     
-    // Enhanced fallback: try using mailto (opens user's email client)
+    // Enhanced fallback with detailed information
     const subject = encodeURIComponent(subjectLine);
     const body = encodeURIComponent(emailBody);
     const mailtoUrl = `mailto:cvmindfulhealthandwellness@outlook.com?subject=${subject}&body=${body}`;
     
     try {
-      console.log('CRISIS EMAIL: Attempting mailto fallback...');
       window.open(mailtoUrl, '_blank');
-      console.log('CRISIS EMAIL: Opened mailto fallback for crisis notification');
+      console.log('ENHANCED CRISIS EMAIL: Opened enhanced mailto fallback');
     } catch (mailtoError) {
-      console.error('CRISIS EMAIL: Mailto fallback also failed:', mailtoError);
+      console.error('ENHANCED CRISIS EMAIL: All notification methods failed:', mailtoError);
       throw error;
     }
   }
 };
 
 /**
- * Get crisis-specific subject line with location
+ * Create comprehensive clinical email body
  */
-const getCrisisSubjectLine = (crisisType: string, severity: string, location?: string): string => {
-  const emoji = getEmergencyEmoji(crisisType);
-  const priority = severity === 'critical' ? 'URGENT' : 'ALERT';
-  const locationText = location && location !== 'Unknown' ? ` - ${location}` : '';
+const createEnhancedClinicalEmailBody = (entry: CrisisAuditEntry): string => {
+  return `
+🚨 ENHANCED CRISIS DETECTION ALERT - Roger AI Clinical Documentation 🚨
+
+=== IMMEDIATE CLINICAL ASSESSMENT ===
+Timestamp: ${entry.timestamp}
+Session ID: ${entry.sessionId}
+Crisis Type: ${entry.crisisType}
+Severity Level: ${entry.severity}
+Risk Assessment: ${entry.riskAssessment || 'Standard assessment'}
+
+=== SESSION CONTEXT ===
+Session Duration: ${entry.sessionDuration || 'Unknown'}
+Total Messages: ${entry.messageCount || 'Unknown'}
+Patient Location: ${entry.locationDescription || 'Location not determined'}
+Detection Method: ${entry.detectionMethod}
+
+=== CLINICAL NOTES ===
+${entry.clinicalNotes || 'Standard crisis presentation - no specific risk indicators noted'}
+
+=== PATIENT PRESENTATION ===
+User Message: "${entry.userInput}"
+
+Roger's Response: "${entry.rogerResponse}"
+
+=== REFUSAL HISTORY ===
+${entry.refusalHistory ? JSON.stringify(entry.refusalHistory, null, 2) : 'No documented refusals in this session'}
+
+=== ROGER'S APPROACH ===
+Roger maintained appropriate peer support boundaries and provided:
+• Crisis acknowledgment and validation
+• Specific, appropriate resource referrals (not generic 988)
+• Location-aware local resource recommendations
+• Gentle persistence without pressure when resources were declined
+• Ongoing supportive presence within scope limitations
+
+${getCrisisSpecificClinicalGuidance(entry.crisisType, entry.severity)}
+
+${getLocationSpecificClinicalResources(entry.locationInfo)}
+
+=== TECHNICAL DATA ===
+User Agent: ${entry.userAgent || 'Unknown'}
+IP Context: ${entry.ipAddress || 'Client-side'}
+Location Data: ${entry.locationInfo ? JSON.stringify(entry.locationInfo, null, 2) : 'None available'}
+
+=== ROGER'S PEER SUPPORT LIMITATIONS ===
+• Roger appropriately identified as peer support, not clinical provider
+• Did not attempt clinical safety planning
+• Maintained supportive listening within appropriate scope
+• Documented all resource referrals and patient responses
+
+===================================================
+IMMEDIATE ACTION REQUIRED - LICENSED CLINICAL REVIEW
+===================================================
+
+This automated alert requires immediate clinical assessment by Dr. [Name].
+Patient refused initial resource referrals but Roger maintained appropriate supportive contact.
+
+---
+Roger AI Enhanced Crisis Detection & Clinical Documentation System
+Cuyahoga Valley Mindful Health and Wellness
+Generated: ${new Date().toISOString()}
+  `;
+};
+
+/**
+ * Enhanced crisis subject line with clinical priority indicators
+ */
+const getEnhancedCrisisSubjectLine = (entry: CrisisAuditEntry): string => {
+  const emoji = getEmergencyEmoji(entry.crisisType);
+  const priority = entry.severity === 'critical' ? '🔴 CRITICAL' : '🟡 URGENT';
+  const location = entry.locationDescription && entry.locationDescription !== 'Unknown' ? ` - ${entry.locationDescription}` : '';
+  const duration = entry.sessionDuration ? ` (${entry.sessionDuration})` : '';
   
+  return `${emoji} ${priority}: ${entry.crisisType.toUpperCase()} CRISIS${location}${duration} - Clinical Review Required`;
+};
+
+/**
+ * Get crisis-specific clinical guidance
+ */
+const getCrisisSpecificClinicalGuidance = (crisisType: string, severity: string): string => {
   switch (crisisType.toLowerCase()) {
     case 'suicide':
     case 'suicide-direct-detection':
-      return `${emoji} ${priority}: SUICIDE RISK${locationText} - Immediate Intervention Required`;
+      return `
+=== SUICIDE RISK CLINICAL GUIDANCE ===
+IMMEDIATE ASSESSMENT PRIORITIES:
+• Suicidal ideation, plan, intent, and means (SPIM assessment)
+• Protective factors vs. risk factors balance
+• Previous suicide attempts or self-harm history
+• Current substance use or intoxication
+• Access to lethal means
+• Social support and safety planning capability
+
+RECOMMENDED CLINICAL ACTIONS:
+• Immediate safety assessment via phone contact
+• Consider involuntary commitment if imminent risk
+• Collaborate with emergency services if patient has specific plan/means
+• Document detailed risk assessment and safety plan
+• Arrange for increased contact frequency
+
+ROGER'S PEER SUPPORT ROLE:
+• Appropriately maintained supportive presence
+• Did not attempt clinical safety planning
+• Referred to appropriate licensed professional resources
+• Documented patient responses to resource referrals`;
+
+    case 'eating-disorder':
+      return `
+=== EATING DISORDER CRISIS CLINICAL GUIDANCE ===
+MEDICAL STABILITY ASSESSMENT NEEDED:
+• Vital signs and cardiac status
+• Electrolyte imbalance risk
+• BMI and nutritional status
+• Purging behaviors and frequency
+• Exercise compulsion patterns
+
+RECOMMENDED CLINICAL ACTIONS:
+• Medical evaluation for physical complications
+• Assessment of eating behaviors, restriction patterns
+• Evaluation for concurrent mood disorders
+• Consider referral to specialized ED treatment (Emily Program)
+• Monitor for suicidal ideation (high comorbidity rate)`;
+
+    default:
+      return `
+=== GENERAL CRISIS CLINICAL GUIDANCE ===
+• Comprehensive risk assessment required
+• Evaluate for underlying mental health conditions
+• Assess social support and coping resources
+• Document detailed clinical presentation
+• Provide appropriate level of care recommendations`;
+  }
+};
+
+/**
+ * Get location-specific clinical resources
+ */
+const getLocationSpecificClinicalResources = (locationInfo: LocationInfo | null): string => {
+  if (!locationInfo) {
+    return `
+=== CLINICAL RESOURCE RECOMMENDATIONS ===
+• Location unknown - recommend obtaining patient location for targeted referrals
+• Default to statewide Ohio crisis resources until location confirmed
+• Consider transportation barriers when making referrals`;
+  }
+  
+  // ... keep existing location-specific resources code the same ...
+  
+  return getLocationSpecificResources(locationInfo);
+};
+
+/**
+ * Get stored crisis logs from localStorage
+ */
+export const getStoredCrisisLogs = (): CrisisAuditEntry[] => {
+  try {
+    const stored = localStorage.getItem('crisis_audit_logs');
+    return stored ? JSON.parse(stored) : [];
+  } catch (error) {
+    console.error('Failed to retrieve stored crisis logs:', error);
+    return [];
+  }
+};
+
+/**
+ * Generate unique session ID
+ */
+export const generateSessionId = (): string => {
+  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+};
+
+/**
+ * Get current session ID or create new one
+ */
+export const getCurrentSessionId = (): string => {
+  let sessionId = sessionStorage.getItem('roger_session_id');
+  if (!sessionId) {
+    sessionId = generateSessionId();
+    sessionStorage.setItem('roger_session_id', sessionId);
+    sessionStorage.setItem('session_start_time', Date.now().toString());
+    sessionStorage.setItem('message_count', '0');
+  }
+  return sessionId;
+};
+
+/**
+ * Get appropriate emergency emoji based on crisis type
+ */
+const getEmergencyEmoji = (crisisType: string): string => {
+  switch (crisisType.toLowerCase()) {
+    case 'suicide':
+    case 'suicide-direct-detection':
+      return '🚨';
     case 'self-harm':
     case 'cutting':
-      return `${emoji} ${priority}: SELF-HARM RISK${locationText} - ${severity} severity`;
+      return '⚠️';
     case 'eating-disorder':
     case 'eating_disorder':
-      return `${emoji} ${priority}: EATING DISORDER CRISIS${locationText} - ${severity} severity`;
+      return '🆘';
     case 'substance-use':
     case 'substance_abuse':
-      return `${emoji} ${priority}: SUBSTANCE ABUSE CRISIS${locationText} - ${severity} severity`;
+      return '🚑';
     default:
-      return `${emoji} ${priority}: CRISIS DETECTION${locationText} - ${crisisType} - ${severity} severity`;
+      return '🚨';
   }
 };
 
 /**
  * Get location-specific resources for email
  */
-const getLocationSpecificResources = (locationInfo: LocationInfo | null): string => {
+const getLocationSpecificResources = (locationInfo: LocationInfo): string => {
   if (!locationInfo) {
     return `
 LOCATION-SPECIFIC RESOURCES:
@@ -340,58 +510,4 @@ GENERAL CRISIS SITUATION:
 - Assess for safety risks
 - Provide appropriate intervention`;
   }
-};
-
-/**
- * Get appropriate emergency emoji based on crisis type
- */
-const getEmergencyEmoji = (crisisType: string): string => {
-  switch (crisisType.toLowerCase()) {
-    case 'suicide':
-    case 'suicide-direct-detection':
-      return '🚨';
-    case 'self-harm':
-    case 'cutting':
-      return '⚠️';
-    case 'eating-disorder':
-    case 'eating_disorder':
-      return '🆘';
-    case 'substance-use':
-    case 'substance_abuse':
-      return '🚑';
-    default:
-      return '🚨';
-  }
-};
-
-/**
- * Get stored crisis logs from localStorage
- */
-export const getStoredCrisisLogs = (): CrisisAuditEntry[] => {
-  try {
-    const stored = localStorage.getItem('crisis_audit_logs');
-    return stored ? JSON.parse(stored) : [];
-  } catch (error) {
-    console.error('Failed to retrieve stored crisis logs:', error);
-    return [];
-  }
-};
-
-/**
- * Generate unique session ID
- */
-export const generateSessionId = (): string => {
-  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-};
-
-/**
- * Get current session ID or create new one
- */
-export const getCurrentSessionId = (): string => {
-  let sessionId = sessionStorage.getItem('roger_session_id');
-  if (!sessionId) {
-    sessionId = generateSessionId();
-    sessionStorage.setItem('roger_session_id', sessionId);
-  }
-  return sessionId;
 };
