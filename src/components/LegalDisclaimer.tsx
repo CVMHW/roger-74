@@ -21,7 +21,7 @@ const LegalDisclaimer: React.FC = () => {
               Always consult licensed healthcare professionals for medical concerns.
             </p>
             <p>
-              <strong>Emergency Limitations:</strong> Roger cannot provide emergency services or assess crisis situations. 
+              <strong>Emergency Limitations:</strong> Roger cannot provide emergency services or assess crisis situations comparable to crisis professionals. 
               For immediate help, call 911 or the 988 Suicide & Crisis Lifeline. Roger's responses may contain errors and should not replace professional mental health care.
             </p>
           </div>
