@@ -1,16 +1,42 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
 import CrisisResources from '../components/CrisisResources';
 import BetaWatermark from '../components/BetaWatermark';
 import LegalDisclaimer from '../components/LegalDisclaimer';
 import ExternalCrisisLink from '../components/ExternalCrisisLink';
+import UserConsentDialog from '../components/UserConsentDialog';
+import FloatingCrisisButton from '../components/FloatingCrisisButton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Image, Users, Award, BookOpen, Heart, Shield, Star, Calendar, Info } from 'lucide-react';
 
 const Index = () => {
+  const [showConsentDialog, setShowConsentDialog] = useState(false);
+  const [hasConsented, setHasConsented] = useState(false);
+
+  useEffect(() => {
+    // Check if user has already consented
+    const storedConsent = localStorage.getItem('roger_user_consent');
+    if (storedConsent) {
+      try {
+        const consentData = JSON.parse(storedConsent);
+        // Check if consent is still valid (you might want to add expiration logic)
+        setHasConsented(true);
+      } catch (error) {
+        console.error('Error parsing stored consent:', error);
+        setShowConsentDialog(true);
+      }
+    } else {
+      setShowConsentDialog(true);
+    }
+  }, []);
+
+  const handleConsent = () => {
+    setHasConsented(true);
+    setShowConsentDialog(false);
+  };
+
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     e.currentTarget.src = '/placeholder.svg';
     e.currentTarget.classList.remove('logo-pulse');
@@ -20,6 +46,15 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-cvmhw-light to-white relative">
       <Header />
       <BetaWatermark />
+      
+      {/* User Consent Dialog */}
+      <UserConsentDialog 
+        isOpen={showConsentDialog}
+        onConsent={handleConsent}
+      />
+      
+      {/* Floating Crisis Button - always visible when consented */}
+      {hasConsented && <FloatingCrisisButton />}
       
       <main className="container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
@@ -68,113 +103,130 @@ const Index = () => {
             <CrisisResources forceOpen={false} />
           </div>
           
-          {/* Tabbed Content for Chat and About */}
-          <Tabs defaultValue="chat" className="mb-6">
-            <TabsList className="w-full mb-2">
-              <TabsTrigger className="w-1/2" value="chat">
-                <div className="flex items-center">
-                  <Heart size={18} className="mr-2 text-cvmhw-pink" />
-                  <span>Chat with Roger</span>
-                </div>
-              </TabsTrigger>
-              <TabsTrigger className="w-1/2" value="about">
-                <div className="flex items-center">
-                  <Info size={18} className="mr-2 text-cvmhw-blue" />
-                  <span>About CVMHW</span>
-                </div>
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="chat" className="focus:outline-none">
-              <ChatInterface />
-            </TabsContent>
-            
-            <TabsContent value="about" className="focus:outline-none">
-              <Card className="shadow-md border-cvmhw-blue border">
-                <CardHeader>
-                  <div className="flex items-center gap-2">
-                    <div className="relative w-10 h-10">
-                      <img 
-                        src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
-                        alt="CVMHW Logo" 
-                        className="w-full h-full object-contain logo-pulse"
-                        onError={handleImageError}
-                      />
-                    </div>
-                    <CardTitle className="text-xl font-semibold gradient-text">About Cuyahoga Valley Mindful Health and Wellness</CardTitle>
+          {/* Tabbed Content for Chat and About - Only show if user has consented */}
+          {hasConsented && (
+            <Tabs defaultValue="chat" className="mb-6">
+              <TabsList className="w-full mb-2">
+                <TabsTrigger className="w-1/2" value="chat">
+                  <div className="flex items-center">
+                    <Heart size={18} className="mr-2 text-cvmhw-pink" />
+                    <span>Chat with Roger</span>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-600 mb-4">
-                    We are dedicated to supporting mental health and wellness for clients of all ages, from children as young as 4 
-                    to adults and veterans. Our team of licensed professionals works together to provide personalized care 
-                    and evidence-based treatment.
-                  </p>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div className="flex items-start space-x-3">
-                      <BookOpen className="text-cvmhw-purple h-6 w-6 mt-1" />
-                      <div>
-                        <h3 className="font-medium text-cvmhw-blue">Evidence-Based Approaches</h3>
-                        <p className="text-sm text-gray-600">Our therapists use cognitive-processing therapy, mindfulness techniques, and play therapy.</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <Heart className="text-cvmhw-pink h-6 w-6 mt-1" />
-                      <div>
-                        <h3 className="font-medium text-cvmhw-blue">Compassionate Care</h3>
-                        <p className="text-sm text-gray-600">Creating a safe, supportive environment where clients of all ages can feel heard.</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <Users className="text-cvmhw-blue h-6 w-6 mt-1" />
-                      <div>
-                        <h3 className="font-medium text-cvmhw-blue">Diverse Specializations</h3>
-                        <p className="text-sm text-gray-600">Expert care for anxiety, depression, PTSD, family dynamics, and trauma-related concerns.</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <Shield className="text-cvmhw-orange h-6 w-6 mt-1" />
-                      <div>
-                        <h3 className="font-medium text-cvmhw-blue">Veteran Services</h3>
-                        <p className="text-sm text-gray-600">Specialized support for veterans dealing with military adjustment and PTSD.</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <Star className="text-cvmhw-purple h-6 w-6 mt-1" />
-                      <div>
-                        <h3 className="font-medium text-cvmhw-blue">Child & Family Services</h3>
-                        <p className="text-sm text-gray-600">Play therapy and family counseling for children as young as 4 years old.</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <Award className="text-cvmhw-blue h-6 w-6 mt-1" />
-                      <div>
-                        <h3 className="font-medium text-cvmhw-blue">Insurance Accepted</h3>
-                        <p className="text-sm text-gray-600">We work with most major insurance providers including Medicaid.</p>
-                      </div>
-                    </div>
+                </TabsTrigger>
+                <TabsTrigger className="w-1/2" value="about">
+                  <div className="flex items-center">
+                    <Info size={18} className="mr-2 text-cvmhw-blue" />
+                    <span>About CVMHW</span>
                   </div>
-                </CardContent>
-                <CardFooter className="border-t pt-4 text-sm text-gray-500">
-                  <a 
-                    href="https://calendly.com/ericmriesterer/" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="flex items-center gap-2 text-cvmhw-blue hover:text-cvmhw-purple transition-colors"
-                  >
-                    <Calendar size={16} />
-                    <span>Schedule an appointment online</span>
-                  </a>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                </TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="chat" className="focus:outline-none">
+                <ChatInterface />
+              </TabsContent>
+              
+              <TabsContent value="about" className="focus:outline-none">
+                <Card className="shadow-md border-cvmhw-blue border">
+                  <CardHeader>
+                    <div className="flex items-center gap-2">
+                      <div className="relative w-10 h-10">
+                        <img 
+                          src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                          alt="CVMHW Logo" 
+                          className="w-full h-full object-contain logo-pulse"
+                          onError={handleImageError}
+                        />
+                      </div>
+                      <CardTitle className="text-xl font-semibold gradient-text">About Cuyahoga Valley Mindful Health and Wellness</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600 mb-4">
+                      We are dedicated to supporting mental health and wellness for clients of all ages, from children as young as 4 
+                      to adults and veterans. Our team of licensed professionals works together to provide personalized care 
+                      and evidence-based treatment.
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                      <div className="flex items-start space-x-3">
+                        <BookOpen className="text-cvmhw-purple h-6 w-6 mt-1" />
+                        <div>
+                          <h3 className="font-medium text-cvmhw-blue">Evidence-Based Approaches</h3>
+                          <p className="text-sm text-gray-600">Our therapists use cognitive-processing therapy, mindfulness techniques, and play therapy.</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-3">
+                        <Heart className="text-cvmhw-pink h-6 w-6 mt-1" />
+                        <div>
+                          <h3 className="font-medium text-cvmhw-blue">Compassionate Care</h3>
+                          <p className="text-sm text-gray-600">Creating a safe, supportive environment where clients of all ages can feel heard.</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-3">
+                        <Users className="text-cvmhw-blue h-6 w-6 mt-1" />
+                        <div>
+                          <h3 className="font-medium text-cvmhw-blue">Diverse Specializations</h3>
+                          <p className="text-sm text-gray-600">Expert care for anxiety, depression, PTSD, family dynamics, and trauma-related concerns.</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-3">
+                        <Shield className="text-cvmhw-orange h-6 w-6 mt-1" />
+                        <div>
+                          <h3 className="font-medium text-cvmhw-blue">Veteran Services</h3>
+                          <p className="text-sm text-gray-600">Specialized support for veterans dealing with military adjustment and PTSD.</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-3">
+                        <Star className="text-cvmhw-purple h-6 w-6 mt-1" />
+                        <div>
+                          <h3 className="font-medium text-cvmhw-blue">Child & Family Services</h3>
+                          <p className="text-sm text-gray-600">Play therapy and family counseling for children as young as 4 years old.</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-3">
+                        <Award className="text-cvmhw-blue h-6 w-6 mt-1" />
+                        <div>
+                          <h3 className="font-medium text-cvmhw-blue">Insurance Accepted</h3>
+                          <p className="text-sm text-gray-600">We work with most major insurance providers including Medicaid.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="border-t pt-4 text-sm text-gray-500">
+                    <a 
+                      href="https://calendly.com/ericmriesterer/" 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="flex items-center gap-2 text-cvmhw-blue hover:text-cvmhw-purple transition-colors"
+                    >
+                      <Calendar size={16} />
+                      <span>Schedule an appointment online</span>
+                    </a>
+                  </CardFooter>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          )}
+          
+          {/* Show message if not consented */}
+          {!hasConsented && (
+            <Card className="shadow-md border-gray-300 border mb-6">
+              <CardContent className="p-6 text-center">
+                <Shield size={48} className="mx-auto text-cvmhw-blue mb-4" />
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                  Please Review Important Information
+                </h3>
+                <p className="text-gray-600">
+                  Before chatting with Roger, please review and acknowledge the important safety information and limitations.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </main>
       
