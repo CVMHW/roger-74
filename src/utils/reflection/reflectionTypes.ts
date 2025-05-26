@@ -47,6 +47,14 @@ export type ConcernType =
   | 'self-care'
   | 'mindfulness'
   | 'wellness'
+  | 'medical'
+  | 'mild-gambling'
+  | 'ptsd'
+  | 'ptsd-mild'
+  | 'trauma-response'
+  | 'pet-illness'
+  | 'weather-related'
+  | 'cultural-adjustment'
   | null;
 
 export interface ReflectionData {
@@ -57,4 +65,44 @@ export interface ReflectionData {
   supportNeeded: boolean;
   resourcesRecommended: string[];
   followUpSuggested: boolean;
+}
+
+export interface TraumaResponseAnalysis {
+  hasPTSDIndicators: boolean;
+  traumaType: string;
+  severity: 'mild' | 'moderate' | 'severe';
+  triggersIdentified: string[];
+  copingMechanisms: string[];
+  requiresSpecializedCare: boolean;
+}
+
+export interface FeelingCategory {
+  primary: string;
+  secondary: string[];
+  intensity: number;
+}
+
+export interface DevelopmentalStage {
+  stage: 'child' | 'adolescent' | 'young-adult' | 'adult' | 'older-adult';
+  characteristics: string[];
+  appropriateResponses: string[];
+}
+
+export interface ConversationStage {
+  stage: 'opening' | 'exploration' | 'deepening' | 'resolution' | 'closing';
+  markers: string[];
+  transitions: string[];
+}
+
+export interface ReflectionPhrases {
+  category: string;
+  phrases: string[];
+  appropriateUse: string[];
+}
+
+export interface ReflectionPrinciple {
+  name: string;
+  description: string;
+  applications: string[];
+  contraindications: string[];
 }

@@ -1,5 +1,5 @@
 /**
- * Enhanced Crisis Detection with Audit Logging, Location Awareness, and Refusal Handling
+ * Enhanced Crisis Detection with Audit Logging, Location Awareness, Phone Number Collection, and Refusal Handling
  */
 
 import { checkForCrisisContent, detectMultipleCrisisTypes, CrisisType } from '../../../chat/crisisDetection';
@@ -14,6 +14,10 @@ import {
   CrisisAuditEntry 
 } from '../../../../utils/crisis/crisisAuditLogger';
 import { extractLocationFromText, getBrowserLocation } from '../../../../utils/crisis/locationDetection';
+import { 
+  handlePhoneNumberCollection,
+  extractPhoneNumber 
+} from '../../../../utils/crisis/phoneNumberCollection';
 
 // Track crisis refusal patterns in session storage
 interface CrisisRefusalData {
@@ -26,7 +30,7 @@ interface CrisisRefusalData {
 }
 
 /**
- * Enhanced crisis detection with refusal tracking and Roger's gentle persistence
+ * Enhanced crisis detection with refusal tracking, phone number collection, and Roger's gentle persistence
  */
 export const handleEnhancedCrisisDetection = async (
   userInput: string,
@@ -37,7 +41,31 @@ export const handleEnhancedCrisisDetection = async (
     return null;
   }
 
-  // Check for crisis refusal patterns first
+  // PRIORITY 1: Check for phone number in crisis context
+  const phoneNumber = extractPhoneNumber(userInput);
+  if (phoneNumber) {
+    console.log("CRISIS PHONE NUMBER: Detected phone number in user input");
+    
+    // Extract location information
+    let locationInfo = extractLocationFromText(userInput);
+    if (!locationInfo) {
+      try {
+        locationInfo = await getBrowserLocation();
+      } catch (error) {
+        console.log('Could not get browser location:', error);
+      }
+    }
+    
+    // Handle phone number collection (this will send email alert)
+    const phoneResponse = await handlePhoneNumberCollection(userInput, 'crisis', locationInfo);
+    if (phoneResponse) {
+      updateStage();
+      recordToMemorySystems(userInput, phoneResponse, "CRISIS:PHONE-NUMBER-PROVIDED");
+      return createMessage(phoneResponse, 'roger', 'crisis');
+    }
+  }
+
+  // PRIORITY 2: Check for crisis refusal patterns
   const refusalResponse = handleCrisisRefusal(userInput);
   if (refusalResponse) {
     return refusalResponse;
@@ -211,7 +239,7 @@ export const handleEnhancedCrisisDetection = async (
 };
 
 /**
- * Handle crisis refusal with Roger's personality-driven gentle pushiness
+ * Handle crisis refusal with Roger's personality-driven gentle pushiness and phone number collection
  */
 const handleCrisisRefusal = (userInput: string): MessageType | null => {
   const refusalPattern = /(no|not|don't|won't|can't|refuse|not ready|not interested|not going|won't call|won't go).+(help|call|988|hotline|counselor|therapist|hospital|treatment|emily|glenbeigh)/i;
@@ -223,21 +251,21 @@ const handleCrisisRefusal = (userInput: string): MessageType | null => {
     trackCrisisRefusal(userInput);
     const refusalData = getCrisisRefusalHistory();
     
-    // Roger's personality-driven responses with escalating gentle pushiness
+    // Roger's personality-driven responses with escalating gentle pushiness and phone number requests
     let rogerResponse = "";
     
     if (refusalData.refusalCount === 1) {
       // Level 1: Understanding but structured introduction to smaller steps
       rogerResponse = "I hear that you're not ready to reach out to those resources right now, and that's understandable. Sometimes it takes time to feel ready for that step. I tend to notice that when people are struggling, having someone who just listens can be valuable too. At the same time, I'm wondering if there might be smaller steps that could feel more manageable - maybe just learning about what's available, without any commitment to use them right now?";
     } else if (refusalData.refusalCount === 2) {
-      // Level 2: Roger's detail-oriented nature kicks in with gentle exploration
-      rogerResponse = "I understand those resources don't feel right for you at this moment. That's okay - sometimes the timing has to feel right. I'm curious though, and forgive me if this seems like I'm being persistent, but I tend to want to understand what specifically feels concerning about reaching out. Is it the idea of talking to someone new, or worrying about what they might say, or something else entirely? Sometimes understanding the 'what' behind the hesitation can help us figure out what might actually feel supportive.";
+      // Level 2: Roger's detail-oriented nature kicks in with gentle exploration + phone number request
+      rogerResponse = "I understand those resources don't feel right for you at this moment. That's okay - sometimes the timing has to feel right. I'm curious though, and forgive me if this seems like I'm being persistent, but I tend to want to understand what specifically feels concerning about reaching out. Is it the idea of talking to someone new, or worrying about what they might say, or something else entirely? Sometimes understanding the 'what' behind the hesitation can help us figure out what might actually feel supportive. Also, would you be comfortable sharing a phone number where someone could reach you if needed? Not for immediate use, just to have that option available.";
     } else if (refusalData.refusalCount === 3) {
-      // Level 3: Structured Roger with gentle but firmer concern
-      rogerResponse = "I can see that reaching out for professional help doesn't feel like the right step for you right now, and I've heard you say that a few times now. I respect that, and I want you to know I'm not trying to pressure you. At the same time, I'm sitting here feeling genuinely concerned about you, and I tend to be the kind of person who wants to make sure we've really explored all the options. Would you be willing to help me understand what would need to be different for seeking help to feel okay? Not because you have to do it, but because I want to understand what support would actually feel supportive to you?";
+      // Level 3: Structured Roger with gentle but firmer concern + stronger phone number request
+      rogerResponse = "I can see that reaching out for professional help doesn't feel like the right step for you right now, and I've heard you say that a few times now. I respect that, and I want you to know I'm not trying to pressure you. At the same time, I'm sitting here feeling genuinely concerned about you, and I tend to be the kind of person who wants to make sure we've really explored all the options. Would you be willing to help me understand what would need to be different for seeking help to feel okay? And honestly, I'm wondering if you'd consider sharing a phone number - not because you have to call anyone, but because having that direct connection available could be important if things feel different later.";
     } else {
-      // Level 4: Roger's authentic concern with maintained boundaries
-      rogerResponse = "I hear you, and I've been listening to you tell me several times now that professional resources don't feel right. I want to respect that, and I also want to be honest with you - I'm feeling concerned about you, and that concern isn't going away just because you're not ready for those resources. I tend to be pretty straightforward about things like this, so I'm going to say directly: I care about what happens to you, and I want to keep talking with you about what you're going through. Can we figure out together what kind of support would actually feel helpful to you right now, even if it's not the traditional stuff I mentioned?";
+      // Level 4: Roger's authentic concern with maintained boundaries + final phone number request
+      rogerResponse = "I hear you, and I've been listening to you tell me several times now that professional resources don't feel right. I want to respect that, and I also want to be honest with you - I'm feeling concerned about you, and that concern isn't going away just because you're not ready for those resources. I tend to be pretty straightforward about things like this, so I'm going to say directly: I care about what happens to you, and I want to keep talking with you about what you're going through. Can we figure out together what kind of support would actually feel helpful to you right now? And would you consider sharing a phone number? I know you've declined resources, but sometimes having that direct connection can make all the difference when someone is ready.";
     }
     
     // Record the refusal and Roger's response
