@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -58,6 +57,8 @@ const Index = () => {
     'Cigna',
     'Frontpath',
     'Medical Mutual',
+    'Medicaid',
+    'Medicare',
     'Molina',
     'OptumHealth',
     'Paramount',
@@ -88,6 +89,25 @@ const Index = () => {
         </p>
       </PopoverContent>
     </Popover>
+  );
+
+  const CVMHWButton = () => (
+    <a 
+      href="https://cvmhw.com" 
+      target="_blank" 
+      rel="noopener noreferrer" 
+      className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-cvmhw-purple to-cvmhw-blue text-white text-sm font-medium rounded-md hover:from-cvmhw-blue hover:to-cvmhw-purple transition-all duration-200 shadow-sm"
+    >
+      <div className="relative w-5 h-5">
+        <img 
+          src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+          alt="CVMHW Logo" 
+          className="w-full h-full object-contain"
+          onError={handleImageError}
+        />
+      </div>
+      <span>Visit CVMHW.com</span>
+    </a>
   );
 
   return (
@@ -142,7 +162,8 @@ const Index = () => {
                   <span className="font-medium">Remember:</span> Roger is a peer support companion, not a licensed therapist. 
                   For immediate crisis support, please use the resources below.
                 </p>
-                <div className="ml-3">
+                <div className="ml-3 flex items-center gap-2">
+                  <CVMHWButton />
                   <InsuranceButton />
                 </div>
               </div>
@@ -250,15 +271,18 @@ const Index = () => {
                   </CardContent>
                   <CardFooter className="border-t pt-4 text-sm text-gray-500">
                     <div className="flex items-center justify-between w-full">
-                      <a 
-                        href="https://calendly.com/ericmriesterer/" 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="flex items-center gap-2 text-cvmhw-blue hover:text-cvmhw-purple transition-colors"
-                      >
-                        <Calendar size={16} />
-                        <span>Schedule an appointment online</span>
-                      </a>
+                      <div className="flex items-center gap-3">
+                        <a 
+                          href="https://calendly.com/ericmriesterer/" 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="flex items-center gap-2 text-cvmhw-blue hover:text-cvmhw-purple transition-colors"
+                        >
+                          <Calendar size={16} />
+                          <span>Schedule an appointment online</span>
+                        </a>
+                        <CVMHWButton />
+                      </div>
                       <InsuranceButton />
                     </div>
                   </CardFooter>
