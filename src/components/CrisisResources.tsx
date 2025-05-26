@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -27,40 +26,36 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
     <Collapsible 
       open={isOpen} 
       onOpenChange={setIsOpen} 
-      className="w-full bg-white rounded-lg shadow-md overflow-hidden border-2 border-cvmhw-blue"
+      className="w-full bg-white rounded-lg shadow-md overflow-hidden border-2 border-red-300"
     >
       <CollapsibleTrigger asChild>
         <Button 
           variant="outline" 
-          className={`w-full flex justify-between items-center p-5 border-b ${forceOpen ? 'bg-red-50 hover:bg-red-100' : 'bg-cvmhw-light hover:bg-blue-100'} relative`}
+          className="w-full flex justify-between items-center p-5 border-b bg-red-600 hover:bg-red-700 text-white border-red-300 relative"
         >
-          <div className="flex items-center gap-3 text-cvmhw-purple">
+          <div className="flex items-center gap-3">
             <div className="relative">
-              {forceOpen ? (
-                <AlertTriangle size={24} className="text-red-500" />
-              ) : (
-                <Info size={24} className="text-cvmhw-blue" />
-              )}
+              <Phone size={24} className="text-white" />
               <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${forceOpen ? 'bg-red-500' : 'bg-cvmhw-pink'} opacity-75`}></span>
-                <span className={`relative inline-flex rounded-full h-3 w-3 ${forceOpen ? 'bg-red-500' : 'bg-cvmhw-pink'}`}></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
               </span>
             </div>
-            <span className={`font-semibold text-lg ${forceOpen ? 'text-red-700' : ''}`}>
-              {forceOpen ? 'IMMEDIATE Crisis Resources & Support' : 'Crisis Resources & Support'}
+            <span className="font-bold text-lg">
+              Crisis Resources & Support
             </span>
-            <div className={`${forceOpen ? 'bg-red-100' : 'bg-blue-50'} p-1 rounded-md flex items-center border ${forceOpen ? 'border-red-200' : 'border-blue-100'} ml-2 animate-pulse`}>
-              <HelpCircle size={16} className={forceOpen ? 'text-red-600 mr-1' : 'text-cvmhw-blue mr-1'} />
-              <span className={`text-xs font-medium ${forceOpen ? 'text-red-700' : 'text-cvmhw-purple'}`}>Available 24/7</span>
+            <div className="bg-red-100 p-1 rounded-md flex items-center border border-red-200 ml-2 animate-pulse">
+              <HelpCircle size={16} className="text-red-700 mr-1" />
+              <span className="text-xs font-medium text-red-700">Available 24/7</span>
             </div>
           </div>
           <div className="flex items-center">
-            <div className={`mr-3 ${forceOpen ? 'bg-red-50' : 'bg-gradient-to-r from-cvmhw-light to-blue-50'} p-1.5 rounded-full border ${forceOpen ? 'border-red-300' : 'border-cvmhw-blue'}`}>
-              <span className={`text-xs font-medium whitespace-nowrap ${forceOpen ? 'text-red-700' : 'bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent'}`}>
+            <div className="mr-3 bg-red-100 p-1.5 rounded-full border border-red-200">
+              <span className="text-xs font-medium whitespace-nowrap text-red-700">
                 {isOpen ? 'Click to hide resources' : 'Click to view resources'}
               </span>
             </div>
-            {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            {isOpen ? <ChevronUp size={20} className="text-white" /> : <ChevronDown size={20} className="text-white" />}
           </div>
         </Button>
       </CollapsibleTrigger>
