@@ -91,7 +91,7 @@ export const processUnifiedRAGPipeline = async (
         ragData = {
           augmentationApplied: true,
           retrievalResults: retrievalResult.retrievedContent,
-          vectorSearchResults: retrievalResult.vectorResults
+          vectorSearchResults: retrievalResult.retrievedContent // Use retrievedContent instead of vectorResults
         };
         
         nervousSystemResult.systemsEngaged.push('advanced-rag-pipeline');

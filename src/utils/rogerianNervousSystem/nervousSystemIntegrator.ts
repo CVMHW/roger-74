@@ -164,8 +164,7 @@ export const processRogerianNervousSystem = async (
   // PHASE 5: PERSONALITY INSIGHTS
   const personalityInsight = getRogerPersonalityInsight(
     userInput,
-    emotionalContext.primaryEmotion || '',
-    messageCount > 30
+    emotionalContext.primaryEmotion || ''
   );
   
   const personalityInsights = {
@@ -229,8 +228,7 @@ export const processRogerianNervousSystem = async (
     try {
       enhancedResponse = enhanceWithMeaningPerspective(
         enhancedResponse,
-        userInput,
-        emotionalContext.primaryEmotion || 'distress'
+        userInput
       );
       systemsEngaged.push('logotherapy');
     } catch (logoError) {
