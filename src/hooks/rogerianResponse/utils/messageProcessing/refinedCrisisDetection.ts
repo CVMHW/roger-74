@@ -1,3 +1,4 @@
+
 /**
  * Refined Crisis Detection with Enhanced Severity Assessment
  * 
@@ -22,7 +23,7 @@ import {
   extractPhoneNumber 
 } from '../../../../utils/crisis/phoneNumberCollection';
 
-// Severity assessment levels - matching crisis system expectations
+// Severity assessment levels - updated to include 'low'
 type SeverityLevel = 'low' | 'medium' | 'high' | 'critical';
 
 // Non-crisis patterns that should NOT trigger crisis response

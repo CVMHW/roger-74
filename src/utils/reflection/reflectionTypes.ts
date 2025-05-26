@@ -113,7 +113,20 @@ export interface ReflectionPhrases {
   appropriateUse: string[];
   opening?: string[];
   closing?: string[];
-  sad?: string[]; // Add the missing 'sad' property
+  sad?: string[];
+  angry?: string[];
+  anxious?: string[];
+  confused?: string[];
+  hurt?: string[];
+  embarrassed?: string[];
+  guilty?: string[];
+  ashamed?: string[];
+  afraid?: string[];
+  hopeful?: string[];
+  lonely?: string[];
+  overwhelmed?: string[];
+  relieved?: string[];
+  neutral?: string[];
 }
 
 export interface ReflectionPrinciple {
@@ -122,5 +135,5 @@ export interface ReflectionPrinciple {
   applications: string[];
   contraindications: string[];
   examples?: string[];
-  implementation?: string; // Add the missing 'implementation' property
+  implementation?: string[];
 }

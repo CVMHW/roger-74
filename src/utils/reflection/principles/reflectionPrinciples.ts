@@ -14,6 +14,16 @@ export const reflectionPrinciples: ReflectionPrinciple[] = [
       "I hear that you're excited about this new opportunity, but also nervous about the changes it might bring.",
       "From what you're saying, it seems like this relationship has been a source of both joy and frustration for you."
     ],
+    applications: [
+      "Listen carefully to the client's words and emotional tone",
+      "Reflect back both content and feelings",
+      "Use tentative language to check understanding",
+      "Stay within the client's frame of reference"
+    ],
+    contraindications: [
+      "Avoid when client is not ready for emotional exploration",
+      "Don't use when safety concerns need immediate addressing"
+    ],
     implementation: [
       "Listen carefully to the client's words and emotional tone",
       "Reflect back both content and feelings",
@@ -27,6 +37,16 @@ export const reflectionPrinciples: ReflectionPrinciple[] = [
     examples: [
       "It sounds like you're feeling frustrated with this situation", 
       "I hear that you're worried about what might happen next"
+    ],
+    applications: [
+      "Identify the core emotion being expressed",
+      "Use phrases like 'It sounds like...' or 'I hear that...'",
+      "Keep the reflection brief and focused",
+      "Pause after reflecting to allow client response"
+    ],
+    contraindications: [
+      "Avoid when client is not ready for emotional exploration",
+      "Don't use when safety concerns need immediate addressing"
     ],
     implementation: [
       "Identify the core emotion being expressed",
