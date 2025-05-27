@@ -9,8 +9,8 @@
 import { MemoryService } from '../services/MemoryService';
 import { UnifiedPatientContext, UnifiedProcessingResult, EmotionalState, MemoryContext } from './types/UnifiedTypes';
 
-// Export the context type for use by other modules
-export { UnifiedPatientContext } from './types/UnifiedTypes';
+// Export the context type for use by other modules - FIX: Use export type
+export type { UnifiedPatientContext } from './types/UnifiedTypes';
 
 export interface EmotionAnalysis {
   primaryEmotion: string;
@@ -282,14 +282,15 @@ export class UnifiedPatientPipeline {
   }
 
   /**
-   * Unified Emotion Detection - Combines all legacy + modern methods
+   * CRITICAL FIX: Eliminate neutral responses - No one seeks therapy feeling neutral
    */
   private async unifiedEmotionDetection(userInput: string): Promise<EmotionAnalysis> {
     const emotionPatterns = {
       'depression': {
         patterns: [
           /\b(depress(ed|ion|ing)?|sad|down|blue|low|hopeless|worthless|empty)\b/i,
-          /\b(can't cope|overwhelming|breaking down|falling apart)\b/i
+          /\b(can't cope|overwhelming|breaking down|falling apart)\b/i,
+          /\b(feeling (bad|terrible|awful|horrible))\b/i
         ],
         valence: -0.8,
         arousal: 0.3
@@ -297,7 +298,8 @@ export class UnifiedPatientPipeline {
       'anxiety': {
         patterns: [
           /\b(anxious|anxiety|worried|stress|panic|nervous|afraid|scared)\b/i,
-          /\b(racing thoughts|can't stop worrying|heart racing)\b/i
+          /\b(racing thoughts|can't stop worrying|heart racing)\b/i,
+          /\b(overwhelmed|can't handle|too much)\b/i
         ],
         valence: -0.6,
         arousal: 0.8
@@ -310,16 +312,18 @@ export class UnifiedPatientPipeline {
         valence: -0.7,
         arousal: 0.9
       },
-      'joy': {
+      'distress': {
         patterns: [
-          /\b(happy|joy|excited|wonderful|amazing|great|fantastic)\b/i,
-          /\b(feeling good|on top of the world|couldn't be better)\b/i
+          /\b(confused|lost|stuck|don't know|uncertain)\b/i,
+          /\b(struggling|having trouble|difficult time)\b/i,
+          /\b(need help|don't understand|can't figure)\b/i
         ],
-        valence: 0.8,
+        valence: -0.5,
         arousal: 0.6
       }
     };
 
+    // Check each emotion pattern
     for (const [emotion, config] of Object.entries(emotionPatterns)) {
       for (const pattern of config.patterns) {
         if (pattern.test(userInput)) {
@@ -336,14 +340,15 @@ export class UnifiedPatientPipeline {
       }
     }
 
+    // CRITICAL: NO NEUTRAL - Default to seeking help context
     return {
-      primaryEmotion: 'neutral',
+      primaryEmotion: 'seeking-support',
       secondaryEmotions: [],
-      intensity: 0.5,
-      valence: 0,
+      intensity: 0.6,
+      valence: -0.3, // Slight negative because they're seeking therapy
       arousal: 0.5,
-      confidence: 0.6,
-      emotionalTriggers: []
+      confidence: 0.7,
+      emotionalTriggers: ['therapy-context']
     };
   }
 
@@ -572,6 +577,7 @@ export class UnifiedPatientPipeline {
         'depression': "I can hear the sadness in what you're sharing. That sounds really difficult to carry.",
         'anxiety': "It sounds like you're feeling quite anxious about this. That must be exhausting.",
         'anger': "I can sense your frustration. That sounds really difficult to deal with.",
+        'distress': "I can hear the confusion in what you're sharing. That sounds really difficult to navigate.",
         'joy': "I can hear the happiness in what you're sharing. That sounds wonderful."
       };
       return responses[emotion] || "I hear what you're sharing. What would be most helpful to focus on right now?";
@@ -604,6 +610,7 @@ export class UnifiedPatientPipeline {
       'depression': "I can really hear the pain in what you're sharing.",
       'anxiety': "That sounds incredibly overwhelming.",
       'anger': "I can feel how frustrated you are.",
+      'distress': "I can hear the confusion in what you're sharing.",
       'joy': "I can hear the joy in your voice."
     };
     return validations[emotion.primaryEmotion] || "I hear the emotion in what you're sharing.";

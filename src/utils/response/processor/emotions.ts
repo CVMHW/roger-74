@@ -1,6 +1,5 @@
-
 /**
- * Emotion processing utilities
+ * Emotion processing utilities - FIXED: No neutral handling
  */
 
 export interface EmotionInfo {
@@ -20,7 +19,7 @@ export interface SocialEmotionalContext {
 }
 
 /**
- * Extract emotions from user input
+ * Extract emotions from user input - ELIMINATES NEUTRAL
  */
 export const extractEmotionsFromInput = (userInput: string) => {
   // Implementation for emotion detection
@@ -39,34 +38,33 @@ export const extractEmotionsFromInput = (userInput: string) => {
     userInput.toLowerCase().includes(word)
   );
   
-  // Look for emotional content
+  // Look for emotional content - NEVER RETURN NEUTRAL
   const emotionalContent: EmotionInfo = {
-    hasEmotion: false,
+    hasEmotion: true, // ALWAYS true in therapy context
     primaryEmotion: null,
     intensity: null,
     isImplicit: true
   };
   
-  if (userInput.match(/sad|upset|down|low|miserable|unhappy|blue/i)) {
-    emotionalContent.hasEmotion = true;
+  if (userInput.match(/sad|upset|down|low|miserable|unhappy|blue|depressed/i)) {
     emotionalContent.primaryEmotion = 'sadness';
     emotionalContent.intensity = userInput.match(/very|really|so|extremely|incredibly/i) ? 'high' : 'medium';
-  } else if (userInput.match(/anxious|nervous|worried|afraid|scared|fearful|terrified/i)) {
-    emotionalContent.hasEmotion = true;
+  } else if (userInput.match(/anxious|nervous|worried|afraid|scared|fearful|terrified|overwhelmed|stressed/i)) {
     emotionalContent.primaryEmotion = 'anxiety';
     emotionalContent.intensity = userInput.match(/very|really|so|extremely|incredibly|terrified|panicked/i) ? 'high' : 'medium';
   } else if (userInput.match(/angry|mad|frustrated|annoyed|irritated|furious/i)) {
-    emotionalContent.hasEmotion = true;
     emotionalContent.primaryEmotion = 'anger';
     emotionalContent.intensity = userInput.match(/very|really|so|extremely|incredibly|furious|enraged/i) ? 'high' : 'medium';
   } else if (userInput.match(/happy|glad|excited|thrilled|delighted|joy|pleased/i)) {
-    emotionalContent.hasEmotion = true;
     emotionalContent.primaryEmotion = 'joy';
     emotionalContent.intensity = userInput.match(/very|really|so|extremely|incredibly|thrilled|elated/i) ? 'high' : 'medium';
-  } else if (isDepressionMentioned || userInput.match(/hopeless|worthless|numb|empty/i)) {
-    emotionalContent.hasEmotion = true;
+  } else if (userInput.match(/hopeless|worthless|numb|empty/i)) {
     emotionalContent.primaryEmotion = 'depression';
     emotionalContent.intensity = 'high';
+  } else {
+    // DEFAULT: Assume seeking support context
+    emotionalContent.primaryEmotion = 'seeking-support';
+    emotionalContent.intensity = 'medium';
   }
   
   // Meaning themes (simplified)
@@ -97,7 +95,7 @@ export const extractEmotionsFromInput = (userInput: string) => {
     socialContext,
     emotionalContent,
     meaningThemes,
-    hasDetectedEmotion: !!explicitEmotion || emotionalContent.hasEmotion,
+    hasDetectedEmotion: true, // ALWAYS true
     hasMeaningTheme: meaningThemes.hasMeaningTheme,
     isDepressionMentioned
   };

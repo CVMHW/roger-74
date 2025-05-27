@@ -2,75 +2,64 @@
 /**
  * Unified Emotion Processor
  * 
- * Uses the sophisticated emotions wheel for accurate detection
+ * FIXED: Eliminates neutral responses completely
  */
 
 import { EmotionalContext, EmotionType, SeverityLevel } from '../core/types';
 import { detectEmotion } from '../../emotions/unifiedEmotionDetector';
 
 /**
- * Process emotions using unified sophisticated detection
+ * Process emotions - NO MORE NEUTRAL BULLSHIT
  */
 export const processEmotions = async (
   userInput: string,
   conversationHistory: string[] = []
 ): Promise<EmotionalContext> => {
-  console.log("EMOTION PROCESSOR: Using sophisticated emotion detection");
+  console.log("EMOTION PROCESSOR: Using sophisticated emotion detection - NO NEUTRAL ALLOWED");
   
   try {
-    // Use unified emotion detector - NO MORE NEUTRAL
+    // Use unified emotion detector 
     const emotionResult = detectEmotion(userInput);
     
-    // Map to unified emotion types
+    // Map to unified emotion types - NEVER NEUTRAL
     const mapToUnifiedEmotion = (emotion: string): EmotionType => {
       const lowerEmotion = emotion.toLowerCase();
       
-      // Crisis emotions
-      if (['hopeless', 'despair', 'worthless', 'powerless'].includes(lowerEmotion)) return 'depression';
+      // Crisis emotions get priority
+      if (['hopeless', 'despair', 'worthless', 'powerless', 'suicidal'].includes(lowerEmotion)) return 'depression';
       
-      // Sophisticated sad emotions
-      if (['abandoned', 'rejected', 'grief', 'lonely', 'guilty', 'ashamed'].includes(lowerEmotion)) return 'sadness';
+      // Depression and sadness
+      if (['depressed', 'sad', 'down', 'blue', 'low', 'abandoned', 'rejected', 'grief', 'lonely', 'guilty', 'ashamed'].includes(lowerEmotion)) return 'sadness';
       
-      // Sophisticated angry emotions  
-      if (['furious', 'bitter', 'resentful', 'humiliated', 'frustrated'].includes(lowerEmotion)) return 'anger';
+      // Anger variants
+      if (['angry', 'mad', 'furious', 'bitter', 'resentful', 'humiliated', 'frustrated', 'irritated'].includes(lowerEmotion)) return 'anger';
       
-      // Sophisticated fearful emotions
-      if (['overwhelmed', 'anxious', 'worried', 'persecuted', 'threatened'].includes(lowerEmotion)) return 'anxiety';
+      // Anxiety and fear
+      if (['anxious', 'worried', 'scared', 'afraid', 'overwhelmed', 'nervous', 'panic', 'stressed'].includes(lowerEmotion)) return 'anxiety';
       
-      // Sophisticated happy emotions
-      if (['joyful', 'content', 'optimistic', 'proud', 'ecstatic'].includes(lowerEmotion)) return 'joy';
+      // Seeking support or distressed
+      if (['confused', 'lost', 'stuck', 'uncertain', 'seeking-support', 'distressed'].includes(lowerEmotion)) return 'anxiety';
       
-      // Default mapping
-      if (lowerEmotion.includes('fear') || lowerEmotion.includes('scared')) return 'fear';
-      if (lowerEmotion.includes('surprise')) return 'surprise';
-      if (lowerEmotion.includes('disgust')) return 'disgust';
+      // Joy (rare in therapy but valid)
+      if (['happy', 'joyful', 'content', 'optimistic', 'proud', 'ecstatic'].includes(lowerEmotion)) return 'joy';
       
-      // NO NEUTRAL - default to anxiety for therapy context
+      // DEFAULT: If someone is in therapy, they're likely experiencing some distress
       return 'anxiety';
     };
     
-    const mapToSeverity = (intensity: string): SeverityLevel => {
-      switch (intensity) {
-        case 'critical': return 'critical';
-        case 'high': return 'high';
-        case 'low': return 'low';
-        default: return 'medium';
-      }
-    };
-    
     const emotionalContext: EmotionalContext = {
-      hasDetectedEmotion: true, // Always true - no one seeks therapy feeling neutral
+      hasDetectedEmotion: true, // ALWAYS true - no neutral in therapy
       primaryEmotion: mapToUnifiedEmotion(emotionResult.primaryEmotion),
-      isDepressionMentioned: emotionResult.intensity === 'critical' || emotionResult.category === 'sad',
-      emotionalIntensity: mapToSeverity(emotionResult.intensity),
+      isDepressionMentioned: /\b(depress(ed|ion|ing)?|hopeless|worthless|despair)\b/i.test(userInput),
+      emotionalIntensity: emotionResult.intensity as SeverityLevel,
       confidence: emotionResult.confidence,
       therapeuticContext: emotionResult.therapeuticContext,
       rogerResponse: emotionResult.rogerResponse
     };
     
-    console.log("EMOTION PROCESSOR: Sophisticated detection complete", {
+    console.log("EMOTION PROCESSOR: Detected emotion", {
       detected: emotionResult.primaryEmotion,
-      category: emotionResult.category,
+      mapped: emotionalContext.primaryEmotion,
       intensity: emotionResult.intensity,
       confidence: emotionResult.confidence
     });
@@ -78,8 +67,8 @@ export const processEmotions = async (
     return emotionalContext;
     
   } catch (error) {
-    console.error("EMOTION PROCESSOR: Error in sophisticated detection:", error);
-    // Even in error, assume therapeutic context
+    console.error("EMOTION PROCESSOR: Error in detection:", error);
+    // Even in error, assume therapeutic context - NEVER NEUTRAL
     return {
       hasDetectedEmotion: true,
       primaryEmotion: 'anxiety',
@@ -87,7 +76,7 @@ export const processEmotions = async (
       emotionalIntensity: 'medium',
       confidence: 0.7,
       therapeuticContext: 'general',
-      rogerResponse: 'I can sense something is weighing on you. What would you like to explore?'
+      rogerResponse: 'I can sense you might be going through something difficult. What would you like to explore?'
     };
   }
 };

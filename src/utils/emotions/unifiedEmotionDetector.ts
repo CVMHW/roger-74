@@ -1,15 +1,13 @@
-
 /**
  * Unified Emotion Detector
  * 
- * Uses the sophisticated emotions wheel for accurate detection
- * NO MORE "NEUTRAL" RESPONSES FOR THERAPY SESSIONS
+ * FIXED: Completely eliminates neutral responses for therapy context
  */
 
 export interface EmotionResult {
   primaryEmotion: string;
   intensity: 'low' | 'medium' | 'high' | 'critical';
-  category: 'happy' | 'sad' | 'angry' | 'fearful' | 'disgusted' | 'surprised';
+  category: 'happy' | 'sad' | 'angry' | 'fearful' | 'disgusted' | 'surprised' | 'distressed';
   confidence: number;
   therapeuticContext: string;
   rogerResponse: string;
@@ -75,11 +73,11 @@ const THERAPY_CONTEXTS = {
 };
 
 /**
- * Detect emotions using sophisticated wheel - NO NEUTRAL ALLOWED
+ * Detect emotions - COMPLETELY ELIMINATES NEUTRAL
  */
 export const detectEmotion = (userInput: string): EmotionResult => {
   if (!userInput || userInput.trim().length === 0) {
-    return createDefaultTherapyResponse();
+    return createTherapyContextResponse();
   }
 
   const lowerInput = userInput.toLowerCase();
@@ -124,12 +122,55 @@ export const detectEmotion = (userInput: string): EmotionResult => {
     }
   }
 
-  // Step 3: If no specific emotion found, infer from context
+  // Step 3: If no specific emotion found, ASSUME THERAPY CONTEXT
   if (!bestMatch || bestMatch.confidence < 0.3) {
-    return inferEmotionFromContext(userInput);
+    return inferTherapyContextEmotion(userInput);
   }
 
   return bestMatch;
+};
+
+/**
+ * FIXED: Create therapy context response instead of neutral
+ */
+const createTherapyContextResponse = (): EmotionResult => {
+  return {
+    primaryEmotion: 'seeking-support',
+    intensity: 'medium',
+    category: 'distressed',
+    confidence: 0.8,
+    therapeuticContext: 'general',
+    rogerResponse: 'I can sense you might be going through something. What would you like to explore today?'
+  };
+};
+
+/**
+ * FIXED: Infer emotion assuming therapy context
+ */
+const inferTherapyContextEmotion = (input: string): EmotionResult => {
+  const lowerInput = input.toLowerCase();
+
+  // Check for implicit distress markers
+  if (/\b(need|want|should|trying|struggling|difficult|hard|problem|issue|trouble)\b/i.test(input)) {
+    return {
+      primaryEmotion: 'distressed',
+      intensity: 'medium',
+      category: 'distressed',
+      confidence: 0.7,
+      therapeuticContext: 'general',
+      rogerResponse: 'It sounds like you might be going through something challenging. I\'m here to listen.'
+    };
+  }
+
+  // Default therapy context - someone seeking help
+  return {
+    primaryEmotion: 'seeking-support',
+    intensity: 'medium', 
+    category: 'distressed',
+    confidence: 0.6,
+    therapeuticContext: 'general',
+    rogerResponse: 'I\'m here to support you. What would be most helpful to talk about?'
+  };
 };
 
 /**
