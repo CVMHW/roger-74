@@ -21,9 +21,18 @@ export interface SimilaritySearchOptions {
   threshold?: number;
   scoreThreshold?: number;
   filter?: (record: VectorRecord) => boolean;
+  includeMetadata?: boolean;
+  fuzzy?: boolean;
+  emotionWeight?: number;
 }
 
 export interface SearchResult {
   record: VectorRecord;
   score: number;
+}
+
+export interface QuickCheckResult {
+  isRelevant: boolean;
+  confidence: number;
+  reason: string;
 }

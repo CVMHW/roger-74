@@ -1,76 +1,44 @@
 
 /**
- * Integration with Rogerian therapy approach
+ * Rogerian Integration for Hallucination Prevention
  */
+
 import { retrieveSimilarResponses } from '../retrieval';
 
 /**
- * Enhance a Rogerian response with RAG capabilities
- * 
- * @param responseText Original response
- * @param userInput User input
- * @param conversationHistory Full conversation history
- * @returns Enhanced response
+ * Get Rogerian-style context for response enhancement
  */
-export const enhanceRogerianResponse = async (
-  responseText: string,
+export const getRogerianContext = async (
   userInput: string,
   conversationHistory: string[]
-): Promise<string> => {
+): Promise<string[]> => {
   try {
-    // Get similar previous responses
+    // Get similar Rogerian responses
     const similarResponses = await retrieveSimilarResponses(userInput, 3);
     
-    // If we found relevant responses, use them to enhance
-    if (similarResponses && similarResponses.length > 0) {
-      // Extract patterns from similar responses
-      const patterns = extractPatterns(similarResponses);
-      
-      // Blend the patterns with the current response
-      return blendRogerianPatterns(responseText, patterns);
-    }
+    // Extract content strings from similarity results
+    const contextTexts = similarResponses.map(response => response.content);
     
-    return responseText;
+    // Add Rogerian principles
+    const rogerianPrinciples = getRogerianPrinciples();
+    contextTexts.unshift(...rogerianPrinciples);
+    
+    return contextTexts;
   } catch (error) {
-    console.error("Error enhancing Rogerian response:", error);
-    return responseText;
+    console.error("Error getting Rogerian context:", error);
+    return [];
   }
 };
 
 /**
- * Extract common patterns from similar responses
+ * Get core Rogerian therapy principles
  */
-function extractPatterns(responses: string[]): string[] {
-  // Simple implementation - just return unique sentences
-  const sentences: string[] = [];
-  
-  responses.forEach(response => {
-    const responseSentences = response.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    responseSentences.forEach(sentence => {
-      if (!sentences.includes(sentence.trim())) {
-        sentences.push(sentence.trim());
-      }
-    });
-  });
-  
-  return sentences;
-}
-
-/**
- * Blend patterns with the current response
- */
-function blendRogerianPatterns(responseText: string, patterns: string[]): string {
-  // Simple implementation - just ensure we don't repeat ourselves
-  if (patterns.length === 0) return responseText;
-  
-  // Check if response already contains any of the patterns
-  for (const pattern of patterns) {
-    if (responseText.includes(pattern)) {
-      return responseText;
-    }
-  }
-  
-  // Add a relevant pattern if it doesn't exist yet
-  const selectedPattern = patterns[0];
-  return `${responseText} ${selectedPattern}`;
-}
+const getRogerianPrinciples = (): string[] => {
+  return [
+    'Demonstrate unconditional positive regard for the client.',
+    'Reflect the client\'s feelings and thoughts back to them.',
+    'Show genuine empathy and understanding.',
+    'Avoid giving direct advice; instead, help the client discover their own solutions.',
+    'Create a safe, non-judgmental space for exploration.'
+  ];
+};

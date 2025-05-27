@@ -1,56 +1,50 @@
 
 /**
- * Conversation tracking functionality for hallucination prevention
+ * Conversation Tracker - Enhanced
  */
+
 import vectorDB from './vectorDatabase';
 import { generateEmbedding } from './vectorEmbeddings';
-import { MemoryPiece } from './types';
 
 /**
- * Adds a conversation exchange to the RAG system for learning
+ * Store conversation exchange in vector database
  */
 export const addConversationExchange = async (
   userInput: string,
   responseText: string
 ): Promise<boolean> => {
   try {
-    console.log("RAG: Adding conversation exchange to memory");
+    const historyCollection = vectorDB.collection('conversation_history');
     
-    if (!vectorDB.hasCollection('conversation_history')) {
-      vectorDB.createCollection('conversation_history');
-    }
-    
-    const historyCollection = vectorDB.getCollection('conversation_history');
-    
-    // Add user input
-    const userVector = await generateEmbedding(userInput);
+    // Add user message
+    const userEmbedding = await generateEmbedding(userInput);
     historyCollection.addItem({
       id: `user_${Date.now()}`,
-      vector: userVector,
+      vector: userEmbedding,
       text: userInput,
       metadata: {
-        content: userInput,
         role: 'user',
         timestamp: Date.now()
-      }
+      },
+      timestamp: Date.now()
     });
     
-    // Add response
-    const responseVector = await generateEmbedding(responseText);
+    // Add assistant response
+    const responseEmbedding = await generateEmbedding(responseText);
     historyCollection.addItem({
       id: `assistant_${Date.now()}`,
-      vector: responseVector,
+      vector: responseEmbedding,
       text: responseText,
       metadata: {
-        content: responseText,
-        role: 'assistant',
+        role: 'assistant', 
         timestamp: Date.now()
-      }
+      },
+      timestamp: Date.now()
     });
     
     return true;
   } catch (error) {
-    console.error("Error adding conversation exchange to RAG:", error);
+    console.error("Error storing conversation exchange:", error);
     return false;
   }
 };

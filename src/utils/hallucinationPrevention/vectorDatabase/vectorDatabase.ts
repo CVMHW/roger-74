@@ -34,6 +34,13 @@ export class VectorDatabase {
   }
 
   /**
+   * Get collection (alias for compatibility)
+   */
+  getCollection(name: string): VectorCollection {
+    return this.collection(name);
+  }
+
+  /**
    * Check if collection exists
    */
   hasCollection(name: string): boolean {
@@ -57,6 +64,14 @@ export class VectorDatabase {
   }
 
   /**
+   * Add a record to the default collection
+   */
+  async add(record: VectorRecord): Promise<void> {
+    const defaultCollection = this.collection('default');
+    defaultCollection.addItem(record);
+  }
+
+  /**
    * Perform search across collections
    */
   async search(
@@ -76,6 +91,45 @@ export class VectorDatabase {
     }
 
     // Sort by score and limit
+    return results
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+  }
+
+  /**
+   * Keyword search across collections
+   */
+  async keywordSearch(
+    keywords: string[],
+    options: SimilaritySearchOptions = {}
+  ): Promise<SearchResult[]> {
+    const { limit = 10, fuzzy = false } = options;
+    const results: SearchResult[] = [];
+
+    // Search all collections for keyword matches
+    for (const collection of this.collections.values()) {
+      const allRecords = collection.getAll();
+      
+      for (const record of allRecords) {
+        let score = 0;
+        const text = record.text.toLowerCase();
+        
+        for (const keyword of keywords) {
+          const keywordLower = keyword.toLowerCase();
+          if (text.includes(keywordLower)) {
+            score += 1;
+          }
+        }
+        
+        if (score > 0) {
+          results.push({
+            record,
+            score: score / keywords.length
+          });
+        }
+      }
+    }
+
     return results
       .sort((a, b) => b.score - a.score)
       .slice(0, limit);
