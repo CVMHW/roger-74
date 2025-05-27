@@ -1,174 +1,106 @@
+
 /**
  * Unified Pipeline Router
  * 
- * Single routing system that integrates all legacy and modern routing logic
- * Uses sophisticated decision-making for optimal patient experience
+ * Single routing system that replaces all fragmented routing logic
  */
 
-import { UnifiedPatientPipeline } from './UnifiedPatientPipeline';
-import { UnifiedPatientContext } from './types/UnifiedTypes';
+import { UnifiedIntegrationCoordinator, IntegratedResponse } from './UnifiedIntegrationCoordinator';
 
-export interface UnifiedPatientResult {
-  response: string;
-  confidence: number;
-  processingTimeMs: number;
-  crisisDetected: boolean;
-  systemsEngaged: string[];
-  therapeuticQuality: number;
-  pipelineRoute: 'crisis' | 'emotional' | 'complex' | 'greeting';
-  memoryIntegration: any;
-  legacyCompatible: boolean;
-}
+class UnifiedPipelineRouterClass {
+  private coordinator: UnifiedIntegrationCoordinator;
+  private sessionData = new Map<string, any>();
 
-export interface UnifiedRoutingDecision {
-  pipeline: 'unified';
-  route: 'crisis' | 'emotional' | 'complex' | 'greeting';
-  reason: string;
-  estimatedProcessingTime: number;
-  expectedQuality: number;
-  sophisticationLevel: 'basic' | 'advanced' | 'expert';
-}
-
-/**
- * Unified Router - Single point of entry for all patient interactions
- */
-export class UnifiedPipelineRouter {
-  private unifiedPipeline: UnifiedPatientPipeline;
-  private sessionMessageCount: number = 0;
-  
   constructor() {
-    this.unifiedPipeline = new UnifiedPatientPipeline();
+    this.coordinator = new UnifiedIntegrationCoordinator();
   }
 
   /**
-   * Route patient input through unified pipeline
+   * Main routing method - SINGLE ENTRY POINT for all responses
    */
-  async route(userInput: string, conversationHistory: string[] = []): Promise<UnifiedPatientResult> {
-    this.sessionMessageCount++;
-    
-    const context: UnifiedPatientContext = {
-      userInput,
-      sessionId: `unified_session_${Date.now()}`,
-      messageCount: this.sessionMessageCount,
-      isNewSession: this.sessionMessageCount === 1,
-      conversationHistory,
-      timestamp: Date.now()
-    };
-
-    console.log(`UNIFIED ROUTER: Processing message ${this.sessionMessageCount} through unified pipeline`);
-    
-    const result = await this.unifiedPipeline.process(context);
-    
-    console.log(`UNIFIED ROUTER: Completed in ${result.processingTimeMs}ms with quality ${result.therapeuticQuality} via ${result.pipelineRoute} route`);
-    
-    return result;
-  }
-
-  /**
-   * Make sophisticated routing decision
-   */
-  private makeUnifiedRoutingDecision(context: UnifiedPatientContext): UnifiedRoutingDecision {
-    const userInput = context.userInput.toLowerCase();
-    
-    // Crisis always takes priority
-    if (this.isCrisisContent(userInput)) {
+  async route(
+    userInput: string, 
+    conversationHistory: string[] = [],
+    sessionId: string = 'default'
+  ): Promise<IntegratedResponse> {
+    try {
+      console.log(`UNIFIED ROUTER: Processing "${userInput.substring(0, 50)}..."`);
+      
+      // Route through unified coordinator
+      const result = await this.coordinator.processUnified(userInput, conversationHistory, sessionId);
+      
+      // Update session data
+      this.updateSessionData(sessionId, userInput, result);
+      
+      console.log(`UNIFIED ROUTER: Complete [${result.systemsUsed.join('+')}] ${result.processingTimeMs}ms (Efficiency: ${result.pipelineEfficiency.toFixed(2)})`);
+      
+      return result;
+      
+    } catch (error) {
+      console.error('Unified router error:', error);
+      
+      // Fallback response
       return {
-        pipeline: 'unified',
-        route: 'crisis',
-        reason: 'Crisis content detected - immediate intervention required',
-        estimatedProcessingTime: 300,
-        expectedQuality: 0.95,
-        sophisticationLevel: 'expert'
+        text: "I'm here to listen and support you. What would you like to share?",
+        confidence: 0.7,
+        emotionDetected: false,
+        hallucinationPrevented: false,
+        personalityApplied: true,
+        systemsUsed: ['fallback'],
+        processingTimeMs: 0,
+        pipelineEfficiency: 0.5
       };
     }
-    
-    // Greeting for new sessions or greeting patterns
-    if (context.isNewSession || this.isGreetingContent(userInput)) {
-      return {
-        pipeline: 'unified',
-        route: 'greeting',
-        reason: 'New session or greeting detected',
-        estimatedProcessingTime: 150,
-        expectedQuality: 0.85,
-        sophisticationLevel: 'basic'
-      };
+  }
+
+  /**
+   * Update session data for continuity
+   */
+  private updateSessionData(sessionId: string, userInput: string, result: IntegratedResponse): void {
+    if (!this.sessionData.has(sessionId)) {
+      this.sessionData.set(sessionId, {
+        messageCount: 0,
+        emotionHistory: [],
+        hallucinationCount: 0,
+        averageConfidence: 0
+      });
     }
     
-    // Emotional route for emotional content
-    if (this.isEmotionalContent(userInput)) {
-      return {
-        pipeline: 'unified',
-        route: 'emotional',
-        reason: 'Emotional content requiring therapeutic response',
-        estimatedProcessingTime: 500,
-        expectedQuality: 0.9,
-        sophisticationLevel: 'advanced'
-      };
+    const session = this.sessionData.get(sessionId);
+    session.messageCount++;
+    
+    if (result.emotionDetected) {
+      session.emotionHistory.push(userInput);
     }
     
-    // Complex route for sophisticated needs
-    return {
-      pipeline: 'unified',
-      route: 'complex',
-      reason: 'Complex therapeutic needs requiring full pipeline',
-      estimatedProcessingTime: 800,
-      expectedQuality: 0.88,
-      sophisticationLevel: 'expert'
-    };
+    if (result.hallucinationPrevented) {
+      session.hallucinationCount++;
+    }
+    
+    session.averageConfidence = (session.averageConfidence * (session.messageCount - 1) + result.confidence) / session.messageCount;
   }
 
   /**
-   * Sophisticated content analysis methods
+   * Reset session (for testing or new conversations)
    */
-  private isCrisisContent(userInput: string): boolean {
-    const crisisPatterns = [
-      /\b(suicide|suicidal|kill myself|end my life|want to die)\b/i,
-      /\b(harm myself|hurt myself|cut myself)\b/i,
-      /\b(overdose|too many pills)\b/i,
-      /\b(don't want to live|better off dead)\b/i
-    ];
-    
-    return crisisPatterns.some(pattern => pattern.test(userInput));
-  }
-
-  private isGreetingContent(userInput: string): boolean {
-    const greetingPatterns = [
-      /\b(hello|hi|hey|good morning|good afternoon|good evening)\b/i,
-      /\b(how are you|what's up|what's happening)\b/i,
-      /^(hey|hi|hello)$/i
-    ];
-    
-    return greetingPatterns.some(pattern => pattern.test(userInput)) || userInput.length < 20;
-  }
-
-  private isEmotionalContent(userInput: string): boolean {
-    const emotionalPatterns = [
-      /\b(feel|feeling|emotion|sad|happy|angry|anxious|depressed|frustrated)\b/i,
-      /\b(upset|worried|scared|afraid|hopeless|overwhelmed)\b/i,
-      /\b(crying|tears|breakdown|falling apart)\b/i
-    ];
-    
-    return emotionalPatterns.some(pattern => pattern.test(userInput));
+  resetSession(sessionId: string = 'default'): void {
+    this.sessionData.delete(sessionId);
   }
 
   /**
-   * Reset session for new patient
+   * Get system metrics
    */
-  resetSession(): void {
-    this.sessionMessageCount = 0;
+  getMetrics() {
+    return this.coordinator.getSystemMetrics();
   }
 
   /**
-   * Get processing statistics
+   * Health check
    */
-  getSessionStats(): any {
-    return {
-      messageCount: this.sessionMessageCount,
-      pipelineType: 'unified',
-      sophisticationLevel: 'expert'
-    };
+  async isHealthy(): Promise<boolean> {
+    return await this.coordinator.isHealthy();
   }
 }
 
-// Export singleton
-export const unifiedPipelineRouter = new UnifiedPipelineRouter();
+// Export singleton instance
+export const unifiedPipelineRouter = new UnifiedPipelineRouterClass();

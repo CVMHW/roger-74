@@ -2,8 +2,7 @@
 /**
  * Unified Patient Response Hook
  * 
- * Single hook that integrates all legacy and modern response generation
- * Uses the unified pipeline for consistent, sophisticated responses
+ * Updated to use the new unified integration coordinator
  */
 
 import { useState, useCallback } from 'react';
@@ -19,7 +18,9 @@ export const useUnifiedPatientResponse = () => {
     averageResponseTime: 0,
     crisisDetections: 0,
     therapeuticQuality: 0,
-    sophisticationLevel: 'expert' as const
+    sophisticationLevel: 'expert' as const,
+    pipelineEfficiency: 0,
+    hallucinationsPrevented: 0
   });
 
   /**
@@ -29,29 +30,31 @@ export const useUnifiedPatientResponse = () => {
     setIsTyping(true);
     
     try {
-      // Process through unified pipeline
+      // Process through unified pipeline router
       const result = await unifiedPipelineRouter.route(userInput, conversationHistory);
       
       // Update conversation history
-      setConversationHistory(prev => [...prev, userInput, result.response]);
+      setConversationHistory(prev => [...prev, userInput, result.text]);
       
-      // Update session statistics
+      // Update session statistics with new metrics
       setSessionStats(prev => ({
         totalMessages: prev.totalMessages + 1,
         averageResponseTime: (prev.averageResponseTime * prev.totalMessages + result.processingTimeMs) / (prev.totalMessages + 1),
-        crisisDetections: prev.crisisDetections + (result.crisisDetected ? 1 : 0),
-        therapeuticQuality: (prev.therapeuticQuality * prev.totalMessages + result.therapeuticQuality) / (prev.totalMessages + 1),
-        sophisticationLevel: 'expert'
+        crisisDetections: prev.crisisDetections + (result.emotionDetected && result.text.includes('crisis') ? 1 : 0),
+        therapeuticQuality: (prev.therapeuticQuality * prev.totalMessages + result.confidence) / (prev.totalMessages + 1),
+        sophisticationLevel: 'expert',
+        pipelineEfficiency: (prev.pipelineEfficiency * prev.totalMessages + result.pipelineEfficiency) / (prev.totalMessages + 1),
+        hallucinationsPrevented: prev.hallucinationsPrevented + (result.hallucinationPrevented ? 1 : 0)
       }));
       
       // Create response message
       const response = createMessage(
-        result.response,
+        result.text,
         'roger',
-        result.crisisDetected ? 'crisis' : null
+        result.emotionDetected && result.text.includes('crisis') ? 'crisis' : null
       );
       
-      console.log(`UNIFIED RESPONSE: ${result.systemsEngaged.join('+')} (${result.processingTimeMs}ms, Q:${result.therapeuticQuality.toFixed(2)}, Route:${result.pipelineRoute})`);
+      console.log(`UNIFIED RESPONSE: [${result.systemsUsed.join('+')}] ${result.processingTimeMs}ms | Efficiency: ${result.pipelineEfficiency.toFixed(2)} | Emotion: ${result.emotionDetected} | Prevention: ${result.hallucinationPrevented}`);
       
       return response;
       
@@ -102,9 +105,29 @@ export const useUnifiedPatientResponse = () => {
   return {
     isTyping,
     processUserMessage,
-    resetConversation,
-    getSessionStats,
-    getConversationMetrics,
+    resetConversation: useCallback(() => {
+      setConversationHistory([]);
+      unifiedPipelineRouter.resetSession();
+      setSessionStats({
+        totalMessages: 0,
+        averageResponseTime: 0,
+        crisisDetections: 0,
+        therapeuticQuality: 0,
+        sophisticationLevel: 'expert',
+        pipelineEfficiency: 0,
+        hallucinationsPrevented: 0
+      });
+    }, []),
+    getSessionStats: useCallback(() => sessionStats, [sessionStats]),
+    getConversationMetrics: useCallback(() => ({
+      messageCount: conversationHistory.length / 2,
+      lastMessage: conversationHistory[conversationHistory.length - 1] || '',
+      averageResponseTime: sessionStats.averageResponseTime,
+      therapeuticQuality: sessionStats.therapeuticQuality,
+      sophisticationLevel: sessionStats.sophisticationLevel,
+      pipelineEfficiency: sessionStats.pipelineEfficiency,
+      hallucinationsPrevented: sessionStats.hallucinationsPrevented
+    }), [conversationHistory, sessionStats]),
     conversationHistory
   };
 };
