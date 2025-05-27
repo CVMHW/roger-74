@@ -82,7 +82,9 @@ export const useUnifiedPatientResponse = () => {
       averageResponseTime: 0,
       crisisDetections: 0,
       therapeuticQuality: 0,
-      sophisticationLevel: 'expert'
+      sophisticationLevel: 'expert',
+      pipelineEfficiency: 0,
+      hallucinationsPrevented: 0
     });
   }, []);
 
@@ -105,20 +107,8 @@ export const useUnifiedPatientResponse = () => {
   return {
     isTyping,
     processUserMessage,
-    resetConversation: useCallback(() => {
-      setConversationHistory([]);
-      unifiedPipelineRouter.resetSession();
-      setSessionStats({
-        totalMessages: 0,
-        averageResponseTime: 0,
-        crisisDetections: 0,
-        therapeuticQuality: 0,
-        sophisticationLevel: 'expert',
-        pipelineEfficiency: 0,
-        hallucinationsPrevented: 0
-      });
-    }, []),
-    getSessionStats: useCallback(() => sessionStats, [sessionStats]),
+    resetConversation,
+    getSessionStats,
     getConversationMetrics: useCallback(() => ({
       messageCount: conversationHistory.length / 2,
       lastMessage: conversationHistory[conversationHistory.length - 1] || '',

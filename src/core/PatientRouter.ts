@@ -24,7 +24,21 @@ export class PatientRouter {
     
     console.log(`PATIENT ROUTER: Delegating to unified pipeline (message ${this.sessionMessageCount})`);
     
-    return await unifiedPipelineRouter.route(userInput, []);
+    const result = await unifiedPipelineRouter.route(userInput, []);
+    
+    // Convert IntegratedResponse to UnifiedPatientResult for backward compatibility
+    return {
+      response: result.text,
+      confidence: result.confidence,
+      processingTimeMs: result.processingTimeMs,
+      crisisDetected: result.emotionDetected && result.text.includes('crisis'),
+      systemsEngaged: result.systemsUsed,
+      therapeuticQuality: result.confidence,
+      pipelineRoute: result.systemsUsed.join('+'),
+      emotionDetected: result.emotionDetected,
+      hallucinationPrevented: result.hallucinationPrevented,
+      personalityApplied: result.personalityApplied
+    };
   }
 
   /**
