@@ -7,16 +7,23 @@
  */
 
 import { MemoryService } from '../services/MemoryService';
-import { EmotionAnalysis } from '../services/EmotionAnalysisService';
-import { UnifiedPatientContext, UnifiedProcessingResult, EmotionalState } from './types/UnifiedTypes';
+import { UnifiedPatientContext, UnifiedProcessingResult, EmotionalState, MemoryContext } from './types/UnifiedTypes';
+
+// Export the context type for use by other modules
+export { UnifiedPatientContext } from './types/UnifiedTypes';
+
+export interface EmotionAnalysis {
+  primaryEmotion: string;
+  secondaryEmotions: string[];
+  intensity: number;
+  valence: number;
+  arousal: number;
+  confidence: number;
+  emotionalTriggers: string[];
+}
 
 export interface UnifiedPatientResult extends UnifiedProcessingResult {
   pipelineRoute: 'crisis' | 'emotional' | 'complex' | 'greeting';
-  memoryIntegration: {
-    shortTerm: any[];
-    workingMemory: any[];
-    episodic: any[];
-  };
 }
 
 /**
@@ -91,13 +98,8 @@ export class UnifiedPatientPipeline {
   private async analyzeUnifiedContext(context: UnifiedPatientContext): Promise<any> {
     const userInput = context.userInput.toLowerCase();
     
-    // Unified emotion detection (combines all legacy methods)
     const emotionAnalysis = await this.unifiedEmotionDetection(context.userInput);
-    
-    // Unified crisis detection (combines all patterns)
     const crisisAnalysis = this.unifiedCrisisDetection(userInput);
-    
-    // Unified content analysis (sophisticated pattern recognition)
     const contentAnalysis = this.analyzeContentSophistication(userInput, context);
     
     return {
@@ -138,7 +140,6 @@ export class UnifiedPatientPipeline {
     const uniqueWords = new Set(words);
     const avgWordLength = words.reduce((sum, word) => sum + word.length, 0) / words.length;
     
-    // Complex vocabulary indicators
     const complexPatterns = [
       /\b(philosophical|existential|introspective|contemplative)\b/i,
       /\b(ambivalent|paradoxical|dichotomous|multifaceted)\b/i,
@@ -173,7 +174,6 @@ export class UnifiedPatientPipeline {
     depthScore += deepEmotionPatterns.filter(p => p.test(userInput)).length * 0.3;
     depthScore -= surfaceEmotionPatterns.filter(p => p.test(userInput)).length * 0.1;
     
-    // Sentence structure complexity
     const sentences = userInput.split(/[.!?]+/).filter(s => s.trim().length > 0);
     const avgSentenceLength = sentences.reduce((sum, s) => sum + s.split(/\s+/).length, 0) / sentences.length;
     depthScore += Math.min((avgSentenceLength - 5) / 15, 0.4);
@@ -202,7 +202,6 @@ export class UnifiedPatientPipeline {
     abstractionScore += abstractPatterns.filter(p => p.test(userInput)).length * 0.25;
     abstractionScore -= concretePatterns.filter(p => p.test(userInput)).length * 0.1;
 
-    // Check for conditional and hypothetical language
     const conditionalPatterns = [
       /\b(if|when|suppose|imagine|what if|perhaps|maybe)\b/i,
       /\b(could|would|might|may|should)\b/i
@@ -218,14 +217,12 @@ export class UnifiedPatientPipeline {
   private assessTherapeuticReadiness(userInput: string, context: UnifiedPatientContext): number {
     let readinessScore = 0;
 
-    // Readiness indicators
     const readinessPatterns = [
       /\b(want to understand|help me|ready to|willing to)\b/i,
       /\b(change|grow|improve|work on)\b/i,
       /\b(insight|awareness|reflection|exploration)\b/i
     ];
 
-    // Resistance indicators
     const resistancePatterns = [
       /\b(don't want|can't|won't|refuse|not ready)\b/i,
       /\b(waste of time|pointless|doesn't help)\b/i
@@ -234,7 +231,6 @@ export class UnifiedPatientPipeline {
     readinessScore += readinessPatterns.filter(p => p.test(userInput)).length * 0.3;
     readinessScore -= resistancePatterns.filter(p => p.test(userInput)).length * 0.2;
 
-    // Message count factor (engagement over time)
     if (context.messageCount > 5) readinessScore += 0.2;
     if (context.messageCount > 10) readinessScore += 0.2;
 
@@ -324,7 +320,6 @@ export class UnifiedPatientPipeline {
       }
     };
 
-    // Sophisticated emotion detection combining multiple approaches
     for (const [emotion, config] of Object.entries(emotionPatterns)) {
       for (const pattern of config.patterns) {
         if (pattern.test(userInput)) {
@@ -397,7 +392,6 @@ export class UnifiedPatientPipeline {
   ): Promise<UnifiedPatientResult> {
     const crisisResponse = this.generateCrisisResponse(unifiedContext.crisis);
     
-    // Record crisis event
     await this.memoryService.store(context.sessionId, {
       id: `crisis_${Date.now()}`,
       content: `CRISIS: ${context.userInput}`,
@@ -415,10 +409,11 @@ export class UnifiedPatientPipeline {
       therapeuticQuality: 0.95,
       pipelineRoute: 'crisis',
       memoryIntegration: {
-        shortTerm: [],
-        workingMemory: [],
-        episodic: []
-      }
+        relevantItems: [],
+        currentFocus: 'crisis-intervention',
+        conversationPhase: 'crisis'
+      },
+      legacyCompatible: true
     };
   }
 
@@ -428,20 +423,18 @@ export class UnifiedPatientPipeline {
   private async processUnifiedMemory(
     context: UnifiedPatientContext,
     unifiedContext: any
-  ): Promise<any> {
-    // Short-term memory (recent conversation)
+  ): Promise<MemoryContext> {
     const shortTermMemories = await this.getShortTermMemories(context);
-    
-    // Working memory (active context)
     const workingMemory = await this.getWorkingMemory(context, unifiedContext);
-    
-    // Episodic memory (important moments)
     const episodicMemory = await this.getEpisodicMemory(context, unifiedContext);
     
     return {
-      shortTerm: shortTermMemories,
+      relevantItems: [...shortTermMemories, ...workingMemory, ...episodicMemory],
+      currentFocus: unifiedContext.emotion.primaryEmotion || 'general',
+      conversationPhase: context.messageCount <= 2 ? 'opening' : 'developing',
+      shortTermMemory: shortTermMemories,
       workingMemory: workingMemory,
-      episodic: episodicMemory
+      episodicMemory: episodicMemory
     };
   }
 
@@ -451,12 +444,11 @@ export class UnifiedPatientPipeline {
   private async generateSophisticatedResponse(
     context: UnifiedPatientContext,
     unifiedContext: any,
-    memoryIntegration: any,
+    memoryIntegration: MemoryContext,
     route: string
   ): Promise<any> {
     const baseResponse = this.generateBaseResponse(context, unifiedContext, route);
     
-    // Apply sophisticated enhancements
     const enhancedResponse = this.applySophisticatedEnhancements(
       baseResponse,
       unifiedContext,
@@ -591,16 +583,14 @@ export class UnifiedPatientPipeline {
   private applySophisticatedEnhancements(
     baseResponse: string,
     unifiedContext: any,
-    memoryIntegration: any
+    memoryIntegration: MemoryContext
   ): string {
     let enhanced = baseResponse;
     
-    // Apply memory-based enhancements
-    if (memoryIntegration.episodic.length > 0) {
+    if (memoryIntegration.episodicMemory && memoryIntegration.episodicMemory.length > 0) {
       enhanced = `I remember we've talked about difficult feelings before. ${enhanced}`;
     }
     
-    // Apply emotional validation
     if (unifiedContext.emotion.intensity > 0.7) {
       const validation = this.generateEmotionalValidation(unifiedContext.emotion);
       enhanced = `${validation} ${enhanced}`;
@@ -619,11 +609,11 @@ export class UnifiedPatientPipeline {
     return validations[emotion.primaryEmotion] || "I hear the emotion in what you're sharing.";
   }
 
-  private calculateResponseConfidence(unifiedContext: any, memoryIntegration: any): number {
+  private calculateResponseConfidence(unifiedContext: any, memoryIntegration: MemoryContext): number {
     let confidence = 0.8;
     
     if (unifiedContext.emotion.confidence > 0.8) confidence += 0.1;
-    if (memoryIntegration.shortTerm.length > 0) confidence += 0.05;
+    if (memoryIntegration.shortTermMemory && memoryIntegration.shortTermMemory.length > 0) confidence += 0.05;
     if (unifiedContext.therapeuticNeeds.needsValidation) confidence += 0.05;
     
     return Math.min(confidence, 1.0);
@@ -632,13 +622,9 @@ export class UnifiedPatientPipeline {
   private calculateTherapeuticQuality(response: string, unifiedContext: any): number {
     let quality = 0.7;
     
-    // Check for emotional acknowledgment
     if (/\b(hear|feel|understand|sense)\b/i.test(response)) quality += 0.15;
-    
-    // Check for therapeutic language
     if (/\b(tell me more|what's that like|sounds like)\b/i.test(response)) quality += 0.1;
     
-    // Check for validation
     if (unifiedContext.emotion.primaryEmotion !== 'neutral' && 
         /\b(difficult|hard|overwhelming|painful)\b/i.test(response)) {
       quality += 0.05;
@@ -647,16 +633,13 @@ export class UnifiedPatientPipeline {
     return Math.min(quality, 1.0);
   }
 
-  private optimizeResponseQuality(response: any, unifiedContext: any, memoryIntegration: any): any {
-    // Final quality optimization
+  private optimizeResponseQuality(response: any, unifiedContext: any, memoryIntegration: MemoryContext): any {
     let optimizedText = response.text;
     
-    // Ensure appropriate length
     if (optimizedText.length > 200) {
       optimizedText = this.truncateGracefully(optimizedText, 180);
     }
     
-    // Ensure therapeutic tone
     optimizedText = this.ensureTherapeuticTone(optimizedText);
     
     return {
@@ -684,7 +667,6 @@ export class UnifiedPatientPipeline {
   }
 
   private ensureTherapeuticTone(text: string): string {
-    // Ensure response maintains therapeutic, supportive tone
     return text.replace(/\b(you should|you need to|you must)\b/gi, 'you might consider')
                .replace(/\b(that's wrong|that's bad)\b/gi, 'that sounds difficult');
   }

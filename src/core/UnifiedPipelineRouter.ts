@@ -1,4 +1,3 @@
-
 /**
  * Unified Pipeline Router
  * 
@@ -6,7 +5,20 @@
  * Uses sophisticated decision-making for optimal patient experience
  */
 
-import { UnifiedPatientPipeline, UnifiedPatientContext, UnifiedPatientResult } from './UnifiedPatientPipeline';
+import { UnifiedPatientPipeline } from './UnifiedPatientPipeline';
+import { UnifiedPatientContext } from './types/UnifiedTypes';
+
+export interface UnifiedPatientResult {
+  response: string;
+  confidence: number;
+  processingTimeMs: number;
+  crisisDetected: boolean;
+  systemsEngaged: string[];
+  therapeuticQuality: number;
+  pipelineRoute: 'crisis' | 'emotional' | 'complex' | 'greeting';
+  memoryIntegration: any;
+  legacyCompatible: boolean;
+}
 
 export interface UnifiedRoutingDecision {
   pipeline: 'unified';

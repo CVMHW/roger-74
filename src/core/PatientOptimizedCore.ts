@@ -6,7 +6,8 @@
  * Eliminates redundancy while maintaining all therapeutic capabilities
  */
 
-import { UnifiedPatientPipeline, UnifiedPatientContext, UnifiedPatientResult } from './UnifiedPatientPipeline';
+import { UnifiedPatientPipeline } from './UnifiedPatientPipeline';
+import { UnifiedPatientContext } from './types/UnifiedTypes';
 
 export interface PatientContext {
   userInput: string;

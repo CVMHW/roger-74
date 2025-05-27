@@ -62,6 +62,7 @@ export interface UnifiedProcessingResult {
   pipelineRoute: string;
   memoryIntegration: MemoryContext;
   legacyCompatible: boolean;
+  unityScore?: number;
 }
 
 // Bridge interface for legacy systems
