@@ -255,7 +255,8 @@ export class VectorDatabase {
     
     const results = allRecords
       .map(record => {
-        const content = (record.content || record.text || '').toLowerCase();
+        // Get content from text property or metadata, with fallback to empty string
+        const content = (record.text || record.metadata?.content || '').toLowerCase();
         const score = keywords.reduce((total, keyword) => {
           return total + (content.includes(keyword.toLowerCase()) ? 1 : 0);
         }, 0) / keywords.length;
