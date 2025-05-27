@@ -13,7 +13,7 @@ export type ConcernType = 'crisis' | 'tentative-harm' | 'depression' | 'anxiety'
 export type MemoryRole = 'user' | 'assistant' | 'patient' | 'roger' | 'system';
 export type SystemName = 'crisis-detection' | 'emotion-analysis' | 'memory-storage' | 'rag-enhancement' | 'personality-integration' | 'logotherapy' | 'core-processing';
 
-// Emotional context structure
+// Emotional context structure - updated with therapeutic context
 export interface EmotionalContext {
   hasDetectedEmotion: boolean;
   primaryEmotion?: EmotionType;
@@ -21,6 +21,8 @@ export interface EmotionalContext {
   isDepressionMentioned: boolean;
   emotionalIntensity?: SeverityLevel;
   confidence?: number;
+  therapeuticContext?: string; // Added for therapeutic context support
+  rogerResponse?: string; // Added for Roger's specific response
 }
 
 // Memory context structure  
@@ -48,12 +50,13 @@ export interface RAGContext {
   sources?: string[];
 }
 
-// Personality insights structure
+// Personality insights structure - updated with therapeutic context
 export interface PersonalityInsights {
   shouldIncludeInsight: boolean;
   insight?: string;
   confidence?: number;
   category?: string;
+  therapeuticContext?: string; // Added for therapeutic context support
 }
 
 // Memory piece structure
