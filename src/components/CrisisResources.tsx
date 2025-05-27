@@ -7,7 +7,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger
 } from "@/components/ui/collapsible";
-import { ChevronDown, ChevronUp, Phone, Info, HelpCircle, AlertTriangle } from 'lucide-react';
+import { ChevronDown, ChevronUp, Phone, Info, HelpCircle, AlertTriangle, Heart } from 'lucide-react';
 
 interface CrisisResourcesProps {
   forceOpen?: boolean;
@@ -27,40 +27,61 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
     <Collapsible 
       open={isOpen} 
       onOpenChange={setIsOpen} 
-      className="w-full bg-white rounded-lg shadow-md overflow-hidden border-2 border-cvmhw-blue"
+      className="w-full bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200"
     >
       <CollapsibleTrigger asChild>
         <Button 
           variant="outline" 
-          className={`w-full flex justify-between items-center p-5 border-b ${forceOpen ? 'bg-red-50 hover:bg-red-100' : 'bg-cvmhw-light hover:bg-blue-100'} relative`}
+          className={`w-full flex justify-between items-center p-6 border-0 ${
+            forceOpen 
+              ? 'bg-gradient-to-r from-red-50 to-orange-50 hover:from-red-100 hover:to-orange-100' 
+              : 'bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 hover:from-blue-100 hover:via-purple-100 hover:to-pink-100'
+          } transition-all duration-300 relative`}
         >
-          <div className="flex items-center gap-3 text-cvmhw-purple">
+          <div className="flex items-center gap-4 text-gray-700">
             <div className="relative">
               {forceOpen ? (
-                <AlertTriangle size={24} className="text-red-500" />
+                <AlertTriangle size={28} className="text-red-500" />
               ) : (
-                <Info size={24} className="text-cvmhw-blue" />
+                <div className="relative">
+                  <Heart size={28} className="text-cvmhw-pink fill-cvmhw-pink" />
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cvmhw-blue opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-cvmhw-blue"></span>
+                  </span>
+                </div>
               )}
-              <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${forceOpen ? 'bg-red-500' : 'bg-cvmhw-pink'} opacity-75`}></span>
-                <span className={`relative inline-flex rounded-full h-3 w-3 ${forceOpen ? 'bg-red-500' : 'bg-cvmhw-pink'}`}></span>
+            </div>
+            <div className="flex flex-col items-start">
+              <span className={`font-semibold text-xl ${forceOpen ? 'text-red-700' : 'text-gray-800'}`}>
+                {forceOpen ? 'IMMEDIATE Crisis Resources & Support' : 'Crisis Resources & Support'}
+              </span>
+              <span className="text-sm text-gray-600 font-medium">
+                Professional help available anytime you need it
               </span>
             </div>
-            <span className={`font-semibold text-lg ${forceOpen ? 'text-red-700' : ''}`}>
-              {forceOpen ? 'IMMEDIATE Crisis Resources & Support' : 'Crisis Resources & Support'}
-            </span>
-            <div className={`${forceOpen ? 'bg-red-100' : 'bg-blue-50'} p-1 rounded-md flex items-center border ${forceOpen ? 'border-red-200' : 'border-blue-100'} ml-2 animate-pulse`}>
-              <HelpCircle size={16} className={forceOpen ? 'text-red-600 mr-1' : 'text-cvmhw-blue mr-1'} />
-              <span className={`text-xs font-medium ${forceOpen ? 'text-red-700' : 'text-cvmhw-purple'}`}>Available 24/7</span>
+            <div className={`${
+              forceOpen ? 'bg-red-100 border-red-200' : 'bg-gradient-to-r from-cvmhw-blue/10 to-cvmhw-purple/10 border-cvmhw-blue/20'
+            } p-2 rounded-lg flex items-center border ml-auto`}>
+              <HelpCircle size={18} className={forceOpen ? 'text-red-600 mr-2' : 'text-cvmhw-blue mr-2'} />
+              <span className={`text-sm font-medium ${forceOpen ? 'text-red-700' : 'text-cvmhw-purple'}`}>Available 24/7</span>
             </div>
           </div>
-          <div className="flex items-center">
-            <div className={`mr-3 ${forceOpen ? 'bg-red-50' : 'bg-gradient-to-r from-cvmhw-light to-blue-50'} p-1.5 rounded-full border ${forceOpen ? 'border-red-300' : 'border-cvmhw-blue'}`}>
-              <span className={`text-xs font-medium whitespace-nowrap ${forceOpen ? 'text-red-700' : 'bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent'}`}>
+          <div className="flex items-center ml-4">
+            <div className={`mr-3 ${
+              forceOpen ? 'bg-red-50 border-red-300' : 'bg-gradient-to-r from-white/80 to-blue-50/80 border-cvmhw-blue/30'
+            } p-2 rounded-full border backdrop-blur-sm`}>
+              <span className={`text-xs font-medium whitespace-nowrap ${
+                forceOpen ? 'text-red-700' : 'bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent'
+              }`}>
                 {isOpen ? 'Click to hide resources' : 'Click to view resources'}
               </span>
             </div>
-            {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+            {isOpen ? (
+              <ChevronUp size={24} className="text-gray-600" />
+            ) : (
+              <ChevronDown size={24} className="text-gray-600" />
+            )}
           </div>
         </Button>
       </CollapsibleTrigger>
@@ -81,7 +102,7 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
               </div>
             )}
             
-            <p className="text-sm text-gray-600 bg-blue-50 p-3 rounded-md border border-blue-100">
+            <p className="text-sm text-gray-600 bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-100">
               Please use the resources below for immediate relief of symptoms and contact one of the relevant crisis resources or 911 for immediate assistance.
             </p>
             
