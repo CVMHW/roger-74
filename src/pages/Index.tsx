@@ -132,16 +132,19 @@ const Index = () => {
           {/* Welcome Card - More compact */}
           <Card className="shadow-md border-cvmhw-blue border mb-6">
             <CardHeader className="pb-2">
-              <div className="flex items-center gap-3">
-                <div className="relative w-10 h-10">
-                  <img 
-                    src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
-                    alt="CVMHW Logo" 
-                    className="w-full h-full object-contain"
-                    onError={handleImageError}
-                  />
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="relative w-10 h-10">
+                    <img 
+                      src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                      alt="CVMHW Logo" 
+                      className="w-full h-full object-contain"
+                      onError={handleImageError}
+                    />
+                  </div>
+                  <CardTitle className="text-xl font-semibold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent">Welcome from Roger at Cuyahoga Valley Mindful Health & Wellness</CardTitle>
                 </div>
-                <CardTitle className="text-xl font-semibold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent">Welcome from Roger at Cuyahoga Valley Mindful Health & Wellness</CardTitle>
+                <BetaWatermark />
               </div>
               <CardDescription>Your Peer Mental Health Support Companion</CardDescription>
             </CardHeader>
@@ -172,9 +175,6 @@ const Index = () => {
               </div>
             </CardContent>
           </Card>
-
-          {/* Beta Watermark - positioned above crisis resources */}
-          <BetaWatermark />
 
           {/* Crisis Resources - Always visible but collapsed by default */}
           <div className="mb-6">
