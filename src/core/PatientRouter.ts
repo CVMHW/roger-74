@@ -34,7 +34,13 @@ export class PatientRouter {
       crisisDetected: result.emotionDetected && result.text.includes('crisis'),
       systemsEngaged: result.systemsUsed,
       therapeuticQuality: result.confidence,
-      pipelineRoute: this.determinePipelineRoute(result.systemsUsed, userInput)
+      pipelineRoute: this.determinePipelineRoute(result.systemsUsed, userInput),
+      memoryIntegration: {
+        relevantItems: [],
+        currentFocus: this.extractMainTopic(userInput),
+        conversationPhase: this.sessionMessageCount < 3 ? 'opening' : 'developing'
+      },
+      legacyCompatible: true
     };
   }
 
@@ -59,6 +65,24 @@ export class PatientRouter {
     
     // Default to complex for everything else
     return 'complex';
+  }
+
+  /**
+   * Extract main topic from user input for memory context
+   */
+  private extractMainTopic(userInput: string): string {
+    const topics = {
+      'relationships': /\b(relationship|partner|spouse|family|friend|love)\b/i,
+      'work': /\b(work|job|career|boss|colleague|employment)\b/i,
+      'health': /\b(health|medical|doctor|hospital|illness|sick)\b/i,
+      'emotions': /\b(feel|emotion|sad|happy|angry|anxious|depressed)\b/i
+    };
+
+    for (const [topic, pattern] of Object.entries(topics)) {
+      if (pattern.test(userInput)) return topic;
+    }
+
+    return 'general';
   }
 
   /**
