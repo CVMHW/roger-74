@@ -46,7 +46,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <Shield className="text-cvmhw-blue" size={24} />
+            <Shield className="text-cvmhw-orange fill-cvmhw-orange" size={24} />
             Important Information About Roger AI
           </DialogTitle>
           <DialogDescription className="text-base">
@@ -107,7 +107,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
           {/* Professional Limitations */}
           <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex items-start gap-3">
-              <Heart className="text-blue-600 mt-1" size={20} />
+              <Heart className="text-cvmhw-pink fill-cvmhw-pink mt-1" size={20} />
               <div>
                 <h3 className="font-semibold text-blue-800 mb-2">What Roger Is and Isn't</h3>
                 <p className="text-sm text-blue-700 mb-3">
