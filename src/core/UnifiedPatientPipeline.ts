@@ -8,23 +8,9 @@
 
 import { MemoryService } from '../services/MemoryService';
 import { EmotionAnalysis } from '../services/EmotionAnalysisService';
+import { UnifiedPatientContext, UnifiedProcessingResult, EmotionalState } from './types/UnifiedTypes';
 
-export interface UnifiedPatientContext {
-  userInput: string;
-  sessionId: string;
-  messageCount: number;
-  isNewSession: boolean;
-  conversationHistory: string[];
-  timestamp: number;
-}
-
-export interface UnifiedPatientResult {
-  response: string;
-  confidence: number;
-  processingTimeMs: number;
-  crisisDetected: boolean;
-  systemsEngaged: string[];
-  therapeuticQuality: number;
+export interface UnifiedPatientResult extends UnifiedProcessingResult {
   pipelineRoute: 'crisis' | 'emotional' | 'complex' | 'greeting';
   memoryIntegration: {
     shortTerm: any[];
@@ -94,7 +80,8 @@ export class UnifiedPatientPipeline {
       systemsEngaged,
       therapeuticQuality: optimizedResponse.quality,
       pipelineRoute: route,
-      memoryIntegration
+      memoryIntegration,
+      legacyCompatible: true
     };
   }
 
