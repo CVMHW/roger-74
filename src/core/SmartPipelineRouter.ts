@@ -158,7 +158,7 @@ export class SmartPipelineRouter {
     // Import sophisticated systems dynamically
     const { processRogerianNervousSystem } = await import('../utils/rogerianNervousSystem');
     const { complexMemoryIntegrator } = await import('../services/ComplexMemorySystemIntegrator');
-    const { legacyRAGIntegrator } = await import('../services/LegacyRAGIntegrator');
+    const { legacyRAGIntegrator, LegacyRAGIntegrator } = await import('../services/LegacyRAGIntegrator');
 
     // Crisis gets full sophisticated processing
     const nervousSystemResult = await processRogerianNervousSystem(
@@ -174,7 +174,7 @@ export class SmartPipelineRouter {
       context.sessionId
     );
 
-    const ragConfig = legacyRAGIntegrator.constructor.getOptimalConfig('enterprise');
+    const ragConfig = LegacyRAGIntegrator.getOptimalConfig('enterprise');
     const ragResult = await legacyRAGIntegrator.integrateRAG(
       nervousSystemResult.enhancedResponse,
       context.userInput,
@@ -243,7 +243,7 @@ export class SmartPipelineRouter {
   ): Promise<any> {
     const { processRogerianNervousSystem } = await import('../utils/rogerianNervousSystem');
     const { complexMemoryIntegrator } = await import('../services/ComplexMemorySystemIntegrator');
-    const { legacyRAGIntegrator } = await import('../services/LegacyRAGIntegrator');
+    const { legacyRAGIntegrator, LegacyRAGIntegrator } = await import('../services/LegacyRAGIntegrator');
 
     // Full sophisticated processing for complex queries
     const nervousSystemResult = await processRogerianNervousSystem(
@@ -260,7 +260,7 @@ export class SmartPipelineRouter {
     );
 
     const clientPriority = context.clientPreferences?.priorityLevel || 'enhanced';
-    const ragConfig = legacyRAGIntegrator.constructor.getOptimalConfig(clientPriority);
+    const ragConfig = LegacyRAGIntegrator.getOptimalConfig(clientPriority);
     const ragResult = await legacyRAGIntegrator.integrateRAG(
       nervousSystemResult.enhancedResponse,
       context.userInput,

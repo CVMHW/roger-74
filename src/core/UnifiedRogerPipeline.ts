@@ -1,3 +1,4 @@
+
 /**
  * Unified Roger Pipeline
  * 
@@ -10,7 +11,6 @@ import { ServiceManager } from './ServiceManager';
 import { PipelineOrchestrator } from './PipelineOrchestrator';
 import { legacyRAGIntegrator, LegacyRAGIntegrator } from '../services/LegacyRAGIntegrator';
 import { complexMemoryIntegrator, ComplexMemorySystemIntegrator } from '../services/ComplexMemorySystemIntegrator';
-import { optimizedUnifiedPipeline } from './OptimizedUnifiedPipeline';
 
 /**
  * Main Unified Roger Pipeline with sophisticated optimization
@@ -43,10 +43,17 @@ export class UnifiedRogerPipeline {
     const startTime = Date.now();
     
     try {
-      // Use optimized pipeline for better patient experience
-      if (optimizedUnifiedPipeline && optimizedUnifiedPipeline !== this) {
-        console.log("UNIFIED PIPELINE: Using optimized sophisticated processing");
-        return await optimizedUnifiedPipeline.process(context);
+      // Check if we should use optimized pipeline (avoid circular reference)
+      const shouldUseOptimized = this.constructor.name === 'UnifiedRogerPipeline';
+      
+      if (shouldUseOptimized) {
+        try {
+          const { optimizedUnifiedPipeline } = await import('./OptimizedUnifiedPipeline');
+          console.log("UNIFIED PIPELINE: Using optimized sophisticated processing");
+          return await optimizedUnifiedPipeline.process(context);
+        } catch (optimizedError) {
+          console.warn("UNIFIED PIPELINE: Optimized pipeline not available, using standard processing");
+        }
       }
 
       // Fallback to original sophisticated processing

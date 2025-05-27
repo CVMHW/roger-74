@@ -96,12 +96,12 @@ export class OptimizedUnifiedPipeline extends UnifiedRogerPipeline {
     if (routeDecision.sophisticationLevel === 'enhanced' || routeDecision.sophisticationLevel === 'full') {
       try {
         const { masterMemory } = await import('../utils/memory');
-        const memoryInsight = masterMemory.getRelevantMemories(context.userInput);
+        const memoryResults = masterMemory.searchMemory({ query: context.userInput, limit: 3 });
         
-        if (memoryInsight.length > 0) {
-          const recentMemory = memoryInsight[0];
+        if (memoryResults.length > 0) {
+          const recentMemory = memoryResults[0];
           if (recentMemory.content && !enhancedResponse.includes(recentMemory.content)) {
-            enhancedResponse = `Remembering our conversation about ${recentMemory.type}, ${enhancedResponse}`;
+            enhancedResponse = `Remembering our conversation about ${recentMemory.type || 'your concerns'}, ${enhancedResponse}`;
           }
         }
       } catch (error) {
