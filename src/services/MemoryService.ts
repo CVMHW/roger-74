@@ -1,3 +1,4 @@
+
 /**
  * Memory Service
  * 
@@ -54,6 +55,69 @@ export class MemoryService {
       currentFocus: this.extractFocus(query),
       conversationPhase: memories.length < 3 ? 'opening' : 'developing'
     };
+  }
+
+  /**
+   * Retrieve relevant context with emotion analysis
+   */
+  async retrieveRelevantContext(
+    userInput: string,
+    conversationHistory: string[],
+    emotionAnalysis: any
+  ): Promise<MemoryContext> {
+    const sessionId = 'current'; // Use a default session for now
+    
+    // Store current input
+    await this.store(sessionId, {
+      id: `memory_${Date.now()}`,
+      content: userInput,
+      timestamp: Date.now(),
+      importance: emotionAnalysis?.intensity || 0.5,
+      type: 'user_input'
+    });
+    
+    return this.retrieve(sessionId, userInput);
+  }
+
+  /**
+   * Update memory with interaction
+   */
+  async updateWithInteraction(
+    userInput: string,
+    response: string,
+    emotionAnalysis: any,
+    confidence: number
+  ): Promise<void> {
+    const sessionId = 'current';
+    
+    // Store the response
+    await this.store(sessionId, {
+      id: `response_${Date.now()}`,
+      content: response,
+      timestamp: Date.now(),
+      importance: confidence,
+      type: 'assistant_response'
+    });
+  }
+
+  /**
+   * Record crisis situation
+   */
+  async recordCrisis(
+    userInput: string,
+    crisisResponse: string,
+    crisisResult: any
+  ): Promise<void> {
+    const sessionId = 'current';
+    
+    // Store crisis event with high importance
+    await this.store(sessionId, {
+      id: `crisis_${Date.now()}`,
+      content: `CRISIS: ${userInput} | RESPONSE: ${crisisResponse}`,
+      timestamp: Date.now(),
+      importance: 1.0,
+      type: 'crisis_event'
+    });
   }
 
   private extractFocus(query: string): string {

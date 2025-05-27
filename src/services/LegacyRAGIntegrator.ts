@@ -274,17 +274,8 @@ export class LegacyRAGIntegrator {
       // Create complete memory context that matches the MemoryContext interface
       const memoryContext = {
         relevantItems: [],
-        conversationSummary: conversationHistory.length > 0 ? 
-          `Conversation with ${conversationHistory.length} exchanges` : 
-          'Beginning of conversation',
-        emotionalPattern: 'neutral engagement',
-        crisisHistory: [],
-        userPreferences: {
-          communicationStyle: 'supportive' as const,
-          triggerTopics: [],
-          preferredApproaches: ['person-centered'],
-          developmentalStage: 'adult' as const
-        }
+        currentFocus: this.extractMainTopic(userInput),
+        conversationPhase: conversationHistory.length < 3 ? 'opening' : 'developing'
       };
 
       const ragResult = await this.ragService.enhance(
@@ -344,6 +335,24 @@ export class LegacyRAGIntegrator {
     }
 
     return `${responseText} ${relevantContext}`;
+  }
+
+  /**
+   * Extract main topic from user input
+   */
+  private extractMainTopic(userInput: string): string {
+    const topics = {
+      'relationships': /\b(relationship|partner|spouse|family|friend|love)\b/i,
+      'work': /\b(work|job|career|boss|colleague|employment)\b/i,
+      'health': /\b(health|medical|doctor|hospital|illness|sick)\b/i,
+      'emotions': /\b(feel|emotion|sad|happy|angry|anxious|depressed)\b/i
+    };
+
+    for (const [topic, pattern] of Object.entries(topics)) {
+      if (pattern.test(userInput)) return topic;
+    }
+
+    return 'general';
   }
 
   /**
