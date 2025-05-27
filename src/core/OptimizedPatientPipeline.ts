@@ -1,4 +1,3 @@
-
 /**
  * Optimized Patient Pipeline
  * 
@@ -9,7 +8,7 @@
 import { EmotionAnalysis } from '../services/EmotionAnalysisService';
 import { MemoryContext } from '../services/MemoryService';
 import { RAGService, RAGContext, RAGResult } from '../services/RAGService';
-import { CrisisService } from '../services/CrisisService';
+import { CrisisInterventionService } from '../services/CrisisInterventionService';
 import { PersonalityService } from '../services/PersonalityService';
 import { ResponseService } from '../services/ResponseService';
 
@@ -36,13 +35,13 @@ export interface OptimizedPipelineResult {
  */
 export class OptimizedPatientPipeline {
   private ragService: RAGService;
-  private crisisService: CrisisService;
+  private crisisService: CrisisInterventionService;
   private personalityService: PersonalityService;
   private responseService: ResponseService;
 
   constructor() {
     this.ragService = new RAGService();
-    this.crisisService = new CrisisService();
+    this.crisisService = new CrisisInterventionService();
     this.personalityService = new PersonalityService();
     this.responseService = new ResponseService();
   }
@@ -56,18 +55,15 @@ export class OptimizedPatientPipeline {
 
     try {
       // Stage 1: Immediate Crisis Detection (HIGHEST PRIORITY)
-      const crisisCheck = await this.crisisService.detectCrisis(context.userInput);
+      const crisisCheck = await this.crisisService.analyze(context.userInput);
       systemsEngaged.push('crisis-detection');
       
-      if (crisisCheck.isCrisis) {
-        const crisisResponse = await this.crisisService.generateCrisisResponse(
-          context.userInput,
-          crisisCheck.crisisType
-        );
+      if (crisisCheck.level !== 'none') {
+        const crisisResponse = await this.crisisService.generateResponse(crisisCheck);
         
         return {
-          response: crisisResponse.response,
-          confidence: crisisResponse.confidence,
+          response: crisisResponse,
+          confidence: crisisCheck.confidence,
           processingTime: Date.now() - startTime,
           systemsEngaged: [...systemsEngaged, 'crisis-intervention'],
           crisisDetected: true,
@@ -80,7 +76,7 @@ export class OptimizedPatientPipeline {
       const [emotionAnalysis, memoryContext, personalityInsights] = await Promise.all([
         this.extractEmotions(context.userInput),
         this.getMemoryContext(context.userInput, context.conversationHistory),
-        this.personalityService.analyzePersonality(context.userInput)
+        this.personalityService.getContextualPersonality(context.userInput, null, context.messageCount)
       ]);
       
       systemsEngaged.push('emotion-analysis', 'memory-retrieval', 'personality-analysis');
@@ -100,19 +96,20 @@ export class OptimizedPatientPipeline {
       }
 
       // Stage 4: Response Generation with Context Integration
-      const response = await this.responseService.generateResponse({
+      const response = await this.responseService.generate({
         userInput: context.userInput,
         emotionAnalysis,
         memoryContext,
-        personalityInsights,
-        ragContext: ragResult?.enhancedContext || [],
-        conversationHistory: context.conversationHistory
+        ragEnhancement: ragResult,
+        personalityContext: personalityInsights,
+        conversationHistory: context.conversationHistory,
+        crisisLevel: 'none'
       });
 
       systemsEngaged.push('response-generation');
 
       // Stage 5: Quality Optimization
-      const optimizedResponse = this.optimizeForPatient(response, emotionAnalysis);
+      const optimizedResponse = this.optimizeForPatient(response.text, emotionAnalysis);
       const therapeuticQuality = this.calculateTherapeuticQuality(
         optimizedResponse,
         emotionAnalysis,
@@ -160,16 +157,24 @@ export class OptimizedPatientPipeline {
       if (pattern.test(userInput)) {
         return {
           primaryEmotion: emotion,
+          secondaryEmotions: [],
           intensity: this.calculateIntensity(userInput, emotion),
-          confidence: 0.8
+          valence: emotion === 'happy' ? 0.7 : -0.7,
+          arousal: emotion === 'anxious' ? 0.8 : 0.5,
+          confidence: 0.8,
+          emotionalTriggers: [emotion]
         };
       }
     }
 
     return {
       primaryEmotion: 'neutral',
+      secondaryEmotions: [],
       intensity: 0.5,
-      confidence: 0.6
+      valence: 0,
+      arousal: 0.5,
+      confidence: 0.6,
+      emotionalTriggers: []
     };
   }
 
@@ -180,10 +185,12 @@ export class OptimizedPatientPipeline {
     const recentHistory = history.slice(-3); // Only use last 3 messages for efficiency
     
     return {
-      relevantItems: recentHistory.map(msg => ({
+      relevantItems: recentHistory.map((msg, index) => ({
+        id: `memory_${Date.now()}_${index}`,
         content: msg,
         timestamp: Date.now(),
-        importance: 0.7
+        importance: 0.7,
+        type: 'conversation'
       })),
       currentFocus: this.extractMainTopic(userInput),
       conversationPhase: history.length < 3 ? 'opening' : 'developing'
