@@ -3,39 +3,27 @@
  * Vector Database Types
  */
 
-/**
- * Vector record with ID, vector, and metadata
- */
 export interface VectorRecord {
   id: string;
-  vector?: number[]; // The actual vector embedding
-  embedding?: number[]; // Alternative name for vector (for compatibility)
-  text?: string;    // Optional text content
-  metadata?: any;   // Any additional data associated with this vector
-  timestamp?: number; // Optional timestamp
+  vector: number[];
+  text: string;
+  metadata: Record<string, any>;
+  timestamp?: number;
 }
 
-/**
- * Simple index structure for vectors
- */
 export interface VectorIndex {
-  vectors: number[][];
-  ids: string[];
+  dimensions: number;
+  records: Map<string, VectorRecord>;
 }
 
-/**
- * Options for similarity search
- */
 export interface SimilaritySearchOptions {
-  similarityFunction?: (a: number[], b: number[]) => number;
+  limit?: number;
+  threshold?: number;
+  scoreThreshold?: number;
   filter?: (record: VectorRecord) => boolean;
 }
 
-/**
- * Quick check result for hallucination detection
- */
-export interface QuickCheckResult {
-  isPotentialHallucination: boolean;
-  confidence: number;
-  reason?: string;
+export interface SearchResult {
+  record: VectorRecord;
+  score: number;
 }

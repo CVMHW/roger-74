@@ -1,4 +1,3 @@
-
 /**
  * Retrieval system - Clean implementation
  */
@@ -45,7 +44,7 @@ export const initializeRetrievalSystem = async (): Promise<boolean> => {
  * Load essential therapy data into the system
  */
 const loadEssentialTherapyData = async (): Promise<void> => {
-  const emotionsCollection = vectorDB.getCollection('emotions');
+  const emotionsCollection = vectorDB.collection('emotions');
   
   // Only load if collection is empty
   if (emotionsCollection.size() === 0) {
@@ -92,6 +91,33 @@ const loadEssentialTherapyData = async (): Promise<void> => {
 };
 
 /**
+ * Retrieve similar responses for pattern matching
+ */
+export const retrieveSimilarResponses = async (
+  userInput: string,
+  limit: number = 5
+): Promise<Array<{ content: string; similarity: number }>> => {
+  try {
+    const queryEmbedding = await generateEmbedding(userInput);
+    
+    // Search conversation history for similar responses
+    const historyCollection = vectorDB.collection('conversation_history');
+    const results = historyCollection.findSimilar(queryEmbedding, {
+      limit,
+      scoreThreshold: 0.6
+    });
+    
+    return results.map(result => ({
+      content: result.record.text,
+      similarity: result.score
+    }));
+  } catch (error) {
+    console.error("Error retrieving similar responses:", error);
+    return [];
+  }
+};
+
+/**
  * Retrieve augmentation for user input
  */
 export const retrieveAugmentation = async (
@@ -103,14 +129,14 @@ export const retrieveAugmentation = async (
     const queryEmbedding = await generateEmbedding(userInput);
     
     // Search emotions collection first (highest priority)
-    const emotionsCollection = vectorDB.getCollection('emotions');
+    const emotionsCollection = vectorDB.collection('emotions');
     const emotionalMatches = emotionsCollection.findSimilar(queryEmbedding, {
       limit: 3,
       scoreThreshold: 0.6
     });
     
     // Search knowledge base
-    const knowledgeCollection = vectorDB.getCollection('knowledge');
+    const knowledgeCollection = vectorDB.collection('knowledge');
     const knowledgeMatches = knowledgeCollection.findSimilar(queryEmbedding, {
       limit: 3,
       scoreThreshold: 0.5
@@ -192,7 +218,7 @@ export const addConversationExchange = async (
   responseText: string
 ): Promise<boolean> => {
   try {
-    const historyCollection = vectorDB.getCollection('conversation_history');
+    const historyCollection = vectorDB.collection('conversation_history');
     
     // Add user message
     const userEmbedding = await generateEmbedding(userInput);

@@ -1,4 +1,3 @@
-
 /**
  * Vector Embeddings - Clean Implementation
  * 
@@ -14,6 +13,14 @@ const embeddingCache = new Map<string, number[]>();
 // Current device and model state
 let currentDevice: DeviceType = 'cpu';
 let isInitialized = false;
+let usingSimulatedEmbeddings = true; // Track if we're using simulated embeddings
+
+/**
+ * Check if using simulated embeddings
+ */
+export const isUsingSimulatedEmbeddings = (): boolean => {
+  return usingSimulatedEmbeddings;
+};
 
 /**
  * Initialize the embedding system
@@ -189,7 +196,8 @@ export const getEmbeddingSystemStatus = () => {
     initialized: isInitialized,
     device: currentDevice,
     cacheSize: embeddingCache.size,
-    isHealthy: isInitialized
+    isHealthy: isInitialized,
+    usingSimulatedEmbeddings
   };
 };
 

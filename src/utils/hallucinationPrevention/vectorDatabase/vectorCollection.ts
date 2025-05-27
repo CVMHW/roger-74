@@ -1,175 +1,101 @@
 
 /**
  * Vector Collection Implementation
- * 
- * A collection within the vector database for storing related vectors
  */
 
-import { VectorIndex, VectorRecord, SimilaritySearchOptions } from './types';
-import { findNearestNeighbors } from './utils';
+import { VectorRecord, SearchResult } from './types';
+import { cosineSimilarity } from '../vectorEmbeddings';
 
-/**
- * Options for Vector Collection
- */
-interface VectorCollectionOptions {
-  useIndexing?: boolean;
-  indexingThreshold?: number;
-}
-
-/**
- * Collection for storing vector records
- */
 export class VectorCollection {
+  private records: Map<string, VectorRecord> = new Map();
   private name: string;
-  private records: VectorRecord[];
-  private useIndexing: boolean;
-  private indexingThreshold: number;
-  private index: VectorIndex | null;
-  private lastIndexed: number;
-  private isDirty: boolean;
 
-  constructor(name: string, options: VectorCollectionOptions = {}) {
+  constructor(name: string) {
     this.name = name;
-    this.records = [];
-    this.useIndexing = options.useIndexing ?? false;
-    this.indexingThreshold = options.indexingThreshold ?? 1000;
-    this.index = null;
-    this.lastIndexed = 0;
-    this.isDirty = false;
-    console.log(`VectorCollection: Created collection '${name}'`);
   }
 
   /**
-   * Get the name of the collection
+   * Add item to collection (using addItem for compatibility)
    */
-  getName(): string {
-    return this.name;
+  addItem(record: VectorRecord): void {
+    record.timestamp = record.timestamp || Date.now();
+    this.records.set(record.id, record);
   }
 
   /**
-   * Get the number of items in the collection
+   * Insert item to collection (alias for addItem)
    */
-  getItemCount(): number {
-    return this.records.length;
+  insert(record: VectorRecord): void {
+    this.addItem(record);
   }
 
   /**
-   * Add a vector item to the collection
+   * Find similar records
    */
-  async addItem(record: VectorRecord): Promise<string> {
-    if (!record.id) {
-      record.id = `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    }
-    
-    this.records.push(record);
-    this.isDirty = true;
-    
-    // Check if we need to rebuild the index
-    await this.rebuildIndexIfNeeded();
-    
-    return record.id;
-  }
+  findSimilar(
+    queryVector: number[],
+    options: { limit?: number; scoreThreshold?: number } = {}
+  ): SearchResult[] {
+    const { limit = 10, scoreThreshold = 0.5 } = options;
+    const results: SearchResult[] = [];
 
-  /**
-   * Delete an item from the collection
-   */
-  deleteItem(id: string): boolean {
-    const initialLength = this.records.length;
-    this.records = this.records.filter(record => record.id !== id);
-    
-    if (this.records.length !== initialLength) {
-      this.isDirty = true;
-      return true;
-    }
-    
-    return false;
-  }
+    for (const record of this.records.values()) {
+      if (!record.vector || record.vector.length === 0) continue;
 
-  /**
-   * Update an item in the collection
-   */
-  updateItem(id: string, updates: Partial<VectorRecord>): boolean {
-    const recordIndex = this.records.findIndex(record => record.id === id);
-    
-    if (recordIndex === -1) {
-      return false;
-    }
-    
-    this.records[recordIndex] = {
-      ...this.records[recordIndex],
-      ...updates
-    };
-    
-    this.isDirty = true;
-    return true;
-  }
-
-  /**
-   * Get an item by ID
-   */
-  getItem(id: string): VectorRecord | null {
-    const record = this.records.find(record => record.id === id);
-    return record || null;
-  }
-
-  /**
-   * Rebuild the index if needed
-   */
-  private async rebuildIndexIfNeeded(): Promise<void> {
-    if (!this.useIndexing) {
-      return;
-    }
-    
-    // Only rebuild if collection is large enough and dirty
-    if (this.records.length >= this.indexingThreshold && this.isDirty) {
-      try {
-        console.log(`VectorCollection '${this.name}': Rebuilding index for ${this.records.length} items`);
-        
-        // In a real implementation, this would build a proper vector index
-        // For now, we'll just mark as indexed
-        this.index = {
-          vectors: this.records.map(record => record.vector),
-          ids: this.records.map(record => record.id)
-        };
-        
-        this.lastIndexed = Date.now();
-        this.isDirty = false;
-      } catch (error) {
-        console.error(`VectorCollection '${this.name}': Error building index`, error);
-        // Continue without index
-        this.index = null;
+      const score = cosineSimilarity(queryVector, record.vector);
+      
+      if (score >= scoreThreshold) {
+        results.push({
+          record,
+          score
+        });
       }
     }
+
+    return results
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
   }
 
   /**
-   * Search for similar vectors
+   * Search records with filter
    */
-  async search(
+  search(
     queryVector: number[],
-    limit: number = 5,
-    options: SimilaritySearchOptions = {}
-  ): Promise<Array<VectorRecord & { score: number }>> {
-    // Rebuild index if needed
-    await this.rebuildIndexIfNeeded();
-    
-    // Filter records if needed
-    let records = this.records;
-    if (options.filter) {
-      records = records.filter(options.filter);
-    }
-    
-    // Use the findNearestNeighbors function to find similar vectors
-    const results = findNearestNeighbors(
-      queryVector,
-      records.map(record => ({ vector: record.vector, record })),
-      limit,
-      options.similarityFunction
-    );
-    
-    return results.map(result => ({
-      ...result.record,
-      score: result.similarity
-    }));
+    limit: number = 10,
+    options: { filter?: (record: VectorRecord) => boolean } = {}
+  ): SearchResult[] {
+    const { filter } = options;
+    const allRecords = Array.from(this.records.values());
+    const filteredRecords = filter ? allRecords.filter(filter) : allRecords;
+
+    return filteredRecords
+      .map(record => ({
+        record,
+        score: record.vector ? cosineSimilarity(queryVector, record.vector) : 0
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+  }
+
+  /**
+   * Get collection size
+   */
+  size(): number {
+    return this.records.size;
+  }
+
+  /**
+   * Get all records
+   */
+  getAll(): VectorRecord[] {
+    return Array.from(this.records.values());
+  }
+
+  /**
+   * Clear collection
+   */
+  clear(): void {
+    this.records.clear();
   }
 }

@@ -1,11 +1,10 @@
 
 /**
  * Vector Database - Clean Implementation
- * 
- * Reliable vector storage and search
  */
 
 import { VectorRecord, SimilaritySearchOptions, SearchResult } from './types';
+import { VectorCollection } from './vectorCollection';
 import { generateEmbedding, cosineSimilarity } from '../vectorEmbeddings';
 
 export class VectorDatabase {
@@ -32,13 +31,6 @@ export class VectorDatabase {
       return this.createCollection(name);
     }
     return this.collections.get(name)!;
-  }
-
-  /**
-   * Get collection (alias for collection method)
-   */
-  getCollection(name: string): VectorCollection {
-    return this.collection(name);
   }
 
   /**
@@ -90,48 +82,9 @@ export class VectorDatabase {
   }
 
   /**
-   * Keyword search across collections
+   * Get database statistics
    */
-  async keywordSearch(
-    keywords: string[],
-    options: any = {}
-  ): Promise<SearchResult[]> {
-    const { limit = 10, fuzzy = false } = options;
-    const results: SearchResult[] = [];
-
-    for (const collection of this.collections.values()) {
-      const collectionResults = collection.keywordSearch(keywords, { limit, fuzzy });
-      results.push(...collectionResults);
-    }
-
-    return results
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
-  }
-
-  /**
-   * Add record to specific collection
-   */
-  async add(record: {
-    id: string;
-    vector: number[];
-    content: string;
-    metadata?: any;
-  }): Promise<void> {
-    // Default to 'general' collection if none specified
-    const collection = this.collection('general');
-    collection.addItem({
-      id: record.id,
-      vector: record.vector,
-      text: record.content,
-      metadata: record.metadata || {}
-    });
-  }
-
-  /**
-   * Get database status
-   */
-  getStatus() {
+  stats() {
     const collections = Array.from(this.collections.entries()).map(([name, collection]) => ({
       name,
       size: collection.size(),
@@ -145,133 +98,11 @@ export class VectorDatabase {
       totalRecords: collections.reduce((sum, col) => sum + col.size, 0)
     };
   }
-}
-
-/**
- * Vector Collection Implementation
- */
-export class VectorCollection {
-  private records: Map<string, VectorRecord> = new Map();
-  private name: string;
-
-  constructor(name: string) {
-    this.name = name;
-  }
 
   /**
-   * Add item to collection
+   * Get database status (alias for stats)
    */
-  addItem(record: VectorRecord): void {
-    record.timestamp = record.timestamp || Date.now();
-    this.records.set(record.id, record);
-  }
-
-  /**
-   * Find similar records
-   */
-  findSimilar(
-    queryVector: number[],
-    options: { limit?: number; scoreThreshold?: number } = {}
-  ): SearchResult[] {
-    const { limit = 10, scoreThreshold = 0.5 } = options;
-    const results: SearchResult[] = [];
-
-    for (const record of this.records.values()) {
-      if (!record.vector || record.vector.length === 0) continue;
-
-      const score = cosineSimilarity(queryVector, record.vector);
-      
-      if (score >= scoreThreshold) {
-        results.push({
-          record,
-          score
-        });
-      }
-    }
-
-    return results
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
-  }
-
-  /**
-   * Keyword search within collection
-   */
-  keywordSearch(
-    keywords: string[],
-    options: { limit?: number; fuzzy?: boolean } = {}
-  ): SearchResult[] {
-    const { limit = 10, fuzzy = false } = options;
-    const results: SearchResult[] = [];
-
-    for (const record of this.records.values()) {
-      let score = 0;
-      const text = record.text.toLowerCase();
-
-      for (const keyword of keywords) {
-        const lowerKeyword = keyword.toLowerCase();
-        if (text.includes(lowerKeyword)) {
-          score += 0.3;
-          
-          // Bonus for exact word match
-          if (text.split(/\W+/).includes(lowerKeyword)) {
-            score += 0.2;
-          }
-        }
-      }
-
-      if (score > 0) {
-        results.push({
-          record,
-          score
-        });
-      }
-    }
-
-    return results
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
-  }
-
-  /**
-   * Search records with filter
-   */
-  search(
-    queryVector: number[],
-    limit: number = 10,
-    options: { filter?: (record: VectorRecord) => boolean } = {}
-  ): SearchResult[] {
-    const { filter } = options;
-    const allRecords = Array.from(this.records.values());
-    const filteredRecords = filter ? allRecords.filter(filter) : allRecords;
-
-    return filteredRecords
-      .map(record => ({
-        record,
-        score: record.vector ? cosineSimilarity(queryVector, record.vector) : 0
-      }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, limit);
-  }
-
-  /**
-   * Get all records
-   */
-  getAll(): VectorRecord[] {
-    return Array.from(this.records.values());
-  }
-
-  /**
-   * Get collection size
-   */
-  size(): number {
-    return this.records.size;
-  }
-
-  /**
-   * Clear collection
-   */
-  clear(): void {
-    this.records.clear();
+  getStatus() {
+    return this.stats();
   }
 }
