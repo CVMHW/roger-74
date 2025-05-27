@@ -1,4 +1,3 @@
-
 /**
  * Legacy RAG Integrator
  * 
@@ -272,11 +271,20 @@ export class LegacyRAGIntegrator {
         emotionalTriggers: []
       };
 
-      // Create mock memory context
+      // Create complete memory context that matches the MemoryContext interface
       const memoryContext = {
         relevantItems: [],
-        confidence: 0.5,
-        contextualRelevance: 0.6
+        conversationSummary: conversationHistory.length > 0 ? 
+          `Conversation with ${conversationHistory.length} exchanges` : 
+          'Beginning of conversation',
+        emotionalPattern: 'neutral engagement',
+        crisisHistory: [],
+        userPreferences: {
+          communicationStyle: 'supportive' as const,
+          triggerTopics: [],
+          preferredApproaches: ['person-centered'],
+          developmentalStage: 'adult' as const
+        }
       };
 
       const ragResult = await this.ragService.enhance(
