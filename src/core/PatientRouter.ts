@@ -1,40 +1,30 @@
 
 /**
- * Patient-Focused Router
+ * Patient Router - Unified Integration
  * 
- * Simplified routing that prioritizes patient care over system complexity
+ * Now acts as a facade to the unified pipeline system
+ * Maintains backward compatibility while eliminating redundancy
  */
 
-import { PatientOptimizedCore, PatientContext, OptimizedResult } from './PatientOptimizedCore';
+import { unifiedPipelineRouter } from './UnifiedPipelineRouter';
+import { UnifiedPatientResult } from './UnifiedPatientPipeline';
 
 export class PatientRouter {
-  private patientCore: PatientOptimizedCore;
   private sessionMessageCount: number = 0;
 
   constructor() {
-    this.patientCore = new PatientOptimizedCore();
+    console.log('PATIENT ROUTER: Initialized with unified pipeline integration');
   }
 
   /**
-   * Route patient input through optimized pipeline
+   * Route patient input through unified pipeline (legacy compatibility)
    */
-  async route(userInput: string): Promise<OptimizedResult> {
+  async route(userInput: string): Promise<UnifiedPatientResult> {
     this.sessionMessageCount++;
     
-    const context: PatientContext = {
-      userInput,
-      sessionId: `session_${Date.now()}`,
-      messageCount: this.sessionMessageCount,
-      isNewSession: this.sessionMessageCount === 1
-    };
-
-    console.log(`PATIENT ROUTER: Processing message ${this.sessionMessageCount}`);
+    console.log(`PATIENT ROUTER: Delegating to unified pipeline (message ${this.sessionMessageCount})`);
     
-    const result = await this.patientCore.process(context);
-    
-    console.log(`PATIENT ROUTER: Completed in ${result.processingTimeMs}ms with quality ${result.therapeuticQuality}`);
-    
-    return result;
+    return await unifiedPipelineRouter.route(userInput, []);
   }
 
   /**
@@ -42,8 +32,9 @@ export class PatientRouter {
    */
   resetSession(): void {
     this.sessionMessageCount = 0;
+    unifiedPipelineRouter.resetSession();
   }
 }
 
-// Export singleton
+// Export singleton for backward compatibility
 export const patientRouter = new PatientRouter();
