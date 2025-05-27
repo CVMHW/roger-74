@@ -34,10 +34,7 @@ export class PatientRouter {
       crisisDetected: result.emotionDetected && result.text.includes('crisis'),
       systemsEngaged: result.systemsUsed,
       therapeuticQuality: result.confidence,
-      pipelineRoute: this.determinePipelineRoute(result.systemsUsed, userInput),
-      emotionDetected: result.emotionDetected,
-      hallucinationPrevented: result.hallucinationPrevented,
-      personalityApplied: result.personalityApplied
+      pipelineRoute: this.determinePipelineRoute(result.systemsUsed, userInput)
     };
   }
 
