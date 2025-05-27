@@ -28,17 +28,36 @@ export class OptimizedUnifiedPipeline extends UnifiedRogerPipeline {
     const startTime = Date.now();
     
     try {
-      // Step 1: Smart routing decision with sophistication analysis
+      // Use optimized response processor for better performance
+      const { processOptimizedResponse } = await import('../utils/response/optimizedResponseProcessor');
+      
+      const optimizedResult = await processOptimizedResponse(
+        context.userInput,
+        context.conversationHistory
+      );
+
+      // If it's a simple greeting, return immediately
+      if (optimizedResult.routeType === 'greeting') {
+        return {
+          response: optimizedResult.response,
+          confidence: optimizedResult.confidence,
+          processingTime: optimizedResult.processingTime,
+          wasEnhanced: false,
+          crisisDetected: false,
+          auditTrail: [`Optimized ${optimizedResult.routeType} route: ${optimizedResult.processingTime}ms`],
+          memoryUpdated: false
+        };
+      }
+
+      // For crisis, emotional, and complex - continue with original sophisticated processing
       const routeDecision = this.smartRouter.determineOptimalRoute(context);
       console.log(`OPTIMIZED PIPELINE: Route ${routeDecision.route} with ${routeDecision.sophisticationLevel} sophistication`);
 
-      // Step 2: Execute sophisticated processing based on optimal route
       const sophisticatedResult = await this.smartRouter.executeSophisticatedRoute(
         context,
         routeDecision
       );
 
-      // Step 3: Apply additional sophisticated enhancements if needed
       const finalResponse = await this.applySophisticatedEnhancements(
         sophisticatedResult.enhancedResponse,
         context,
@@ -54,10 +73,10 @@ export class OptimizedUnifiedPipeline extends UnifiedRogerPipeline {
         wasEnhanced: sophisticatedResult.systemsEngaged.length > 0,
         crisisDetected: routeDecision.route === 'crisis',
         auditTrail: [
-          `Smart route: ${routeDecision.route}`,
+          `Optimized route: ${optimizedResult.routeType} -> ${routeDecision.route}`,
           `Sophistication level: ${routeDecision.sophisticationLevel}`,
           `Systems engaged: ${sophisticatedResult.systemsEngaged.join(', ')}`,
-          `Processing complexity: ${sophisticatedResult.sophisticationMetrics.processingComplexity}`
+          `Total processing: ${processingTime}ms`
         ],
         memoryUpdated: true
       };
@@ -65,7 +84,7 @@ export class OptimizedUnifiedPipeline extends UnifiedRogerPipeline {
     } catch (error) {
       console.error('Optimized unified pipeline error:', error);
       
-      // Fallback to full sophisticated processing
+      // Fallback to original processing
       return await super.process(context);
     }
   }
@@ -145,6 +164,3 @@ export class OptimizedUnifiedPipeline extends UnifiedRogerPipeline {
     };
   }
 }
-
-// Export optimized instance
-export const optimizedUnifiedPipeline = new OptimizedUnifiedPipeline();
