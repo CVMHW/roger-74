@@ -164,3 +164,6 @@ export class OptimizedUnifiedPipeline extends UnifiedRogerPipeline {
     };
   }
 }
+
+// Export singleton instance
+export const optimizedUnifiedPipeline = new OptimizedUnifiedPipeline();
