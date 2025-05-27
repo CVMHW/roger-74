@@ -2,159 +2,124 @@
 /**
  * Unified Personality Processor
  * 
- * Processes personality insights using standardized types and interfaces
+ * Integrates Roger's personality with sophisticated emotion detection
  */
 
 import { PersonalityInsights, EmotionalContext } from '../core/types';
 import { getRogerPersonalityInsight } from '../../reflection/rogerPersonality';
 
 /**
- * Process personality insights with unified types
+ * Process personality insights integrated with emotion detection
  */
 export const processPersonality = async (
   userInput: string,
   emotionalContext: EmotionalContext
 ): Promise<PersonalityInsights> => {
-  console.log("PERSONALITY PROCESSOR: Generating personality insights");
+  console.log("PERSONALITY PROCESSOR: Integrating with sophisticated emotion detection");
   
   try {
-    // Get personality insight from existing system
-    const personalityInsight = getRogerPersonalityInsight(userInput);
+    // Use Roger's response from emotion detection if available
+    let personalityInsight = emotionalContext.rogerResponse;
     
-    if (!personalityInsight) {
-      return {
-        shouldIncludeInsight: false,
-        confidence: 0.1
-      };
+    // Enhance with Roger's personality system if needed
+    if (!personalityInsight || personalityInsight.length < 20) {
+      personalityInsight = getRogerPersonalityInsight(userInput);
     }
     
-    // Determine if insight should be included based on sophisticated criteria
-    const shouldInclude = determineShouldIncludeInsight(
-      userInput,
-      emotionalContext,
-      personalityInsight
-    );
+    // Always include personality for therapy context
+    const shouldInclude = true; // No therapy session should be without Roger's personality
     
-    // Calculate confidence based on emotional context and content relevance
-    const confidence = calculateInsightConfidence(userInput, emotionalContext, personalityInsight);
+    // Calculate confidence based on emotional context
+    const confidence = calculateTherapeuticConfidence(userInput, emotionalContext);
     
-    // Categorize the insight
-    const category = categorizeInsight(personalityInsight);
+    // Categorize based on emotional context
+    const category = categorizeTherapeuticInsight(emotionalContext);
     
     const insights: PersonalityInsights = {
       shouldIncludeInsight: shouldInclude,
-      insight: shouldInclude ? personalityInsight : undefined,
+      insight: personalityInsight,
       confidence,
-      category
+      category,
+      therapeuticContext: emotionalContext.therapeuticContext
     };
     
-    console.log("PERSONALITY PROCESSOR: Processing complete", {
-      hasInsight: !!personalityInsight,
-      shouldInclude,
+    console.log("PERSONALITY PROCESSOR: Integration complete", {
+      hasPersonalityInsight: !!personalityInsight,
       category,
-      confidence
+      confidence,
+      therapeuticContext: emotionalContext.therapeuticContext
     });
     
     return insights;
     
   } catch (error) {
-    console.error("PERSONALITY PROCESSOR: Error processing personality:", error);
+    console.error("PERSONALITY PROCESSOR: Error in personality integration:", error);
     return {
-      shouldIncludeInsight: false,
-      confidence: 0.1
+      shouldIncludeInsight: true,
+      insight: "I'm here to understand what you're going through. What feels most important to share right now?",
+      confidence: 0.8,
+      category: 'therapeutic-presence',
+      therapeuticContext: 'general'
     };
   }
 };
 
 /**
- * Determine if personality insight should be included
+ * Calculate confidence for therapeutic context
  */
-const determineShouldIncludeInsight = (
+const calculateTherapeuticConfidence = (
   userInput: string,
-  emotionalContext: EmotionalContext,
-  insight: string
-): boolean => {
-  // Always include for depression - highest priority
-  if (emotionalContext.isDepressionMentioned) {
-    return true;
-  }
-  
-  // Include for strong emotional content
-  if (emotionalContext.hasDetectedEmotion && emotionalContext.confidence && emotionalContext.confidence > 0.7) {
-    return true;
-  }
-  
-  // Include for substantive personal sharing
-  if (userInput.length > 50 && /\b(i feel|i am|i think|my|me)\b/i.test(userInput)) {
-    return true;
-  }
-  
-  // Include for therapeutic questions
-  if (/\b(what should|how can|help me|advice|guidance)\b/i.test(userInput)) {
-    return true;
-  }
-  
-  // Random inclusion for variety (30% chance)
-  return Math.random() > 0.7;
-};
-
-/**
- * Calculate confidence score for personality insight
- */
-const calculateInsightConfidence = (
-  userInput: string,
-  emotionalContext: EmotionalContext,
-  insight: string
+  emotionalContext: EmotionalContext
 ): number => {
-  let confidence = 0.5; // Base confidence
+  let confidence = 0.8; // High base confidence for therapy
   
-  // Boost for emotional context
+  // Boost for detected emotion
   if (emotionalContext.hasDetectedEmotion) {
-    confidence += 0.2;
+    confidence += 0.1;
   }
   
+  // Boost for crisis/depression detection
   if (emotionalContext.isDepressionMentioned) {
-    confidence += 0.3;
+    confidence += 0.1;
   }
   
-  // Boost for personal content
-  const personalWords = (userInput.match(/\b(i|my|me|myself)\b/gi) || []).length;
-  confidence += Math.min(personalWords * 0.05, 0.2);
-  
-  // Boost for insight relevance
-  const userWords = userInput.toLowerCase().split(/\W+/);
-  const insightWords = insight.toLowerCase().split(/\W+/);
-  const overlap = userWords.filter(word => insightWords.includes(word)).length;
-  confidence += Math.min(overlap * 0.02, 0.1);
+  // Boost for personal sharing
+  const personalWords = (userInput.match(/\b(i|my|me|myself|i'm|i've|i feel)\b/gi) || []).length;
+  confidence += Math.min(personalWords * 0.02, 0.1);
   
   return Math.min(confidence, 1.0);
 };
 
 /**
- * Categorize the personality insight
+ * Categorize insight based on therapeutic context
  */
-const categorizeInsight = (insight: string): string => {
-  const lowerInsight = insight.toLowerCase();
-  
-  if (lowerInsight.includes('feel') || lowerInsight.includes('emotion')) {
-    return 'emotional-support';
+const categorizeTherapeuticInsight = (emotionalContext: EmotionalContext): string => {
+  if (emotionalContext.isDepressionMentioned) {
+    return 'crisis-support';
   }
   
-  if (lowerInsight.includes('understand') || lowerInsight.includes('perspective')) {
-    return 'understanding';
+  if (emotionalContext.therapeuticContext) {
+    switch (emotionalContext.therapeuticContext) {
+      case 'relationship': return 'relationship-support';
+      case 'work': return 'identity-support';
+      case 'family': return 'family-support';
+      case 'health': return 'health-support';
+      case 'financial': return 'security-support';
+      case 'social': return 'connection-support';
+      case 'identity': return 'identity-support';
+      default: return 'general-support';
+    }
   }
   
-  if (lowerInsight.includes('strength') || lowerInsight.includes('capable')) {
-    return 'empowerment';
+  if (emotionalContext.primaryEmotion) {
+    switch (emotionalContext.primaryEmotion) {
+      case 'sadness': return 'emotional-validation';
+      case 'anger': return 'emotional-processing';
+      case 'anxiety': return 'anxiety-support';
+      case 'fear': return 'safety-support';
+      default: return 'emotional-support';
+    }
   }
   
-  if (lowerInsight.includes('accept') || lowerInsight.includes('compassion')) {
-    return 'acceptance';
-  }
-  
-  if (lowerInsight.includes('change') || lowerInsight.includes('grow')) {
-    return 'growth-oriented';
-  }
-  
-  return 'general-support';
+  return 'therapeutic-presence';
 };

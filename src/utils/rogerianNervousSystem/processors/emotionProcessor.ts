@@ -2,90 +2,92 @@
 /**
  * Unified Emotion Processor
  * 
- * Processes emotional context using standardized types and interfaces
+ * Uses the sophisticated emotions wheel for accurate detection
  */
 
 import { EmotionalContext, EmotionType, SeverityLevel } from '../core/types';
-import { extractEmotionsFromInput } from '../../response/processor/emotions';
-import { identifyEnhancedFeelings } from '../../reflection/feelingDetection';
+import { detectEmotion } from '../../emotions/unifiedEmotionDetector';
 
 /**
- * Process emotions from user input using unified types
+ * Process emotions using unified sophisticated detection
  */
 export const processEmotions = async (
   userInput: string,
   conversationHistory: string[] = []
 ): Promise<EmotionalContext> => {
-  console.log("EMOTION PROCESSOR: Analyzing emotional context");
+  console.log("EMOTION PROCESSOR: Using sophisticated emotion detection");
   
   try {
-    // Extract emotions using existing system
-    const emotionInfo = extractEmotionsFromInput(userInput);
-    const enhancedFeelings = identifyEnhancedFeelings(userInput);
+    // Use unified emotion detector - NO MORE NEUTRAL
+    const emotionResult = detectEmotion(userInput);
     
     // Map to unified emotion types
     const mapToUnifiedEmotion = (emotion: string): EmotionType => {
       const lowerEmotion = emotion.toLowerCase();
-      if (lowerEmotion.includes('depress')) return 'depression';
-      if (lowerEmotion.includes('sad')) return 'sadness';
-      if (lowerEmotion.includes('anxious') || lowerEmotion.includes('worry')) return 'anxiety';
-      if (lowerEmotion.includes('angry') || lowerEmotion.includes('mad')) return 'anger';
-      if (lowerEmotion.includes('happy') || lowerEmotion.includes('joy')) return 'joy';
+      
+      // Crisis emotions
+      if (['hopeless', 'despair', 'worthless', 'powerless'].includes(lowerEmotion)) return 'depression';
+      
+      // Sophisticated sad emotions
+      if (['abandoned', 'rejected', 'grief', 'lonely', 'guilty', 'ashamed'].includes(lowerEmotion)) return 'sadness';
+      
+      // Sophisticated angry emotions  
+      if (['furious', 'bitter', 'resentful', 'humiliated', 'frustrated'].includes(lowerEmotion)) return 'anger';
+      
+      // Sophisticated fearful emotions
+      if (['overwhelmed', 'anxious', 'worried', 'persecuted', 'threatened'].includes(lowerEmotion)) return 'anxiety';
+      
+      // Sophisticated happy emotions
+      if (['joyful', 'content', 'optimistic', 'proud', 'ecstatic'].includes(lowerEmotion)) return 'joy';
+      
+      // Default mapping
       if (lowerEmotion.includes('fear') || lowerEmotion.includes('scared')) return 'fear';
       if (lowerEmotion.includes('surprise')) return 'surprise';
       if (lowerEmotion.includes('disgust')) return 'disgust';
-      return 'neutral';
+      
+      // NO NEUTRAL - default to anxiety for therapy context
+      return 'anxiety';
     };
     
-    const mapToSeverity = (intensity?: string): SeverityLevel => {
-      if (!intensity) return 'medium';
-      const lower = intensity.toLowerCase();
-      if (lower.includes('high') || lower.includes('severe')) return 'high';
-      if (lower.includes('critical') || lower.includes('extreme')) return 'critical';
-      if (lower.includes('low') || lower.includes('mild')) return 'low';
-      return 'medium';
-    };
-    
-    // Detect depression with comprehensive patterns
-    const isDepressionMentioned = /\b(depress(ed|ing|ion)?|sad|down|low|hopeless|worthless|empty|numb|feeling (bad|low|terrible|awful|horrible))\b/i.test(userInput.toLowerCase());
-    
-    // Determine primary emotion
-    let primaryEmotion: EmotionType | undefined;
-    if (isDepressionMentioned) {
-      primaryEmotion = 'depression';
-    } else if (emotionInfo.explicitEmotion) {
-      primaryEmotion = mapToUnifiedEmotion(emotionInfo.explicitEmotion);
-    } else if (enhancedFeelings.length > 0) {
-      primaryEmotion = mapToUnifiedEmotion(enhancedFeelings[0].detectedWord);
-    }
-    
-    // Extract secondary emotions
-    const secondaryEmotions: EmotionType[] = [];
-    enhancedFeelings.slice(1, 3).forEach(feeling => {
-      const emotion = mapToUnifiedEmotion(feeling.detectedWord);
-      if (emotion !== primaryEmotion) {
-        secondaryEmotions.push(emotion);
+    const mapToSeverity = (intensity: string): SeverityLevel => {
+      switch (intensity) {
+        case 'critical': return 'critical';
+        case 'high': return 'high';
+        case 'low': return 'low';
+        default: return 'medium';
       }
-    });
+    };
     
     const emotionalContext: EmotionalContext = {
-      hasDetectedEmotion: emotionInfo.hasDetectedEmotion || enhancedFeelings.length > 0 || isDepressionMentioned,
-      primaryEmotion,
-      secondaryEmotions: secondaryEmotions.length > 0 ? secondaryEmotions : undefined,
-      isDepressionMentioned,
-      emotionalIntensity: mapToSeverity(emotionInfo.emotionalContent?.intensity),
-      confidence: emotionInfo.hasDetectedEmotion ? 0.8 : (enhancedFeelings.length > 0 ? 0.6 : 0.3)
+      hasDetectedEmotion: true, // Always true - no one seeks therapy feeling neutral
+      primaryEmotion: mapToUnifiedEmotion(emotionResult.primaryEmotion),
+      isDepressionMentioned: emotionResult.intensity === 'critical' || emotionResult.category === 'sad',
+      emotionalIntensity: mapToSeverity(emotionResult.intensity),
+      confidence: emotionResult.confidence,
+      therapeuticContext: emotionResult.therapeuticContext,
+      rogerResponse: emotionResult.rogerResponse
     };
     
-    console.log("EMOTION PROCESSOR: Analysis complete", emotionalContext);
+    console.log("EMOTION PROCESSOR: Sophisticated detection complete", {
+      detected: emotionResult.primaryEmotion,
+      category: emotionResult.category,
+      intensity: emotionResult.intensity,
+      confidence: emotionResult.confidence
+    });
+    
     return emotionalContext;
     
   } catch (error) {
-    console.error("EMOTION PROCESSOR: Error processing emotions:", error);
+    console.error("EMOTION PROCESSOR: Error in sophisticated detection:", error);
+    // Even in error, assume therapeutic context
     return {
-      hasDetectedEmotion: false,
+      hasDetectedEmotion: true,
+      primaryEmotion: 'anxiety',
       isDepressionMentioned: false,
-      confidence: 0.1
+      emotionalIntensity: 'medium',
+      confidence: 0.7,
+      therapeuticContext: 'general',
+      rogerResponse: 'I can sense something is weighing on you. What would you like to explore?'
     };
   }
 };
