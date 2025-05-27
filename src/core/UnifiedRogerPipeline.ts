@@ -72,6 +72,7 @@ export class UnifiedRogerPipeline {
   async process(context: PipelineContext): Promise<PipelineResult> {
     const startTime = Date.now();
     const auditTrail: string[] = [];
+    let crisisResult: any = { level: 'none', requiresImmediate: false }; // Initialize crisisResult
     
     try {
       // HIPAA logging and compliance check
@@ -79,7 +80,7 @@ export class UnifiedRogerPipeline {
       auditTrail.push('HIPAA compliance logged');
 
       // Phase 1: Crisis Detection (HIGHEST PRIORITY)
-      const crisisResult = await this.crisisService.analyze(context.userInput);
+      crisisResult = await this.crisisService.analyze(context.userInput);
       auditTrail.push(`Crisis analysis: ${crisisResult.level}`);
       
       if (crisisResult.requiresImmediate) {
