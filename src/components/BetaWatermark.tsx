@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 
 const BetaWatermark: React.FC = () => {
   return (
-    <div className="fixed top-20 right-4 z-10 pointer-events-none select-none">
+    <div className="flex justify-end mb-4">
       <div className="flex flex-col items-end gap-2">
         {/* Main Beta Badge */}
         <div className="relative">

@@ -117,7 +117,6 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-cvmhw-light to-white relative">
       <Header />
-      <BetaWatermark />
       
       {/* User Consent Dialog */}
       <UserConsentDialog 
@@ -173,6 +172,9 @@ const Index = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Beta Watermark - positioned above crisis resources */}
+          <BetaWatermark />
 
           {/* Crisis Resources - Always visible but collapsed by default */}
           <div className="mb-6">
