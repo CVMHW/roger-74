@@ -1,4 +1,3 @@
-
 /**
  * Unified RAG Service
  * 
@@ -343,7 +342,7 @@ export class RAGService {
       await this.vectorDatabase.add({
         id: `chunk_${Date.now()}_${Math.random()}`,
         vector: embedding,
-        content: chunk,
+        text: chunk,
         metadata: {
           ...metadata,
           originalLength: content.length,

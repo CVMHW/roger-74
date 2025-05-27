@@ -35,4 +35,5 @@ export interface QuickCheckResult {
   isRelevant: boolean;
   confidence: number;
   reason: string;
+  isPotentialHallucination?: boolean;
 }

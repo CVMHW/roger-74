@@ -43,8 +43,9 @@ export const quickCheck = (responseText: string, userInput: string): QuickCheckR
   }
   
   return {
-    isPotentialHallucination,
+    isRelevant: !isPotentialHallucination,
     confidence,
-    reason
+    reason: reason || "No hallucination detected",
+    isPotentialHallucination
   };
 };
