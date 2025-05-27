@@ -1,4 +1,3 @@
-
 /**
  * Unified Patient Pipeline Architecture
  * 
@@ -112,7 +111,7 @@ export class UnifiedPatientPipeline {
     const crisisAnalysis = this.unifiedCrisisDetection(userInput);
     
     // Unified content analysis (sophisticated pattern recognition)
-    const contentAnalysis = this.analyzeContentSophistication(userInput);
+    const contentAnalysis = this.analyzeContentSophistication(userInput, context);
     
     return {
       emotion: emotionAnalysis,
@@ -121,6 +120,165 @@ export class UnifiedPatientPipeline {
       complexity: this.assessComplexity(userInput, context.messageCount),
       therapeuticNeeds: this.assessTherapeuticNeeds(emotionAnalysis, context)
     };
+  }
+
+  /**
+   * Analyze Content Sophistication - Unified content analysis
+   */
+  private analyzeContentSophistication(userInput: string, context: UnifiedPatientContext): any {
+    const sophisticationMetrics = {
+      vocabularyComplexity: this.calculateVocabularyComplexity(userInput),
+      emotionalDepth: this.calculateEmotionalDepth(userInput),
+      conceptualAbstraction: this.calculateConceptualAbstraction(userInput),
+      therapeuticReadiness: this.assessTherapeuticReadiness(userInput, context)
+    };
+
+    const overallSophistication = this.calculateOverallSophistication(sophisticationMetrics);
+
+    return {
+      ...sophisticationMetrics,
+      overallLevel: overallSophistication,
+      requiresAdvancedResponse: overallSophistication > 0.7,
+      suggestedApproach: this.suggestResponseApproach(sophisticationMetrics)
+    };
+  }
+
+  /**
+   * Calculate vocabulary complexity (0-1 scale)
+   */
+  private calculateVocabularyComplexity(userInput: string): number {
+    const words = userInput.toLowerCase().split(/\s+/);
+    const uniqueWords = new Set(words);
+    const avgWordLength = words.reduce((sum, word) => sum + word.length, 0) / words.length;
+    
+    // Complex vocabulary indicators
+    const complexPatterns = [
+      /\b(philosophical|existential|introspective|contemplative)\b/i,
+      /\b(ambivalent|paradoxical|dichotomous|multifaceted)\b/i,
+      /\b(transcendent|profound|elusive|nuanced)\b/i
+    ];
+    
+    let complexityScore = 0;
+    complexityScore += Math.min(uniqueWords.size / words.length, 1) * 0.3; // Vocabulary diversity
+    complexityScore += Math.min((avgWordLength - 3) / 7, 1) * 0.3; // Word length
+    complexityScore += complexPatterns.filter(p => p.test(userInput)).length * 0.4; // Complex terms
+    
+    return Math.min(complexityScore, 1);
+  }
+
+  /**
+   * Calculate emotional depth (0-1 scale)
+   */
+  private calculateEmotionalDepth(userInput: string): number {
+    const deepEmotionPatterns = [
+      /\b(profound|deep|overwhelming|transformative)\s+(sadness|joy|fear|anger|love)\b/i,
+      /\b(existential|spiritual|meaning|purpose|identity)\b/i,
+      /\b(conflicted|torn|ambivalent|confused)\s+(about|regarding)\b/i,
+      /\b(questioning|wondering|searching|seeking)\b/i
+    ];
+
+    const surfaceEmotionPatterns = [
+      /\b(happy|sad|mad|okay|fine)\b/i,
+      /\b(good|bad|alright|whatever)\b/i
+    ];
+
+    let depthScore = 0;
+    depthScore += deepEmotionPatterns.filter(p => p.test(userInput)).length * 0.3;
+    depthScore -= surfaceEmotionPatterns.filter(p => p.test(userInput)).length * 0.1;
+    
+    // Sentence structure complexity
+    const sentences = userInput.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const avgSentenceLength = sentences.reduce((sum, s) => sum + s.split(/\s+/).length, 0) / sentences.length;
+    depthScore += Math.min((avgSentenceLength - 5) / 15, 0.4);
+
+    return Math.max(0, Math.min(depthScore, 1));
+  }
+
+  /**
+   * Calculate conceptual abstraction (0-1 scale)
+   */
+  private calculateConceptualAbstraction(userInput: string): number {
+    const abstractPatterns = [
+      /\b(concept|idea|theory|principle|philosophy)\b/i,
+      /\b(metaphor|analogy|symbolism|representation)\b/i,
+      /\b(pattern|system|framework|structure)\b/i,
+      /\b(perspective|viewpoint|lens|approach)\b/i
+    ];
+
+    const concretePatterns = [
+      /\b(today|yesterday|tomorrow|this morning|tonight)\b/i,
+      /\b(here|there|home|work|school)\b/i,
+      /\b(he said|she said|they told me)\b/i
+    ];
+
+    let abstractionScore = 0;
+    abstractionScore += abstractPatterns.filter(p => p.test(userInput)).length * 0.25;
+    abstractionScore -= concretePatterns.filter(p => p.test(userInput)).length * 0.1;
+
+    // Check for conditional and hypothetical language
+    const conditionalPatterns = [
+      /\b(if|when|suppose|imagine|what if|perhaps|maybe)\b/i,
+      /\b(could|would|might|may|should)\b/i
+    ];
+    abstractionScore += conditionalPatterns.filter(p => p.test(userInput)).length * 0.15;
+
+    return Math.max(0, Math.min(abstractionScore, 1));
+  }
+
+  /**
+   * Assess therapeutic readiness (0-1 scale)
+   */
+  private assessTherapeuticReadiness(userInput: string, context: UnifiedPatientContext): number {
+    let readinessScore = 0;
+
+    // Readiness indicators
+    const readinessPatterns = [
+      /\b(want to understand|help me|ready to|willing to)\b/i,
+      /\b(change|grow|improve|work on)\b/i,
+      /\b(insight|awareness|reflection|exploration)\b/i
+    ];
+
+    // Resistance indicators
+    const resistancePatterns = [
+      /\b(don't want|can't|won't|refuse|not ready)\b/i,
+      /\b(waste of time|pointless|doesn't help)\b/i
+    ];
+
+    readinessScore += readinessPatterns.filter(p => p.test(userInput)).length * 0.3;
+    readinessScore -= resistancePatterns.filter(p => p.test(userInput)).length * 0.2;
+
+    // Message count factor (engagement over time)
+    if (context.messageCount > 5) readinessScore += 0.2;
+    if (context.messageCount > 10) readinessScore += 0.2;
+
+    return Math.max(0, Math.min(readinessScore, 1));
+  }
+
+  /**
+   * Calculate overall sophistication level
+   */
+  private calculateOverallSophistication(metrics: any): number {
+    const weights = {
+      vocabularyComplexity: 0.25,
+      emotionalDepth: 0.35,
+      conceptualAbstraction: 0.25,
+      therapeuticReadiness: 0.15
+    };
+
+    return Object.entries(weights).reduce((sum, [key, weight]) => {
+      return sum + (metrics[key] * weight);
+    }, 0);
+  }
+
+  /**
+   * Suggest response approach based on sophistication
+   */
+  private suggestResponseApproach(metrics: any): string {
+    if (metrics.conceptualAbstraction > 0.7) return 'philosophical-exploration';
+    if (metrics.emotionalDepth > 0.7) return 'deep-emotional-processing';
+    if (metrics.therapeuticReadiness > 0.7) return 'active-therapeutic-work';
+    if (metrics.vocabularyComplexity > 0.7) return 'intellectually-engaged';
+    return 'supportive-exploration';
   }
 
   /**
