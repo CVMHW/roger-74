@@ -1,4 +1,3 @@
-
 /**
  * Unified RAG Integrator
  * 
@@ -120,7 +119,7 @@ export class UnifiedRAGIntegrator {
       );
 
       // Step 8: Evaluation and Feedback Integration
-      const evaluationMetrics = await ragEvaluationFramework.evaluateRAGResponse({
+      const evaluationMetrics = await ragEvaluationFramework.evaluateResponse({
         query: context.userInput,
         retrievedDocuments: rerankedResults.map(r => r.record.text),
         generatedResponse: enhancedResponse,
@@ -213,7 +212,8 @@ export class UnifiedRAGIntegrator {
   ): Promise<number[]> {
     const enhancedQuery = `${query} [session: ${context.sessionId}] [emotion: ${context.emotionalContext?.primaryEmotion}]`;
     
-    return await advancedVectorDB.collection('enhanced_queries').generateEmbedding(enhancedQuery);
+    const collection = advancedVectorDB.collection('enhanced_queries');
+    return await collection.generateEmbedding(enhancedQuery);
   }
 
   /**

@@ -59,7 +59,8 @@ export class UnifiedRogerPipeline {
         'patient',
         {
           sessionId: context.sessionId,
-          orchestratorConfidence: orchestratorResult.confidence
+          orchestratorConfidence: orchestratorResult.confidence,
+          emotionalContext: context.emotionalContext || {}
         },
         0.8,
         context.sessionId
@@ -70,15 +71,15 @@ export class UnifiedRogerPipeline {
         orchestratorResult.response,
         {
           userInput: context.userInput,
-          conversationHistory: context.conversationHistory,
+          conversationHistory: context.conversationHistory || [],
           sessionId: context.sessionId,
-          emotionalContext: context.emotionalContext,
+          emotionalContext: context.emotionalContext || {},
           clientPreferences: context.clientPreferences
         }
       );
 
       // Step 5: Evaluation framework assessment
-      const evaluationResult = await ragEvaluationFramework.evaluateRAGResponse({
+      const evaluationResult = await ragEvaluationFramework.evaluateResponse({
         query: context.userInput,
         retrievedDocuments: ragResult.retrievalResults.map(r => r.record?.text || ''),
         generatedResponse: ragResult.enhancedResponse,
@@ -173,11 +174,11 @@ export class UnifiedRogerPipeline {
     const baseHealth = await this.serviceManager.healthCheck();
     
     const additionalServices = {
-      unifiedMemory: true, // Synchronous check
-      unifiedRAG: true,    // Synchronous check
-      feedbackSystem: true, // Synchronous check
-      evaluationFramework: true, // Synchronous check
-      accessControl: true  // Synchronous check
+      unifiedMemory: true,
+      unifiedRAG: true,
+      feedbackSystem: true,
+      evaluationFramework: true,
+      accessControl: true
     };
 
     const allServices = {

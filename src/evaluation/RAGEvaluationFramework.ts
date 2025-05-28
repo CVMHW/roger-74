@@ -1,616 +1,313 @@
-
 /**
- * Comprehensive RAG Evaluation Framework
+ * RAG Evaluation Framework
  * 
- * Implements systematic evaluation metrics for 5/5 evaluation framework
+ * Comprehensive evaluation system for RAG responses
  */
 
-export interface EvaluationMetrics {
-  relevance: {
-    score: number;
-    details: {
-      semanticRelevance: number;
-      contextualRelevance: number;
-      topicalRelevance: number;
-    };
-  };
-  coherence: {
-    score: number;
-    details: {
-      logicalFlow: number;
-      consistencyScore: number;
-      contradictionCount: number;
-    };
-  };
-  factualGrounding: {
-    score: number;
-    details: {
-      factualAccuracy: number;
-      sourceAttribution: number;
-      hallucinationRate: number;
-    };
-  };
-  responsiveness: {
-    score: number;
-    details: {
-      queryAnswering: number;
-      completeness: number;
-      specificity: number;
-    };
-  };
-  overall: number;
-}
-
-export interface EvaluationContext {
-  userQuery: string;
-  retrievedDocuments: string[];
-  generatedResponse: string;
-  conversationHistory: string[];
-  expectedTopics?: string[];
-  groundTruthFacts?: string[];
-}
-
-export interface EvaluationResult {
-  metrics: EvaluationMetrics;
-  timestamp: number;
-  processingTime: number;
-  recommendations: string[];
-  detailedAnalysis: Record<string, any>;
-}
+import { advancedVectorDB } from '../core/AdvancedVectorDatabase';
+import { userFeedbackSystem } from '../feedback/UserFeedbackSystem';
 
 export class RAGEvaluationFramework {
-  private evaluationHistory: EvaluationResult[] = [];
-  private benchmarkScores: Record<string, number> = {
-    relevance: 0.85,
-    coherence: 0.90,
-    factualGrounding: 0.95,
-    responsiveness: 0.88
+  private evaluationMetrics: Map<string, any> = new Map();
+  private evaluationThresholds = {
+    relevance: 0.7,
+    coherence: 0.8,
+    faithfulness: 0.75,
+    overall: 0.75
   };
 
+  constructor() {
+    console.log("RAG Evaluation Framework initialized");
+  }
+
   /**
-   * Comprehensive evaluation of RAG system response
+   * Evaluate RAG response quality
    */
-  async evaluateResponse(context: EvaluationContext): Promise<EvaluationResult> {
-    const startTime = Date.now();
+  async evaluateRAGResponse(params: {
+    query: string;
+    retrievedDocuments: string[];
+    generatedResponse: string;
+    groundTruth?: string;
+    context?: any;
+  }): Promise<any> {
+    const { query, retrievedDocuments, generatedResponse, groundTruth, context } = params;
+    
+    // Calculate relevance score
+    const relevanceScore = await this.calculateRelevance(query, retrievedDocuments);
+    
+    // Calculate coherence score
+    const coherenceScore = await this.calculateCoherence(generatedResponse);
+    
+    // Calculate faithfulness score
+    const faithfulnessScore = await this.calculateFaithfulness(generatedResponse, retrievedDocuments);
+    
+    // Calculate groundtruth alignment if available
+    let groundTruthScore = 0.5;
+    if (groundTruth) {
+      groundTruthScore = await this.calculateGroundTruthAlignment(generatedResponse, groundTruth);
+    }
+    
+    // Calculate overall score
+    const overallScore = this.calculateOverallScore({
+      relevanceScore,
+      coherenceScore,
+      faithfulnessScore,
+      groundTruthScore
+    });
+    
+    // Store evaluation results
+    const evaluationId = `eval_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const evaluationResult = {
+      evaluationId,
+      query,
+      relevanceScore,
+      coherenceScore,
+      faithfulnessScore,
+      groundTruthScore,
+      overallScore,
+      timestamp: Date.now(),
+      context: context || {}
+    };
+    
+    this.evaluationMetrics.set(evaluationId, evaluationResult);
+    
+    // Submit feedback if score is below threshold
+    if (overallScore < this.evaluationThresholds.overall) {
+      await this.submitEvaluationFeedback(evaluationResult);
+    }
+    
+    return evaluationResult;
+  }
+
+  /**
+   * Calculate relevance between query and retrieved documents
+   */
+  private async calculateRelevance(query: string, documents: string[]): Promise<number> {
+    if (!documents.length) return 0;
     
     try {
-      console.log('Starting comprehensive RAG evaluation...');
+      // Generate query embedding
+      const queryEmbedding = await advancedVectorDB.collection('evaluation').generateEmbedding(query);
       
-      // Parallel evaluation of all metrics
-      const [relevance, coherence, factualGrounding, responsiveness] = await Promise.all([
-        this.evaluateRelevance(context),
-        this.evaluateCoherence(context),
-        this.evaluateFactualGrounding(context),
-        this.evaluateResponsiveness(context)
-      ]);
+      // Calculate similarity with each document
+      const similarities = await Promise.all(documents.map(async (doc) => {
+        const docEmbedding = await advancedVectorDB.collection('evaluation').generateEmbedding(doc);
+        return this.cosineSimilarity(queryEmbedding, docEmbedding);
+      }));
       
-      // Calculate overall score
-      const overall = this.calculateOverallScore(relevance, coherence, factualGrounding, responsiveness);
-      
-      const metrics: EvaluationMetrics = {
-        relevance,
-        coherence,
-        factualGrounding,
-        responsiveness,
-        overall
-      };
-      
-      // Generate recommendations
-      const recommendations = this.generateRecommendations(metrics);
-      
-      // Detailed analysis
-      const detailedAnalysis = await this.performDetailedAnalysis(context, metrics);
-      
-      const result: EvaluationResult = {
-        metrics,
-        timestamp: Date.now(),
-        processingTime: Date.now() - startTime,
-        recommendations,
-        detailedAnalysis
-      };
-      
-      // Store for trend analysis
-      this.evaluationHistory.push(result);
-      this.maintainHistorySize();
-      
-      console.log(`RAG evaluation completed: Overall score ${overall.toFixed(2)}`);
-      return result;
-      
+      // Return average similarity
+      return similarities.reduce((sum, sim) => sum + sim, 0) / similarities.length;
     } catch (error) {
-      console.error('Evaluation framework error:', error);
-      return this.createFallbackResult(context);
+      console.error('Error calculating relevance:', error);
+      return 0.5; // Default fallback score
     }
   }
 
   /**
-   * Evaluate relevance of retrieved documents and response
+   * Calculate coherence of generated response
    */
-  private async evaluateRelevance(context: EvaluationContext): Promise<EvaluationMetrics['relevance']> {
-    const { userQuery, retrievedDocuments, generatedResponse } = context;
-    
-    // Semantic relevance: How well do retrieved docs match the query
-    const semanticRelevance = await this.calculateSemanticRelevance(userQuery, retrievedDocuments);
-    
-    // Contextual relevance: How well does response use the context
-    const contextualRelevance = await this.calculateContextualRelevance(
-      generatedResponse, 
-      retrievedDocuments, 
-      context.conversationHistory
-    );
-    
-    // Topical relevance: How well does response stay on topic
-    const topicalRelevance = await this.calculateTopicalRelevance(
-      userQuery, 
-      generatedResponse, 
-      context.expectedTopics
-    );
-    
-    const score = (semanticRelevance + contextualRelevance + topicalRelevance) / 3;
-    
-    return {
-      score,
-      details: {
-        semanticRelevance,
-        contextualRelevance,
-        topicalRelevance
-      }
-    };
-  }
-
-  /**
-   * Evaluate coherence and logical consistency
-   */
-  private async evaluateCoherence(context: EvaluationContext): Promise<EvaluationMetrics['coherence']> {
-    const { generatedResponse, conversationHistory } = context;
-    
-    // Logical flow: Does the response follow logically
-    const logicalFlow = this.evaluateLogicalFlow(generatedResponse);
-    
-    // Consistency: Is response consistent with conversation history
-    const consistencyScore = await this.evaluateConsistency(generatedResponse, conversationHistory);
-    
-    // Contradiction detection
-    const contradictionCount = this.detectContradictions(generatedResponse, conversationHistory);
-    const contradictionPenalty = Math.min(contradictionCount * 0.2, 0.8);
-    
-    const score = Math.max(0, (logicalFlow + consistencyScore) / 2 - contradictionPenalty);
-    
-    return {
-      score,
-      details: {
-        logicalFlow,
-        consistencyScore,
-        contradictionCount
-      }
-    };
-  }
-
-  /**
-   * Evaluate factual accuracy and grounding
-   */
-  private async evaluateFactualGrounding(context: EvaluationContext): Promise<EvaluationMetrics['factualGrounding']> {
-    const { generatedResponse, retrievedDocuments, groundTruthFacts } = context;
-    
-    // Factual accuracy against ground truth
-    const factualAccuracy = groundTruthFacts 
-      ? this.evaluateFactualAccuracy(generatedResponse, groundTruthFacts)
-      : 0.8; // Default if no ground truth
-    
-    // Source attribution: How well response is grounded in retrieved docs
-    const sourceAttribution = await this.evaluateSourceAttribution(generatedResponse, retrievedDocuments);
-    
-    // Hallucination detection
-    const hallucinationRate = await this.detectHallucinations(generatedResponse, retrievedDocuments);
-    
-    const score = Math.max(0, (factualAccuracy + sourceAttribution) / 2 - hallucinationRate);
-    
-    return {
-      score,
-      details: {
-        factualAccuracy,
-        sourceAttribution,
-        hallucinationRate
-      }
-    };
-  }
-
-  /**
-   * Evaluate how well response addresses the query
-   */
-  private async evaluateResponsiveness(context: EvaluationContext): Promise<EvaluationMetrics['responsiveness']> {
-    const { userQuery, generatedResponse } = context;
-    
-    // Query answering: Does response address the specific query
-    const queryAnswering = await this.evaluateQueryAnswering(userQuery, generatedResponse);
-    
-    // Completeness: Is the response complete
-    const completeness = this.evaluateCompleteness(userQuery, generatedResponse);
-    
-    // Specificity: Is response appropriately specific vs generic
-    const specificity = this.evaluateSpecificity(generatedResponse);
-    
-    const score = (queryAnswering + completeness + specificity) / 3;
-    
-    return {
-      score,
-      details: {
-        queryAnswering,
-        completeness,
-        specificity
-      }
-    };
-  }
-
-  /**
-   * Helper evaluation methods
-   */
-  private async calculateSemanticRelevance(query: string, documents: string[]): Promise<number> {
-    if (!documents || documents.length === 0) return 0;
-    
-    // Simple keyword overlap + length consideration
-    const queryWords = new Set(query.toLowerCase().split(/\W+/).filter(w => w.length > 2));
-    let totalRelevance = 0;
-    
-    for (const doc of documents) {
-      const docWords = new Set(doc.toLowerCase().split(/\W+/).filter(w => w.length > 2));
-      const intersection = [...queryWords].filter(w => docWords.has(w));
-      const relevance = queryWords.size > 0 ? intersection.length / queryWords.size : 0;
-      totalRelevance += relevance;
-    }
-    
-    return documents.length > 0 ? totalRelevance / documents.length : 0;
-  }
-
-  private async calculateContextualRelevance(
-    response: string, 
-    documents: string[], 
-    history: string[]
-  ): Promise<number> {
-    // Check how much of the response is grounded in retrieved documents
-    if (!documents || documents.length === 0) return 0.5;
-    
-    const responseWords = new Set(response.toLowerCase().split(/\W+/).filter(w => w.length > 3));
-    const docText = documents.join(' ').toLowerCase();
-    
-    let groundedWords = 0;
-    for (const word of responseWords) {
-      if (docText.includes(word)) {
-        groundedWords++;
-      }
-    }
-    
-    return responseWords.size > 0 ? groundedWords / responseWords.size : 0;
-  }
-
-  private async calculateTopicalRelevance(
-    query: string, 
-    response: string, 
-    expectedTopics?: string[]
-  ): Promise<number> {
-    if (!expectedTopics || expectedTopics.length === 0) {
-      // Default topical analysis
-      return this.analyzeTopicAlignment(query, response);
-    }
-    
-    const responseText = response.toLowerCase();
-    let topicMatches = 0;
-    
-    for (const topic of expectedTopics) {
-      if (responseText.includes(topic.toLowerCase())) {
-        topicMatches++;
-      }
-    }
-    
-    return expectedTopics.length > 0 ? topicMatches / expectedTopics.length : 0;
-  }
-
-  private evaluateLogicalFlow(response: string): number {
+  private async calculateCoherence(response: string): Promise<number> {
+    // Simple coherence heuristics
     const sentences = response.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    if (sentences.length < 2) return 1.0;
     
-    // Simple logical flow indicators
-    const transitionWords = /\b(however|therefore|because|since|although|moreover|furthermore|consequently)\b/gi;
-    const transitionCount = (response.match(transitionWords) || []).length;
+    if (sentences.length <= 1) return 0.7; // Single sentence is coherent by default
     
-    // Penalty for abrupt topic changes (simplified)
-    const repetitionPenalty = this.calculateRepetitionPenalty(sentences);
+    // Check for common coherence markers
+    const hasCoherenceMarkers = sentences.some((s, i) => {
+      if (i === 0) return true;
+      const lowerS = s.toLowerCase().trim();
+      return lowerS.startsWith('additionally') || 
+             lowerS.startsWith('furthermore') || 
+             lowerS.startsWith('however') || 
+             lowerS.startsWith('moreover') ||
+             lowerS.startsWith('also') ||
+             lowerS.startsWith('in addition');
+    });
     
-    const baseScore = Math.min(0.9, 0.5 + (transitionCount / sentences.length) * 2);
-    return Math.max(0.1, baseScore - repetitionPenalty);
+    // Check for sentence length variation (more natural)
+    const lengths = sentences.map(s => s.length);
+    const avgLength = lengths.reduce((sum, len) => sum + len, 0) / lengths.length;
+    const lengthVariation = lengths.some(len => Math.abs(len - avgLength) > 10);
+    
+    // Calculate coherence score
+    let score = 0.7; // Base score
+    if (hasCoherenceMarkers) score += 0.15;
+    if (lengthVariation) score += 0.1;
+    
+    return Math.min(score, 1.0);
   }
 
-  private async evaluateConsistency(response: string, history: string[]): Promise<number> {
-    if (!history || history.length === 0) return 1.0;
+  /**
+   * Calculate faithfulness to retrieved documents
+   */
+  private async calculateFaithfulness(response: string, documents: string[]): Promise<number> {
+    if (!documents.length) return 0.5;
     
-    const recentHistory = history.slice(-4).join(' ').toLowerCase();
-    const responseText = response.toLowerCase();
-    
-    // Check for contradictory statements (simplified)
-    const contradictoryPatterns = [
-      [/\bnever\b/, /\balways\b/],
-      [/\bno\b/, /\byes\b/],
-      [/\bcan't\b/, /\bcan\b/]
-    ];
-    
-    let contradictions = 0;
-    for (const [pattern1, pattern2] of contradictoryPatterns) {
-      if (recentHistory.match(pattern1) && responseText.match(pattern2)) {
-        contradictions++;
-      }
+    try {
+      // Extract key phrases from documents
+      const documentText = documents.join(' ');
+      const documentPhrases = this.extractKeyPhrases(documentText);
+      
+      // Check if response contains key phrases
+      const responseLower = response.toLowerCase();
+      const matchedPhrases = documentPhrases.filter(phrase => 
+        responseLower.includes(phrase.toLowerCase())
+      );
+      
+      // Calculate faithfulness score
+      const matchRatio = matchedPhrases.length / Math.max(1, documentPhrases.length);
+      return 0.5 + (matchRatio * 0.5); // Scale from 0.5 to 1.0
+    } catch (error) {
+      console.error('Error calculating faithfulness:', error);
+      return 0.5; // Default fallback score
     }
-    
-    return Math.max(0, 1 - (contradictions * 0.3));
   }
 
-  private detectContradictions(response: string, history: string[]): number {
-    // Simplified contradiction detection
-    const responseText = response.toLowerCase();
-    const historyText = history.join(' ').toLowerCase();
-    
-    const contradictionIndicators = [
-      'actually', 'however', 'but', 'although', 'despite', 'contrary'
-    ];
-    
-    return contradictionIndicators.filter(indicator => 
-      responseText.includes(indicator) && historyText.length > 0
-    ).length;
-  }
-
-  private evaluateFactualAccuracy(response: string, groundTruthFacts: string[]): number {
-    if (!groundTruthFacts || groundTruthFacts.length === 0) return 0.8;
-    
-    const responseText = response.toLowerCase();
-    let factMatches = 0;
-    
-    for (const fact of groundTruthFacts) {
-      if (responseText.includes(fact.toLowerCase())) {
-        factMatches++;
-      }
+  /**
+   * Calculate alignment with ground truth
+   */
+  private async calculateGroundTruthAlignment(response: string, groundTruth: string): Promise<number> {
+    try {
+      // Generate embeddings
+      const responseEmbedding = await advancedVectorDB.collection('evaluation').generateEmbedding(response);
+      const truthEmbedding = await advancedVectorDB.collection('evaluation').generateEmbedding(groundTruth);
+      
+      // Calculate similarity
+      return this.cosineSimilarity(responseEmbedding, truthEmbedding);
+    } catch (error) {
+      console.error('Error calculating ground truth alignment:', error);
+      return 0.5; // Default fallback score
     }
-    
-    return groundTruthFacts.length > 0 ? factMatches / groundTruthFacts.length : 0;
   }
 
-  private async evaluateSourceAttribution(response: string, documents: string[]): Promise<number> {
-    if (!documents || documents.length === 0) return 0;
-    
-    // Check how much of response content comes from source documents
-    return this.calculateContextualRelevance(response, documents, []);
-  }
-
-  private async detectHallucinations(response: string, documents: string[]): Promise<number> {
-    // Simplified hallucination detection
-    const responseText = response.toLowerCase();
-    const docText = documents.join(' ').toLowerCase();
-    
-    // Look for specific claims not supported by documents
-    const specificClaims = response.match(/\b(exactly|precisely|specifically|according to|studies show|research indicates)\b/gi) || [];
-    
-    let unsupportedClaims = 0;
-    for (const claim of specificClaims) {
-      // Very simplified check
-      if (!docText.includes(claim.toLowerCase())) {
-        unsupportedClaims++;
-      }
-    }
-    
-    return specificClaims.length > 0 ? unsupportedClaims / specificClaims.length : 0;
-  }
-
-  private async evaluateQueryAnswering(query: string, response: string): Promise<number> {
-    // Check if response addresses the query
-    const queryWords = query.toLowerCase().split(/\W+/).filter(w => w.length > 2);
-    const responseText = response.toLowerCase();
-    
-    let addressedWords = 0;
-    for (const word of queryWords) {
-      if (responseText.includes(word)) {
-        addressedWords++;
-      }
-    }
-    
-    return queryWords.length > 0 ? addressedWords / queryWords.length : 0;
-  }
-
-  private evaluateCompleteness(query: string, response: string): number {
-    // Simple completeness based on response length and structure
-    const hasIntroduction = /^[A-Z]/.test(response.trim());
-    const hasConclusion = /[.!?]$/.test(response.trim());
-    const hasSubstance = response.length > 50;
-    
-    const completenessFactors = [hasIntroduction, hasConclusion, hasSubstance];
-    return completenessFactors.filter(Boolean).length / completenessFactors.length;
-  }
-
-  private evaluateSpecificity(response: string): number {
-    // Balance between specific and generic
-    const genericPhrases = ['in general', 'usually', 'often', 'sometimes', 'it depends'];
-    const specificIndicators = ['specifically', 'exactly', 'precisely', 'in particular'];
-    
-    const genericCount = genericPhrases.filter(phrase => 
-      response.toLowerCase().includes(phrase)
-    ).length;
-    
-    const specificCount = specificIndicators.filter(indicator => 
-      response.toLowerCase().includes(indicator)
-    ).length;
-    
-    // Optimal balance is some specificity without being overly generic
-    return Math.max(0, 0.8 - (genericCount * 0.1) + (specificCount * 0.1));
-  }
-
-  private calculateOverallScore(
-    relevance: EvaluationMetrics['relevance'],
-    coherence: EvaluationMetrics['coherence'],
-    factualGrounding: EvaluationMetrics['factualGrounding'],
-    responsiveness: EvaluationMetrics['responsiveness']
-  ): number {
-    // Weighted average with emphasis on factual grounding and relevance
+  /**
+   * Calculate overall evaluation score
+   */
+  private calculateOverallScore(scores: {
+    relevanceScore: number;
+    coherenceScore: number;
+    faithfulnessScore: number;
+    groundTruthScore: number;
+  }): number {
+    // Weighted average of all scores
     return (
-      relevance.score * 0.3 +
-      coherence.score * 0.2 +
-      factualGrounding.score * 0.3 +
-      responsiveness.score * 0.2
+      (scores.relevanceScore * 0.3) +
+      (scores.coherenceScore * 0.2) +
+      (scores.faithfulnessScore * 0.3) +
+      (scores.groundTruthScore * 0.2)
     );
   }
 
-  private generateRecommendations(metrics: EvaluationMetrics): string[] {
-    const recommendations: string[] = [];
+  /**
+   * Extract key phrases from text
+   */
+  private extractKeyPhrases(text: string): string[] {
+    // Simple key phrase extraction
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const phrases: string[] = [];
     
-    if (metrics.relevance.score < this.benchmarkScores.relevance) {
-      recommendations.push('Improve document retrieval relevance');
-    }
-    
-    if (metrics.coherence.score < this.benchmarkScores.coherence) {
-      recommendations.push('Enhance response coherence and logical flow');
-    }
-    
-    if (metrics.factualGrounding.score < this.benchmarkScores.factualGrounding) {
-      recommendations.push('Strengthen factual grounding and reduce hallucinations');
-    }
-    
-    if (metrics.responsiveness.score < this.benchmarkScores.responsiveness) {
-      recommendations.push('Improve query understanding and response completeness');
-    }
-    
-    if (recommendations.length === 0) {
-      recommendations.push('System performing well - consider optimization for edge cases');
-    }
-    
-    return recommendations;
-  }
-
-  private async performDetailedAnalysis(
-    context: EvaluationContext, 
-    metrics: EvaluationMetrics
-  ): Promise<Record<string, any>> {
-    return {
-      queryComplexity: this.analyzeQueryComplexity(context.userQuery),
-      responseLength: context.generatedResponse.length,
-      documentUtilization: this.analyzeDocumentUtilization(context),
-      conversationContext: context.conversationHistory.length,
-      topicAnalysis: this.analyzeTopics(context.generatedResponse),
-      performanceTrend: this.analyzePerformanceTrend(),
-      improvementAreas: this.identifyImprovementAreas(metrics)
-    };
-  }
-
-  // Helper methods for detailed analysis
-  private analyzeQueryComplexity(query: string): string {
-    if (query.length < 20) return 'simple';
-    if (query.includes('?') && query.split(' ').length > 10) return 'complex';
-    return 'moderate';
-  }
-
-  private analyzeDocumentUtilization(context: EvaluationContext): number {
-    const totalDocLength = context.retrievedDocuments.reduce((sum, doc) => sum + doc.length, 0);
-    return totalDocLength > 0 ? context.generatedResponse.length / totalDocLength : 0;
-  }
-
-  private analyzeTopics(response: string): string[] {
-    const topics = [];
-    const topicPatterns = {
-      'emotional': /\b(feel|emotion|sad|happy|angry|anxious|depressed)\b/gi,
-      'therapeutic': /\b(therapy|counseling|treatment|support|help)\b/gi,
-      'personal': /\b(I|me|my|myself|personal|life)\b/gi
-    };
-    
-    for (const [topic, pattern] of Object.entries(topicPatterns)) {
-      if (pattern.test(response)) {
-        topics.push(topic);
+    // Extract noun phrases (simplified)
+    for (const sentence of sentences) {
+      const words = sentence.split(/\s+/);
+      
+      // Extract 2-3 word phrases
+      for (let i = 0; i < words.length - 1; i++) {
+        if (words[i].length > 3 && words[i+1].length > 3) {
+          phrases.push(`${words[i]} ${words[i+1]}`);
+        }
+        
+        if (i < words.length - 2 && words[i+2].length > 3) {
+          phrases.push(`${words[i]} ${words[i+1]} ${words[i+2]}`);
+        }
       }
     }
     
-    return topics;
+    // Deduplicate and return top phrases
+    return [...new Set(phrases)].slice(0, 10);
   }
 
-  private analyzePerformanceTrend(): string {
-    if (this.evaluationHistory.length < 3) return 'insufficient-data';
+  /**
+   * Calculate cosine similarity between vectors
+   */
+  private cosineSimilarity(vec1: number[], vec2: number[]): number {
+    if (vec1.length !== vec2.length) {
+      throw new Error('Vectors must have the same length');
+    }
     
-    const recent = this.evaluationHistory.slice(-3);
-    const avgRecent = recent.reduce((sum, r) => sum + r.metrics.overall, 0) / recent.length;
-    const overall = this.evaluationHistory.reduce((sum, r) => sum + r.metrics.overall, 0) / this.evaluationHistory.length;
+    let dotProduct = 0;
+    let mag1 = 0;
+    let mag2 = 0;
     
-    if (avgRecent > overall + 0.05) return 'improving';
-    if (avgRecent < overall - 0.05) return 'declining';
-    return 'stable';
-  }
-
-  private identifyImprovementAreas(metrics: EvaluationMetrics): string[] {
-    const areas: string[] = [];
+    for (let i = 0; i < vec1.length; i++) {
+      dotProduct += vec1[i] * vec2[i];
+      mag1 += vec1[i] * vec1[i];
+      mag2 += vec2[i] * vec2[i];
+    }
     
-    if (metrics.relevance.details.semanticRelevance < 0.7) areas.push('semantic-matching');
-    if (metrics.coherence.details.logicalFlow < 0.7) areas.push('logical-structure');
-    if (metrics.factualGrounding.details.hallucinationRate > 0.2) areas.push('hallucination-control');
-    if (metrics.responsiveness.details.completeness < 0.7) areas.push('response-completeness');
+    mag1 = Math.sqrt(mag1);
+    mag2 = Math.sqrt(mag2);
     
-    return areas;
-  }
-
-  private calculateRepetitionPenalty(sentences: string[]): number {
-    const uniqueSentences = new Set(sentences.map(s => s.trim().toLowerCase()));
-    return sentences.length > 0 ? (sentences.length - uniqueSentences.size) / sentences.length : 0;
-  }
-
-  private analyzeTopicAlignment(query: string, response: string): number {
-    // Simple topic alignment based on keyword overlap
-    const queryWords = new Set(query.toLowerCase().split(/\W+/).filter(w => w.length > 3));
-    const responseWords = new Set(response.toLowerCase().split(/\W+/).filter(w => w.length > 3));
+    if (mag1 === 0 || mag2 === 0) return 0;
     
-    const intersection = [...queryWords].filter(w => responseWords.has(w));
-    return queryWords.size > 0 ? intersection.length / queryWords.size : 0;
+    return dotProduct / (mag1 * mag2);
   }
 
-  private createFallbackResult(context: EvaluationContext): EvaluationResult {
-    return {
-      metrics: {
-        relevance: { score: 0.5, details: { semanticRelevance: 0.5, contextualRelevance: 0.5, topicalRelevance: 0.5 } },
-        coherence: { score: 0.5, details: { logicalFlow: 0.5, consistencyScore: 0.5, contradictionCount: 0 } },
-        factualGrounding: { score: 0.5, details: { factualAccuracy: 0.5, sourceAttribution: 0.5, hallucinationRate: 0.2 } },
-        responsiveness: { score: 0.5, details: { queryAnswering: 0.5, completeness: 0.5, specificity: 0.5 } },
-        overall: 0.5
-      },
-      timestamp: Date.now(),
-      processingTime: 0,
-      recommendations: ['System evaluation failed - manual review recommended'],
-      detailedAnalysis: { error: 'Evaluation framework error' }
-    };
-  }
-
-  private maintainHistorySize(): void {
-    const maxHistory = 100;
-    if (this.evaluationHistory.length > maxHistory) {
-      this.evaluationHistory = this.evaluationHistory.slice(-maxHistory);
+  /**
+   * Submit evaluation feedback for low-quality responses
+   */
+  private async submitEvaluationFeedback(evaluation: any): Promise<void> {
+    try {
+      await userFeedbackSystem.submitFeedback(
+        'system',
+        evaluation.evaluationId,
+        {
+          type: 'improvement',
+          content: `RAG evaluation below threshold: ${evaluation.overallScore.toFixed(2)}`,
+          severity: evaluation.overallScore < 0.5 ? 'high' : 'medium',
+          category: 'rag-quality',
+          metadata: {
+            relevanceScore: evaluation.relevanceScore,
+            coherenceScore: evaluation.coherenceScore,
+            faithfulnessScore: evaluation.faithfulnessScore
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Error submitting evaluation feedback:', error);
     }
   }
 
   /**
-   * Get evaluation statistics and trends
+   * Get evaluation metrics for analysis
    */
-  getEvaluationStats() {
-    if (this.evaluationHistory.length === 0) {
-      return { message: 'No evaluation history available' };
-    }
-    
-    const recent = this.evaluationHistory.slice(-10);
-    const averageScore = recent.reduce((sum, r) => sum + r.metrics.overall, 0) / recent.length;
-    
-    return {
-      totalEvaluations: this.evaluationHistory.length,
-      averageScore: averageScore.toFixed(3),
-      trend: this.analyzePerformanceTrend(),
-      lastEvaluation: this.evaluationHistory[this.evaluationHistory.length - 1]
-    };
+  getEvaluationMetrics(limit: number = 100): any[] {
+    return Array.from(this.evaluationMetrics.values())
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, limit);
   }
 
   /**
-   * Export evaluation data for analysis
+   * Get evaluation statistics
    */
-  exportEvaluationData() {
+  getEvaluationStatistics(): any {
+    const metrics = Array.from(this.evaluationMetrics.values());
+    
+    if (metrics.length === 0) {
+      return {
+        count: 0,
+        averageOverallScore: 0,
+        averageRelevanceScore: 0,
+        averageCoherenceScore: 0,
+        averageFaithfulnessScore: 0
+      };
+    }
+    
     return {
-      history: this.evaluationHistory,
-      benchmarks: this.benchmarkScores,
-      exportedAt: Date.now()
+      count: metrics.length,
+      averageOverallScore: metrics.reduce((sum, m) => sum + m.overallScore, 0) / metrics.length,
+      averageRelevanceScore: metrics.reduce((sum, m) => sum + m.relevanceScore, 0) / metrics.length,
+      averageCoherenceScore: metrics.reduce((sum, m) => sum + m.coherenceScore, 0) / metrics.length,
+      averageFaithfulnessScore: metrics.reduce((sum, m) => sum + m.faithfulnessScore, 0) / metrics.length
     };
   }
 }

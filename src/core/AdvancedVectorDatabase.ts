@@ -1,4 +1,3 @@
-
 /**
  * Advanced Vector Database with Sophisticated Indexing and Versioning
  * 
@@ -185,6 +184,15 @@ class AdvancedVectorCollection {
     this.updateMetadataIndexes(versionedRecord);
     
     this.records.set(record.id, versionedRecord);
+  }
+
+  /**
+   * Generate embedding for text
+   */
+  async generateEmbedding(text: string): Promise<number[]> {
+    // Use the existing embedding generation utility
+    const { generateEmbedding } = await import('../utils/hallucinationPrevention/vectorEmbeddings');
+    return await generateEmbedding(text);
   }
 
   /**

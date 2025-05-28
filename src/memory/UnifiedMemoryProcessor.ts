@@ -1,4 +1,3 @@
-
 /**
  * Unified Memory Processor
  * 
@@ -295,7 +294,8 @@ export class UnifiedMemoryProcessor {
     const enhancedContent = `[${source}] ${content} [context: ${JSON.stringify(metadata)}]`;
     
     // Use advanced vector database's embedding generation
-    return await advancedVectorDB.collection('unified_memory').generateEmbedding(enhancedContent);
+    const collection = advancedVectorDB.collection('unified_memory');
+    return await collection.generateEmbedding(enhancedContent);
   }
 
   /**

@@ -1,16 +1,12 @@
 
-/**
- * Core types for the Unified Roger Pipeline
- */
-
 export interface PipelineContext {
   userInput: string;
-  conversationHistory: string[];
   userId?: string;
-  sessionId: string;
-  timestamp: number;
+  sessionId?: string;
+  conversationHistory?: string[];
+  emotionalContext?: any;
   clientPreferences?: any;
-  emergencyContext?: boolean;
+  timestamp?: number;
 }
 
 export interface PipelineResult {
@@ -20,10 +16,13 @@ export interface PipelineResult {
   wasEnhanced: boolean;
   crisisDetected: boolean;
   auditTrail: string[];
-  memoryUpdated: boolean;
+  memoryUpdated?: boolean;
+  metadata?: any;
 }
 
 export interface HealthCheckResult {
   healthy: boolean;
   services: Record<string, boolean>;
+  memoryStatus?: any;
+  timestamp?: number;
 }

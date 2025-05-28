@@ -1,4 +1,3 @@
-
 /**
  * Advanced Educational Memory System
  * 
@@ -727,6 +726,49 @@ export class EducationalMemorySystem {
     
     const totalScore = sessions.reduce((sum, session) => sum + session.comprehensionScore, 0);
     return totalScore / sessions.length;
+  }
+
+  /**
+   * Get adaptive learning context for user
+   */
+  async getAdaptiveLearningContext(sessionId: string, query: string): Promise<{
+    relevantConcepts: string[];
+    learningProgress: any;
+    adaptationNeeded: boolean;
+  }> {
+    // Simple implementation for now
+    const relevantConcepts = this.extractConcepts(query);
+    
+    return {
+      relevantConcepts,
+      learningProgress: { conceptsMastered: [], conceptsInProgress: relevantConcepts },
+      adaptationNeeded: relevantConcepts.length > 0
+    };
+  }
+
+  /**
+   * Store adaptive learning data
+   */
+  async storeAdaptiveLearning(content: string, sessionId: string, metadata: any): Promise<void> {
+    // Store learning data with session association
+    await this.storeEducationalContent(content, {
+      ...metadata,
+      sessionId,
+      timestamp: Date.now(),
+      adaptive: true
+    });
+  }
+
+  private extractConcepts(query: string): string[] {
+    const concepts = [];
+    const queryLower = query.toLowerCase();
+    
+    if (queryLower.includes('depression')) concepts.push('depression_management');
+    if (queryLower.includes('anxiety')) concepts.push('anxiety_coping');
+    if (queryLower.includes('stress')) concepts.push('stress_management');
+    if (queryLower.includes('therapy')) concepts.push('therapeutic_techniques');
+    
+    return concepts;
   }
 }
 
