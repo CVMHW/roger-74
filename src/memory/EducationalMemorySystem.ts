@@ -751,11 +751,20 @@ export class EducationalMemorySystem {
    */
   async storeAdaptiveLearning(content: string, sessionId: string, metadata: any): Promise<void> {
     // Store learning data with session association
-    await this.storeEducationalContent(content, {
-      ...metadata,
-      sessionId,
-      timestamp: Date.now(),
-      adaptive: true
+    const educationalCollection = advancedVectorDB.collection('educational_content');
+    
+    await educationalCollection.addVersionedRecord({
+      id: `educational_${sessionId}_${Date.now()}`,
+      text: content,
+      vector: await generateEmbedding(content),
+      metadata: {
+        ...metadata,
+        sessionId,
+        timestamp: Date.now(),
+        adaptive: true,
+        category: 'educational_content'
+      },
+      timestamp: Date.now()
     });
   }
 

@@ -119,7 +119,7 @@ export class UnifiedRAGIntegrator {
       );
 
       // Step 8: Evaluation and Feedback Integration
-      const evaluationMetrics = await ragEvaluationFramework.evaluateResponse({
+      const evaluationMetrics = await ragEvaluationFramework.evaluateRAGResponse({
         query: context.userInput,
         retrievedDocuments: rerankedResults.map(r => r.record.text),
         generatedResponse: enhancedResponse,

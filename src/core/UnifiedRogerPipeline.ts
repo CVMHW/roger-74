@@ -79,7 +79,7 @@ export class UnifiedRogerPipeline {
       );
 
       // Step 5: Evaluation framework assessment
-      const evaluationResult = await ragEvaluationFramework.evaluateResponse({
+      const evaluationResult = await ragEvaluationFramework.evaluateRAGResponse({
         query: context.userInput,
         retrievedDocuments: ragResult.retrievalResults.map(r => r.record?.text || ''),
         generatedResponse: ragResult.enhancedResponse,

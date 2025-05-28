@@ -261,7 +261,7 @@ export class RAGEvaluationFramework {
         'system',
         evaluation.evaluationId,
         {
-          type: 'improvement',
+          type: 'suggestion',
           content: `RAG evaluation below threshold: ${evaluation.overallScore.toFixed(2)}`,
           severity: evaluation.overallScore < 0.5 ? 'high' : 'medium',
           category: 'rag-quality',
