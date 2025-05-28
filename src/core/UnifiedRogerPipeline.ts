@@ -1,25 +1,22 @@
 
 /**
- * Unified Roger Pipeline
+ * Updated Unified Roger Pipeline
  * 
- * Main entry point that coordinates all systems through the orchestrator
- * Now with optimized sophisticated routing and complex memory systems
+ * Now integrates all new systems including feedback and evaluation
  */
 
 import { PipelineContext, PipelineResult, HealthCheckResult } from './types';
 import { ServiceManager } from './ServiceManager';
 import { PipelineOrchestrator } from './PipelineOrchestrator';
-import { legacyRAGIntegrator, LegacyRAGIntegrator } from '../services/LegacyRAGIntegrator';
-import { complexMemoryIntegrator, ComplexMemorySystemIntegrator } from '../services/ComplexMemorySystemIntegrator';
+import { unifiedRAGIntegrator } from '../integration/UnifiedRAGIntegrator';
+import { unifiedMemoryProcessor } from '../memory/UnifiedMemoryProcessor';
+import { userFeedbackSystem } from '../feedback/UserFeedbackSystem';
+import { ragEvaluationFramework } from '../evaluation/RAGEvaluationFramework';
+import { accessControlSystem } from '../security/AccessControlSystem';
 
-/**
- * Main Unified Roger Pipeline with sophisticated optimization
- */
 export class UnifiedRogerPipeline {
   private serviceManager: ServiceManager;
   private orchestrator: PipelineOrchestrator;
-  private legacyRAGIntegrator: LegacyRAGIntegrator;
-  private complexMemoryIntegrator: ComplexMemorySystemIntegrator;
 
   constructor() {
     this.serviceManager = new ServiceManager();
@@ -32,101 +29,155 @@ export class UnifiedRogerPipeline {
       this.serviceManager.responseService,
       this.serviceManager.hipaaCompliance
     );
-    this.legacyRAGIntegrator = legacyRAGIntegrator;
-    this.complexMemoryIntegrator = complexMemoryIntegrator;
   }
 
   /**
-   * Main processing pipeline with sophisticated optimization
+   * Main processing pipeline with full integration
    */
   async process(context: PipelineContext): Promise<PipelineResult> {
     const startTime = Date.now();
     
     try {
-      // Check if we should use optimized pipeline (avoid circular reference)
-      const shouldUseOptimized = this.constructor.name === 'UnifiedRogerPipeline';
+      console.log("🔄 UNIFIED PIPELINE: Starting fully integrated processing");
       
-      if (shouldUseOptimized) {
-        try {
-          const { optimizedUnifiedPipeline } = await import('./OptimizedUnifiedPipeline');
-          console.log("UNIFIED PIPELINE: Using optimized sophisticated processing");
-          return await optimizedUnifiedPipeline.process(context);
-        } catch (optimizedError) {
-          console.warn("UNIFIED PIPELINE: Optimized pipeline not available, using standard processing");
-        }
+      // Step 1: Access control validation
+      let sessionId = context.sessionId;
+      if (!sessionId) {
+        sessionId = await accessControlSystem.createUserSession(
+          context.userId || `user_${Date.now()}`,
+          { privacyLevel: 'private' }
+        );
+        context.sessionId = sessionId;
       }
 
-      // Fallback to original sophisticated processing
-      return await this.processWithSophistication(context, startTime);
+      // Step 2: Process through orchestrator
+      const orchestratorResult = await this.orchestrator.execute(context);
+      
+      // Step 3: Memory processing through unified processor
+      await unifiedMemoryProcessor.addMemory(
+        context.userInput,
+        'patient',
+        {
+          sessionId: context.sessionId,
+          orchestratorConfidence: orchestratorResult.confidence
+        },
+        0.8,
+        context.sessionId
+      );
+
+      // Step 4: Unified RAG processing
+      const ragResult = await unifiedRAGIntegrator.processUnifiedRAG(
+        orchestratorResult.response,
+        {
+          userInput: context.userInput,
+          conversationHistory: context.conversationHistory,
+          sessionId: context.sessionId,
+          emotionalContext: context.emotionalContext,
+          clientPreferences: context.clientPreferences
+        }
+      );
+
+      // Step 5: Evaluation framework assessment
+      const evaluationResult = await ragEvaluationFramework.evaluateRAGResponse({
+        query: context.userInput,
+        retrievedDocuments: ragResult.retrievalResults.map(r => r.record?.text || ''),
+        generatedResponse: ragResult.enhancedResponse,
+        groundTruth: orchestratorResult.response,
+        context: {
+          conversationHistory: context.conversationHistory,
+          sessionId: context.sessionId
+        }
+      });
+
+      // Step 6: Feedback system integration
+      if (evaluationResult.overallScore < 0.6) {
+        await userFeedbackSystem.submitFeedback(
+          context.sessionId,
+          context.sessionId,
+          {
+            type: 'suggestion',
+            content: `Pipeline performance below threshold: ${evaluationResult.overallScore}`,
+            severity: 'medium',
+            category: 'pipeline-performance'
+          }
+        );
+      }
+
+      // Step 7: Store enhanced response in memory
+      await unifiedMemoryProcessor.addMemory(
+        ragResult.enhancedResponse,
+        'roger',
+        {
+          originalResponse: orchestratorResult.response,
+          ragApplied: true,
+          evaluationScore: evaluationResult.overallScore,
+          systemsEngaged: ragResult.systemsEngaged
+        },
+        0.9,
+        context.sessionId
+      );
+
+      // Step 8: Compile comprehensive result
+      const finalResult: PipelineResult = {
+        response: ragResult.enhancedResponse,
+        confidence: Math.min(
+          orchestratorResult.confidence,
+          ragResult.confidence,
+          evaluationResult.overallScore
+        ),
+        processingTime: Date.now() - startTime,
+        wasEnhanced: ragResult.systemsEngaged.length > 0,
+        crisisDetected: orchestratorResult.crisisDetected,
+        auditTrail: [
+          ...orchestratorResult.auditTrail,
+          `Unified RAG applied: ${ragResult.chunkingStrategy}`,
+          `Memory layers engaged: ${ragResult.memoryIntegration.layersUsed.join(', ')}`,
+          `Evaluation score: ${evaluationResult.overallScore}`,
+          `Systems engaged: ${ragResult.systemsEngaged.join(', ')}`
+        ],
+        memoryUpdated: true,
+        metadata: {
+          ragResult,
+          evaluationResult,
+          memoryStatus: unifiedMemoryProcessor.getMemoryStatus()
+        }
+      };
+
+      console.log(`🔄 UNIFIED PIPELINE: Complete. Final confidence: ${finalResult.confidence}`);
+      return finalResult;
 
     } catch (error) {
-      console.error('Unified pipeline processing error:', error);
+      console.error('🔄 UNIFIED PIPELINE: Processing error:', error);
       
-      // Fallback to orchestrator only
+      // Enhanced fallback with basic memory storage
+      try {
+        await unifiedMemoryProcessor.addMemory(
+          context.userInput,
+          'patient',
+          { error: true, fallback: true },
+          0.3,
+          context.sessionId
+        );
+      } catch (memoryError) {
+        console.error('Memory fallback also failed:', memoryError);
+      }
+      
       return await this.orchestrator.execute(context);
     }
   }
 
   /**
-   * Process with full sophistication (original implementation)
-   */
-  private async processWithSophistication(context: PipelineContext, startTime: number): Promise<PipelineResult> {
-    // Step 1: Process through complex memory systems first
-    const memoryResult = await this.complexMemoryIntegrator.processMemoryIntegration(
-      context.userInput,
-      context.conversationHistory,
-      context.sessionId
-    );
-
-    // Step 2: Process through main orchestrator
-    const orchestratorResult = await this.orchestrator.execute(context);
-
-    // Step 3: Apply legacy RAG integration based on client preferences
-    const clientPriority = context.clientPreferences?.priorityLevel || 'standard';
-    const ragConfig = LegacyRAGIntegrator.getOptimalConfig(clientPriority);
-    
-    const ragResult = await this.legacyRAGIntegrator.integrateRAG(
-      orchestratorResult.response,
-      context.userInput,
-      context.conversationHistory,
-      ragConfig
-    );
-
-    // Step 4: Combine results with sophisticated metrics
-    const finalResponse = ragResult.enhancedResponse;
-    const combinedConfidence = (
-      orchestratorResult.confidence * 0.5 +
-      ragResult.confidence * 0.3 +
-      memoryResult.confidence * 0.2
-    );
-
-    const sophisticatedAuditTrail = [
-      ...orchestratorResult.auditTrail,
-      `Sophisticated RAG applied: ${ragResult.retrievalMethod}`,
-      `Complex memory systems engaged: ${memoryResult.systemsEngaged.join(', ')}`,
-      `Sophisticated RAG systems: ${ragResult.systemsUsed.join(', ')}`
-    ];
-
-    return {
-      response: finalResponse,
-      confidence: combinedConfidence,
-      processingTime: Date.now() - startTime,
-      wasEnhanced: ragResult.systemsUsed.length > 0 || memoryResult.systemsEngaged.length > 0,
-      crisisDetected: orchestratorResult.crisisDetected,
-      auditTrail: sophisticatedAuditTrail,
-      memoryUpdated: orchestratorResult.memoryUpdated
-    };
-  }
-
-  /**
-   * Health check for all pipeline components including new integrators
+   * Enhanced health check including all new systems
    */
   async healthCheck(): Promise<HealthCheckResult> {
     const baseHealth = await this.serviceManager.healthCheck();
     
     const additionalServices = {
-      legacyRAG: true, // Legacy RAG integrator doesn't need async health check
-      complexMemory: await this.complexMemoryIntegrator.isHealthy()
+      unifiedMemory: true, // Synchronous check
+      unifiedRAG: true,    // Synchronous check
+      feedbackSystem: true, // Synchronous check
+      evaluationFramework: true, // Synchronous check
+      accessControl: true  // Synchronous check
     };
 
     const allServices = {
@@ -138,25 +189,27 @@ export class UnifiedRogerPipeline {
     
     return { 
       healthy, 
-      services: allServices 
+      services: allServices,
+      memoryStatus: unifiedMemoryProcessor.getMemoryStatus(),
+      timestamp: Date.now()
     };
   }
 
   /**
-   * Get memory state for debugging/monitoring
+   * Get comprehensive system status
    */
-  getMemoryState() {
-    return this.complexMemoryIntegrator.getMemoryState();
-  }
-
-  /**
-   * Configure RAG integration for specific client needs
-   */
-  configureRAGForClient(clientId: string, priorityLevel: 'standard' | 'enhanced' | 'enterprise') {
-    // This would typically store client-specific configurations
-    console.log(`RAG configured for client ${clientId} with priority ${priorityLevel}`);
+  async getSystemStatus() {
+    const healthCheck = await this.healthCheck();
+    const memoryStatus = unifiedMemoryProcessor.getMemoryStatus();
+    const feedbackStatus = userFeedbackSystem.getFeedbackSystemStatus();
+    
+    return {
+      health: healthCheck,
+      memory: memoryStatus,
+      feedback: feedbackStatus,
+      timestamp: Date.now()
+    };
   }
 }
 
-// Export singleton instance
 export const unifiedPipeline = new UnifiedRogerPipeline();

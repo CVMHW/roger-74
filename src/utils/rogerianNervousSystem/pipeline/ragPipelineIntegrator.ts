@@ -1,22 +1,16 @@
 
 /**
- * RAG Pipeline Integrator
+ * Updated RAG Pipeline Integrator
  * 
- * Unifies the existing RAG pipeline with the comprehensive nervous system
- * Integrates retrieval, enhancement, memory, and all Roger's systems
+ * Now uses all new unified systems and integrations
  */
 
-import { 
-  enhanceResponseWithRAG,
-  retrieveAugmentation,
-  augmentResponseWithRetrieval,
-  addConversationExchange
-} from '../../hallucinationPrevention';
+import { unifiedRAGIntegrator } from '../../../integration/UnifiedRAGIntegrator';
+import { unifiedMemoryProcessor } from '../../../memory/UnifiedMemoryProcessor';
 import { processRogerianNervousSystem, RogerNervousSystemContext } from '../nervousSystemIntegrator';
-import { initializeRAGSystem } from '../../hallucinationPrevention/initialization';
 
 /**
- * Unified RAG Pipeline that integrates all Roger's systems
+ * Updated unified RAG pipeline using new integrations
  */
 export const processUnifiedRAGPipeline = async (
   originalResponse: string,
@@ -32,18 +26,13 @@ export const processUnifiedRAGPipeline = async (
     retrievalResults?: any[];
     augmentationApplied: boolean;
     vectorSearchResults?: any[];
+    memoryIntegration?: any;
+    evaluationMetrics?: any;
   };
 }> => {
-  console.log("UNIFIED RAG PIPELINE: Starting comprehensive processing");
+  console.log("🔄 UPDATED RAG PIPELINE: Starting with unified integrations");
   
-  // Initialize RAG system if not already done
-  try {
-    await initializeRAGSystem();
-  } catch (error) {
-    console.warn("RAG system initialization warning:", error);
-  }
-  
-  // Process through Roger's comprehensive nervous system first
+  // Process through Roger's nervous system first
   const nervousSystemResult = await processRogerianNervousSystem(
     originalResponse,
     userInput,
@@ -52,70 +41,66 @@ export const processUnifiedRAGPipeline = async (
     updateStage
   );
   
-  // If crisis was detected, return immediately without further RAG processing
+  // If crisis detected, return immediately
   if (nervousSystemResult.context.crisisContext.isCrisisDetected) {
     return {
       ...nervousSystemResult,
       ragData: {
-        augmentationApplied: false
+        augmentationApplied: false,
+        retrievalResults: [],
+        vectorSearchResults: []
       }
     };
   }
   
-  // Apply advanced RAG processing if appropriate
-  let finalResponse = nervousSystemResult.enhancedResponse;
-  let ragData = {
-    augmentationApplied: false,
-    retrievalResults: undefined as any[] | undefined,
-    vectorSearchResults: undefined as any[] | undefined
-  };
-  
-  if (nervousSystemResult.context.ragContext.shouldApplyRAG) {
-    try {
-      console.log("UNIFIED RAG PIPELINE: Applying advanced RAG processing");
-      
-      // Retrieve relevant information using the existing RAG system
-      const retrievalResult = await retrieveAugmentation(
-        nervousSystemResult.context.ragContext.queryAugmentation || userInput,
-        conversationHistory
-      );
-      
-      if (retrievalResult.retrievedContent && retrievalResult.retrievedContent.length > 0) {
-        // Augment the response with retrieved content
-        finalResponse = await augmentResponseWithRetrieval(
-          finalResponse,
-          userInput,
-          retrievalResult
-        );
-        
-        ragData = {
-          augmentationApplied: true,
-          retrievalResults: retrievalResult.retrievedContent,
-          vectorSearchResults: retrievalResult.retrievedContent // Use retrievedContent instead of vectorResults
-        };
-        
-        nervousSystemResult.systemsEngaged.push('advanced-rag-pipeline');
+  // Apply unified RAG integration
+  try {
+    console.log("🔄 UPDATED RAG PIPELINE: Applying unified RAG integration");
+    
+    const ragResult = await unifiedRAGIntegrator.processUnifiedRAG(
+      nervousSystemResult.enhancedResponse,
+      {
+        userInput,
+        conversationHistory,
+        emotionalContext: nervousSystemResult.context.emotionalContext,
+        memoryContext: nervousSystemResult.context.memoryContext
       }
-      
-      // Record the conversation exchange for future retrieval
-      await addConversationExchange(userInput, finalResponse);
-      
-    } catch (ragError) {
-      console.error("UNIFIED RAG PIPELINE: Advanced RAG error:", ragError);
-      // Continue with nervous system response if RAG fails
-    }
+    );
+    
+    return {
+      enhancedResponse: ragResult.enhancedResponse,
+      context: nervousSystemResult.context,
+      systemsEngaged: [
+        ...nervousSystemResult.systemsEngaged,
+        ...ragResult.systemsEngaged
+      ],
+      ragData: {
+        retrievalResults: ragResult.retrievalResults,
+        augmentationApplied: ragResult.confidence > 0.5,
+        vectorSearchResults: ragResult.retrievalResults,
+        memoryIntegration: ragResult.memoryIntegration,
+        evaluationMetrics: ragResult.evaluationMetrics
+      }
+    };
+    
+  } catch (ragError) {
+    console.error("🔄 UPDATED RAG PIPELINE: Unified RAG error:", ragError);
+    
+    return {
+      enhancedResponse: nervousSystemResult.enhancedResponse,
+      context: nervousSystemResult.context,
+      systemsEngaged: [...nervousSystemResult.systemsEngaged, 'rag-error-fallback'],
+      ragData: {
+        augmentationApplied: false,
+        retrievalResults: [],
+        vectorSearchResults: []
+      }
+    };
   }
-  
-  return {
-    enhancedResponse: finalResponse,
-    context: nervousSystemResult.context,
-    systemsEngaged: nervousSystemResult.systemsEngaged,
-    ragData
-  };
 };
 
 /**
- * Quick access function for the unified pipeline
+ * Enhanced access function with unified pipeline
  */
 export const enhanceWithUnifiedPipeline = async (
   originalResponse: string,
@@ -132,7 +117,7 @@ export const enhanceWithUnifiedPipeline = async (
     updateStage
   );
   
-  console.log(`🧠 UNIFIED PIPELINE: Enhanced with ${result.systemsEngaged.length} systems:`, 
+  console.log(`🔄 UPDATED PIPELINE: Enhanced with ${result.systemsEngaged.length} systems:`, 
     result.systemsEngaged.join(', '));
   
   return result.enhancedResponse;
