@@ -264,12 +264,7 @@ export class RAGEvaluationFramework {
           type: 'suggestion',
           content: `RAG evaluation below threshold: ${evaluation.overallScore.toFixed(2)}`,
           severity: evaluation.overallScore < 0.5 ? 'high' : 'medium',
-          category: 'rag-quality',
-          metadata: {
-            relevanceScore: evaluation.relevanceScore,
-            coherenceScore: evaluation.coherenceScore,
-            faithfulnessScore: evaluation.faithfulnessScore
-          }
+          category: 'rag-quality'
         }
       );
     } catch (error) {
