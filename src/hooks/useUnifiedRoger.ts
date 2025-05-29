@@ -1,4 +1,3 @@
-
 /**
  * Unified Roger Hook
  * 
@@ -76,12 +75,12 @@ export const useUnifiedRoger = (
         totalProcessingTime: prev.totalProcessingTime + result.processingTime
       }));
       
-      // Create message response
+      // Create message response with proper argument structure
       const message = createMessage(
         result.response,
         'roger',
-        result.confidence,
         {
+          confidence: result.confidence,
           processingTime: result.processingTime,
           systemsEngaged: result.systemsEngaged,
           memoryLayers: result.memoryLayers,
@@ -101,12 +100,12 @@ export const useUnifiedRoger = (
     } catch (error) {
       console.error('🎯 UNIFIED ROGER: Processing error:', error);
       
-      // Fallback response
+      // Fallback response with proper argument structure
       const fallbackMessage = createMessage(
         "I'm here to listen and support you. Could you tell me more about what's on your mind?",
         'roger',
-        0.7,
         {
+          confidence: 0.7,
           errorMessage: error.message,
           fallback: true,
           systemsEngaged: ['error-fallback']
