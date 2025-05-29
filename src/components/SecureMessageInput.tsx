@@ -1,15 +1,27 @@
 
+/**
+ * Secure Message Input Component
+ * 
+ * Enhanced MessageInput with security features
+ */
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Shield, AlertTriangle } from 'lucide-react';
 import { useSecureInput } from '../hooks/useSecureInput';
 
-interface MessageInputProps {
+interface SecureMessageInputProps {
   onSendMessage: (message: string) => void;
+  disabled?: boolean;
+  crisisContext?: boolean;
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
+const SecureMessageInput: React.FC<SecureMessageInputProps> = ({ 
+  onSendMessage, 
+  disabled = false,
+  crisisContext = false 
+}) => {
   const [userInput, setUserInput] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   
@@ -22,11 +34,12 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
     maxLength: 2000,
     minLength: 1,
     strictMode: true,
+    crisisContext,
     enableRateLimit: true
   });
 
   const handleSendMessage = () => {
-    if (!userInput.trim() || isRateLimited) return;
+    if (!userInput.trim() || disabled || isRateLimited) return;
 
     // Check rate limiting first
     if (!checkRateLimit()) {
@@ -88,7 +101,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
             placeholder="Type your message here..."
             className={`resize-none ${validationError ? 'border-red-500' : ''}`}
             rows={2}
-            disabled={isRateLimited}
+            disabled={disabled || isRateLimited}
             maxLength={2000}
           />
           
@@ -115,7 +128,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
         <Button 
           type="button"
           onClick={handleSendMessage}
-          disabled={isRateLimited || !userInput.trim() || !!validationError}
+          disabled={disabled || isRateLimited || !userInput.trim() || !!validationError}
           className="bg-roger hover:bg-roger-dark"
         >
           <Send size={18} />
@@ -141,4 +154,4 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
   );
 };
 
-export default MessageInput;
+export default SecureMessageInput;
