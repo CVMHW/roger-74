@@ -79,18 +79,21 @@ export const useUnifiedRoger = (
       const message = createMessage(
         result.response,
         'roger',
-        {
-          confidence: result.confidence,
-          processingTime: result.processingTime,
-          systemsEngaged: result.systemsEngaged,
-          memoryLayers: result.memoryLayers,
-          ragEnhanced: result.ragEnhanced,
-          crisisDetected: result.crisisDetected,
-          evaluationScore: result.evaluationScore,
-          auditTrail: result.auditTrail,
-          metadata: result.metadata
-        }
+        null // No concernType for normal responses
       );
+      
+      // Add metadata to the message after creation
+      message.metadata = {
+        confidence: result.confidence,
+        processingTime: result.processingTime,
+        systemsEngaged: result.systemsEngaged,
+        memoryLayers: result.memoryLayers,
+        ragEnhanced: result.ragEnhanced,
+        crisisDetected: result.crisisDetected,
+        evaluationScore: result.evaluationScore,
+        auditTrail: result.auditTrail,
+        metadata: result.metadata
+      };
       
       console.log(`🎯 UNIFIED ROGER: Response generated with confidence ${result.confidence} in ${result.processingTime}ms`);
       console.log(`🎯 Systems engaged: ${result.systemsEngaged.join(', ')}`);
@@ -104,13 +107,16 @@ export const useUnifiedRoger = (
       const fallbackMessage = createMessage(
         "I'm here to listen and support you. Could you tell me more about what's on your mind?",
         'roger',
-        {
-          confidence: 0.7,
-          errorMessage: error.message,
-          fallback: true,
-          systemsEngaged: ['error-fallback']
-        }
+        null // No concernType for fallback responses
       );
+      
+      // Add metadata to the fallback message after creation
+      fallbackMessage.metadata = {
+        confidence: 0.7,
+        errorMessage: error.message,
+        fallback: true,
+        systemsEngaged: ['error-fallback']
+      };
       
       return fallbackMessage;
       
