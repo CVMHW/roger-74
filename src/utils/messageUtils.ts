@@ -11,6 +11,19 @@ export type MessageType = {
     state?: string;
     city?: string;
   } | null;
+  metadata?: {
+    confidence?: number;
+    processingTime?: number;
+    systemsEngaged?: string[];
+    memoryLayers?: string[];
+    ragEnhanced?: boolean;
+    crisisDetected?: boolean;
+    evaluationScore?: number;
+    auditTrail?: string[];
+    errorMessage?: string;
+    fallback?: boolean;
+    [key: string]: any; // Allow additional metadata properties
+  };
 };
 
 /**
