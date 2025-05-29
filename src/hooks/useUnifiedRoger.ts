@@ -118,7 +118,7 @@ export const useUnifiedRoger = (
     } finally {
       setIsProcessing(false);
     }
-  }, [userInput, userId, sessionId, conversationHistory, messageCount]);
+  }, [userId, sessionId, conversationHistory, messageCount]);
 
   /**
    * Get comprehensive system status

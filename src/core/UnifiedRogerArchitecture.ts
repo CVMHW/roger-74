@@ -1,4 +1,3 @@
-
 /**
  * Unified Roger Architecture
  * 
@@ -45,6 +44,7 @@ export interface UnifiedArchitectureResult {
     memoryStatus?: any;
     evaluationMetrics?: any;
     legacySystemsUsed?: string[];
+    errorMessage?: string;
   };
 }
 
@@ -330,7 +330,7 @@ export class UnifiedRogerArchitecture {
         evaluationScore: 0.5,
         auditTrail,
         metadata: {
-          error: error.message,
+          errorMessage: error.message,
           legacySystemsUsed: ['fallback']
         }
       };
