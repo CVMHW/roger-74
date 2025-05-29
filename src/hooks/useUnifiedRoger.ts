@@ -107,7 +107,7 @@ export const useUnifiedRoger = (
         'roger',
         0.7,
         {
-          error: error.message,
+          errorMessage: error.message,
           fallback: true,
           systemsEngaged: ['error-fallback']
         }
