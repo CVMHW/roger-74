@@ -184,7 +184,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                       <div className="text-left">
                         <h3 className="font-bold text-red-800 text-lg">Need Help Now? Crisis Resources Available 24/7</h3>
                         <p className="text-sm text-red-700">
-                          Click to view emergency contacts and crisis support numbers
+                          Click to view local mobile crisis lines and emergency contacts
                         </p>
                       </div>
                     </div>
@@ -215,9 +215,32 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                             <span className="font-bold">911</span>
                           </a>
                         </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-3 bg-white border border-red-200 rounded-lg">
+                      <h4 className="font-semibold text-red-800 mb-2">Local Mobile Crisis Lines</h4>
+                      <div className="space-y-2 text-sm">
                         <div className="flex justify-between items-center">
-                          <span className="font-medium">Crisis Text Line</span>
-                          <span className="text-red-600 font-bold">Text 741741</span>
+                          <span className="font-medium">Summit County Mobile Crisis</span>
+                          <a href="tel:3304349144" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                            <Phone size={14} />
+                            <span className="font-bold">330-434-9144</span>
+                          </a>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">Stark County Mobile Crisis</span>
+                          <a href="tel:3304526000" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                            <Phone size={14} />
+                            <span className="font-bold">330-452-6000</span>
+                          </a>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium">Cuyahoga County Mobile Crisis</span>
+                          <a href="tel:2166236555" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                            <Phone size={14} />
+                            <span className="font-bold">216-623-6555</span>
+                          </a>
                         </div>
                       </div>
                     </div>
