@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { getInitialMessages } from '../../../utils/messageUtils';
 import useRogerianResponse from '../../useRogerianResponse';
 import { useLocationConcern } from '../useLocationConcern';
@@ -17,9 +17,11 @@ import { useMessageHandling } from './useMessageHandling';
 import { useResponseEnhancement } from './useResponseEnhancement';
 import { useResponseHooks } from './useResponseHooks';
 import { ChatLogicReturn } from './types';
+import { processWithRogerNervousSystem } from '../../../utils/rogerianNervousSystem';
 
 /**
  * Hook that contains the main chat business logic with integrated crisis detection
+ * NOW WITH FULL NERVOUS SYSTEM INTEGRATION
  */
 export const useChatLogic = (): ChatLogicReturn => {
   // Core state
@@ -87,7 +89,7 @@ export const useChatLogic = (): ChatLogicReturn => {
     getResponseDelay
   );
   
-  // Enhanced message handling with PRIORITY crisis detection
+  // Enhanced message handling with PRIORITY crisis detection AND NERVOUS SYSTEM INTEGRATION
   const { isProcessing, setIsProcessing, handleSendMessage } = useMessageHandling(
     updateUserMessageHistory,
     checkFeedbackLoop,
@@ -100,7 +102,7 @@ export const useChatLogic = (): ChatLogicReturn => {
     feedbackLoopDetected,
     setFeedbackLoopDetected,
     async (userInput: string) => {
-      console.log("CHAT LOGIC: Processing user input:", userInput);
+      console.log("CHAT LOGIC: Processing user input with FULL NERVOUS SYSTEM:", userInput);
       
       // PRIORITY 1: Check for crisis content FIRST with integrated crisis detection
       const crisisResponse = await handleCrisisMessage(userInput);
@@ -122,14 +124,46 @@ export const useChatLogic = (): ChatLogicReturn => {
         return;
       }
       
-      // PRIORITY 3: Regular processing if no crisis detected
-      console.log("CHAT LOGIC: No crisis detected, processing normally");
-      const response = await processUserMessage(userInput);
-      setMessages(prevMessages => [...prevMessages, response]);
+      // PRIORITY 3: Process through FULL NERVOUS SYSTEM with RAG and memory integration
+      console.log("CHAT LOGIC: No crisis detected, processing through Roger's Nervous System");
       
-      // Track response for feedback loop detection
-      trackRogerResponse(response.text);
-      updateRogerResponseHistory(response.text);
+      try {
+        // Get the base response first
+        const baseResponse = await processUserMessage(userInput);
+        
+        // Process through Roger's complete nervous system with RAG and memory
+        const enhancedResponseText = await processWithRogerNervousSystem(
+          baseResponse.text,
+          userInput,
+          userMessageHistory,
+          userMessageHistory.length,
+          () => {} // updateStage function
+        );
+        
+        // Create enhanced message
+        const enhancedResponse = {
+          ...baseResponse,
+          text: enhancedResponseText
+        };
+        
+        console.log("CHAT LOGIC: Response enhanced through nervous system");
+        setMessages(prevMessages => [...prevMessages, enhancedResponse]);
+        
+        // Track response for feedback loop detection
+        trackRogerResponse(enhancedResponse.text);
+        updateRogerResponseHistory(enhancedResponse.text);
+        
+      } catch (error) {
+        console.error("CHAT LOGIC: Error in nervous system processing:", error);
+        
+        // Fallback to regular processing
+        const response = await processUserMessage(userInput);
+        setMessages(prevMessages => [...prevMessages, response]);
+        
+        // Track response for feedback loop detection
+        trackRogerResponse(response.text);
+        updateRogerResponseHistory(response.text);
+      }
     },
     setMessages, 
     setProcessingContext,

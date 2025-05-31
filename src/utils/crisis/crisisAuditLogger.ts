@@ -1,7 +1,7 @@
+
 /**
  * Enhanced Crisis Audit Logger with Comprehensive Clinical Documentation
- * 
- * Logs all crisis detections and sends email notifications to the psychologist
+ * ALL SEVERITY LEVELS NOW LOGGED AND EMAILED
  */
 
 import { sendCrisisEmailAlert } from './emailNotificationService';
@@ -27,20 +27,20 @@ export interface CrisisAuditEntry {
 }
 
 /**
- * Enhanced crisis event logging with comprehensive clinical documentation
+ * Enhanced crisis event logging with ALL SEVERITY LEVELS getting email notifications
  */
 export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => {
   try {
-    console.log('CRISIS AUDIT: Starting comprehensive crisis logging', entry);
+    console.log(`CRISIS AUDIT: Starting crisis logging for ${entry.severity.toUpperCase()} severity`, entry);
     
     // Store in local storage for immediate backup
     const existingLogs = getStoredCrisisLogs();
     existingLogs.push(entry);
     localStorage.setItem('crisis_audit_logs', JSON.stringify(existingLogs));
-    console.log('CRISIS AUDIT: Stored locally with enhanced clinical data');
+    console.log('CRISIS AUDIT: Stored locally with clinical data');
     
-    // Send comprehensive email notification - FORCE IMMEDIATE SENDING
-    console.log('CRISIS AUDIT: Attempting to send email notification');
+    // Send email notification for ALL severity levels - no filtering
+    console.log(`CRISIS AUDIT: Sending email notification for ${entry.severity.toUpperCase()} severity level`);
     console.log('CRISIS AUDIT: Email data being sent:', {
       timestamp: entry.timestamp,
       sessionId: entry.sessionId,
@@ -70,9 +70,9 @@ export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => 
     });
     
     if (emailSent) {
-      console.log("CRISIS AUDIT: Email notification sent successfully");
+      console.log(`CRISIS AUDIT: Email notification sent successfully for ${entry.severity.toUpperCase()} severity`);
     } else {
-      console.error("CRISIS AUDIT: Failed to send email notification");
+      console.error(`CRISIS AUDIT: Failed to send email notification for ${entry.severity.toUpperCase()} severity`);
       // Mark as email failed but still store locally
       const failedEntry = { ...entry, emailFailed: true };
       const logs = getStoredCrisisLogs();
@@ -80,7 +80,7 @@ export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => 
       localStorage.setItem('crisis_audit_logs', JSON.stringify(logs));
     }
     
-    console.log('CRISIS AUDIT: Complete clinical documentation processed');
+    console.log(`CRISIS AUDIT: Complete clinical documentation processed for ${entry.severity.toUpperCase()} level`);
   } catch (error) {
     console.error('CRISIS AUDIT ERROR: Failed to log crisis event', error);
     // Store locally even if email fails
