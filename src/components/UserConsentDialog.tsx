@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AlertTriangle, Shield, Heart, Lock } from 'lucide-react';
+import { AlertTriangle, Shield, Heart, Lock, Phone, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 
 interface UserConsentDialogProps {
   isOpen: boolean;
@@ -24,6 +29,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
   const [password, setPassword] = useState('');
   const [canProceed, setCanProceed] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
+  const [crisisResourcesOpen, setCrisisResourcesOpen] = useState(false);
 
   const REQUIRED_PASSWORD = 'Jefferson00!!';
 
@@ -49,7 +55,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Shield className="text-cvmhw-orange fill-cvmhw-orange" size={24} />
@@ -61,6 +67,105 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
         </DialogHeader>
         
         <div className="space-y-6 py-4">
+          {/* Crisis Resources Section */}
+          <div className="p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+            <Collapsible open={crisisResourcesOpen} onOpenChange={setCrisisResourcesOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full flex justify-between items-center p-0 hover:bg-transparent">
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="text-red-600" size={24} />
+                    <div className="text-left">
+                      <h3 className="font-bold text-red-800 text-lg">Crisis Resources Available Now</h3>
+                      <p className="text-sm text-red-700">
+                        If you need immediate help, these resources are available 24/7
+                      </p>
+                    </div>
+                  </div>
+                  {crisisResourcesOpen ? (
+                    <ChevronUp className="text-red-600" size={20} />
+                  ) : (
+                    <ChevronDown className="text-red-600" size={20} />
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+              
+              <CollapsibleContent className="mt-4 space-y-4">
+                <div className="grid gap-3">
+                  <div className="p-3 bg-white border border-red-200 rounded-lg">
+                    <h4 className="font-semibold text-red-800 mb-2">Emergency Crisis Support</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">National Suicide Prevention Lifeline</span>
+                        <a href="tel:988" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                          <Phone size={14} />
+                          <span className="font-bold">988</span>
+                        </a>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Crisis Text Line</span>
+                        <span className="text-red-600 font-bold">Text 741741</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Emergency Services</span>
+                        <a href="tel:911" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                          <Phone size={14} />
+                          <span className="font-bold">911</span>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 bg-white border border-red-200 rounded-lg">
+                    <h4 className="font-semibold text-red-800 mb-2">Cleveland/Ohio Crisis Support</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Cuyahoga County Mobile Crisis</span>
+                        <a href="tel:2166236555" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                          <Phone size={14} />
+                          <span className="font-bold">216-623-6555</span>
+                        </a>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Highland Springs Hospital</span>
+                        <a href="tel:2163023070" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                          <Phone size={14} />
+                          <span className="font-bold">216-302-3070</span>
+                        </a>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Windsor-Laurelwood Hospital</span>
+                        <a href="tel:4409533000" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                          <Phone size={14} />
+                          <span className="font-bold">440-953-3000</span>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="p-3 bg-white border border-red-200 rounded-lg">
+                    <h4 className="font-semibold text-red-800 mb-2">Additional Support</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Trevor Project (LGBTQ+ Crisis)</span>
+                        <a href="tel:8664887386" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                          <Phone size={14} />
+                          <span className="font-bold">866-488-7386</span>
+                        </a>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium">Domestic Violence Hotline</span>
+                        <a href="tel:3304537233" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                          <Phone size={14} />
+                          <span className="font-bold">330-453-7233</span>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+
           {/* Testing Notice */}
           <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-start gap-3">
