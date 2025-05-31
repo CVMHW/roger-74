@@ -1,4 +1,3 @@
-
 /**
  * Enhanced Crisis Detection Hook - Updated with CVMHW Legal Integration
  * 
@@ -180,7 +179,7 @@ Have you been able to talk to a mental health professional about these feelings?
 
 Your life matters, and there are people trained specifically to help you through this crisis.`;
 
-        return createMessage(persistentResponse, 'roger', 'immediate');
+        return createMessage(persistentResponse, 'roger', 'crisis');
       }
     }
     

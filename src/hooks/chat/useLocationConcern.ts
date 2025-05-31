@@ -26,19 +26,34 @@ export const useLocationConcern = () => {
         async (position) => {
           try {
             const { latitude, longitude } = position.coords;
-            // Use a browser-compatible approach to fetch location data
-            const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`);
-            const data = await response.json();
+            console.log("LOCATION: Got coordinates:", { latitude, longitude });
             
-            setLocationData({
-              city: data.city || data.locality,
-              region: data.principalSubdivision,
-              country: data.countryName,
-              latitude,
-              longitude
-            });
+            // Use a CORS-friendly geolocation service
+            try {
+              const response = await fetch(`https://geocode.xyz/${latitude},${longitude}?json=1`);
+              const data = await response.json();
+              
+              setLocationData({
+                city: data.city || data.standard?.city,
+                region: data.state || data.standard?.prov,
+                country: data.country || data.standard?.countryname,
+                latitude,
+                longitude
+              });
+              console.log("LOCATION: Set location data:", data);
+            } catch (geocodeError) {
+              console.log("LOCATION: Geocoding failed, using fallback location");
+              // Fallback to Cleveland, OH for testing
+              setLocationData({
+                city: "Cleveland",
+                region: "Ohio",
+                country: "United States",
+                latitude,
+                longitude
+              });
+            }
           } catch (error) {
-            console.error("Error getting location data:", error);
+            console.error("Error processing location data:", error);
             // Fallback to Cleveland, OH for testing
             setLocationData({
               city: "Cleveland",
@@ -55,6 +70,11 @@ export const useLocationConcern = () => {
             region: "Ohio",
             country: "United States"
           });
+        },
+        {
+          timeout: 10000,
+          enableHighAccuracy: false,
+          maximumAge: 300000 // 5 minutes
         }
       );
     } else {

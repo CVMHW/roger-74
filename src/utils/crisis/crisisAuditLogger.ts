@@ -6,6 +6,7 @@
 
 import { LocationInfo } from './crisisResponseCoordinator';
 import { extractLocationFromText, getBrowserLocation, getLocationDescription } from './locationDetection';
+import { sendCrisisEmailAlert } from './emailNotificationService';
 
 export interface CrisisAuditEntry {
   timestamp: string;
@@ -110,47 +111,27 @@ const sendEnhancedCrisisEmailNotification = async (entry: CrisisAuditEntry): Pro
   const emailBody = createEnhancedClinicalEmailBody(entry);
   const subjectLine = getEnhancedCrisisSubjectLine(entry);
   
-  const emailJSData = {
-    service_id: 'service_fqqp3ta',
-    template_id: 'template_u3w9maq',
-    user_id: 'eFkOj3YAK3s86h8hL',
-    template_params: {
-      to_email: 'cvmindfulhealthandwellness@outlook.com',
-      from_name: 'Roger AI Enhanced Crisis System',
-      subject: subjectLine,
-      message: emailBody,
-      timestamp: entry.timestamp,
-      crisis_type: entry.crisisType,
-      severity: entry.severity,
-      session_id: entry.sessionId,
-      user_input: entry.userInput,
-      roger_response: entry.rogerResponse,
-      location: entry.locationDescription || 'Unknown',
-      clinical_notes: entry.clinicalNotes || 'None',
-      risk_assessment: entry.riskAssessment || 'Standard',
-      session_duration: entry.sessionDuration || 'Unknown',
-      message_count: entry.messageCount || 0
-    }
-  };
-
-  try {
-    const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(emailJSData)
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`EmailJS send failed: ${response.status} - ${errorText}`);
-    }
-
-    console.log('✅ Enhanced crisis email sent successfully with comprehensive clinical data');
-    
-  } catch (error) {
-    console.error('ENHANCED CRISIS EMAIL: Failed to send comprehensive notification:', error);
+  // Send email notification
+  const emailSent = await sendCrisisEmailAlert({
+    timestamp: entry.timestamp,
+    sessionId: entry.sessionId,
+    crisisType: entry.crisisType,
+    severity: entry.severity,
+    userMessage: entry.userInput,
+    rogerResponse: entry.rogerResponse,
+    locationInfo: entry.locationInfo,
+    clinicalNotes: entry.clinicalNotes,
+    riskAssessment: entry.riskAssessment,
+    userAgent: entry.userAgent,
+    detectionMethod: entry.detectionMethod,
+    emailSubject: subjectLine,
+    emailBody: emailBody
+  });
+  
+  if (emailSent) {
+    console.log("ENHANCED CRISIS AUDIT: Email notification sent successfully");
+  } else {
+    console.error("ENHANCED CRISIS AUDIT: Failed to send email notification");
     
     // Enhanced fallback with detailed information
     const subject = encodeURIComponent(subjectLine);
@@ -162,7 +143,7 @@ const sendEnhancedCrisisEmailNotification = async (entry: CrisisAuditEntry): Pro
       console.log('ENHANCED CRISIS EMAIL: Opened enhanced mailto fallback');
     } catch (mailtoError) {
       console.error('ENHANCED CRISIS EMAIL: All notification methods failed:', mailtoError);
-      throw error;
+      throw new Error('Failed to send crisis notification through any method');
     }
   }
 };
@@ -316,8 +297,6 @@ const getLocationSpecificClinicalResources = (locationInfo: LocationInfo | null)
 • Default to statewide Ohio crisis resources until location confirmed
 • Consider transportation barriers when making referrals`;
   }
-  
-  // ... keep existing location-specific resources code the same ...
   
   return getLocationSpecificResources(locationInfo);
 };

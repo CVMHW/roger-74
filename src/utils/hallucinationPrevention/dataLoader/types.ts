@@ -1,22 +1,11 @@
 
 /**
- * Vector Database Data Loader Types
- * 
- * Type definitions for the data loader system
+ * Type definitions for knowledge data entries
  */
 
-// Interface for knowledge entries
 export interface KnowledgeEntry {
   content: string;
   category: string;
-  importance: number;
-  source?: string;
+  importance: 'low' | 'medium' | 'high' | 'critical';
+  source: string;
 }
-
-// Collection names as constants
-export const COLLECTIONS = {
-  ROGER_KNOWLEDGE: 'roger_knowledge',
-  USER_MESSAGES: 'user_messages',
-  ROGER_RESPONSES: 'roger_responses',
-  FACTS: 'facts'
-};
