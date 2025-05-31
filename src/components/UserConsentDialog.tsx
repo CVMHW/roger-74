@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Shield, Heart, Lock, Phone, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { AlertTriangle, Shield, Heart, Lock, Phone, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -74,7 +75,6 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
               }}
             />
             <span>CVMHW</span>
-            <ExternalLink size={10} />
           </Button>
           <DialogDescription className="text-base">
             Before you begin chatting with Roger, please read and acknowledge the following important information.
