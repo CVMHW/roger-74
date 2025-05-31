@@ -17,6 +17,7 @@ export interface CrisisAuditEntry {
   userAgent?: string;
   ipAddress?: string;
   emailFailed?: boolean;
+  emailSent?: boolean;
   locationInfo?: any;
   locationDescription?: string;
   clinicalNotes?: string;
@@ -26,6 +27,8 @@ export interface CrisisAuditEntry {
   messageCount?: number;
   followUpRequired?: boolean;
   escalationLevel?: string;
+  auditTimestamp?: string;
+  auditError?: string;
 }
 
 /**
