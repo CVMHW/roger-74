@@ -20,107 +20,84 @@ export const useLocationConcern = () => {
 
   // Get location data if available and permitted by user
   useEffect(() => {
-    // Modern browser geolocation API
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          try {
-            const { latitude, longitude } = position.coords;
-            console.log("LOCATION: Got coordinates:", { latitude, longitude });
-            
-            // Use multiple geocoding services for better reliability
-            let locationResult = null;
-            
-            // Try BigDataCloud first (no API key required)
+    const getLocation = async () => {
+      // Modern browser geolocation API
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
             try {
-              const bdcResponse = await fetch(
-                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-              );
+              const { latitude, longitude } = position.coords;
+              console.log("LOCATION: Got coordinates:", { latitude, longitude });
               
-              if (bdcResponse.ok) {
-                const bdcData = await bdcResponse.json();
-                locationResult = {
-                  city: bdcData.city || bdcData.locality,
-                  region: bdcData.principalSubdivision,
-                  country: bdcData.countryName,
-                  latitude,
-                  longitude
-                };
-                console.log("LOCATION: BigDataCloud geocoding successful:", locationResult);
-              }
-            } catch (bdcError) {
-              console.log("LOCATION: BigDataCloud failed, trying alternative");
-            }
-            
-            // If BigDataCloud failed, try ipapi.co as fallback
-            if (!locationResult) {
+              // Use BigDataCloud first (no API key required)
               try {
-                const ipapiResponse = await fetch('https://ipapi.co/json/');
-                if (ipapiResponse.ok) {
-                  const ipapiData = await ipapiResponse.json();
-                  locationResult = {
-                    city: ipapiData.city,
-                    region: ipapiData.region,
-                    country: ipapiData.country_name,
+                const response = await fetch(
+                  `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+                );
+                
+                if (response.ok) {
+                  const data = await response.json();
+                  const locationResult = {
+                    city: data.city || data.locality,
+                    region: data.principalSubdivision,
+                    country: data.countryName,
                     latitude,
                     longitude
                   };
-                  console.log("LOCATION: ipapi.co geocoding successful:", locationResult);
+                  console.log("LOCATION: BigDataCloud geocoding successful:", locationResult);
+                  setLocationData(locationResult);
+                  return;
                 }
-              } catch (ipapiError) {
-                console.log("LOCATION: ipapi.co also failed");
+              } catch (error) {
+                console.log("LOCATION: BigDataCloud failed, using fallback");
               }
-            }
-            
-            // If both services failed, use Cleveland as fallback for testing
-            if (!locationResult) {
-              console.log("LOCATION: All geocoding services failed, using Cleveland fallback");
-              locationResult = {
+              
+              // Fallback to Cleveland, OH for testing
+              setLocationData({
                 city: "Cleveland",
                 region: "Ohio",
                 country: "United States",
                 latitude,
                 longitude
-              };
+              });
+              
+            } catch (error) {
+              console.error("Error processing location data:", error);
+              // Fallback to Cleveland, OH
+              setLocationData({
+                city: "Cleveland",
+                region: "Ohio",
+                country: "United States"
+              });
             }
-            
-            setLocationData(locationResult);
-            console.log("LOCATION: Final location data set:", locationResult);
-            
-          } catch (error) {
-            console.error("Error processing location data:", error);
-            // Fallback to Cleveland, OH for testing
+          },
+          (error) => {
+            console.log("Geolocation permission denied or error:", error);
+            // Fallback to Cleveland, OH
             setLocationData({
               city: "Cleveland",
               region: "Ohio",
               country: "United States"
             });
+          },
+          {
+            timeout: 10000,
+            enableHighAccuracy: false,
+            maximumAge: 300000 // 5 minutes
           }
-        },
-        (error) => {
-          console.log("Geolocation permission denied or error:", error);
-          // Fallback to Cleveland, OH for testing
-          setLocationData({
-            city: "Cleveland",
-            region: "Ohio",
-            country: "United States"
-          });
-        },
-        {
-          timeout: 10000,
-          enableHighAccuracy: false,
-          maximumAge: 300000 // 5 minutes
-        }
-      );
-    } else {
-      console.log("Geolocation not supported");
-      // Fallback to Cleveland, OH for testing
-      setLocationData({
-        city: "Cleveland",
-        region: "Ohio",
-        country: "United States"
-      });
-    }
+        );
+      } else {
+        console.log("Geolocation not supported");
+        // Fallback to Cleveland, OH
+        setLocationData({
+          city: "Cleveland",
+          region: "Ohio",
+          country: "United States"
+        });
+      }
+    };
+
+    getLocation();
   }, []);
 
   // Function to handle location data from user input

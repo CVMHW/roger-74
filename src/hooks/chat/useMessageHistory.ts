@@ -1,45 +1,37 @@
 
-import { useState, useCallback } from 'react';
+import { useState, useRef } from 'react';
 
 /**
- * Hook for managing message history
+ * Hook for tracking message history for analysis and pattern detection
  */
 export const useMessageHistory = () => {
-  // Track all Roger responses to prevent repetition (in accordance with master rules)
   const [rogerResponseHistory, setRogerResponseHistory] = useState<string[]>([]);
-  
-  // Track user message history for context awareness
   const [userMessageHistory, setUserMessageHistory] = useState<string[]>([]);
-  
-  // Update user message history for context-awareness
-  const updateUserMessageHistory = useCallback((message: string) => {
-    if (!message || typeof message !== 'string') {
-      console.error("Invalid message passed to updateUserMessageHistory:", message);
-      return;
-    }
-    
+  const initialized = useRef(false);
+
+  // Initialize on first call
+  if (!initialized.current) {
+    initialized.current = true;
+  }
+
+  const updateRogerResponseHistory = (response: string) => {
+    setRogerResponseHistory(prev => {
+      const newHistory = [...prev, response];
+      return newHistory.slice(-10); // Keep last 10 responses
+    });
+  };
+
+  const updateUserMessageHistory = (message: string) => {
     setUserMessageHistory(prev => {
       const newHistory = [...prev, message];
-      // Keep only the last 10 messages
-      return newHistory.length > 10 ? newHistory.slice(-10) : newHistory;
+      return newHistory.slice(-20); // Keep last 20 messages
     });
-  }, []);
-
-  // Update Roger's response history
-  const updateRogerResponseHistory = useCallback((responseText: string) => {
-    if (!responseText || typeof responseText !== 'string') {
-      console.error("Invalid response text passed to updateRogerResponseHistory:", responseText);
-      return;
-    }
-    
-    setRogerResponseHistory(prev => [...prev, responseText]);
-  }, []);
+  };
 
   return {
     rogerResponseHistory,
     userMessageHistory,
-    updateUserMessageHistory,
     updateRogerResponseHistory,
-    setRogerResponseHistory
+    updateUserMessageHistory
   };
 };
