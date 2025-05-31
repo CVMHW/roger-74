@@ -1,8 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { AlertTriangle, Shield, Heart } from 'lucide-react';
+import { AlertTriangle, Shield, Heart, Lock } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -20,11 +21,16 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
   const [acknowledgedLimitations, setAcknowledgedLimitations] = useState(false);
   const [acknowledgedEmergency, setAcknowledgedEmergency] = useState(false);
   const [acknowledgedBeta, setAcknowledgedBeta] = useState(false);
+  const [password, setPassword] = useState('');
   const [canProceed, setCanProceed] = useState(false);
+  const [passwordError, setPasswordError] = useState(false);
+
+  const REQUIRED_PASSWORD = 'Jefferson00!!';
 
   useEffect(() => {
-    setCanProceed(acknowledgedLimitations && acknowledgedEmergency && acknowledgedBeta);
-  }, [acknowledgedLimitations, acknowledgedEmergency, acknowledgedBeta]);
+    setCanProceed(acknowledgedLimitations && acknowledgedEmergency && acknowledgedBeta && password === REQUIRED_PASSWORD);
+    setPasswordError(password.length > 0 && password !== REQUIRED_PASSWORD);
+  }, [acknowledgedLimitations, acknowledgedEmergency, acknowledgedBeta, password]);
 
   const handleConsent = () => {
     if (canProceed) {
@@ -55,6 +61,19 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
         </DialogHeader>
         
         <div className="space-y-6 py-4">
+          {/* Testing Notice */}
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-start gap-3">
+              <Lock className="text-red-600 mt-1" size={20} />
+              <div>
+                <h3 className="font-semibold text-red-800 mb-2">System Testing Mode</h3>
+                <p className="text-sm text-red-700 mb-3">
+                  Roger is currently in testing mode. Access is restricted to authorized personnel only.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Beta Software Warning */}
           <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
             <div className="flex items-start gap-3">
@@ -140,7 +159,23 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
           </div>
         </div>
 
-        <div className="flex justify-end pt-4">
+        <div className="flex items-center justify-between gap-4 pt-4">
+          <div className="flex-1">
+            <label htmlFor="access-password" className="block text-sm font-medium text-gray-700 mb-2">
+              Access Password (Testing Mode)
+            </label>
+            <Input
+              id="access-password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter access password"
+              className={passwordError ? 'border-red-500' : ''}
+            />
+            {passwordError && (
+              <p className="text-red-500 text-xs mt-1">Incorrect password</p>
+            )}
+          </div>
           <Button 
             onClick={handleConsent}
             disabled={!canProceed}
