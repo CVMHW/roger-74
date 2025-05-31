@@ -103,15 +103,22 @@ export const useChatLogic = (): ChatLogicReturn => {
     async (userInput: string) => {
       console.log("🚨 CHAT LOGIC: Processing user input with ABSOLUTE PRIORITY crisis detection:", userInput);
       
-      // ABSOLUTE PRIORITY 1: Check for ANY crisis content FIRST
+      // ABSOLUTE PRIORITY 1: Check for ANY crisis content FIRST - This must work!
       console.log("🚨 CHAT LOGIC: PRIORITY 1 - Checking for crisis content");
-      const crisisResponse = await handleCrisisMessage(userInput);
       
-      if (crisisResponse) {
-        console.log("🚨 CHAT LOGIC: CRISIS DETECTED - Using crisis response and showing resources");
-        setMessages(prevMessages => [...prevMessages, crisisResponse]);
-        setShowCrisisResources(true);
-        return;
+      // Check if input contains crisis keywords immediately
+      const hasCrisisKeywords = /\b(kill myself|suicide|suicidal|want to die|end my life|hurt myself|harm myself|can't go on|better off dead)\b/i.test(userInput);
+      
+      if (hasCrisisKeywords) {
+        console.log("🚨 CHAT LOGIC: CRISIS KEYWORDS DETECTED - Calling handleCrisisMessage");
+        const crisisResponse = await handleCrisisMessage(userInput);
+        
+        if (crisisResponse) {
+          console.log("🚨 CHAT LOGIC: CRISIS RESPONSE GENERATED - Adding to messages and showing resources");
+          setMessages(prevMessages => [...prevMessages, crisisResponse]);
+          setShowCrisisResources(true);
+          return;
+        }
       }
       
       // PRIORITY 2: Check for persistent crisis patterns

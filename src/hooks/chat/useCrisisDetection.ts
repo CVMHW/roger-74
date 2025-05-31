@@ -8,12 +8,9 @@ import { useState, useCallback, useRef } from 'react';
 import { MessageType } from '../../components/Message';
 import { createMessage } from '../../utils/messageUtils';
 import { logCrisisEvent, getCurrentSessionId } from '../../utils/crisis/crisisAuditLogger';
-import emailjs from '@emailjs/browser';
 
-// CORRECT EmailJS Configuration from your screenshots
-const EMAILJS_SERVICE_ID = 'service_fqqp3ta';
-const EMAILJS_TEMPLATE_ID = 'template_u3w9maq';  
-const EMAILJS_PUBLIC_KEY = 'eFkOj3YAK3s86h8hL';
+// Import the email service directly
+import { sendCrisisEmailAlert, initializeEmailService } from '../../utils/crisis/emailNotificationService';
 
 export const useCrisisDetection = (
   simulateTypingResponse: (text: string, onComplete: (text: string) => void) => void,
@@ -23,8 +20,11 @@ export const useCrisisDetection = (
   const [consecutiveCrisisCount, setConsecutiveCrisisCount] = useState(0);
   const lastCrisisTime = useRef<number>(0);
 
-  // Initialize EmailJS immediately
-  emailjs.init(EMAILJS_PUBLIC_KEY);
+  // Initialize EmailJS on hook creation
+  useState(() => {
+    console.log("🚨 CRISIS DETECTION: Initializing EmailJS service");
+    initializeEmailService();
+  });
 
   // Enhanced crisis detection that catches ALL concerning content
   const detectCrisisLevel = useCallback((userInput: string): 'low' | 'medium' | 'high' | 'critical' => {
@@ -49,19 +49,20 @@ export const useCrisisDetection = (
     // Check in order of severity - ANY match triggers crisis response
     for (const pattern of criticalIndicators) {
       if (pattern.test(input)) {
-        console.log("CRISIS DETECTION: CRITICAL level detected");
+        console.log("🚨 CRISIS DETECTION: CRITICAL level detected");
         return 'critical';
       }
     }
     
     for (const pattern of highIndicators) {
       if (pattern.test(input)) {
-        console.log("CRISIS DETECTION: HIGH level detected");
+        console.log("🚨 CRISIS DETECTION: HIGH level detected");
         return 'high';
       }
     }
     
-    return 'critical'; // Default to critical for safety
+    // If we got here, it's still concerning enough to treat as critical for safety
+    return 'critical';
   }, []);
 
   // Detect specific crisis type
@@ -79,97 +80,8 @@ export const useCrisisDetection = (
     return 'suicide'; // Default for safety
   }, []);
 
-  // DIRECT EMAIL SENDING FUNCTION
-  const sendCrisisEmail = async (crisisData: any): Promise<boolean> => {
-    try {
-      console.log("🚨 SENDING CRISIS EMAIL:", crisisData);
-      
-      // Force reinitialize EmailJS
-      emailjs.init(EMAILJS_PUBLIC_KEY);
-      
-      // Create comprehensive email body matching your working format
-      const emailBody = `🚨 ENHANCED CRISIS DETECTION ALERT - Roger AI Clinical Documentation 🚨
-
-=== IMMEDIATE CLINICAL ASSESSMENT ===
-Timestamp: ${crisisData.timestamp}
-Session ID: ${crisisData.sessionId}
-Crisis Type: ${crisisData.crisisType}
-Severity Level: ${crisisData.severity}
-Risk Assessment: CRITICAL RISK - Immediate intervention required
-
-=== SESSION CONTEXT ===
-Session Duration: ${crisisData.sessionDuration || 'Unknown'}
-Total Messages: ${crisisData.messageCount || 'Unknown'}
-Patient Location: Cleveland, Ohio
-Detection Method: comprehensive-crisis-detection-all-levels
-
-=== CLINICAL NOTES ===
-Patient expressed ${crisisData.crisisType} concerns at ${crisisData.severity} severity level - IMMEDIATE PROFESSIONAL REVIEW REQUIRED
-
-=== PATIENT PRESENTATION ===
-User Message: "${crisisData.userInput}"
-
-Roger's Response: "${crisisData.rogerResponse}"
-
-=== CLEVELAND/CUYAHOGA COUNTY SPECIFIC RESOURCES ===
-- Cuyahoga County Mobile Crisis: 1-216-623-6555
-- Cleveland Emily Program (Eating Disorders): 1-888-272-0836
-- Windsor-Laurelwood Hospital: 1-440-953-3000
-- Highland Springs Hospital: 1-216-302-3070
-
-=== TECHNICAL DATA ===
-User Agent: ${crisisData.userAgent}
-Location Data: ${JSON.stringify(crisisData.locationInfo, null, 2)}
-
-===================================================
-IMMEDIATE ACTION REQUIRED - LICENSED CLINICAL REVIEW
-===================================================
-
-This automated alert requires immediate clinical assessment.
-
----
-Roger AI Enhanced Crisis Detection & Clinical Documentation System
-Cuyahoga Valley Mindful Health and Wellness
-Generated: ${new Date().toISOString()}`;
-
-      // Template parameters matching your EmailJS template
-      const templateParams = {
-        to_email: 'ericmriesterer@gmail.com',
-        from_name: 'Roger AI Crisis Detection',
-        subject: `🚨 CRISIS ALERT - ${crisisData.severity.toUpperCase()} - ${crisisData.crisisType}`,
-        message: emailBody,
-        name: 'Roger AI Crisis Detection System',
-        email: 'crisis@cvmhw.com'
-      };
-
-      console.log("CRISIS EMAIL: Sending with params:", templateParams);
-
-      // Send the email using correct IDs
-      const response = await emailjs.send(
-        EMAILJS_SERVICE_ID,
-        EMAILJS_TEMPLATE_ID,
-        templateParams,
-        EMAILJS_PUBLIC_KEY
-      );
-
-      console.log("CRISIS EMAIL: Response:", response);
-      
-      if (response.status === 200 || response.text === 'OK') {
-        console.log("✅ CRISIS EMAIL: Successfully sent!");
-        return true;
-      } else {
-        console.error("❌ CRISIS EMAIL: Unexpected response:", response);
-        return false;
-      }
-
-    } catch (error) {
-      console.error("❌ CRISIS EMAIL: Failed to send:", error);
-      return false;
-    }
-  };
-
-  const generateCrisisResponse = useCallback((crisisType: string, severity: string, userInput: string, locationInfo: any): string => {
-    console.log(`CRISIS RESPONSE: Generating for ${crisisType} at ${severity} level`);
+  const generateCrisisResponse = useCallback((crisisType: string, severity: string, userInput: string): string => {
+    console.log(`🚨 CRISIS RESPONSE: Generating for ${crisisType} at ${severity} level`);
     
     // Always return critical response for safety
     return `🚨 **This sounds extremely serious, and I'm very concerned about your safety.**
@@ -227,40 +139,47 @@ You don't have to face this alone. Help is available right now, and your life ha
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
         };
-        console.log("CRISIS DETECTION: Got geolocation:", coordinates);
+        console.log("🚨 CRISIS DETECTION: Got geolocation:", coordinates);
       }
     } catch (error) {
-      console.log("CRISIS DETECTION: Using default Cleveland location");
+      console.log("🚨 CRISIS DETECTION: Using default Cleveland location");
     }
     
     // Generate crisis response
-    const crisisResponse = generateCrisisResponse(crisisType, crisisLevel, userInput, locationInfo);
+    const crisisResponse = generateCrisisResponse(crisisType, crisisLevel, userInput);
     console.log("🚨 CRISIS DETECTION: Generated response, now sending email");
     
-    // CRITICAL: Send email notification DIRECTLY
+    // CRITICAL: Send email notification IMMEDIATELY
     const crisisData = {
       timestamp: new Date().toISOString(),
       sessionId: getCurrentSessionId(),
-      userInput,
       crisisType,
       severity: crisisLevel,
+      userMessage: userInput,
       rogerResponse: crisisResponse,
-      userAgent: navigator.userAgent,
       locationInfo: {
         ...locationInfo,
         coordinates
       },
-      sessionDuration: calculateSessionDuration(),
-      messageCount: consecutiveCrisisCount
+      clinicalNotes: `Patient expressed ${crisisType} concerns at ${crisisLevel} severity level - IMMEDIATE PROFESSIONAL REVIEW REQUIRED`,
+      riskAssessment: generateRiskAssessment(crisisLevel, userInput),
+      userAgent: navigator.userAgent,
+      detectionMethod: 'comprehensive-crisis-detection-all-levels'
     };
     
-    // Send email immediately
-    const emailSent = await sendCrisisEmail(crisisData);
+    console.log("🚨 CRISIS EMAIL: Sending crisis alert with data:", crisisData);
     
-    if (emailSent) {
-      console.log("✅ CRISIS EMAIL: Successfully sent crisis alert!");
-    } else {
-      console.error("❌ CRISIS EMAIL: Failed to send crisis alert!");
+    // Send email immediately using the service
+    try {
+      const emailSent = await sendCrisisEmailAlert(crisisData);
+      
+      if (emailSent) {
+        console.log("✅ CRISIS EMAIL: Successfully sent crisis alert!");
+      } else {
+        console.error("❌ CRISIS EMAIL: Failed to send crisis alert!");
+      }
+    } catch (error) {
+      console.error("❌ CRISIS EMAIL: Error sending crisis alert:", error);
     }
     
     // Also log to audit system
@@ -268,22 +187,21 @@ You don't have to face this alone. Help is available right now, and your life ha
       await logCrisisEvent({
         timestamp: crisisData.timestamp,
         sessionId: crisisData.sessionId,
-        userInput: crisisData.userInput,
+        userInput: crisisData.userMessage,
         crisisType: crisisData.crisisType,
         severity: crisisData.severity,
         rogerResponse: crisisData.rogerResponse,
-        detectionMethod: 'comprehensive-crisis-detection-all-levels',
+        detectionMethod: crisisData.detectionMethod,
         userAgent: crisisData.userAgent,
         ipAddress: 'client-side',
         locationInfo: crisisData.locationInfo,
-        clinicalNotes: `Patient expressed ${crisisType} concerns at ${crisisLevel} severity level - IMMEDIATE PROFESSIONAL REVIEW REQUIRED`,
-        riskAssessment: generateRiskAssessment(crisisLevel, userInput),
-        sessionDuration: crisisData.sessionDuration,
-        messageCount: crisisData.messageCount,
-        emailFailed: !emailSent
+        clinicalNotes: crisisData.clinicalNotes,
+        riskAssessment: crisisData.riskAssessment,
+        sessionDuration: calculateSessionDuration(),
+        messageCount: consecutiveCrisisCount
       });
     } catch (error) {
-      console.error('CRISIS DETECTION: Failed to log crisis event:', error);
+      console.error('🚨 CRISIS DETECTION: Failed to log crisis event:', error);
     }
     
     return createMessage(crisisResponse, 'roger', 'crisis');
