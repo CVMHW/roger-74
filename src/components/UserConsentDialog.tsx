@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -256,60 +255,60 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                     <div className="p-3 bg-white border border-green-200 rounded-lg">
                       <h4 className="font-semibold text-green-800 mb-2">Ohio/National Crisis Support</h4>
                       <div className="space-y-2 text-sm">
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center p-2 hover:bg-teal-50 rounded">
                           <span className="font-medium text-gray-800">National Suicide Prevention Hotline</span>
                           <a href="tel:18002738255" className="flex items-center gap-1 text-teal-700 hover:text-teal-900 font-medium">
                             <Phone size={14} />
                             <span>1-800-273-8255</span>
                           </a>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center p-2 hover:bg-teal-50 rounded">
                           <span className="font-medium text-gray-800">Ohio Crisis Text-Line</span>
                           <span className="text-teal-700 font-medium">Text 241-241</span>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center p-2 hover:bg-teal-50 rounded">
                           <span className="font-medium text-gray-800">Ohio Veteran Crisis-Line</span>
                           <a href="tel:18002738255" className="flex items-center gap-1 text-teal-700 hover:text-teal-900 font-medium">
                             <Phone size={14} />
                             <span>1-800-273-8255</span>
                           </a>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center p-2 hover:bg-teal-50 rounded">
                           <span className="font-medium text-gray-800">Trevor Project LGBTQ+ Crisis</span>
                           <a href="tel:8664887386" className="flex items-center gap-1 text-teal-700 hover:text-teal-900 font-medium">
                             <Phone size={14} />
                             <span>866-488-7386</span>
                           </a>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center p-2 hover:bg-teal-50 rounded">
                           <span className="font-medium text-gray-800">Ohio Trans-Lifeline</span>
                           <a href="tel:8775658860" className="flex items-center gap-1 text-teal-700 hover:text-teal-900 font-medium">
                             <Phone size={14} />
                             <span>877-565-8860</span>
                           </a>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center p-2 hover:bg-teal-50 rounded">
                           <span className="font-medium text-gray-800">Domestic Violence Lifeline</span>
                           <a href="tel:3304537233" className="flex items-center gap-1 text-teal-700 hover:text-teal-900 font-medium">
                             <Phone size={14} />
                             <span>330-453-7233</span>
                           </a>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center p-2 hover:bg-teal-50 rounded">
                           <span className="font-medium text-gray-800">Opiate Hotline</span>
                           <a href="tel:3304534357" className="flex items-center gap-1 text-teal-700 hover:text-teal-900 font-medium">
                             <Phone size={14} />
                             <span>330-453-4357</span>
                           </a>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center p-2 hover:bg-teal-50 rounded">
                           <span className="font-medium text-gray-800">Ohio Gambling Hotline</span>
                           <a href="tel:18884263500" className="flex items-center gap-1 text-teal-700 hover:text-teal-900 font-medium">
                             <Phone size={14} />
                             <span>1-888-532-3500</span>
                           </a>
                         </div>
-                        <div className="flex justify-between items-center">
+                        <div className="flex justify-between items-center p-2 hover:bg-teal-50 rounded">
                           <span className="font-medium text-gray-800">United Way of Ohio</span>
                           <a href="tel:211" className="flex items-center gap-1 text-teal-700 hover:text-teal-900 font-medium">
                             <Phone size={14} />
