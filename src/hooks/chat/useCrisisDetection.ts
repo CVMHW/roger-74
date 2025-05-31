@@ -177,6 +177,8 @@ You don't have to face this alone. Help is available right now, and your life ha
       country: "United States"
     };
     
+    let coordinates = { latitude: 0, longitude: 0 };
+    
     // Try to get actual location if available
     try {
       if (navigator.geolocation) {
@@ -188,12 +190,11 @@ You don't have to face this alone. Help is available right now, and your life ha
           );
         });
         
-        locationInfo = {
-          ...locationInfo,
+        coordinates = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
         };
-        console.log("CRISIS DETECTION: Got geolocation:", locationInfo);
+        console.log("CRISIS DETECTION: Got geolocation:", coordinates);
       }
     } catch (error) {
       console.log("CRISIS DETECTION: Using default Cleveland location");
@@ -215,7 +216,10 @@ You don't have to face this alone. Help is available right now, and your life ha
         detectionMethod: 'comprehensive-crisis-detection-all-levels',
         userAgent: navigator.userAgent,
         ipAddress: 'client-side',
-        locationInfo,
+        locationInfo: {
+          ...locationInfo,
+          coordinates
+        },
         clinicalNotes: `Patient expressed ${crisisType} concerns at ${crisisLevel} severity level - IMMEDIATE PROFESSIONAL REVIEW REQUIRED`,
         riskAssessment: generateRiskAssessment(crisisLevel, userInput),
         sessionDuration: calculateSessionDuration(),
