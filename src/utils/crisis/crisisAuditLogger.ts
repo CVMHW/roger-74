@@ -107,11 +107,11 @@ const enhanceEntryWithClinicalData = async (entry: CrisisAuditEntry): Promise<Cr
 const sendEnhancedCrisisEmailNotification = async (entry: CrisisAuditEntry): Promise<void> => {
   console.log('ENHANCED CRISIS EMAIL: Preparing comprehensive clinical notification');
   
-  // Create detailed clinical assessment email
-  const emailBody = createEnhancedClinicalEmailBody(entry);
-  const subjectLine = getEnhancedCrisisSubjectLine(entry);
+  // Get crisis-specific clinical information
+  const crisisSpecificInfo = getCrisisSpecificInformation(entry.crisisType, entry.severity);
+  const locationSpecificResources = getLocationSpecificClinicalResources(entry.locationInfo);
   
-  // Send email notification
+  // Send email notification with comprehensive crisis type information
   const emailSent = await sendCrisisEmailAlert({
     timestamp: entry.timestamp,
     sessionId: entry.sessionId,
@@ -120,12 +120,10 @@ const sendEnhancedCrisisEmailNotification = async (entry: CrisisAuditEntry): Pro
     userMessage: entry.userInput,
     rogerResponse: entry.rogerResponse,
     locationInfo: entry.locationInfo,
-    clinicalNotes: entry.clinicalNotes,
+    clinicalNotes: `${entry.clinicalNotes || 'Standard crisis presentation'}\n\n${crisisSpecificInfo}\n\n${locationSpecificResources}`,
     riskAssessment: entry.riskAssessment,
     userAgent: entry.userAgent,
-    detectionMethod: entry.detectionMethod,
-    emailSubject: subjectLine,
-    emailBody: emailBody
+    detectionMethod: entry.detectionMethod
   });
   
   if (emailSent) {
@@ -134,8 +132,8 @@ const sendEnhancedCrisisEmailNotification = async (entry: CrisisAuditEntry): Pro
     console.error("ENHANCED CRISIS AUDIT: Failed to send email notification");
     
     // Enhanced fallback with detailed information
-    const subject = encodeURIComponent(subjectLine);
-    const body = encodeURIComponent(emailBody);
+    const subject = encodeURIComponent(getEnhancedCrisisSubjectLine(entry));
+    const body = encodeURIComponent(createEnhancedClinicalEmailBody(entry));
     const mailtoUrl = `mailto:cvmindfulhealthandwellness@outlook.com?subject=${subject}&body=${body}`;
     
     try {
@@ -176,17 +174,6 @@ User Message: "${entry.userInput}"
 
 Roger's Response: "${entry.rogerResponse}"
 
-=== REFUSAL HISTORY ===
-${entry.refusalHistory ? JSON.stringify(entry.refusalHistory, null, 2) : 'No documented refusals in this session'}
-
-=== ROGER'S APPROACH ===
-Roger maintained appropriate peer support boundaries and provided:
-• Crisis acknowledgment and validation
-• Specific, appropriate resource referrals (not generic 988)
-• Location-aware local resource recommendations
-• Gentle persistence without pressure when resources were declined
-• Ongoing supportive presence within scope limitations
-
 ${getCrisisSpecificClinicalGuidance(entry.crisisType, entry.severity)}
 
 ${getLocationSpecificClinicalResources(entry.locationInfo)}
@@ -196,18 +183,11 @@ User Agent: ${entry.userAgent || 'Unknown'}
 IP Context: ${entry.ipAddress || 'Client-side'}
 Location Data: ${entry.locationInfo ? JSON.stringify(entry.locationInfo, null, 2) : 'None available'}
 
-=== ROGER'S PEER SUPPORT LIMITATIONS ===
-• Roger appropriately identified as peer support, not clinical provider
-• Did not attempt clinical safety planning
-• Maintained supportive listening within appropriate scope
-• Documented all resource referrals and patient responses
-
 ===================================================
 IMMEDIATE ACTION REQUIRED - LICENSED CLINICAL REVIEW
 ===================================================
 
-This automated alert requires immediate clinical assessment by Dr. [Name].
-Patient refused initial resource referrals but Roger maintained appropriate supportive contact.
+This automated alert requires immediate clinical assessment by a licensed professional.
 
 ---
 Roger AI Enhanced Crisis Detection & Clinical Documentation System
@@ -235,6 +215,7 @@ const getCrisisSpecificClinicalGuidance = (crisisType: string, severity: string)
   switch (crisisType.toLowerCase()) {
     case 'suicide':
     case 'suicide-direct-detection':
+    case 'suicidal-ideation':
       return `
 === SUICIDE RISK CLINICAL GUIDANCE ===
 IMMEDIATE ASSESSMENT PRIORITIES:
@@ -250,15 +231,13 @@ RECOMMENDED CLINICAL ACTIONS:
 • Consider involuntary commitment if imminent risk
 • Collaborate with emergency services if patient has specific plan/means
 • Document detailed risk assessment and safety plan
-• Arrange for increased contact frequency
-
-ROGER'S PEER SUPPORT ROLE:
-• Appropriately maintained supportive presence
-• Did not attempt clinical safety planning
-• Referred to appropriate licensed professional resources
-• Documented patient responses to resource referrals`;
+• Arrange for increased contact frequency`;
 
     case 'eating-disorder':
+    case 'eating_disorder':
+    case 'anorexia':
+    case 'bulimia':
+    case 'binge-eating':
       return `
 === EATING DISORDER CRISIS CLINICAL GUIDANCE ===
 MEDICAL STABILITY ASSESSMENT NEEDED:
@@ -274,6 +253,64 @@ RECOMMENDED CLINICAL ACTIONS:
 • Evaluation for concurrent mood disorders
 • Consider referral to specialized ED treatment (Emily Program)
 • Monitor for suicidal ideation (high comorbidity rate)`;
+
+    case 'substance-use':
+    case 'substance_abuse':
+    case 'addiction':
+    case 'overdose':
+      return `
+=== SUBSTANCE ABUSE CRISIS CLINICAL GUIDANCE ===
+IMMEDIATE MEDICAL ASSESSMENT:
+• Current intoxication level
+• Withdrawal risk assessment
+• Overdose potential
+• Drug interactions
+• Medical complications
+
+RECOMMENDED CLINICAL ACTIONS:
+• Medical evaluation for withdrawal management
+• Assessment of substance use patterns and triggers
+• Evaluation for dual diagnosis conditions
+• Consider referral to addiction specialist or detox
+• Safety planning around substance access`;
+
+    case 'self-harm':
+    case 'cutting':
+    case 'self-injury':
+      return `
+=== SELF-HARM CRISIS CLINICAL GUIDANCE ===
+IMMEDIATE ASSESSMENT:
+• Methods and frequency of self-harm
+• Medical attention needed for current injuries
+• Escalation patterns
+• Suicidal intent vs. non-suicidal self-injury
+• Access to self-harm tools
+
+RECOMMENDED CLINICAL ACTIONS:
+• Medical evaluation for wound care if needed
+• Assessment of underlying emotional regulation issues
+• Safety planning and coping strategies development
+• Consider increased session frequency
+• Monitor for escalation to suicidal behavior`;
+
+    case 'psychosis':
+    case 'hallucinations':
+    case 'delusions':
+      return `
+=== PSYCHOSIS CRISIS CLINICAL GUIDANCE ===
+IMMEDIATE ASSESSMENT:
+• Reality testing and insight level
+• Command hallucinations or violent delusions
+• Medication compliance
+• Risk to self or others
+• Substance-induced vs. primary psychosis
+
+RECOMMENDED CLINICAL ACTIONS:
+• Psychiatric evaluation for medication adjustment
+• Assessment of safety risks from psychotic symptoms
+• Coordination with psychiatrist or emergency services
+• Environmental safety assessment
+• Consider higher level of care if severe`;
 
     default:
       return `
@@ -427,60 +464,56 @@ const getCrisisSpecificInformation = (crisisType: string, severity: string): str
   switch (crisisType.toLowerCase()) {
     case 'suicide':
     case 'suicide-direct-detection':
+    case 'suicidal-ideation':
       return `
 SUICIDE RISK ASSESSMENT:
 - This patient has expressed suicidal ideation
 - Immediate safety assessment required
 - Consider involuntary hold if imminent risk
-- Contact emergency services if patient has plan/means
-
-IMMEDIATE ACTIONS RECOMMENDED:
-- Call patient immediately
-- Assess for plan, intent, and means
-- Safety planning required
-- Consider hospitalization`;
-
-    case 'self-harm':
-    case 'cutting':
-      return `
-SELF-HARM RISK ASSESSMENT:
-- Patient has expressed self-harm intentions
-- Risk of escalation to suicidal behavior
-- Immediate safety planning needed
-
-IMMEDIATE ACTIONS RECOMMENDED:
-- Contact patient within 24 hours
-- Assess frequency and severity of self-harm
-- Safety planning and coping strategies
-- Consider increased session frequency`;
+- Contact emergency services if patient has plan/means`;
 
     case 'eating-disorder':
     case 'eating_disorder':
+    case 'anorexia':
+    case 'bulimia':
+    case 'binge-eating':
       return `
 EATING DISORDER CRISIS:
 - Patient showing concerning eating behaviors
 - Risk of medical complications
 - May require specialized treatment
-
-IMMEDIATE ACTIONS RECOMMENDED:
-- Medical evaluation for physical complications
-- Assessment of eating patterns and behaviors
-- Consider referral to eating disorder specialist
-- Monitor for suicidal ideation (high comorbidity)`;
+- High comorbidity with mood disorders`;
 
     case 'substance-use':
     case 'substance_abuse':
+    case 'addiction':
+    case 'overdose':
       return `
 SUBSTANCE ABUSE CRISIS:
 - Patient showing concerning substance use patterns
 - Risk of overdose or withdrawal complications
 - May require detoxification support
+- Assess for dual diagnosis conditions`;
 
-IMMEDIATE ACTIONS RECOMMENDED:
-- Assess current intoxication/withdrawal state
-- Medical evaluation if withdrawal symptoms present
-- Consider referral to addiction specialist
-- Safety planning around substance use`;
+    case 'self-harm':
+    case 'cutting':
+    case 'self-injury':
+      return `
+SELF-HARM CRISIS:
+- Patient has expressed self-harm intentions/behaviors
+- Risk of escalation to suicidal behavior
+- Immediate safety planning needed
+- May require medical attention for injuries`;
+
+    case 'psychosis':
+    case 'hallucinations':
+    case 'delusions':
+      return `
+PSYCHOSIS CRISIS:
+- Patient showing signs of psychotic symptoms
+- Risk assessment for reality testing
+- May require psychiatric evaluation
+- Consider medication compliance issues`;
 
     default:
       return `
