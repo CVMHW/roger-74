@@ -1,209 +1,206 @@
-import { useState, useEffect } from 'react';
-import { MessageType } from '../../components/Message';
-import { createMessage } from '../../utils/messageUtils';
-import { ConcernType } from '../../utils/reflection/reflectionTypes';
-
-interface RecentCrisisMessage {
-  message: string;
-  timestamp: Date;
-  concernType: string;
-}
 
 /**
- * Enhanced hook for detecting and handling crisis-related messages
- * with vector-based pattern detection
+ * Enhanced Crisis Detection Hook - Updated with CVMHW Legal Integration
+ * 
+ * Includes awareness of CVMHW mandated reporting requirements
  */
+
+import { useState, useCallback, useRef } from 'react';
+import { MessageType } from '../../components/Message';
+import { createMessage } from '../../utils/messageUtils';
+import { shouldUseCVMHWKnowledge, generateCVMHWResponse } from '../../utils/cvmhw/rogerCVMHWIntegration';
+
 export const useCrisisDetection = (
-  simulateTypingResponse: (response: string, callback: (text: string) => void) => void,
+  simulateTypingResponse: (text: string, onComplete: (text: string) => void) => void,
   setMessages: React.Dispatch<React.SetStateAction<MessageType[]>>
 ) => {
-  // Track potential crisis messaging for deception detection
-  const [recentCrisisMessage, setRecentCrisisMessage] = useState<RecentCrisisMessage | null>(null);
-  // Track consecutive crisis messages to ensure appropriate response escalation
-  const [consecutiveCrisisCount, setConsecutiveCrisisCount] = useState<number>(0);
-  // Track crisis type for contextual responses
-  const [lastCrisisType, setLastCrisisType] = useState<string | null>(null);
-  
-  // Store crisis messages for deception detection
-  const handleCrisisMessage = (userInput: string, rogerResponse: MessageType) => {
-    const crisisConcernTypes = ['crisis', 'tentative-harm', 'suicide', 'self-harm', 'eating-disorder'];
-    if (rogerResponse.concernType && crisisConcernTypes.includes(rogerResponse.concernType)) {
-      setRecentCrisisMessage({
-        message: userInput,
-        timestamp: new Date(),
-        concernType: rogerResponse.concernType
-      });
+  const [recentCrisisMessage, setRecentCrisisMessage] = useState<string | null>(null);
+  const [consecutiveCrisisCount, setConsecutiveCrisisCount] = useState(0);
+  const lastCrisisTime = useRef<number>(0);
+  const crisisPatterns = useRef<Set<string>>(new Set());
+
+  // Enhanced crisis detection patterns
+  const detectCrisisLevel = useCallback((userInput: string): 'none' | 'mild' | 'moderate' | 'severe' | 'immediate' => {
+    const input = userInput.toLowerCase();
+    
+    // Immediate crisis indicators
+    const immediateCrisis = [
+      /i am going to (kill myself|end my life|commit suicide)/,
+      /i have a plan to (die|kill myself|end it)/,
+      /i'm going to hurt myself (today|tonight|now)/,
+      /i can't take it anymore.*(?:kill|die|end)/,
+      /i have pills.*(?:take them all|overdose)/
+    ];
+
+    // Severe crisis indicators  
+    const severeCrisis = [
+      /want to (die|kill myself|end my life|not be here)/,
+      /thoughts of (suicide|killing myself|ending it)/,
+      /don'?t want to (live|be alive|exist)/,
+      /life.*not worth living/,
+      /everyone.*better.*without me/,
+      /thinking about.*ending.*all/
+    ];
+
+    // Moderate crisis indicators
+    const moderateCrisis = [
+      /can'?t go on/,
+      /feel.*hopeless/,
+      /nothing.*matters/,
+      /what'?s the point/,
+      /tired of.*living/,
+      /wish.*never.*born/
+    ];
+
+    // Check for immediate crisis
+    if (immediateCrisis.some(pattern => pattern.test(input))) {
+      return 'immediate';
+    }
+
+    // Check for severe crisis
+    if (severeCrisis.some(pattern => pattern.test(input))) {
+      return 'severe';
+    }
+
+    // Check for moderate crisis
+    if (moderateCrisis.some(pattern => pattern.test(input))) {
+      return 'moderate';
+    }
+
+    return 'none';
+  }, []);
+
+  const generateCrisisResponse = useCallback((crisisLevel: string, userInput: string): string => {
+    const currentTime = Date.now();
+    
+    switch (crisisLevel) {
+      case 'immediate':
+        return `🚨 **This sounds extremely serious, and I'm very concerned about your safety.** 
+
+**Please take immediate action:**
+• **Call 911** if you're in immediate danger
+• **Call or text 988** for the Suicide & Crisis Lifeline (24/7)
+• **Go to your nearest emergency room** right away
+• **Call a trusted friend or family member** to stay with you
+
+You don't have to face this alone. Help is available right now, and your life has value.
+
+**Important:** Roger provides peer support only. For professional mental health services, CVMHW offers therapy with Eric Riesterer, LPC, under supervision of Wendy Nathan, LPCC-S. As mandated reporters, they are required by Ohio law to report imminent safety concerns to appropriate authorities.`;
+
+      case 'severe':
+        return `I'm very concerned about what you're sharing. These feelings are serious, and it's important to get professional help right away.
+
+**Immediate Resources:**
+• **988 Suicide & Crisis Lifeline** (call or text) - 24/7 support
+• **Crisis Text Line** - Text 741741
+• **National Alliance on Mental Illness** - 1-800-950-NAMI
+
+**Local Professional Support:**
+CVMHW provides professional mental health counseling with Eric Riesterer, LPC, supervised by Wendy Nathan, LPCC-S. They accept most major insurance and offer sliding scale fees. Contact: (440) 294-8068.
+
+**Important:** As mandated reporters under Ohio law, mental health professionals must report imminent safety threats to protect you and ensure you get appropriate help.
+
+Would it be possible for you to reach out to one of these resources today?`;
+
+      case 'moderate':
+        return `I hear that you're going through a really difficult time, and I'm concerned about you. These feelings of hopelessness are important to address with professional support.
+
+**Support Resources:**
+• **988 Suicide & Crisis Lifeline** - Call or text anytime
+• **Crisis Text Line** - Text 741741
+• **NAMI Helpline** - 1-800-950-NAMI
+
+**Professional Mental Health Services:**
+CVMHW offers therapy services with sliding scale fees and insurance acceptance. Contact (440) 294-8068 to schedule with Eric Riesterer, LPC.
+
+**Remember:** These feelings can change with proper support. You don't have to navigate this alone.
+
+Have you been able to talk to a mental health professional about these feelings?`;
+
+      default:
+        return `I'm listening and want to make sure you have the support you need. If you're having thoughts of self-harm, please know that help is available 24/7 through the 988 Suicide & Crisis Lifeline.`;
+    }
+  }, []);
+
+  const handleCrisisMessage = useCallback((userInput: string): MessageType | null => {
+    const crisisLevel = detectCrisisLevel(userInput);
+    
+    if (crisisLevel !== 'none') {
+      const currentTime = Date.now();
       
-      // Store the crisis type for context-aware follow-ups
-      setLastCrisisType(rogerResponse.concernType);
-      
-      // Increment consecutive crisis counter to track escalation
+      // Update crisis tracking
+      setRecentCrisisMessage(userInput);
       setConsecutiveCrisisCount(prev => prev + 1);
-    } else {
-      // Only reset counter if we're not receiving another crisis-related message
-      // This prevents counter reset during persistent crisis situations
-      if (!isCrisisContent(userInput)) {
-        setConsecutiveCrisisCount(0);
-        setLastCrisisType(null);
-      }
-    }
-  };
-  
-  // Helper function to determine if new input is crisis-related
-  const isCrisisContent = (userInput: string): boolean => {
-    const lowerInput = userInput.toLowerCase();
-    
-    // Check for suicide/self-harm indicators
-    const suicidePatterns = /suicid|kill (myself|me)|end (my|this) life|harm (myself|me)|cut (myself|me)|hurt (myself|me)|don'?t want to (live|be alive)|want to die/i;
-    if (suicidePatterns.test(lowerInput)) return true;
-    
-    // Check for eating disorder indicators
-    const eatingDisorderPatterns = /can't stop eating|binge eating|overeating|eating too much|not eating|haven'?t been eating|purge|anorexia|bulimia/i;
-    if (eatingDisorderPatterns.test(lowerInput)) return true;
-    
-    // Check for substance abuse indicators
-    const substancePatterns = /drinking|drunk|alcohol|can't stop drinking|addicted/i;
-    if (substancePatterns.test(lowerInput)) return true;
-    
-    return false;
-  };
-  
-  // Check for deception in crisis messages
-  const checkDeception = (
-    userInput: string, 
-    currentCrisisMessage: RecentCrisisMessage | null,
-    simulateTyping: (response: string, callback: (text: string) => void) => void,
-    setMsgs: React.Dispatch<React.SetStateAction<MessageType[]>>
-  ): boolean => {
-    if (currentCrisisMessage && 
-        (new Date().getTime() - currentCrisisMessage.timestamp.getTime() < 5 * 60 * 1000)) {
-      try {
-        // Simple deception detection without dynamic import
-        const isPotentialDeception = 
-          currentCrisisMessage.concernType === 'suicide' && 
-          (/just kidding|joking|not serious|didn't mean it/i.test(userInput.toLowerCase()));
-        
-        if (isPotentialDeception) {
-          // Generate a deception response
-          const deceptionResponse = 
-            "I take all mentions of suicide or self-harm very seriously. Even if you're feeling better now, " +
-            "I strongly encourage you to speak with a mental health professional. The 988 Suicide & Crisis " +
-            "Lifeline (call or text 988) is available 24/7 to provide support.";
-          
-          // Create Roger's response to the potential deception
-          const rogerResponse = createMessage(deceptionResponse, 'roger', currentCrisisMessage.concernType as any);
-          
-          // Add the response
-          setMsgs(prevMessages => [...prevMessages, rogerResponse]);
-          
-          // Simulate typing
-          simulateTyping(deceptionResponse, (text) => {
-            setMsgs(prevMessages => 
-              prevMessages.map(msg => 
-                msg.id === rogerResponse.id ? { ...msg, text } : msg
-              )
-            );
-          });
-          
-          // Clear the crisis tracking since we've addressed it
-          setRecentCrisisMessage(null);
-          return true;
-        }
-      } catch (error) {
-        console.error("Error in deception detection:", error);
-      }
-    }
-    
-    return false;
-  };
-  
-  // Handle persistent crisis messaging with progressive responses
-  const handlePersistentCrisis = (userInput: string): MessageType | null => {
-    // Check for new crisis content to maintain the crisis context even with different phrasings
-    const isNewCrisisContent = isCrisisContent(userInput);
-    
-    // Update consecutive counter for new crisis content
-    if (isNewCrisisContent && consecutiveCrisisCount === 0) {
-      setConsecutiveCrisisCount(1);
-    }
-    
-    // If this is a follow-up crisis message after we've already responded
-    if ((consecutiveCrisisCount >= 1 && isNewCrisisContent) || consecutiveCrisisCount >= 2) {
-      // Choose appropriate escalated response based on consecutive count and crisis type
-      let escalatedResponse = "";
-      let concernType: ConcernType = 'crisis';
+      lastCrisisTime.current = currentTime;
       
-      // Handle based on previous crisis type for continuity
-      const isSuicideContent = /suicid|kill myself|die|want to die|end my life|no reason to live|don't want to be alive/i.test(userInput.toLowerCase());
-      const isEatingDisorderContent = /can't stop eating|binge eating|overeating|eating too much|not eating|haven't been eating|purge|anorexia|bulimia/i.test(userInput.toLowerCase());
-      const isSubstanceContent = /drinking|drunk|alcohol|can't stop drinking|addicted/i.test(userInput.toLowerCase());
+      // Add pattern to tracking
+      const normalizedInput = userInput.toLowerCase().substring(0, 50);
+      crisisPatterns.current.add(normalizedInput);
       
-      // Prioritize suicide content detection
-      if (isSuicideContent || lastCrisisType === 'suicide' || lastCrisisType === 'crisis') {
-        concernType = 'crisis';
-        
-        if (consecutiveCrisisCount === 1) {
-          // First follow-up - reinforce crisis resources
-          escalatedResponse = "I'm still very concerned about what you're sharing. I want to emphasize how important it is to speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline at 988 now. Would you like me to provide additional resources or support options?";
-        } else if (consecutiveCrisisCount === 2) {
-          // Second follow-up - provide more specific guidance
-          escalatedResponse = "It's clear you're in significant distress right now. Please understand that reaching out to 988 or going to your nearest emergency room is the most important step you can take. The trained professionals there have the expertise to help you through this difficult time. Would it help to talk through what might be making it difficult to reach out?";
-        } else {
-          // Third or more - emphasize immediate action with empathy
-          escalatedResponse = "I hear your pain and I'm deeply concerned for your safety right now. Please call 988 immediately - even if you've hesitated until now. The crisis counselors there understand what you're going through and can provide immediate support. Your life matters, and help is available right now.";
-        }
-      }
-      // Handle eating disorder content
-      else if (isEatingDisorderContent || lastCrisisType === 'eating-disorder') {
-        concernType = 'eating-disorder';
-        
-        if (consecutiveCrisisCount === 1) {
-          escalatedResponse = "I'm still concerned about your eating patterns. The National Eating Disorders Association has professionals who understand what you're going through. Please reach out to their helpline at 1-800-931-2237. Would you be willing to call them today?";
-        } else {
-          escalatedResponse = "Your continued struggle with eating is serious, and professional help is essential. The NEDA helpline at 1-800-931-2237 can connect you with treatment options tailored to your needs. You deserve support during this difficult time.";
-        }
-      }
-      // Handle substance use content
-      else if (isSubstanceContent) {
-        concernType = 'substance-use';
-        
-        if (consecutiveCrisisCount === 1) {
-          escalatedResponse = "I understand your struggle with drinking is serious. The SAMHSA National Helpline at 1-800-662-4357 provides confidential support and can connect you with local resources. They're available 24/7. Would you consider calling them?";
-        } else {
-          escalatedResponse = "Your continued struggle with alcohol is concerning. Please know that recovery is possible with the right support. The SAMHSA helpline at 1-800-662-4357 can help you find treatment options that work for your situation. You don't have to face this alone.";
-        }
-      }
-      // Default crisis response for other scenarios
-      else {
-        if (consecutiveCrisisCount <= 2) {
-          escalatedResponse = "I'm still concerned about what you're sharing. Speaking with a professional who can provide appropriate support would be helpful. The 988 Lifeline (call or text 988) connects you with trained counselors. Would you be willing to reach out to them?";
-        } else {
-          escalatedResponse = "I continue to hear your distress, and I want to emphasize that professional help is available. Please consider calling 988 or visiting your local emergency services where professionals can provide the support you need right now.";
-        }
-      }
+      // Generate appropriate crisis response
+      const crisisResponse = generateCrisisResponse(crisisLevel, userInput);
       
-      // Create crisis response
-      const crisisResponse = createMessage(
-        escalatedResponse,
-        'roger',
-        concernType
-      );
-      
-      // Increment crisis counter again
-      setConsecutiveCrisisCount(prev => prev + 1);
-      
-      return crisisResponse;
+      return createMessage(crisisResponse, 'roger', crisisLevel as any);
     }
     
     return null;
-  };
-  
+  }, [detectCrisisLevel, generateCrisisResponse]);
+
+  const checkDeception = useCallback((followUpMessage: string): boolean => {
+    if (!recentCrisisMessage) return false;
+    
+    const deceptionPatterns = [
+      /just kidding/i,
+      /was just joking/i,
+      /didn'?t mean it/i,
+      /not serious/i,
+      /was testing/i
+    ];
+    
+    const timeSinceLastCrisis = Date.now() - lastCrisisTime.current;
+    const isQuickFollowUp = timeSinceLastCrisis < 60000; // Within 1 minute
+    
+    return isQuickFollowUp && deceptionPatterns.some(pattern => pattern.test(followUpMessage));
+  }, [recentCrisisMessage]);
+
+  const handlePersistentCrisis = useCallback((userInput: string): MessageType | null => {
+    // Handle cases where user continues to express crisis after initial response
+    if (consecutiveCrisisCount >= 2) {
+      const crisisLevel = detectCrisisLevel(userInput);
+      
+      if (crisisLevel !== 'none') {
+        const persistentResponse = `I continue to be very concerned about your safety. You've shared several concerning messages, and I want to make sure you get the immediate help you need.
+
+**Please take action now:**
+• **Call 911** if you're in immediate danger
+• **Call or text 988** for immediate crisis support
+• **Go to your nearest emergency room**
+
+**Professional Support:** CVMHW mental health professionals are trained to help with crisis situations and are required by Ohio law to take appropriate action to ensure your safety.
+
+Your life matters, and there are people trained specifically to help you through this crisis.`;
+
+        return createMessage(persistentResponse, 'roger', 'immediate');
+      }
+    }
+    
+    return null;
+  }, [consecutiveCrisisCount, detectCrisisLevel]);
+
+  // Reset crisis tracking when user shows improvement
+  const resetCrisisTracking = useCallback(() => {
+    setRecentCrisisMessage(null);
+    setConsecutiveCrisisCount(0);
+    crisisPatterns.current.clear();
+  }, []);
+
   return {
     recentCrisisMessage,
+    consecutiveCrisisCount,
     handleCrisisMessage,
     checkDeception,
     handlePersistentCrisis,
-    consecutiveCrisisCount,
-    lastCrisisType
+    resetCrisisTracking,
+    detectCrisisLevel
   };
 };
