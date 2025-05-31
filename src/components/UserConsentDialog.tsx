@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Shield, Heart, Lock, Phone, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertTriangle, Heart, Lock, Phone, ChevronDown, ChevronUp } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -58,7 +58,14 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="relative">
           <DialogTitle className="flex items-center gap-2 text-xl">
-            <Shield className="text-cvmhw-orange fill-cvmhw-orange" size={24} />
+            <img 
+              src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+              alt="CVMHW Logo" 
+              className="w-6 h-6"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
             Important Information About Roger AI
           </DialogTitle>
           <DialogDescription className="text-base">
@@ -98,16 +105,16 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                 </div>
                 <Button
                   onClick={() => window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer')}
-                  className="group relative bg-gradient-to-br from-emerald-400 via-green-500 to-emerald-600 hover:from-emerald-500 hover:via-green-600 hover:to-emerald-700 text-white text-xs px-4 py-2 h-8 transition-all duration-500 shadow-xl hover:shadow-2xl flex items-center gap-2 rounded-xl font-bold border-2 border-emerald-300/40 backdrop-blur-sm overflow-hidden transform hover:scale-105 hover:-translate-y-1"
+                  className="group relative bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 hover:from-blue-500 hover:via-blue-600 hover:to-blue-700 text-white text-xs px-4 py-2 h-8 transition-all duration-500 shadow-xl hover:shadow-2xl flex items-center gap-2 rounded-xl font-bold border-2 border-blue-300/40 backdrop-blur-sm overflow-hidden transform hover:scale-105 hover:-translate-y-1"
                 >
                   {/* Animated shine effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
                   
                   {/* Pulsing background overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-300/20 via-green-400/30 to-emerald-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-300/20 via-blue-400/30 to-blue-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" />
                   
                   {/* Glowing border effect */}
-                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-emerald-400 via-green-500 to-emerald-600 opacity-20 blur-sm group-hover:opacity-40 transition-opacity duration-300" />
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 opacity-20 blur-sm group-hover:opacity-40 transition-opacity duration-300" />
                   
                   <img 
                     src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
@@ -255,7 +262,9 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                     </div>
                     
                     <div className="p-3 bg-white border border-blue-200 rounded-lg">
-                      <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-red-600 bg-clip-text text-transparent mb-2">Local Mobile Crisis Lines</h4>
+                      <h4 className="relative font-semibold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-red-700 animate-pulse drop-shadow-lg">
+                        Local Mobile Crisis Lines
+                      </h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between items-center">
                           <span className="font-medium text-gray-800">Summit County Mobile Crisis</span>
@@ -282,7 +291,9 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                     </div>
 
                     <div className="p-3 bg-white border border-green-200 rounded-lg">
-                      <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-red-600 bg-clip-text text-transparent mb-2">Ohio/National Crisis Support</h4>
+                      <h4 className="relative font-semibold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-red-700 animate-pulse drop-shadow-lg">
+                        Ohio/National Crisis Support
+                      </h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
                           <span className="font-medium text-gray-800">National Suicide Prevention Hotline</span>
@@ -393,7 +404,9 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
             <div className="space-y-4">
               {/* Ohio/National Crisis Support */}
               <div className="p-4 bg-white border border-gray-200 rounded-lg">
-                <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-red-600 bg-clip-text text-transparent mb-3">Ohio/National Crisis Support</h4>
+                <h4 className="relative font-semibold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-red-700 animate-pulse drop-shadow-lg">
+                  Ohio/National Crisis Support
+                </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
                     <span className="font-medium text-gray-800">National Suicide Prevention Hotline</span>
@@ -460,7 +473,9 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
 
               {/* Akron/Canton Crisis Support */}
               <div className="p-4 bg-white border border-blue-200 rounded-lg">
-                <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-red-600 bg-clip-text text-transparent mb-3">Akron/Canton Crisis Support</h4>
+                <h4 className="relative font-semibold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-red-700 animate-pulse drop-shadow-lg">
+                  Akron/Canton Crisis Support
+                </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded">
                     <span className="font-medium text-gray-800">Summit County Mobile Crisis</span>
@@ -502,7 +517,9 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
 
               {/* Ashtabula/Jefferson Crisis Support */}
               <div className="p-4 bg-white border border-green-200 rounded-lg">
-                <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-red-600 bg-clip-text text-transparent mb-3">Ashtabula/Jefferson Crisis Support</h4>
+                <h4 className="relative font-semibold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-red-700 animate-pulse drop-shadow-lg">
+                  Ashtabula/Jefferson Crisis Support
+                </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded">
                     <span className="font-medium text-gray-800">Ashtabula County 24/7 Substance Use Disorder Crisis</span>
@@ -579,7 +596,9 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
 
               {/* Cleveland/Mentor/Chardon Crisis Support */}
               <div className="p-4 bg-white border border-gray-200 rounded-lg">
-                <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-red-600 bg-clip-text text-transparent mb-3">Cleveland/Mentor/Chardon Crisis Support</h4>
+                <h4 className="relative font-semibold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-red-700 animate-pulse drop-shadow-lg">
+                  Cleveland/Mentor/Chardon Crisis Support
+                </h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
                     <span className="font-medium text-gray-800">Cuyahoga County Mobile Crisis (Emergency)</span>
