@@ -68,10 +68,18 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
         </DialogHeader>
         
         <Tabs defaultValue="consent" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="consent">Roger Information</TabsTrigger>
-            <TabsTrigger value="crisis" className="flex items-center gap-2">
-              <AlertTriangle size={16} className="text-red-600" />
+          <TabsList className="grid w-full grid-cols-2 p-1 bg-gray-100">
+            <TabsTrigger 
+              value="consent" 
+              className="bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 text-white hover:from-blue-500 hover:via-blue-600 hover:to-blue-700 data-[state=active]:from-blue-500 data-[state=active]:via-blue-600 data-[state=active]:to-blue-700 data-[state=active]:text-white border-0 shadow-md transition-all duration-300"
+            >
+              Roger Information
+            </TabsTrigger>
+            <TabsTrigger 
+              value="crisis" 
+              className="bg-gradient-to-r from-red-500 via-red-600 to-red-700 text-white hover:from-red-600 hover:via-red-700 hover:to-red-800 data-[state=active]:from-red-600 data-[state=active]:via-red-700 data-[state=active]:to-red-800 data-[state=active]:text-white border-0 shadow-md transition-all duration-300 flex items-center gap-2"
+            >
+              <AlertTriangle size={16} />
               Crisis Resources
             </TabsTrigger>
           </TabsList>
