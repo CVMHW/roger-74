@@ -64,18 +64,18 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
           </DialogTitle>
           <Button
             onClick={() => window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer')}
-            className="absolute -top-2 right-8 bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple hover:from-cvmhw-purple hover:to-cvmhw-pink text-white text-sm px-3 py-1 h-8 transition-all duration-300 shadow-sm hover:shadow-md"
+            className="absolute -top-1 right-6 bg-white hover:bg-gray-50 border-2 border-cvmhw-blue text-cvmhw-blue hover:text-cvmhw-purple text-sm px-4 py-2 h-9 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2 rounded-lg"
           >
             <img 
               src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
               alt="CVMHW" 
-              className="w-4 h-4 mr-1"
+              className="w-5 h-5"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <span className="font-medium">Visit CVMHW.com</span>
-            <ExternalLink size={14} className="ml-1" />
+            <span className="font-semibold">CVMHW.com</span>
+            <ExternalLink size={16} className="ml-0" />
           </Button>
           <DialogDescription className="text-base">
             Before you begin chatting with Roger, please read and acknowledge the following important information.
