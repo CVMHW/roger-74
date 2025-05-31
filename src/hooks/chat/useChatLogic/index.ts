@@ -19,9 +19,7 @@ import { useResponseHooks } from './useResponseHooks';
 import { ChatLogicReturn } from './types';
 
 /**
- * Hook that contains the main chat business logic
- * UNCONDITIONAL RULE: Roger will answer inquiries with pinpoint accuracy
- * UNCONDITIONAL RULE: Roger listens first, then responds, never automatic
+ * Hook that contains the main chat business logic with integrated crisis detection
  */
 export const useChatLogic = (): ChatLogicReturn => {
   // Core state
@@ -34,14 +32,15 @@ export const useChatLogic = (): ChatLogicReturn => {
   // Import response generation hook
   const { isTyping, processUserMessage, simulateTypingResponse } = useRogerianResponse();
   
-  // Import needed hooks for specific functionality
+  // Import location concern hook with geolocation
   const { 
+    locationData,
     activeLocationConcern, 
     handleLocationData, 
     setActiveLocationConcern 
   } = useLocationConcern();
   
-  // Enhanced crisis detection hook with persistent crisis handling
+  // Enhanced crisis detection hook - this is the main crisis detection system
   const { 
     recentCrisisMessage, 
     handleCrisisMessage, 
@@ -75,7 +74,6 @@ export const useChatLogic = (): ChatLogicReturn => {
   const { processingContext, setProcessingContext } = useProcessContext();
   const { isGenericResponse } = useGenericResponseDetection();
   const { validateResponse } = useResponseValidator(rogerResponseHistory, isGenericResponse);
-  // Get crisis detector functionality
   const { checkForCrisisContent } = useCrisisDetector();
   const { createSpecificResponse } = useSpecificResponseGenerator();
 
@@ -89,32 +87,7 @@ export const useChatLogic = (): ChatLogicReturn => {
     getResponseDelay
   );
   
-  // Response processing hooks
-  const { processResponse } = useResponseHooks(
-    processUserMessage,
-    setMessages,
-    handleCrisisMessage,
-    activeLocationConcern,
-    setActiveLocationConcern,
-    simulateTypingResponse,
-    shouldThrottleResponse,
-    getResponseDelay,
-    setProcessingContext,
-    (responseText) => {
-      // Track the response for feedback loop detection
-      trackRogerResponse(responseText);
-      
-      // Enhanced response tracking with generic detection
-      const enhancedResponse = enhanceAndTrackResponse(responseText);
-      
-      // Update regular response history 
-      updateRogerResponseHistory(responseText);
-      
-      return enhancedResponse;
-    }
-  );
-  
-  // Message handling hooks with added crisis persistence handling
+  // Enhanced message handling with PRIORITY crisis detection
   const { isProcessing, setIsProcessing, handleSendMessage } = useMessageHandling(
     updateUserMessageHistory,
     checkFeedbackLoop,
@@ -126,29 +99,37 @@ export const useChatLogic = (): ChatLogicReturn => {
     simulateTypingResponse,
     feedbackLoopDetected,
     setFeedbackLoopDetected,
-    (userInput: string) => {
-      // First check for persistent crisis patterns
+    async (userInput: string) => {
+      console.log("CHAT LOGIC: Processing user input:", userInput);
+      
+      // PRIORITY 1: Check for crisis content FIRST with integrated crisis detection
+      const crisisResponse = await handleCrisisMessage(userInput);
+      
+      if (crisisResponse) {
+        console.log("CHAT LOGIC: Crisis detected, using crisis response");
+        setMessages(prevMessages => [...prevMessages, crisisResponse]);
+        setShowCrisisResources(true);
+        return;
+      }
+      
+      // PRIORITY 2: Check for persistent crisis patterns
       const persistentCrisisResponse = handlePersistentCrisis(userInput);
       
       if (persistentCrisisResponse) {
-        // Add the persistent crisis response
+        console.log("CHAT LOGIC: Persistent crisis detected");
         setMessages(prevMessages => [...prevMessages, persistentCrisisResponse]);
-        
-        // Simulate typing for this response
-        simulateTypingResponse(persistentCrisisResponse.text, (text) => {
-          setMessages(prevMessages => 
-            prevMessages.map(msg => 
-              msg.id === persistentCrisisResponse.id ? { ...msg, text } : msg
-            )
-          );
-          
-          // Clear the processing context once response is complete
-          setProcessingContext(null);
-        });
-      } else {
-        // Process normally if not a persistent crisis
-        processResponse(userInput);
+        setShowCrisisResources(true);
+        return;
       }
+      
+      // PRIORITY 3: Regular processing if no crisis detected
+      console.log("CHAT LOGIC: No crisis detected, processing normally");
+      const response = await processUserMessage(userInput);
+      setMessages(prevMessages => [...prevMessages, response]);
+      
+      // Track response for feedback loop detection
+      trackRogerResponse(response.text);
+      updateRogerResponseHistory(response.text);
     },
     setMessages, 
     setProcessingContext,
@@ -166,6 +147,13 @@ export const useChatLogic = (): ChatLogicReturn => {
       }
     }
   }, [isTyping, isProcessing, processingContext, setProcessingContext]);
+
+  // Log location data when available
+  useEffect(() => {
+    if (locationData) {
+      console.log("CHAT LOGIC: Location data available:", locationData);
+    }
+  }, [locationData]);
   
   return {
     messages,
@@ -178,5 +166,4 @@ export const useChatLogic = (): ChatLogicReturn => {
   };
 };
 
-// Export the default hook
 export default useChatLogic;

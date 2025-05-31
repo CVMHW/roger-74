@@ -1,14 +1,13 @@
 
 /**
  * Enhanced Email Notification Service for Crisis Detection
- * Integrated with EmailJS for real-time crisis alerts
  */
 
 import emailjs from '@emailjs/browser';
 
-// EmailJS Configuration
+// EmailJS Configuration - using your existing setup
 const EMAILJS_SERVICE_ID = 'service_fqqp3ta';
-const EMAILJS_TEMPLATE_ID = 'template_u3w9maq';
+const EMAILJS_TEMPLATE_ID = 'template_u3w9maq';  
 const EMAILJS_PUBLIC_KEY = 'eFkOj3YAK3s86h8hL';
 
 interface CrisisEmailData {
@@ -97,7 +96,7 @@ export const sendCrisisEmailAlert = async (crisisData: CrisisEmailData): Promise
 };
 
 /**
- * Create comprehensive clinical email body
+ * Create comprehensive clinical email body matching your previous format
  */
 const createComprehensiveEmailBody = (crisisData: CrisisEmailData, locationText: string, crisisSpecificInfo: string): string => {
   return `CRISIS DETECTION ALERT - Roger AI
@@ -122,6 +121,13 @@ IMMEDIATE ACTIONS RECOMMENDED:
 - Assess for plan, intent, and means if contact information available
 - Consider emergency services notification if imminent risk indicated
 - Safety planning required for ongoing support
+
+CLEVELAND/CUYAHOGA COUNTY SPECIFIC RESOURCES:
+- Cuyahoga County Mobile Crisis: 1-216-623-6555
+- Cleveland Emily Program (Eating Disorders): 1-888-272-0836
+- Windsor-Laurelwood Hospital: 1-440-953-3000
+- Cleveland Project DAWN: 1-216-387-6290
+- Highland Springs Hospital: 1-216-302-3070
 
 Technical Details:
 - User Agent: ${crisisData.userAgent || 'Unknown browser'}

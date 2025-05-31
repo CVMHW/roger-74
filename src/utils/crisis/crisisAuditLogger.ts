@@ -1,4 +1,3 @@
-
 /**
  * Enhanced Crisis Audit Logger with Comprehensive Clinical Documentation
  * 
@@ -32,7 +31,7 @@ export interface CrisisAuditEntry {
  */
 export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => {
   try {
-    console.log('ENHANCED CRISIS AUDIT: Starting comprehensive crisis logging', entry);
+    console.log('CRISIS AUDIT: Starting comprehensive crisis logging', entry);
     
     // Store in local storage for immediate backup
     const existingLogs = getStoredCrisisLogs();
@@ -41,6 +40,7 @@ export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => 
     console.log('CRISIS AUDIT: Stored locally with enhanced clinical data');
     
     // Send comprehensive email notification
+    console.log('CRISIS AUDIT: Attempting to send email notification');
     const emailSent = await sendCrisisEmailAlert({
       timestamp: entry.timestamp,
       sessionId: entry.sessionId,
@@ -56,9 +56,9 @@ export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => 
     });
     
     if (emailSent) {
-      console.log("ENHANCED CRISIS AUDIT: Email notification sent successfully");
+      console.log("CRISIS AUDIT: Email notification sent successfully");
     } else {
-      console.error("ENHANCED CRISIS AUDIT: Failed to send email notification");
+      console.error("CRISIS AUDIT: Failed to send email notification");
       // Mark as email failed but still store locally
       const failedEntry = { ...entry, emailFailed: true };
       const logs = getStoredCrisisLogs();
@@ -66,7 +66,7 @@ export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => 
       localStorage.setItem('crisis_audit_logs', JSON.stringify(logs));
     }
     
-    console.log('ENHANCED CRISIS AUDIT: Complete clinical documentation processed');
+    console.log('CRISIS AUDIT: Complete clinical documentation processed');
   } catch (error) {
     console.error('CRISIS AUDIT ERROR: Failed to log crisis event', error);
     // Store locally even if email fails

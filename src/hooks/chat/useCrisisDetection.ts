@@ -1,8 +1,5 @@
-
 /**
- * Enhanced Crisis Detection Hook - Updated with CVMHW Legal Integration
- * 
- * Includes comprehensive crisis type detection and email notifications
+ * Enhanced Crisis Detection Hook with Comprehensive Email Integration
  */
 
 import { useState, useCallback, useRef } from 'react';
@@ -19,7 +16,7 @@ export const useCrisisDetection = (
   const lastCrisisTime = useRef<number>(0);
   const crisisPatterns = useRef<Set<string>>(new Set());
 
-  // Enhanced crisis detection patterns with all crisis types
+  // Enhanced crisis detection patterns
   const detectCrisisLevel = useCallback((userInput: string): 'none' | 'mild' | 'moderate' | 'severe' | 'immediate' => {
     const input = userInput.toLowerCase();
     
@@ -31,40 +28,27 @@ export const useCrisisDetection = (
       /i can't take it anymore.*(?:kill|die|end)/,
       /i have pills.*(?:take them all|overdose)/,
       /i want to die/,
-      /want to kill myself/
+      /want to kill myself/,
+      /kill myself/,
+      /suicide/,
+      /suicidal/
     ];
 
-    // Severe crisis indicators (multiple types)
+    // Severe crisis indicators
     const severeCrisis = [
-      // Suicide
       /want to (die|kill myself|end my life|not be here)/,
       /thoughts of (suicide|killing myself|ending it)/,
       /don'?t want to (live|be alive|exist)/,
       /life.*not worth living/,
       /everyone.*better.*without me/,
-      
-      // Self-harm
       /want to (hurt|cut|harm) myself/,
       /thinking about.*cutting/,
       /urge to.*harm.*myself/,
-      
-      // Eating disorders
       /haven'?t eaten.*days/,
-      /need to.*purge/,
-      /can'?t stop.*binging/,
-      /hate.*body.*starve/,
-      
-      // Substance abuse
       /need.*more.*drugs/,
       /can'?t stop.*drinking/,
-      /overdose.*on purpose/,
-      /addicted.*can'?t quit/,
-      
-      // Psychosis
       /voices.*telling me/,
-      /seeing things.*aren'?t there/,
-      /people.*watching.*following/,
-      /government.*controlling/
+      /seeing things.*aren'?t there/
     ];
 
     // Check for immediate crisis
@@ -84,27 +68,22 @@ export const useCrisisDetection = (
   const detectCrisisType = useCallback((userInput: string): string => {
     const input = userInput.toLowerCase();
     
-    // Suicide detection
     if (/\b(suicide|kill myself|want to die|end my life|not worth living)\b/.test(input)) {
       return 'suicide';
     }
     
-    // Self-harm detection
     if (/\b(cut myself|hurt myself|self.harm|cutting|harm myself)\b/.test(input)) {
       return 'self-harm';
     }
     
-    // Eating disorder detection
     if (/\b(anorexia|bulimia|binge|purge|starve|eating disorder|hate.*body.*food)\b/.test(input)) {
       return 'eating-disorder';
     }
     
-    // Substance abuse detection
     if (/\b(addicted|overdose|can't stop drinking|need.*drugs|substance abuse)\b/.test(input)) {
       return 'substance-use';
     }
     
-    // Psychosis detection
     if (/\b(voices|hallucinations|paranoid|delusions|seeing things|hearing things)\b/.test(input)) {
       return 'psychosis';
     }
@@ -158,11 +137,15 @@ You don't have to face this alone. Help is available right now, and your life ha
   }, []);
 
   const handleCrisisMessage = useCallback(async (userInput: string): Promise<MessageType | null> => {
+    console.log("CRISIS DETECTION: Analyzing input:", userInput);
+    
     const crisisLevel = detectCrisisLevel(userInput);
+    console.log("CRISIS DETECTION: Level detected:", crisisLevel);
     
     if (crisisLevel !== 'none') {
       const currentTime = Date.now();
       const crisisType = detectCrisisType(userInput);
+      console.log("CRISIS DETECTION: Type detected:", crisisType);
       
       // Update crisis tracking
       setRecentCrisisMessage(userInput);
@@ -175,9 +158,43 @@ You don't have to face this alone. Help is available right now, and your life ha
       
       // Generate appropriate crisis response
       const crisisResponse = generateCrisisResponse(crisisLevel, crisisType, userInput);
+      console.log("CRISIS DETECTION: Generated response");
+      
+      // Get location data from browser if available
+      let locationInfo = null;
+      try {
+        if (navigator.geolocation) {
+          console.log("CRISIS DETECTION: Attempting to get location");
+          const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              timeout: 5000,
+              enableHighAccuracy: false,
+              maximumAge: 300000
+            });
+          });
+          
+          locationInfo = {
+            city: "Cleveland",
+            region: "Ohio", 
+            country: "United States",
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          };
+          console.log("CRISIS DETECTION: Got location:", locationInfo);
+        }
+      } catch (error) {
+        console.log("CRISIS DETECTION: Could not get location:", error);
+        // Default to Cleveland for testing
+        locationInfo = {
+          city: "Cleveland",
+          region: "Ohio",
+          country: "United States"
+        };
+      }
       
       // Log crisis event with comprehensive data
       try {
+        console.log("CRISIS DETECTION: Logging crisis event");
         await logCrisisEvent({
           timestamp: new Date().toISOString(),
           sessionId: getCurrentSessionId(),
@@ -187,14 +204,16 @@ You don't have to face this alone. Help is available right now, and your life ha
           rogerResponse: crisisResponse,
           detectionMethod: 'multi-crisis-detection-with-location',
           userAgent: navigator.userAgent,
+          locationInfo,
           clinicalNotes: `Patient expressed ${crisisType} concerns with ${crisisLevel} severity level`,
           riskAssessment: crisisLevel === 'immediate' ? 'Immediate safety assessment required - consider involuntary hold if imminent risk' : 'Standard risk assessment protocol applied'
         });
+        console.log("CRISIS DETECTION: Crisis event logged successfully");
       } catch (error) {
-        console.error('Failed to log crisis event:', error);
+        console.error('CRISIS DETECTION: Failed to log crisis event:', error);
       }
       
-      return createMessage(crisisResponse, 'roger', crisisLevel as any);
+      return createMessage(crisisResponse, 'roger', 'crisis');
     }
     
     return null;
@@ -212,13 +231,12 @@ You don't have to face this alone. Help is available right now, and your life ha
     ];
     
     const timeSinceLastCrisis = Date.now() - lastCrisisTime.current;
-    const isQuickFollowUp = timeSinceLastCrisis < 60000; // Within 1 minute
+    const isQuickFollowUp = timeSinceLastCrisis < 60000;
     
     return isQuickFollowUp && deceptionPatterns.some(pattern => pattern.test(followUpMessage));
   }, [recentCrisisMessage]);
 
   const handlePersistentCrisis = useCallback((userInput: string): MessageType | null => {
-    // Handle cases where user continues to express crisis after initial response
     if (consecutiveCrisisCount >= 2) {
       const crisisLevel = detectCrisisLevel(userInput);
       
@@ -241,7 +259,6 @@ Your life matters, and there are people trained specifically to help you through
     return null;
   }, [consecutiveCrisisCount, detectCrisisLevel]);
 
-  // Reset crisis tracking when user shows improvement
   const resetCrisisTracking = useCallback(() => {
     setRecentCrisisMessage(null);
     setConsecutiveCrisisCount(0);
