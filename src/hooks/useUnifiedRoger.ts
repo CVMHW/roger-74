@@ -1,3 +1,4 @@
+
 /**
  * Unified Roger Hook
  * 
@@ -9,6 +10,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { unifiedRogerArchitecture, UnifiedArchitectureContext, UnifiedArchitectureResult } from '../core/UnifiedRogerArchitecture';
 import { MessageType } from '../components/Message';
 import { createMessage } from '../utils/messageUtils';
+import { detectCVMHWServiceInquiry, generateCVMHWResponse, shouldUseCVMHWKnowledge } from '../utils/cvmhw/rogerCVMHWIntegration';
 
 export interface UnifiedRogerHook {
   processMessage: (userInput: string) => Promise<MessageType>;
@@ -47,6 +49,45 @@ export const useUnifiedRoger = (
     
     try {
       console.log(`🎯 UNIFIED ROGER: Processing message "${userInput.substring(0, 50)}..."`);
+      
+      // Check if this is a CVMHW service inquiry first
+      if (shouldUseCVMHWKnowledge(userInput)) {
+        const inquiryType = detectCVMHWServiceInquiry(userInput);
+        if (inquiryType) {
+          console.log(`🏥 CVMHW Knowledge: Detected ${inquiryType} inquiry`);
+          
+          const cvmhwResponse = generateCVMHWResponse(inquiryType, userInput);
+          
+          // Update conversation history
+          const newHistory = [...conversationHistory, userInput, cvmhwResponse];
+          setConversationHistory(newHistory);
+          setMessageCount(prev => prev + 1);
+          
+          // Update session metrics
+          setSessionMetrics(prev => ({
+            totalMessages: prev.totalMessages + 1,
+            averageConfidence: (prev.averageConfidence * prev.totalMessages + 0.9) / (prev.totalMessages + 1),
+            systemsUsed: [...new Set([...prev.systemsUsed, 'cvmhw-knowledge-base'])],
+            totalProcessingTime: prev.totalProcessingTime + 150
+          }));
+          
+          // Create message response
+          const message = createMessage(cvmhwResponse, 'roger', null);
+          
+          // Add metadata
+          message.metadata = {
+            confidence: 0.9,
+            processingTime: 150,
+            systemsEngaged: ['cvmhw-knowledge-base', 'policy-integration'],
+            cvmhwInquiryType: inquiryType,
+            knowledgeSource: 'practice-policies'
+          };
+          
+          console.log(`🏥 CVMHW Knowledge: Response generated for ${inquiryType}`);
+          
+          return message;
+        }
+      }
       
       // Create unified context
       const context: UnifiedArchitectureContext = {

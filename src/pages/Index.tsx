@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -13,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Image, Users, Award, BookOpen, Heart, Shield, Star, Calendar, Info, CreditCard } from 'lucide-react';
+import PatientRightsTab from '../components/PatientRightsTab';
 
 const Index = () => {
   const [showConsentDialog, setShowConsentDialog] = useState(false);
@@ -181,20 +181,26 @@ const Index = () => {
             <CrisisResources forceOpen={false} />
           </div>
           
-          {/* Tabbed Content for Chat and About - Only show if user has consented */}
+          {/* Tabbed Content for Chat, About, and Patient Rights - Only show if user has consented */}
           {hasConsented && (
             <Tabs defaultValue="chat" className="mb-6">
               <TabsList className="w-full mb-2">
-                <TabsTrigger className="w-1/2" value="chat">
+                <TabsTrigger className="w-1/3" value="chat">
                   <div className="flex items-center">
                     <Heart size={18} className="mr-2 text-cvmhw-pink fill-cvmhw-pink" />
                     <span>Chat with Roger</span>
                   </div>
                 </TabsTrigger>
-                <TabsTrigger className="w-1/2" value="about">
+                <TabsTrigger className="w-1/3" value="about">
                   <div className="flex items-center">
                     <Info size={18} className="mr-2 text-cvmhw-blue" />
                     <span>About CVMHW</span>
+                  </div>
+                </TabsTrigger>
+                <TabsTrigger className="w-1/3" value="rights">
+                  <div className="flex items-center">
+                    <Shield size={16} className="mr-2 text-cvmhw-orange" />
+                    <span>Patient Rights</span>
                   </div>
                 </TabsTrigger>
               </TabsList>
@@ -293,6 +299,10 @@ const Index = () => {
                     </div>
                   </CardFooter>
                 </Card>
+              </TabsContent>
+              
+              <TabsContent value="rights" className="focus:outline-none">
+                <PatientRightsTab />
               </TabsContent>
             </Tabs>
           )}
