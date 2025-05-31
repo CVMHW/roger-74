@@ -226,7 +226,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                     </div>
                     
                     <div className="p-3 bg-white border border-blue-200 rounded-lg">
-                      <h4 className="font-semibold text-blue-800 mb-2">Local Mobile Crisis Lines</h4>
+                      <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-red-600 bg-clip-text text-transparent mb-2">Local Mobile Crisis Lines</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between items-center">
                           <span className="font-medium text-gray-800">Summit County Mobile Crisis</span>
@@ -253,7 +253,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                     </div>
 
                     <div className="p-3 bg-white border border-green-200 rounded-lg">
-                      <h4 className="font-semibold text-green-800 mb-2">Ohio/National Crisis Support</h4>
+                      <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-red-600 bg-clip-text text-transparent mb-2">Ohio/National Crisis Support</h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
                           <span className="font-medium text-gray-800">National Suicide Prevention Hotline</span>
@@ -364,7 +364,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
             <div className="space-y-4">
               {/* Ohio/National Crisis Support */}
               <div className="p-4 bg-white border border-gray-200 rounded-lg">
-                <h4 className="font-semibold text-gray-800 mb-3">Ohio/National Crisis Support</h4>
+                <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-red-600 bg-clip-text text-transparent mb-3">Ohio/National Crisis Support</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
                     <span className="font-medium text-gray-800">National Suicide Prevention Hotline</span>
@@ -431,7 +431,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
 
               {/* Akron/Canton Crisis Support */}
               <div className="p-4 bg-white border border-blue-200 rounded-lg">
-                <h4 className="font-semibold text-blue-800 mb-3">Akron/Canton Crisis Support</h4>
+                <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-red-600 bg-clip-text text-transparent mb-3">Akron/Canton Crisis Support</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded">
                     <span className="font-medium text-gray-800">Summit County Mobile Crisis</span>
@@ -473,7 +473,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
 
               {/* Ashtabula/Jefferson Crisis Support */}
               <div className="p-4 bg-white border border-green-200 rounded-lg">
-                <h4 className="font-semibold text-green-800 mb-3">Ashtabula/Jefferson Crisis Support</h4>
+                <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-red-600 bg-clip-text text-transparent mb-3">Ashtabula/Jefferson Crisis Support</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded">
                     <span className="font-medium text-gray-800">Ashtabula County 24/7 Substance Use Disorder Crisis</span>
@@ -550,7 +550,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
 
               {/* Cleveland/Mentor/Chardon Crisis Support */}
               <div className="p-4 bg-white border border-gray-200 rounded-lg">
-                <h4 className="font-semibold text-gray-800 mb-3">Cleveland/Mentor/Chardon Crisis Support</h4>
+                <h4 className="font-semibold bg-gradient-to-r from-purple-600 to-red-600 bg-clip-text text-transparent mb-3">Cleveland/Mentor/Chardon Crisis Support</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
                     <span className="font-medium text-gray-800">Cuyahoga County Mobile Crisis (Emergency)</span>
