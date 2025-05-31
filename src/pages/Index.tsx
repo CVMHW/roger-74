@@ -15,29 +15,25 @@ import { Image, Users, Award, BookOpen, Heart, Shield, Star, Calendar, Info, Cre
 import PatientRightsTab from '../components/PatientRightsTab';
 
 const Index = () => {
-  const [showConsentDialog, setShowConsentDialog] = useState(false);
+  const [showConsentDialog, setShowConsentDialog] = useState(true); // Always start with dialog shown
   const [hasConsented, setHasConsented] = useState(false);
 
-  useEffect(() => {
-    // Check if user has already consented
-    const storedConsent = localStorage.getItem('roger_user_consent');
-    if (storedConsent) {
-      try {
-        const consentData = JSON.parse(storedConsent);
-        // Check if consent is still valid (you might want to add expiration logic)
-        setHasConsented(true);
-      } catch (error) {
-        console.error('Error parsing stored consent:', error);
-        setShowConsentDialog(true);
-      }
-    } else {
-      setShowConsentDialog(true);
-    }
-  }, []);
-
+  // Remove the useEffect that was checking localStorage - we want consent dialog every session
+  
   const handleConsent = () => {
     setHasConsented(true);
     setShowConsentDialog(false);
+    
+    // Still store consent with session timestamp for tracking purposes
+    const consentData = {
+      timestamp: new Date().toISOString(),
+      sessionId: sessionStorage.getItem('roger_session_id') || 'unknown',
+      acknowledgedLimitations: true,
+      acknowledgedEmergency: true,
+      acknowledgedBeta: true,
+      version: '1.0'
+    };
+    localStorage.setItem('roger_user_consent', JSON.stringify(consentData));
   };
 
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -118,7 +114,7 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-cvmhw-light to-white relative">
       <Header />
       
-      {/* User Consent Dialog */}
+      {/* User Consent Dialog - now shows every session */}
       <UserConsentDialog 
         isOpen={showConsentDialog}
         onConsent={handleConsent}
