@@ -64,7 +64,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
           </DialogTitle>
           <Button
             onClick={() => window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer')}
-            className="absolute -top-1 right-6 bg-white hover:bg-gray-50 border-2 border-cvmhw-blue text-cvmhw-blue hover:text-cvmhw-purple text-sm px-4 py-2 h-9 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2 rounded-lg"
+            className="absolute -top-1 right-6 bg-gradient-to-r from-green-400 via-green-500 to-green-600 hover:from-green-500 hover:via-green-600 hover:to-green-700 border-2 border-cvmhw-blue text-cvmhw-blue hover:text-blue-800 text-sm px-4 py-2 h-9 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2 rounded-lg font-semibold"
           >
             <img 
               src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
