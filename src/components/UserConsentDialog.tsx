@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,24 +57,10 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="relative">
-          <DialogTitle className="flex items-center gap-2 text-xl pr-24">
+          <DialogTitle className="flex items-center gap-2 text-xl">
             <Shield className="text-cvmhw-orange fill-cvmhw-orange" size={24} />
             Important Information About Roger AI
           </DialogTitle>
-          <Button
-            onClick={() => window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer')}
-            className="absolute -top-1 right-6 bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs px-2 py-1 h-6 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-1 rounded-md font-medium"
-          >
-            <img 
-              src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
-              alt="CVMHW" 
-              className="w-3 h-3"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-            <span>CVMHW</span>
-          </Button>
           <DialogDescription className="text-base">
             Before you begin chatting with Roger, please read and acknowledge the following important information.
           </DialogDescription>
@@ -101,14 +86,30 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
           <TabsContent value="consent" className="space-y-6 py-4">
             {/* Testing Notice */}
             <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
-              <div className="flex items-start gap-3">
-                <Lock className="text-slate-600 mt-1" size={20} />
-                <div>
-                  <h3 className="font-semibold text-slate-800 mb-2">System Testing Mode</h3>
-                  <p className="text-sm text-slate-700 mb-3">
-                    Roger is currently in testing mode. Access is restricted to authorized personnel only.
-                  </p>
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <Lock className="text-slate-600 mt-1" size={20} />
+                  <div>
+                    <h3 className="font-semibold text-slate-800 mb-2">System Testing Mode</h3>
+                    <p className="text-sm text-slate-700 mb-3">
+                      Roger is currently in testing mode. Access is restricted to authorized personnel only.
+                    </p>
+                  </div>
                 </div>
+                <Button
+                  onClick={() => window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer')}
+                  className="bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs px-2 py-1 h-6 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-1 rounded-md font-medium"
+                >
+                  <img 
+                    src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                    alt="CVMHW" 
+                    className="w-3 h-3"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                  <span>CVMHW</span>
+                </Button>
               </div>
             </div>
 
