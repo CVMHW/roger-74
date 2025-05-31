@@ -1,13 +1,14 @@
+
 /**
  * Enhanced Crisis Detection Hook - Updated with CVMHW Legal Integration
  * 
- * Includes awareness of CVMHW mandated reporting requirements
+ * Includes comprehensive crisis type detection and email notifications
  */
 
 import { useState, useCallback, useRef } from 'react';
 import { MessageType } from '../../components/Message';
 import { createMessage } from '../../utils/messageUtils';
-import { shouldUseCVMHWKnowledge, generateCVMHWResponse } from '../../utils/cvmhw/rogerCVMHWIntegration';
+import { logCrisisEvent, getCurrentSessionId } from '../../utils/crisis/crisisAuditLogger';
 
 export const useCrisisDetection = (
   simulateTypingResponse: (text: string, onComplete: (text: string) => void) => void,
@@ -18,37 +19,52 @@ export const useCrisisDetection = (
   const lastCrisisTime = useRef<number>(0);
   const crisisPatterns = useRef<Set<string>>(new Set());
 
-  // Enhanced crisis detection patterns
+  // Enhanced crisis detection patterns with all crisis types
   const detectCrisisLevel = useCallback((userInput: string): 'none' | 'mild' | 'moderate' | 'severe' | 'immediate' => {
     const input = userInput.toLowerCase();
     
-    // Immediate crisis indicators
+    // Immediate crisis indicators (suicide)
     const immediateCrisis = [
       /i am going to (kill myself|end my life|commit suicide)/,
       /i have a plan to (die|kill myself|end it)/,
       /i'm going to hurt myself (today|tonight|now)/,
       /i can't take it anymore.*(?:kill|die|end)/,
-      /i have pills.*(?:take them all|overdose)/
+      /i have pills.*(?:take them all|overdose)/,
+      /i want to die/,
+      /want to kill myself/
     ];
 
-    // Severe crisis indicators  
+    // Severe crisis indicators (multiple types)
     const severeCrisis = [
+      // Suicide
       /want to (die|kill myself|end my life|not be here)/,
       /thoughts of (suicide|killing myself|ending it)/,
       /don'?t want to (live|be alive|exist)/,
       /life.*not worth living/,
       /everyone.*better.*without me/,
-      /thinking about.*ending.*all/
-    ];
-
-    // Moderate crisis indicators
-    const moderateCrisis = [
-      /can'?t go on/,
-      /feel.*hopeless/,
-      /nothing.*matters/,
-      /what'?s the point/,
-      /tired of.*living/,
-      /wish.*never.*born/
+      
+      // Self-harm
+      /want to (hurt|cut|harm) myself/,
+      /thinking about.*cutting/,
+      /urge to.*harm.*myself/,
+      
+      // Eating disorders
+      /haven'?t eaten.*days/,
+      /need to.*purge/,
+      /can'?t stop.*binging/,
+      /hate.*body.*starve/,
+      
+      // Substance abuse
+      /need.*more.*drugs/,
+      /can'?t stop.*drinking/,
+      /overdose.*on purpose/,
+      /addicted.*can'?t quit/,
+      
+      // Psychosis
+      /voices.*telling me/,
+      /seeing things.*aren'?t there/,
+      /people.*watching.*following/,
+      /government.*controlling/
     ];
 
     // Check for immediate crisis
@@ -61,17 +77,42 @@ export const useCrisisDetection = (
       return 'severe';
     }
 
-    // Check for moderate crisis
-    if (moderateCrisis.some(pattern => pattern.test(input))) {
-      return 'moderate';
-    }
-
     return 'none';
   }, []);
 
-  const generateCrisisResponse = useCallback((crisisLevel: string, userInput: string): string => {
-    const currentTime = Date.now();
+  // Detect specific crisis type
+  const detectCrisisType = useCallback((userInput: string): string => {
+    const input = userInput.toLowerCase();
     
+    // Suicide detection
+    if (/\b(suicide|kill myself|want to die|end my life|not worth living)\b/.test(input)) {
+      return 'suicide';
+    }
+    
+    // Self-harm detection
+    if (/\b(cut myself|hurt myself|self.harm|cutting|harm myself)\b/.test(input)) {
+      return 'self-harm';
+    }
+    
+    // Eating disorder detection
+    if (/\b(anorexia|bulimia|binge|purge|starve|eating disorder|hate.*body.*food)\b/.test(input)) {
+      return 'eating-disorder';
+    }
+    
+    // Substance abuse detection
+    if (/\b(addicted|overdose|can't stop drinking|need.*drugs|substance abuse)\b/.test(input)) {
+      return 'substance-use';
+    }
+    
+    // Psychosis detection
+    if (/\b(voices|hallucinations|paranoid|delusions|seeing things|hearing things)\b/.test(input)) {
+      return 'psychosis';
+    }
+    
+    return 'general-crisis';
+  }, []);
+
+  const generateCrisisResponse = useCallback((crisisLevel: string, crisisType: string, userInput: string): string => {
     switch (crisisLevel) {
       case 'immediate':
         return `🚨 **This sounds extremely serious, and I'm very concerned about your safety.** 
@@ -87,45 +128,41 @@ You don't have to face this alone. Help is available right now, and your life ha
 **Important:** Roger provides peer support only. For professional mental health services, CVMHW offers therapy with Eric Riesterer, LPC, under supervision of Wendy Nathan, LPCC-S. As mandated reporters, they are required by Ohio law to report imminent safety concerns to appropriate authorities.`;
 
       case 'severe':
-        return `I'm very concerned about what you're sharing. These feelings are serious, and it's important to get professional help right away.
-
-**Immediate Resources:**
-• **988 Suicide & Crisis Lifeline** (call or text) - 24/7 support
-• **Crisis Text Line** - Text 741741
-• **National Alliance on Mental Illness** - 1-800-950-NAMI
-
-**Local Professional Support:**
-CVMHW provides professional mental health counseling with Eric Riesterer, LPC, supervised by Wendy Nathan, LPCC-S. They accept most major insurance and offer sliding scale fees. Contact: (440) 294-8068.
-
-**Important:** As mandated reporters under Ohio law, mental health professionals must report imminent safety threats to protect you and ensure you get appropriate help.
-
-Would it be possible for you to reach out to one of these resources today?`;
-
-      case 'moderate':
-        return `I hear that you're going through a really difficult time, and I'm concerned about you. These feelings of hopelessness are important to address with professional support.
-
-**Support Resources:**
-• **988 Suicide & Crisis Lifeline** - Call or text anytime
-• **Crisis Text Line** - Text 741741
-• **NAMI Helpline** - 1-800-950-NAMI
-
-**Professional Mental Health Services:**
-CVMHW offers therapy services with sliding scale fees and insurance acceptance. Contact (440) 294-8068 to schedule with Eric Riesterer, LPC.
-
-**Remember:** These feelings can change with proper support. You don't have to navigate this alone.
-
-Have you been able to talk to a mental health professional about these feelings?`;
+        return getSpecificCrisisResponse(crisisType, userInput);
 
       default:
         return `I'm listening and want to make sure you have the support you need. If you're having thoughts of self-harm, please know that help is available 24/7 through the 988 Suicide & Crisis Lifeline.`;
     }
   }, []);
 
-  const handleCrisisMessage = useCallback((userInput: string): MessageType | null => {
+  const getSpecificCrisisResponse = useCallback((crisisType: string, userInput: string): string => {
+    switch (crisisType) {
+      case 'suicide':
+        return `I'm very concerned about what you're sharing regarding thoughts of suicide. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room. Would you like me to provide additional resources? To help connect you with the most appropriate local crisis services and support, could you let me know what area or city you're in right now?`;
+      
+      case 'eating-disorder':
+        return `I'm concerned about what you're sharing regarding your eating patterns. This sounds serious, and it's important that you speak with a healthcare professional. The National Eating Disorders Association (NEDA) helpline (1-800-931-2237) can provide immediate support and resources. I'd like to help you find specialized eating disorder treatment resources in your area. What city or region are you located in?`;
+      
+      case 'substance-use':
+        return `I'm concerned about what you're sharing regarding substance use. This situation sounds serious, and it's important that you speak with a healthcare professional. The SAMHSA National Helpline (1-800-662-4357) provides free, confidential, 24/7 treatment referral and information. To provide you with the best local treatment options and support services, could you share what area you're in?`;
+      
+      case 'self-harm':
+        return `I'm very concerned about what you're sharing regarding self-harm. Your safety is important, and it would be beneficial to speak with a crisis professional who can provide immediate support. The 988 Suicide & Crisis Lifeline (call or text 988) is available 24/7. I want to help you find immediate local support services. What city or area are you currently in?`;
+      
+      case 'psychosis':
+        return `I'm concerned about what you're describing. These experiences sound distressing, and it's important to speak with a mental health professional who can help. The 988 Suicide & Crisis Lifeline (call or text 988) is available 24/7 for immediate support. Would it be possible for you to reach out to them or go to your nearest emergency room today?`;
+      
+      default:
+        return `I'm concerned about what you're sharing. This sounds like a difficult situation that would benefit from immediate professional support. The 988 Suicide & Crisis Lifeline (call or text 988) can provide guidance and resources. Would it be helpful if I shared some additional support options?`;
+    }
+  }, []);
+
+  const handleCrisisMessage = useCallback(async (userInput: string): Promise<MessageType | null> => {
     const crisisLevel = detectCrisisLevel(userInput);
     
     if (crisisLevel !== 'none') {
       const currentTime = Date.now();
+      const crisisType = detectCrisisType(userInput);
       
       // Update crisis tracking
       setRecentCrisisMessage(userInput);
@@ -137,13 +174,31 @@ Have you been able to talk to a mental health professional about these feelings?
       crisisPatterns.current.add(normalizedInput);
       
       // Generate appropriate crisis response
-      const crisisResponse = generateCrisisResponse(crisisLevel, userInput);
+      const crisisResponse = generateCrisisResponse(crisisLevel, crisisType, userInput);
+      
+      // Log crisis event with comprehensive data
+      try {
+        await logCrisisEvent({
+          timestamp: new Date().toISOString(),
+          sessionId: getCurrentSessionId(),
+          userInput,
+          crisisType,
+          severity: crisisLevel === 'immediate' ? 'critical' : crisisLevel === 'severe' ? 'high' : 'medium',
+          rogerResponse: crisisResponse,
+          detectionMethod: 'multi-crisis-detection-with-location',
+          userAgent: navigator.userAgent,
+          clinicalNotes: `Patient expressed ${crisisType} concerns with ${crisisLevel} severity level`,
+          riskAssessment: crisisLevel === 'immediate' ? 'Immediate safety assessment required - consider involuntary hold if imminent risk' : 'Standard risk assessment protocol applied'
+        });
+      } catch (error) {
+        console.error('Failed to log crisis event:', error);
+      }
       
       return createMessage(crisisResponse, 'roger', crisisLevel as any);
     }
     
     return null;
-  }, [detectCrisisLevel, generateCrisisResponse]);
+  }, [detectCrisisLevel, detectCrisisType, generateCrisisResponse]);
 
   const checkDeception = useCallback((followUpMessage: string): boolean => {
     if (!recentCrisisMessage) return false;

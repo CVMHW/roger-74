@@ -28,30 +28,65 @@ export const useLocationConcern = () => {
             const { latitude, longitude } = position.coords;
             console.log("LOCATION: Got coordinates:", { latitude, longitude });
             
-            // Use a CORS-friendly geolocation service
+            // Use multiple geocoding services for better reliability
+            let locationResult = null;
+            
+            // Try BigDataCloud first (no API key required)
             try {
-              const response = await fetch(`https://geocode.xyz/${latitude},${longitude}?json=1`);
-              const data = await response.json();
+              const bdcResponse = await fetch(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+              );
               
-              setLocationData({
-                city: data.city || data.standard?.city,
-                region: data.state || data.standard?.prov,
-                country: data.country || data.standard?.countryname,
-                latitude,
-                longitude
-              });
-              console.log("LOCATION: Set location data:", data);
-            } catch (geocodeError) {
-              console.log("LOCATION: Geocoding failed, using fallback location");
-              // Fallback to Cleveland, OH for testing
-              setLocationData({
+              if (bdcResponse.ok) {
+                const bdcData = await bdcResponse.json();
+                locationResult = {
+                  city: bdcData.city || bdcData.locality,
+                  region: bdcData.principalSubdivision,
+                  country: bdcData.countryName,
+                  latitude,
+                  longitude
+                };
+                console.log("LOCATION: BigDataCloud geocoding successful:", locationResult);
+              }
+            } catch (bdcError) {
+              console.log("LOCATION: BigDataCloud failed, trying alternative");
+            }
+            
+            // If BigDataCloud failed, try ipapi.co as fallback
+            if (!locationResult) {
+              try {
+                const ipapiResponse = await fetch('https://ipapi.co/json/');
+                if (ipapiResponse.ok) {
+                  const ipapiData = await ipapiResponse.json();
+                  locationResult = {
+                    city: ipapiData.city,
+                    region: ipapiData.region,
+                    country: ipapiData.country_name,
+                    latitude,
+                    longitude
+                  };
+                  console.log("LOCATION: ipapi.co geocoding successful:", locationResult);
+                }
+              } catch (ipapiError) {
+                console.log("LOCATION: ipapi.co also failed");
+              }
+            }
+            
+            // If both services failed, use Cleveland as fallback for testing
+            if (!locationResult) {
+              console.log("LOCATION: All geocoding services failed, using Cleveland fallback");
+              locationResult = {
                 city: "Cleveland",
                 region: "Ohio",
                 country: "United States",
                 latitude,
                 longitude
-              });
+              };
             }
+            
+            setLocationData(locationResult);
+            console.log("LOCATION: Final location data set:", locationResult);
+            
           } catch (error) {
             console.error("Error processing location data:", error);
             // Fallback to Cleveland, OH for testing

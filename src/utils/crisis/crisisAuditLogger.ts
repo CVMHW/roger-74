@@ -1,3 +1,4 @@
+
 /**
  * Enhanced Crisis Audit Logger with Comprehensive Clinical Documentation
  * 
@@ -44,7 +45,7 @@ export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => 
     localStorage.setItem('crisis_audit_logs', JSON.stringify(existingLogs));
     console.log('CRISIS AUDIT: Stored locally with enhanced clinical data');
     
-    // Send comprehensive email notification
+    // Send comprehensive email notification matching your format
     await sendEnhancedCrisisEmailNotification(enhancedEntry);
     
     console.log('ENHANCED CRISIS AUDIT: Complete clinical documentation sent');
@@ -107,11 +108,7 @@ const enhanceEntryWithClinicalData = async (entry: CrisisAuditEntry): Promise<Cr
 const sendEnhancedCrisisEmailNotification = async (entry: CrisisAuditEntry): Promise<void> => {
   console.log('ENHANCED CRISIS EMAIL: Preparing comprehensive clinical notification');
   
-  // Get crisis-specific clinical information
-  const crisisSpecificInfo = getCrisisSpecificInformation(entry.crisisType, entry.severity);
-  const locationSpecificResources = getLocationSpecificClinicalResources(entry.locationInfo);
-  
-  // Send email notification with comprehensive crisis type information
+  // Send email notification with comprehensive crisis information
   const emailSent = await sendCrisisEmailAlert({
     timestamp: entry.timestamp,
     sessionId: entry.sessionId,
@@ -120,7 +117,7 @@ const sendEnhancedCrisisEmailNotification = async (entry: CrisisAuditEntry): Pro
     userMessage: entry.userInput,
     rogerResponse: entry.rogerResponse,
     locationInfo: entry.locationInfo,
-    clinicalNotes: `${entry.clinicalNotes || 'Standard crisis presentation'}\n\n${crisisSpecificInfo}\n\n${locationSpecificResources}`,
+    clinicalNotes: entry.clinicalNotes,
     riskAssessment: entry.riskAssessment,
     userAgent: entry.userAgent,
     detectionMethod: entry.detectionMethod
@@ -174,10 +171,6 @@ User Message: "${entry.userInput}"
 
 Roger's Response: "${entry.rogerResponse}"
 
-${getCrisisSpecificClinicalGuidance(entry.crisisType, entry.severity)}
-
-${getLocationSpecificClinicalResources(entry.locationInfo)}
-
 === TECHNICAL DATA ===
 User Agent: ${entry.userAgent || 'Unknown'}
 IP Context: ${entry.ipAddress || 'Client-side'}
@@ -206,136 +199,6 @@ const getEnhancedCrisisSubjectLine = (entry: CrisisAuditEntry): string => {
   const duration = entry.sessionDuration ? ` (${entry.sessionDuration})` : '';
   
   return `${emoji} ${priority}: ${entry.crisisType.toUpperCase()} CRISIS${location}${duration} - Clinical Review Required`;
-};
-
-/**
- * Get crisis-specific clinical guidance
- */
-const getCrisisSpecificClinicalGuidance = (crisisType: string, severity: string): string => {
-  switch (crisisType.toLowerCase()) {
-    case 'suicide':
-    case 'suicide-direct-detection':
-    case 'suicidal-ideation':
-      return `
-=== SUICIDE RISK CLINICAL GUIDANCE ===
-IMMEDIATE ASSESSMENT PRIORITIES:
-• Suicidal ideation, plan, intent, and means (SPIM assessment)
-• Protective factors vs. risk factors balance
-• Previous suicide attempts or self-harm history
-• Current substance use or intoxication
-• Access to lethal means
-• Social support and safety planning capability
-
-RECOMMENDED CLINICAL ACTIONS:
-• Immediate safety assessment via phone contact
-• Consider involuntary commitment if imminent risk
-• Collaborate with emergency services if patient has specific plan/means
-• Document detailed risk assessment and safety plan
-• Arrange for increased contact frequency`;
-
-    case 'eating-disorder':
-    case 'eating_disorder':
-    case 'anorexia':
-    case 'bulimia':
-    case 'binge-eating':
-      return `
-=== EATING DISORDER CRISIS CLINICAL GUIDANCE ===
-MEDICAL STABILITY ASSESSMENT NEEDED:
-• Vital signs and cardiac status
-• Electrolyte imbalance risk
-• BMI and nutritional status
-• Purging behaviors and frequency
-• Exercise compulsion patterns
-
-RECOMMENDED CLINICAL ACTIONS:
-• Medical evaluation for physical complications
-• Assessment of eating behaviors, restriction patterns
-• Evaluation for concurrent mood disorders
-• Consider referral to specialized ED treatment (Emily Program)
-• Monitor for suicidal ideation (high comorbidity rate)`;
-
-    case 'substance-use':
-    case 'substance_abuse':
-    case 'addiction':
-    case 'overdose':
-      return `
-=== SUBSTANCE ABUSE CRISIS CLINICAL GUIDANCE ===
-IMMEDIATE MEDICAL ASSESSMENT:
-• Current intoxication level
-• Withdrawal risk assessment
-• Overdose potential
-• Drug interactions
-• Medical complications
-
-RECOMMENDED CLINICAL ACTIONS:
-• Medical evaluation for withdrawal management
-• Assessment of substance use patterns and triggers
-• Evaluation for dual diagnosis conditions
-• Consider referral to addiction specialist or detox
-• Safety planning around substance access`;
-
-    case 'self-harm':
-    case 'cutting':
-    case 'self-injury':
-      return `
-=== SELF-HARM CRISIS CLINICAL GUIDANCE ===
-IMMEDIATE ASSESSMENT:
-• Methods and frequency of self-harm
-• Medical attention needed for current injuries
-• Escalation patterns
-• Suicidal intent vs. non-suicidal self-injury
-• Access to self-harm tools
-
-RECOMMENDED CLINICAL ACTIONS:
-• Medical evaluation for wound care if needed
-• Assessment of underlying emotional regulation issues
-• Safety planning and coping strategies development
-• Consider increased session frequency
-• Monitor for escalation to suicidal behavior`;
-
-    case 'psychosis':
-    case 'hallucinations':
-    case 'delusions':
-      return `
-=== PSYCHOSIS CRISIS CLINICAL GUIDANCE ===
-IMMEDIATE ASSESSMENT:
-• Reality testing and insight level
-• Command hallucinations or violent delusions
-• Medication compliance
-• Risk to self or others
-• Substance-induced vs. primary psychosis
-
-RECOMMENDED CLINICAL ACTIONS:
-• Psychiatric evaluation for medication adjustment
-• Assessment of safety risks from psychotic symptoms
-• Coordination with psychiatrist or emergency services
-• Environmental safety assessment
-• Consider higher level of care if severe`;
-
-    default:
-      return `
-=== GENERAL CRISIS CLINICAL GUIDANCE ===
-• Comprehensive risk assessment required
-• Evaluate for underlying mental health conditions
-• Assess social support and coping resources
-• Document detailed clinical presentation
-• Provide appropriate level of care recommendations`;
-  }
-};
-
-/**
- * Get location-specific clinical resources
- */
-const getLocationSpecificClinicalResources = (locationInfo: LocationInfo | null): string => {
-  if (!locationInfo) {
-    return `
-=== CLINICAL RESOURCE RECOMMENDATIONS ===
-• Location unknown - recommend obtaining patient location for targeted referrals
-• Default to statewide Ohio crisis resources until location confirmed
-• Consider transportation barriers when making referrals`;
-  }
-  
-  return getLocationSpecificResources(locationInfo);
 };
 
 /**
@@ -391,135 +254,5 @@ const getEmergencyEmoji = (crisisType: string): string => {
       return '🚑';
     default:
       return '🚨';
-  }
-};
-
-/**
- * Get location-specific resources for email
- */
-const getLocationSpecificResources = (locationInfo: LocationInfo): string => {
-  if (!locationInfo) {
-    return `
-LOCATION-SPECIFIC RESOURCES:
-- Location unknown - recommend asking patient for location to provide targeted local resources
-- Default to national resources until location is determined`;
-  }
-  
-  const region = locationInfo.region?.toLowerCase();
-  const city = locationInfo.city?.toLowerCase();
-  
-  if (region?.includes('ashtabula')) {
-    return `
-ASHTABULA COUNTY SPECIFIC RESOURCES:
-- Ashtabula County 24/7 Crisis Hotline: 1-800-577-7849
-- Rock Creek Glenbeigh Hospital (Substance Abuse): 1-877-487-5126
-- Ashtabula County Regional Medical Center: 1-440-997-2262
-- Frontline Services: 1-440-381-8347
-- Ashtabula Rape Crisis Center: 1-440-354-7364`;
-  }
-  
-  if (region?.includes('cuyahoga') || city?.includes('cleveland')) {
-    return `
-CLEVELAND/CUYAHOGA COUNTY SPECIFIC RESOURCES:
-- Cuyahoga County Mobile Crisis: 1-216-623-6555
-- Cleveland Emily Program (Eating Disorders): 1-888-272-0836
-- Windsor-Laurelwood Hospital: 1-440-953-3000
-- Cleveland Project DAWN: 1-216-387-6290
-- Highland Springs Hospital: 1-216-302-3070`;
-  }
-  
-  if (region?.includes('summit') || city?.includes('akron')) {
-    return `
-AKRON/SUMMIT COUNTY SPECIFIC RESOURCES:
-- Summit County Mobile Crisis: 330-434-9144
-- Akron Children's Crisis Line: 330-543-7472
-- Homeless Hotline Summit County: 330-615-0577`;
-  }
-  
-  if (region?.includes('stark') || city?.includes('canton')) {
-    return `
-CANTON/STARK COUNTY SPECIFIC RESOURCES:
-- Stark County Mobile Crisis: 330-452-6000
-- Homeless Hotline Stark County: 330-452-4363`;
-  }
-  
-  if (region?.includes('lake') || city?.includes('mentor')) {
-    return `
-LAKE COUNTY SPECIFIC RESOURCES:
-- Lake County Frontline Services: 1-440-381-8347
-- Chardon Ravenwood Hospital: 1-440-285-4552`;
-  }
-  
-  return `
-OHIO STATEWIDE RESOURCES:
-- Patient location: ${getLocationDescription(locationInfo)}
-- Recommend contacting local crisis services in patient's area
-- Default to statewide Ohio resources`;
-};
-
-/**
- * Get crisis-specific information for email body
- */
-const getCrisisSpecificInformation = (crisisType: string, severity: string): string => {
-  switch (crisisType.toLowerCase()) {
-    case 'suicide':
-    case 'suicide-direct-detection':
-    case 'suicidal-ideation':
-      return `
-SUICIDE RISK ASSESSMENT:
-- This patient has expressed suicidal ideation
-- Immediate safety assessment required
-- Consider involuntary hold if imminent risk
-- Contact emergency services if patient has plan/means`;
-
-    case 'eating-disorder':
-    case 'eating_disorder':
-    case 'anorexia':
-    case 'bulimia':
-    case 'binge-eating':
-      return `
-EATING DISORDER CRISIS:
-- Patient showing concerning eating behaviors
-- Risk of medical complications
-- May require specialized treatment
-- High comorbidity with mood disorders`;
-
-    case 'substance-use':
-    case 'substance_abuse':
-    case 'addiction':
-    case 'overdose':
-      return `
-SUBSTANCE ABUSE CRISIS:
-- Patient showing concerning substance use patterns
-- Risk of overdose or withdrawal complications
-- May require detoxification support
-- Assess for dual diagnosis conditions`;
-
-    case 'self-harm':
-    case 'cutting':
-    case 'self-injury':
-      return `
-SELF-HARM CRISIS:
-- Patient has expressed self-harm intentions/behaviors
-- Risk of escalation to suicidal behavior
-- Immediate safety planning needed
-- May require medical attention for injuries`;
-
-    case 'psychosis':
-    case 'hallucinations':
-    case 'delusions':
-      return `
-PSYCHOSIS CRISIS:
-- Patient showing signs of psychotic symptoms
-- Risk assessment for reality testing
-- May require psychiatric evaluation
-- Consider medication compliance issues`;
-
-    default:
-      return `
-GENERAL CRISIS SITUATION:
-- Patient requires immediate attention
-- Assess for safety risks
-- Provide appropriate intervention`;
   }
 };
