@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,17 +99,17 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                 </div>
                 <Button
                   onClick={() => window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer')}
-                  className="bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs px-2 py-1 h-6 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-1 rounded-md font-medium"
+                  className="bg-gradient-to-br from-emerald-400 via-emerald-500 to-green-600 hover:from-emerald-500 hover:via-emerald-600 hover:to-green-700 text-white text-xs px-3 py-1.5 h-7 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-1.5 rounded-lg font-semibold border border-emerald-300/30 backdrop-blur-sm relative overflow-hidden before:absolute before:inset-0 before:bg-gradient-to-r before:from-white/20 before:via-white/10 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300"
                 >
                   <img 
                     src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
                     alt="CVMHW" 
-                    className="w-3 h-3"
+                    className="w-3.5 h-3.5 drop-shadow-sm"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
                   />
-                  <span>CVMHW</span>
+                  <span className="relative z-10">CVMHW</span>
                 </Button>
               </div>
             </div>
