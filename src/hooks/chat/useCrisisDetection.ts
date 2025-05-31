@@ -4,16 +4,11 @@
  * COMPREHENSIVE CLINICAL DOCUMENTATION FOR ALL SEVERITY LEVELS
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { MessageType } from '../../components/Message';
 import { createMessage } from '../../utils/messageUtils';
 import { logCrisisEvent, getCurrentSessionId } from '../../utils/crisis/crisisAuditLogger';
-import emailjs from '@emailjs/browser';
-
-// Direct EmailJS Configuration - VERIFIED WORKING
-const EMAILJS_SERVICE_ID = 'service_fqqp3ta';
-const EMAILJS_TEMPLATE_ID = 'template_u3w9maq';  
-const EMAILJS_PUBLIC_KEY = 'eFkOj3YAK3s86h8hL';
+import { sendCrisisEmailAlert } from '../../utils/crisis/emailNotificationService';
 
 export const useCrisisDetection = (
   simulateTypingResponse: (text: string, onComplete: (text: string) => void) => void,
@@ -24,23 +19,13 @@ export const useCrisisDetection = (
   const [refusalHistory, setRefusalHistory] = useState<string[]>([]);
   const lastCrisisTime = useRef<number>(0);
 
-  // Initialize EmailJS immediately
-  useState(() => {
-    try {
-      emailjs.init(EMAILJS_PUBLIC_KEY);
-      console.log("🚨 CRISIS DETECTION: EmailJS initialized successfully");
-    } catch (error) {
-      console.error("🚨 CRISIS DETECTION: EmailJS initialization failed:", error);
-    }
-  });
-
   // COMPREHENSIVE crisis detection for ALL severity levels
   const detectCrisisLevel = useCallback((userInput: string): 'low' | 'medium' | 'high' | 'critical' => {
     const input = userInput.toLowerCase();
     
     // CRITICAL level indicators - IMMEDIATE INTERVENTION
     const criticalIndicators = [
-      /\b(kill myself|suicide|suicidal|want to die|end my life|take my life)\b/i,
+      /\b(kill myself|suicide|suicidal|want to die|end my life|take my life|wana kill|gonna kill)\b/i,
       /\b(better off dead|no reason to live|can't go on|end it all)\b/i,
       /\b(plan to die|going to die|ready to die|tonight|today)\b/i,
       /\b(overdose|pills to die|hanging myself|jumping off|gun|razor)\b/i
@@ -90,7 +75,7 @@ export const useCrisisDetection = (
   const detectCrisisType = useCallback((userInput: string): string => {
     const input = userInput.toLowerCase();
     
-    if (/\b(suicide|kill myself|want to die|end my life|take my life)\b/.test(input)) {
+    if (/\b(suicide|kill myself|want to die|end my life|take my life|wana kill|gonna kill)\b/.test(input)) {
       return 'suicide';
     }
     if (/\b(cut myself|hurt myself|self.harm|cutting|harm myself)\b/.test(input)) {
@@ -112,7 +97,7 @@ export const useCrisisDetection = (
       city: "Cleveland",
       region: "Ohio", 
       country: "United States",
-      coordinates: { latitude: 0, longitude: 0 }
+      coordinates: { latitude: 41.45226, longitude: -81.70314 }
     };
     
     try {
@@ -138,148 +123,6 @@ export const useCrisisDetection = (
     
     return locationInfo;
   }, []);
-
-  // GUARANTEED EMAIL SENDING FUNCTION
-  const sendCrisisEmailAlert = useCallback(async (crisisData: any): Promise<boolean> => {
-    try {
-      console.log(`🚨 CRISIS EMAIL: SENDING EMAIL for ${crisisData.severity.toUpperCase()} severity level`);
-      
-      // Force re-initialize EmailJS
-      emailjs.init(EMAILJS_PUBLIC_KEY);
-      
-      // Create comprehensive clinical email body
-      const emailBody = `🚨 ENHANCED CRISIS DETECTION ALERT - Roger AI Clinical Documentation 🚨
-
-=== IMMEDIATE CLINICAL ASSESSMENT ===
-Timestamp: ${crisisData.timestamp}
-Session ID: ${crisisData.sessionId}
-Crisis Type: ${crisisData.crisisType}
-Severity Level: ${crisisData.severity.toUpperCase()}
-Risk Assessment: ${crisisData.riskAssessment}
-
-=== SESSION CONTEXT ===
-Session Duration: ${crisisData.sessionDuration || 'Unknown'}
-Total Messages: ${consecutiveCrisisCount}
-Patient Location: ${crisisData.locationInfo?.city}, ${crisisData.locationInfo?.region}
-Detection Method: ${crisisData.detectionMethod}
-
-=== CLINICAL NOTES ===
-${crisisData.clinicalNotes}
-
-=== PATIENT PRESENTATION ===
-User Message: "${crisisData.userMessage}"
-
-Roger's Response: "${crisisData.rogerResponse}"
-
-=== REFUSAL HISTORY ===
-${refusalHistory.length > 0 ? refusalHistory.join('\n') : 'No documented refusals in this session'}
-
-=== ROGER'S APPROACH ===
-Roger maintained appropriate peer support boundaries and provided:
-• Crisis acknowledgment and validation
-• Specific, appropriate resource referrals
-• Location-aware local resource recommendations
-• Gentle persistence without pressure when resources were declined
-• Ongoing supportive presence within scope limitations
-
-=== SUICIDE RISK CLINICAL GUIDANCE ===
-IMMEDIATE ASSESSMENT PRIORITIES:
-• Suicidal ideation, plan, intent, and means (SPIM assessment)
-• Protective factors vs. risk factors balance
-• Previous suicide attempts or self-harm history
-• Current substance use or intoxication
-• Access to lethal means
-• Social support and safety planning capability
-
-RECOMMENDED CLINICAL ACTIONS:
-• Immediate safety assessment via phone contact
-• Consider involuntary commitment if imminent risk
-• Collaborate with emergency services if patient has specific plan/means
-• Document detailed risk assessment and safety plan
-• Arrange for increased contact frequency
-
-ROGER'S PEER SUPPORT ROLE:
-• Appropriately maintained supportive presence
-• Did not attempt clinical safety planning
-• Referred to appropriate licensed professional resources
-• Documented patient responses to resource referrals
-
-=== CLEVELAND/CUYAHOGA COUNTY SPECIFIC RESOURCES ===
-• Cuyahoga County Mobile Crisis: 1-216-623-6555
-• Cleveland Emily Program (Eating Disorders): 1-888-272-0836  
-• Windsor-Laurelwood Hospital: 1-440-953-3000
-• Highland Springs Hospital: 1-216-302-3070
-
-=== TECHNICAL DATA ===
-User Agent: ${crisisData.userAgent}
-Location Data: ${JSON.stringify(crisisData.locationInfo, null, 2)}
-
-=== ROGER'S PEER SUPPORT LIMITATIONS ===
-• Roger appropriately identified as peer support, not clinical provider
-• Did not attempt clinical safety planning
-• Maintained supportive listening within appropriate scope
-• Documented all resource referrals and patient responses
-
-===================================================
-IMMEDIATE ACTION REQUIRED - LICENSED CLINICAL REVIEW
-===================================================
-
-This automated alert requires immediate clinical assessment.
-
----
-Roger AI Enhanced Crisis Detection & Clinical Documentation System
-Cuyahoga Valley Mindful Health and Wellness
-Generated: ${new Date().toISOString()}`;
-
-      // Prepare template parameters for EmailJS
-      const templateParams = {
-        to_email: 'ericmriesterer@gmail.com',
-        from_name: 'Roger AI Crisis Detection',
-        subject: `🚨 CRISIS ALERT - ${crisisData.severity.toUpperCase()} - ${crisisData.crisisType}`,
-        message: emailBody,
-        name: 'Roger AI Crisis Detection System',
-        email: 'crisis@cvmhw.com'
-      };
-
-      console.log("🚨 CRISIS EMAIL: Sending with template params:", templateParams);
-
-      // Send the email with retry logic
-      let attempts = 0;
-      const maxAttempts = 3;
-      
-      while (attempts < maxAttempts) {
-        try {
-          const response = await emailjs.send(
-            EMAILJS_SERVICE_ID,
-            EMAILJS_TEMPLATE_ID,
-            templateParams,
-            EMAILJS_PUBLIC_KEY
-          );
-
-          console.log(`✅ CRISIS EMAIL: SUCCESS - Email sent for ${crisisData.severity.toUpperCase()} level:`, response);
-          
-          if (response.status === 200 || response.text === 'OK') {
-            console.log("✅ CRISIS EMAIL: Confirmed successful delivery");
-            return true;
-          }
-        } catch (error) {
-          attempts++;
-          console.error(`❌ CRISIS EMAIL: Attempt ${attempts} failed:`, error);
-          
-          if (attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
-          }
-        }
-      }
-      
-      console.error("❌ CRISIS EMAIL: All attempts failed");
-      return false;
-
-    } catch (error) {
-      console.error("❌ CRISIS EMAIL: FAILED to send email:", error);
-      return false;
-    }
-  }, [consecutiveCrisisCount, refusalHistory]);
 
   // Generate appropriate crisis response based on severity
   const generateCrisisResponse = useCallback((crisisType: string, severity: string, userInput: string): string => {
@@ -324,7 +167,33 @@ How long have you been feeling this way?`;
     return `Thank you for sharing that with me. It sounds like you're dealing with some challenges. Would you like to talk more about what's been going on?`;
   }, []);
 
-  // MAIN CRISIS HANDLER - This handles ALL severity levels
+  // Generate risk assessment
+  const generateRiskAssessment = (severity: string, userInput: string): string => {
+    if (severity === 'critical') {
+      return 'CRITICAL RISK - IMMEDIATE intervention required - Emergency services may be needed';
+    }
+    if (severity === 'high') {
+      return 'HIGH RISK - Professional assessment required within 24 hours';
+    }
+    if (severity === 'medium') {
+      return 'MODERATE RISK - Professional follow-up recommended within 72 hours';
+    }
+    return 'LOW RISK - Monitoring recommended';
+  };
+
+  // Calculate session duration
+  const calculateSessionDuration = (): string => {
+    const sessionStart = sessionStorage.getItem('session_start_time');
+    if (sessionStart) {
+      const duration = Date.now() - parseInt(sessionStart);
+      const minutes = Math.floor(duration / 60000);
+      const seconds = Math.floor((duration % 60000) / 1000);
+      return `${minutes}m ${seconds}s`;
+    }
+    return 'Unknown';
+  };
+
+  // MAIN CRISIS HANDLER - This handles ALL severity levels and SENDS EMAILS
   const handleCrisisMessage = useCallback(async (userInput: string): Promise<MessageType | null> => {
     console.log("🚨 CRISIS DETECTION: Analyzing input for crisis content:", userInput);
     
@@ -368,7 +237,7 @@ How long have you been feeling this way?`;
       
       console.log("🚨 CRISIS EMAIL: Sending crisis alert with data:", crisisData);
       
-      // Send email immediately
+      // Send email immediately - THIS IS THE CRITICAL FIX
       try {
         const emailSent = await sendCrisisEmailAlert(crisisData);
         
@@ -407,33 +276,7 @@ How long have you been feeling this way?`;
     }
 
     return null;
-  }, [detectCrisisLevel, detectCrisisType, generateCrisisResponse, consecutiveCrisisCount, getLocationData, sendCrisisEmailAlert]);
-
-  // Generate risk assessment
-  const generateRiskAssessment = (severity: string, userInput: string): string => {
-    if (severity === 'critical') {
-      return 'CRITICAL RISK - IMMEDIATE intervention required - Emergency services may be needed';
-    }
-    if (severity === 'high') {
-      return 'HIGH RISK - Professional assessment required within 24 hours';
-    }
-    if (severity === 'medium') {
-      return 'MODERATE RISK - Professional follow-up recommended within 72 hours';
-    }
-    return 'LOW RISK - Monitoring recommended';
-  };
-
-  // Calculate session duration
-  const calculateSessionDuration = (): string => {
-    const sessionStart = sessionStorage.getItem('session_start_time');
-    if (sessionStart) {
-      const duration = Date.now() - parseInt(sessionStart);
-      const minutes = Math.floor(duration / 60000);
-      const seconds = Math.floor((duration % 60000) / 1000);
-      return `${minutes}m ${seconds}s`;
-    }
-    return 'Unknown';
-  };
+  }, [detectCrisisLevel, detectCrisisType, generateCrisisResponse, consecutiveCrisisCount, getLocationData]);
 
   // Handle deception detection
   const checkDeception = useCallback((followUpMessage: string): boolean => {

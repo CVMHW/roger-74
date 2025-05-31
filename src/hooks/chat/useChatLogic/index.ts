@@ -106,16 +106,34 @@ export const useChatLogic = (): ChatLogicReturn => {
       // ABSOLUTE PRIORITY 1: Check for ANY crisis content FIRST
       console.log("🚨 CHAT LOGIC: PRIORITY 1 - Checking for crisis content");
       
-      // Direct crisis keyword detection for immediate response
-      const hasCrisisKeywords = /\b(kill myself|suicide|suicidal|want to die|end my life|hurt myself|harm myself|can't go on|better off dead|cut myself|overdose|depression|anxious|struggling|overwhelmed|sad|hopeless|worthless)\b/i.test(userInput);
+      // CRITICAL: Direct crisis detection with IMMEDIATE email sending
+      const hasCrisisKeywords = /\b(kill myself|suicide|suicidal|want to die|end my life|hurt myself|harm myself|can't go on|better off dead|cut myself|overdose|depression|anxious|struggling|overwhelmed|sad|hopeless|worthless|wana kill|gonna kill)\b/i.test(userInput);
       
       if (hasCrisisKeywords) {
         console.log("🚨 CHAT LOGIC: CRISIS KEYWORDS DETECTED - Calling handleCrisisMessage");
-        const crisisResponse = await handleCrisisMessage(userInput);
         
-        if (crisisResponse) {
-          console.log("🚨 CHAT LOGIC: CRISIS RESPONSE GENERATED - Adding to messages and showing resources");
-          setMessages(prevMessages => [...prevMessages, crisisResponse]);
+        try {
+          const crisisResponse = await handleCrisisMessage(userInput);
+          
+          if (crisisResponse) {
+            console.log("🚨 CHAT LOGIC: CRISIS RESPONSE GENERATED - Adding to messages and showing resources");
+            setMessages(prevMessages => [...prevMessages, crisisResponse]);
+            setShowCrisisResources(true);
+            return;
+          }
+        } catch (error) {
+          console.error("🚨 CHAT LOGIC: ERROR in crisis handling:", error);
+          
+          // Fallback crisis response
+          const fallbackCrisisResponse = {
+            id: Date.now().toString(),
+            text: "🚨 I'm very concerned about what you're sharing. Your safety is the most important thing right now. Please call 911 if you're in immediate danger, or call/text 988 for the Suicide & Crisis Lifeline. For local support, Cuyahoga County Mobile Crisis is available at 1-216-623-6555.",
+            sender: 'roger' as const,
+            timestamp: new Date(),
+            messageType: 'crisis' as const
+          };
+          
+          setMessages(prevMessages => [...prevMessages, fallbackCrisisResponse]);
           setShowCrisisResources(true);
           return;
         }
