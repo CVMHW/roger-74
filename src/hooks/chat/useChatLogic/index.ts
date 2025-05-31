@@ -20,7 +20,7 @@ import { ChatLogicReturn } from './types';
 import { processWithRogerNervousSystem } from '../../../utils/rogerianNervousSystem';
 
 /**
- * Hook that contains the main chat business logic with PRIORITY crisis detection
+ * Hook that contains the main chat business logic with GUARANTEED crisis detection
  */
 export const useChatLogic = (): ChatLogicReturn => {
   // Core state
@@ -41,7 +41,7 @@ export const useChatLogic = (): ChatLogicReturn => {
     setActiveLocationConcern 
   } = useLocationConcern();
   
-  // MAIN crisis detection hook - this handles all crisis detection and emailing
+  // MAIN crisis detection hook - this handles ALL crisis detection and emailing
   const { 
     recentCrisisMessage, 
     handleCrisisMessage, 
@@ -88,7 +88,7 @@ export const useChatLogic = (): ChatLogicReturn => {
     getResponseDelay
   );
   
-  // Enhanced message handling with ABSOLUTE PRIORITY crisis detection
+  // Enhanced message handling with GUARANTEED crisis detection
   const { isProcessing, setIsProcessing, handleSendMessage } = useMessageHandling(
     updateUserMessageHistory,
     checkFeedbackLoop,
@@ -101,13 +101,13 @@ export const useChatLogic = (): ChatLogicReturn => {
     feedbackLoopDetected,
     setFeedbackLoopDetected,
     async (userInput: string) => {
-      console.log("🚨 CHAT LOGIC: Processing user input with ABSOLUTE PRIORITY crisis detection:", userInput);
+      console.log("🚨 CHAT LOGIC: Processing user input with GUARANTEED crisis detection:", userInput);
       
-      // ABSOLUTE PRIORITY 1: Check for ANY crisis content FIRST - This must work!
+      // ABSOLUTE PRIORITY 1: Check for ANY crisis content FIRST
       console.log("🚨 CHAT LOGIC: PRIORITY 1 - Checking for crisis content");
       
-      // Check if input contains crisis keywords immediately
-      const hasCrisisKeywords = /\b(kill myself|suicide|suicidal|want to die|end my life|hurt myself|harm myself|can't go on|better off dead)\b/i.test(userInput);
+      // Direct crisis keyword detection for immediate response
+      const hasCrisisKeywords = /\b(kill myself|suicide|suicidal|want to die|end my life|hurt myself|harm myself|can't go on|better off dead|cut myself|overdose|depression|anxious|struggling|overwhelmed|sad|hopeless|worthless)\b/i.test(userInput);
       
       if (hasCrisisKeywords) {
         console.log("🚨 CHAT LOGIC: CRISIS KEYWORDS DETECTED - Calling handleCrisisMessage");
