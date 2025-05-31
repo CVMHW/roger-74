@@ -20,8 +20,7 @@ import { ChatLogicReturn } from './types';
 import { processWithRogerNervousSystem } from '../../../utils/rogerianNervousSystem';
 
 /**
- * Hook that contains the main chat business logic with integrated crisis detection
- * NOW WITH FULL NERVOUS SYSTEM INTEGRATION
+ * Hook that contains the main chat business logic with PRIORITY crisis detection
  */
 export const useChatLogic = (): ChatLogicReturn => {
   // Core state
@@ -42,7 +41,7 @@ export const useChatLogic = (): ChatLogicReturn => {
     setActiveLocationConcern 
   } = useLocationConcern();
   
-  // Enhanced crisis detection hook - this is the main crisis detection system
+  // MAIN crisis detection hook - this handles all crisis detection and emailing
   const { 
     recentCrisisMessage, 
     handleCrisisMessage, 
@@ -89,7 +88,7 @@ export const useChatLogic = (): ChatLogicReturn => {
     getResponseDelay
   );
   
-  // Enhanced message handling with PRIORITY crisis detection AND NERVOUS SYSTEM INTEGRATION
+  // Enhanced message handling with ABSOLUTE PRIORITY crisis detection
   const { isProcessing, setIsProcessing, handleSendMessage } = useMessageHandling(
     updateUserMessageHistory,
     checkFeedbackLoop,
@@ -102,19 +101,21 @@ export const useChatLogic = (): ChatLogicReturn => {
     feedbackLoopDetected,
     setFeedbackLoopDetected,
     async (userInput: string) => {
-      console.log("CHAT LOGIC: Processing user input with FULL NERVOUS SYSTEM:", userInput);
+      console.log("🚨 CHAT LOGIC: Processing user input with ABSOLUTE PRIORITY crisis detection:", userInput);
       
-      // PRIORITY 1: Check for crisis content FIRST with integrated crisis detection
+      // ABSOLUTE PRIORITY 1: Check for ANY crisis content FIRST
+      console.log("🚨 CHAT LOGIC: PRIORITY 1 - Checking for crisis content");
       const crisisResponse = await handleCrisisMessage(userInput);
       
       if (crisisResponse) {
-        console.log("CHAT LOGIC: Crisis detected, using crisis response");
+        console.log("🚨 CHAT LOGIC: CRISIS DETECTED - Using crisis response and showing resources");
         setMessages(prevMessages => [...prevMessages, crisisResponse]);
         setShowCrisisResources(true);
         return;
       }
       
       // PRIORITY 2: Check for persistent crisis patterns
+      console.log("CHAT LOGIC: PRIORITY 2 - Checking for persistent crisis");
       const persistentCrisisResponse = handlePersistentCrisis(userInput);
       
       if (persistentCrisisResponse) {
@@ -124,14 +125,14 @@ export const useChatLogic = (): ChatLogicReturn => {
         return;
       }
       
-      // PRIORITY 3: Process through FULL NERVOUS SYSTEM with RAG and memory integration
-      console.log("CHAT LOGIC: No crisis detected, processing through Roger's Nervous System");
+      // PRIORITY 3: Regular processing with nervous system
+      console.log("CHAT LOGIC: PRIORITY 3 - No crisis detected, processing normally");
       
       try {
         // Get the base response first
         const baseResponse = await processUserMessage(userInput);
         
-        // Process through Roger's complete nervous system with RAG and memory
+        // Process through Roger's nervous system
         const enhancedResponseText = await processWithRogerNervousSystem(
           baseResponse.text,
           userInput,
@@ -154,7 +155,7 @@ export const useChatLogic = (): ChatLogicReturn => {
         updateRogerResponseHistory(enhancedResponse.text);
         
       } catch (error) {
-        console.error("CHAT LOGIC: Error in nervous system processing:", error);
+        console.error("CHAT LOGIC: Error in processing:", error);
         
         // Fallback to regular processing
         const response = await processUserMessage(userInput);

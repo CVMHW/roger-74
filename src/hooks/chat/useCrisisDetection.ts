@@ -18,76 +18,78 @@ export const useCrisisDetection = (
   const lastCrisisTime = useRef<number>(0);
   const crisisPatterns = useRef<Set<string>>(new Set());
 
-  // ALL levels now trigger email notifications - no more "none" filtering
+  // Enhanced crisis detection that catches ALL concerning content
   const detectCrisisLevel = useCallback((userInput: string): 'low' | 'medium' | 'high' | 'critical' => {
     const input = userInput.toLowerCase();
     
-    // Critical level indicators
+    // Critical level indicators - IMMEDIATE CRISIS
     const criticalIndicators = [
-      /i am going to (kill myself|end my life|commit suicide)/,
-      /i have a plan to (die|kill myself|end it)/,
-      /i'm going to hurt myself (today|tonight|now)/,
-      /i have pills.*(?:take them all|overdose)/,
-      /kill myself|suicide|suicidal/,
-      /want to die/,
-      /end my life/,
-      /better off dead/
+      /\b(kill myself|suicide|suicidal|want to die|end my life|take my life)\b/i,
+      /\b(better off dead|no reason to live|can't go on|end it all)\b/i,
+      /\b(plan to die|going to die|ready to die)\b/i,
+      /\b(overdose|pills to die|hanging myself|jumping off)\b/i
     ];
 
-    // High level indicators
+    // High level indicators - SERIOUS CONCERN
     const highIndicators = [
-      /want to (hurt|cut|harm) myself/,
-      /thinking about.*cutting/,
-      /urge to.*harm.*myself/,
-      /can't take it anymore/,
-      /don'?t want to (live|be alive|exist)/,
-      /life.*not worth living/,
-      /everyone.*better.*without me/
+      /\b(hurt myself|harm myself|cut myself|cutting)\b/i,
+      /\b(don't want to live|life isn't worth|hopeless|worthless)\b/i,
+      /\b(can't take it anymore|breaking down|falling apart)\b/i,
+      /\b(thoughts of death|thinking about dying)\b/i
     ];
 
-    // Medium level indicators
+    // Medium level indicators - ELEVATED CONCERN  
     const mediumIndicators = [
-      /haven'?t eaten.*days/,
-      /need.*more.*drugs/,
-      /can'?t stop.*drinking/,
-      /voices.*telling me/,
-      /seeing things.*aren'?t there/,
-      /hopeless|worthless|empty|numb/,
-      /thoughts of death/,
-      /feeling terrible|awful|horrible/
+      /\b(overwhelmed|can't cope|struggling badly)\b/i,
+      /\b(severely depressed|deeply sad|empty inside)\b/i,
+      /\b(everything is falling apart|nothing matters)\b/i,
+      /\b(no hope|no future|no point)\b/i
     ];
 
-    // Low level indicators
+    // Low level indicators - CONCERN
     const lowIndicators = [
-      /struggling|difficult|hard time/,
-      /overwhelmed|stressed/,
-      /sad|down|depressed/,
-      /anxious|worried/,
-      /can't cope/
+      /\b(sad|down|depressed|anxious|worried|stressed)\b/i,
+      /\b(difficult time|hard time|struggling)\b/i,
+      /\b(feeling terrible|feeling awful|feeling bad)\b/i
     ];
 
-    // Check in order of severity
-    if (criticalIndicators.some(pattern => pattern.test(input))) {
-      return 'critical';
+    // Check in order of severity - ANY match triggers crisis response
+    for (const pattern of criticalIndicators) {
+      if (pattern.test(input)) {
+        console.log("CRISIS DETECTION: CRITICAL level detected");
+        return 'critical';
+      }
     }
-    if (highIndicators.some(pattern => pattern.test(input))) {
-      return 'high';
+    
+    for (const pattern of highIndicators) {
+      if (pattern.test(input)) {
+        console.log("CRISIS DETECTION: HIGH level detected");
+        return 'high';
+      }
     }
-    if (mediumIndicators.some(pattern => pattern.test(input))) {
-      return 'medium';
+    
+    for (const pattern of mediumIndicators) {
+      if (pattern.test(input)) {
+        console.log("CRISIS DETECTION: MEDIUM level detected");
+        return 'medium';
+      }
     }
-    if (lowIndicators.some(pattern => pattern.test(input))) {
-      return 'low';
+    
+    for (const pattern of lowIndicators) {
+      if (pattern.test(input)) {
+        console.log("CRISIS DETECTION: LOW level detected");
+        return 'low';
+      }
     }
 
-    return 'low'; // Default to low for any concerning content
+    return 'low'; // Default for safety
   }, []);
 
   // Detect specific crisis type
   const detectCrisisType = useCallback((userInput: string): string => {
     const input = userInput.toLowerCase();
     
-    if (/\b(suicide|kill myself|want to die|end my life|not worth living)\b/.test(input)) {
+    if (/\b(suicide|kill myself|want to die|end my life|take my life)\b/.test(input)) {
       return 'suicide';
     }
     
@@ -95,138 +97,131 @@ export const useCrisisDetection = (
       return 'self-harm';
     }
     
-    if (/\b(anorexia|bulimia|binge|purge|starve|eating disorder|hate.*body.*food)\b/.test(input)) {
+    if (/\b(anorexia|bulimia|binge|purge|starve|eating disorder)\b/.test(input)) {
       return 'eating-disorder';
     }
     
-    if (/\b(addicted|overdose|can't stop drinking|need.*drugs|substance abuse)\b/.test(input)) {
+    if (/\b(addicted|overdose|can't stop drinking|need.*drugs)\b/.test(input)) {
       return 'substance-use';
     }
     
-    if (/\b(voices|hallucinations|paranoid|delusions|seeing things|hearing things)\b/.test(input)) {
+    if (/\b(voices|hallucinations|paranoid|delusions)\b/.test(input)) {
       return 'psychosis';
     }
     
-    return 'general-crisis'; // Default crisis type
+    return 'general-crisis';
   }, []);
 
   const generateCrisisResponse = useCallback((crisisType: string, severity: string, userInput: string, locationInfo: any): string => {
-    // Generate severity-appropriate responses with location-specific referrals
-    switch (severity) {
-      case 'critical':
-        let response = `🚨 **This sounds extremely serious, and I'm very concerned about your safety.** **Please take immediate action:** • **Call 911** if you're in immediate danger • **Call or text 988** for the Suicide & Crisis Lifeline (24/7) • **Go to your nearest emergency room** right away • **Call a trusted friend or family member** to stay with you`;
-        
-        if (locationInfo && (locationInfo.region === 'Ohio' || locationInfo.city === 'Cleveland')) {
-          response += ` • **Cuyahoga County Mobile Crisis: 1-216-623-6555** (immediate local support)`;
-          if (crisisType === 'eating-disorder') {
-            response += ` • **Cleveland Emily Program: 1-888-272-0836** (eating disorder crisis support)`;
-          }
-        }
-        
-        response += ` You don't have to face this alone. Help is available right now, and your life has value.`;
-        return response;
+    console.log(`CRISIS RESPONSE: Generating for ${crisisType} at ${severity} level`);
+    
+    // Base response for all levels
+    let response = "I'm very concerned about what you're sharing";
+    
+    if (severity === 'critical') {
+      response = `🚨 **This sounds extremely serious, and I'm very concerned about your safety.**
 
-      case 'high':
-        let highResponse = `I'm very concerned about what you're sharing. This sounds serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room.`;
-        
-        if (locationInfo && (locationInfo.region === 'Ohio' || locationInfo.city === 'Cleveland')) {
-          highResponse += ` For immediate local support in your area, Cuyahoga County Mobile Crisis is available at 1-216-623-6555.`;
-        }
-        
-        return highResponse;
-
-      case 'medium':
-        let mediumResponse = `I'm concerned about what you're sharing. It sounds like you're going through a really difficult time. While I want to support you, it's important that you also have access to professional crisis support. The 988 Suicide & Crisis Lifeline is available 24/7 if you need someone to talk to immediately.`;
-        
-        if (locationInfo && (locationInfo.region === 'Ohio' || locationInfo.city === 'Cleveland')) {
-          mediumResponse += ` For local support, you can also reach Cuyahoga County Mobile Crisis at 1-216-623-6555.`;
-        }
-        
-        return mediumResponse;
-
-      case 'low':
-        return `I hear that you're struggling right now. That takes courage to share. While I'm here to support you, it's important to know that professional help is always available. The 988 Suicide & Crisis Lifeline is there 24/7 if you need someone to talk to. You don't have to go through this alone.`;
-
-      default:
-        return `I want to make sure you have access to professional support. The 988 Suicide & Crisis Lifeline is available 24/7 for immediate help.`;
+**Please take immediate action:**
+• **Call 911** if you're in immediate danger
+• **Call or text 988** for the Suicide & Crisis Lifeline (24/7)  
+• **Go to your nearest emergency room** right away
+• **Call a trusted friend or family member** to stay with you`;
+    } else if (severity === 'high') {
+      response = "I'm very concerned about what you're sharing. This sounds serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room.";
+    } else {
+      response = "I'm concerned about what you're sharing. It sounds like you're going through a really difficult time. While I want to support you, it's important that you also have access to professional crisis support. The 988 Suicide & Crisis Lifeline is available 24/7 if you need someone to talk to immediately.";
     }
+    
+    // Add Cleveland/Ohio specific resources
+    if (locationInfo && (locationInfo.region === 'Ohio' || locationInfo.city === 'Cleveland')) {
+      response += `
+
+For immediate local support in your area, Cuyahoga County Mobile Crisis is available at 1-216-623-6555.`;
+      
+      if (crisisType === 'eating-disorder') {
+        response += `
+
+**Cleveland Emily Program: 1-888-272-0836** (eating disorder crisis support)`;
+      }
+    }
+    
+    response += `
+
+You don't have to face this alone. Help is available right now, and your life has value.`;
+    
+    return response;
   }, []);
 
+  // MAIN CRISIS HANDLER - This is called from chat logic
   const handleCrisisMessage = useCallback(async (userInput: string): Promise<MessageType | null> => {
-    console.log("CRISIS DETECTION: Analyzing input for ALL severity levels:", userInput);
+    console.log("CRISIS DETECTION: Analyzing input for crisis content:", userInput);
     
+    // Check if this contains ANY crisis indicators
     const crisisLevel = detectCrisisLevel(userInput);
-    console.log("CRISIS DETECTION: Level detected:", crisisLevel);
-    
-    // ALL levels now get crisis handling and email notifications
-    const currentTime = Date.now();
     const crisisType = detectCrisisType(userInput);
-    console.log("CRISIS DETECTION: Type detected:", crisisType);
+    
+    console.log(`CRISIS DETECTION: Level=${crisisLevel}, Type=${crisisType}`);
+    
+    // ALL levels trigger crisis handling now
+    const currentTime = Date.now();
     
     // Update crisis tracking
     setRecentCrisisMessage(userInput);
     setConsecutiveCrisisCount(prev => prev + 1);
     lastCrisisTime.current = currentTime;
     
-    // Add pattern to tracking
-    const normalizedInput = userInput.toLowerCase().substring(0, 50);
-    crisisPatterns.current.add(normalizedInput);
+    // Get location data - default to Cleveland for testing
+    let locationInfo = {
+      city: "Cleveland",
+      region: "Ohio", 
+      country: "United States"
+    };
     
-    // Get location data from browser if available
-    let locationInfo = null;
+    // Try to get actual location if available
     try {
       if (navigator.geolocation) {
-        console.log("CRISIS DETECTION: Attempting to get location");
         const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            timeout: 5000,
-            enableHighAccuracy: false,
-            maximumAge: 300000
-          });
+          navigator.geolocation.getCurrentPosition(
+            resolve, 
+            reject, 
+            { timeout: 3000, enableHighAccuracy: false }
+          );
         });
         
         locationInfo = {
-          city: "Cleveland",
-          region: "Ohio", 
-          country: "United States",
+          ...locationInfo,
           latitude: position.coords.latitude,
           longitude: position.coords.longitude
         };
-        console.log("CRISIS DETECTION: Got location:", locationInfo);
+        console.log("CRISIS DETECTION: Got geolocation:", locationInfo);
       }
     } catch (error) {
-      console.log("CRISIS DETECTION: Could not get location:", error);
-      // Default to Cleveland for testing
-      locationInfo = {
-        city: "Cleveland",
-        region: "Ohio",
-        country: "United States"
-      };
+      console.log("CRISIS DETECTION: Using default Cleveland location");
     }
     
-    // Generate appropriate crisis response with severity and location awareness
+    // Generate crisis response
     const crisisResponse = generateCrisisResponse(crisisType, crisisLevel, userInput, locationInfo);
-    console.log("CRISIS DETECTION: Generated response");
+    console.log("CRISIS DETECTION: Generated response, now logging crisis event");
     
-    // Log crisis event with comprehensive data - ALL LEVELS GET LOGGED AND EMAILED
+    // CRITICAL: Log crisis event - THIS TRIGGERS EMAIL
     try {
-      console.log("CRISIS DETECTION: Logging crisis event for level:", crisisLevel);
       await logCrisisEvent({
         timestamp: new Date().toISOString(),
         sessionId: getCurrentSessionId(),
         userInput,
         crisisType,
-        severity: crisisLevel, // Use actual detected level
+        severity: crisisLevel,
         rogerResponse: crisisResponse,
-        detectionMethod: 'comprehensive-multi-level-crisis-detection-with-location',
+        detectionMethod: 'comprehensive-crisis-detection-all-levels',
         userAgent: navigator.userAgent,
+        ipAddress: 'client-side',
         locationInfo,
-        clinicalNotes: `Patient expressed ${crisisType} concerns at ${crisisLevel} severity level - professional review required`,
+        clinicalNotes: `Patient expressed ${crisisType} concerns at ${crisisLevel} severity level - IMMEDIATE PROFESSIONAL REVIEW REQUIRED`,
         riskAssessment: generateRiskAssessment(crisisLevel, userInput),
         sessionDuration: calculateSessionDuration(),
         messageCount: consecutiveCrisisCount
       });
-      console.log("CRISIS DETECTION: Crisis event logged and emailed successfully");
+      console.log("CRISIS DETECTION: Crisis event logged and email sent successfully");
     } catch (error) {
       console.error('CRISIS DETECTION: Failed to log crisis event:', error);
     }
@@ -234,19 +229,19 @@ export const useCrisisDetection = (
     return createMessage(crisisResponse, 'roger', 'crisis');
   }, [detectCrisisLevel, detectCrisisType, generateCrisisResponse, consecutiveCrisisCount]);
 
-  // Generate risk assessment based on severity
+  // Generate risk assessment
   const generateRiskAssessment = (severity: string, userInput: string): string => {
     switch (severity) {
       case 'critical':
-        return 'CRITICAL RISK - Immediate intervention required - consider involuntary hold if imminent risk';
+        return 'CRITICAL RISK - IMMEDIATE intervention required - Emergency services may be needed';
       case 'high':
-        return 'HIGH RISK - Urgent professional assessment needed - close monitoring required';
+        return 'HIGH RISK - URGENT professional assessment needed - Same day intervention required';
       case 'medium':
-        return 'MODERATE RISK - Professional evaluation recommended - safety planning needed';
+        return 'MODERATE RISK - Professional evaluation needed within 24 hours';
       case 'low':
-        return 'ELEVATED CONCERN - Follow-up recommended - monitoring and support indicated';
+        return 'ELEVATED CONCERN - Follow-up recommended within 48 hours';
       default:
-        return 'BASELINE CONCERN - Standard crisis protocols apply';
+        return 'CRISIS DETECTED - Professional review required';
     }
   };
 
@@ -290,7 +285,7 @@ export const useCrisisDetection = (
 • **Call or text 988** for immediate crisis support
 • **Go to your nearest emergency room**
 
-**Professional Support:** CVMHW mental health professionals are trained to help with crisis situations and are required by Ohio law to take appropriate action to ensure your safety.
+**Cuyahoga County Mobile Crisis: 1-216-623-6555**
 
 Your life matters, and there are people trained specifically to help you through this crisis.`;
 
@@ -300,19 +295,12 @@ Your life matters, and there are people trained specifically to help you through
     return null;
   }, [consecutiveCrisisCount, detectCrisisLevel]);
 
-  const resetCrisisTracking = useCallback(() => {
-    setRecentCrisisMessage(null);
-    setConsecutiveCrisisCount(0);
-    crisisPatterns.current.clear();
-  }, []);
-
   return {
     recentCrisisMessage,
     consecutiveCrisisCount,
     handleCrisisMessage,
     checkDeception,
     handlePersistentCrisis,
-    resetCrisisTracking,
     detectCrisisLevel
   };
 };
