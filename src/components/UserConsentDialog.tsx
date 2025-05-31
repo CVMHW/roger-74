@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -85,12 +86,12 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
           
           <TabsContent value="consent" className="space-y-6 py-4">
             {/* Testing Notice */}
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg">
               <div className="flex items-start gap-3">
-                <Lock className="text-red-600 mt-1" size={20} />
+                <Lock className="text-slate-600 mt-1" size={20} />
                 <div>
-                  <h3 className="font-semibold text-red-800 mb-2">System Testing Mode</h3>
-                  <p className="text-sm text-red-700 mb-3">
+                  <h3 className="font-semibold text-slate-800 mb-2">System Testing Mode</h3>
+                  <p className="text-sm text-slate-700 mb-3">
                     Roger is currently in testing mode. Access is restricted to authorized personnel only.
                   </p>
                 </div>
@@ -98,12 +99,12 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
             </div>
 
             {/* Beta Software Warning */}
-            <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="text-orange-600 mt-1" size={20} />
+                <AlertTriangle className="text-blue-600 mt-1" size={20} />
                 <div>
-                  <h3 className="font-semibold text-orange-800 mb-2">Beta Software Notice</h3>
-                  <p className="text-sm text-orange-700 mb-3">
+                  <h3 className="font-semibold text-blue-800 mb-2">Beta Software Notice</h3>
+                  <p className="text-sm text-blue-700 mb-3">
                     Roger AI is experimental beta software that is not FDA approved or clinically validated. 
                     This system is for informational and peer support purposes only.
                   </p>
@@ -113,7 +114,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                       checked={acknowledgedBeta}
                       onCheckedChange={(checked) => setAcknowledgedBeta(checked as boolean)}
                     />
-                    <label htmlFor="beta-acknowledge" className="text-sm text-orange-800 cursor-pointer">
+                    <label htmlFor="beta-acknowledge" className="text-sm text-blue-800 cursor-pointer">
                       I understand that Roger AI is experimental beta software and not clinically validated
                     </label>
                   </div>
