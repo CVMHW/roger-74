@@ -67,6 +67,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
             onClick={() => window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer')}
             className="absolute -top-2 right-8 bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple hover:from-cvmhw-purple hover:to-cvmhw-pink text-white text-sm px-3 py-1 h-8 transition-all duration-300 shadow-sm hover:shadow-md"
           >
+            <img src="/logo.png" alt="CVMHW" className="w-4 h-4 mr-1" />
             <span className="font-medium">Visit CVMHW.com</span>
             <ExternalLink size={14} className="ml-1" />
           </Button>
@@ -663,4 +664,3 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
 };
 
 export default UserConsentDialog;
-
