@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -58,25 +57,24 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="relative">
-          <DialogTitle className="flex items-center gap-2 text-xl pr-32">
+          <DialogTitle className="flex items-center gap-2 text-xl pr-24">
             <Shield className="text-cvmhw-orange fill-cvmhw-orange" size={24} />
             Important Information About Roger AI
           </DialogTitle>
           <Button
             onClick={() => window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer')}
-            className="absolute -top-1 right-6 bg-gradient-to-br from-slate-800 via-slate-900 to-black hover:from-slate-700 hover:via-slate-800 hover:to-slate-900 border border-slate-600 hover:border-slate-500 text-white hover:text-slate-100 text-sm px-3 py-2 h-9 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 rounded-xl backdrop-blur-sm relative overflow-hidden group"
+            className="absolute -top-1 right-6 bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-500 hover:to-emerald-600 text-white text-xs px-2 py-1 h-6 transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-1 rounded-md font-medium"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <img 
               src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
               alt="CVMHW" 
-              className="w-4 h-4 relative z-10"
+              className="w-3 h-3"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}
             />
-            <span className="font-medium relative z-10">CVMHW.com</span>
-            <ExternalLink size={14} className="relative z-10" />
+            <span>CVMHW</span>
+            <ExternalLink size={10} />
           </Button>
           <DialogDescription className="text-base">
             Before you begin chatting with Roger, please read and acknowledge the following important information.
