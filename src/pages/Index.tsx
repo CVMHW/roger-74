@@ -181,26 +181,20 @@ const Index = () => {
             <CrisisResources forceOpen={false} />
           </div>
           
-          {/* Tabbed Content for Chat, About, and Patient Rights - Only show if user has consented */}
+          {/* Tabbed Content for Chat and About - Only show if user has consented */}
           {hasConsented && (
             <Tabs defaultValue="chat" className="mb-6">
               <TabsList className="w-full mb-2">
-                <TabsTrigger className="w-1/3" value="chat">
+                <TabsTrigger className="w-1/2" value="chat">
                   <div className="flex items-center">
                     <Heart size={18} className="mr-2 text-cvmhw-pink fill-cvmhw-pink" />
                     <span>Chat with Roger</span>
                   </div>
                 </TabsTrigger>
-                <TabsTrigger className="w-1/3" value="about">
+                <TabsTrigger className="w-1/2" value="about">
                   <div className="flex items-center">
                     <Info size={18} className="mr-2 text-cvmhw-blue" />
                     <span>About CVMHW</span>
-                  </div>
-                </TabsTrigger>
-                <TabsTrigger className="w-1/3" value="rights">
-                  <div className="flex items-center">
-                    <Shield size={16} className="mr-2 text-cvmhw-orange" />
-                    <span>Patient Rights</span>
                   </div>
                 </TabsTrigger>
               </TabsList>
@@ -300,11 +294,29 @@ const Index = () => {
                   </CardFooter>
                 </Card>
               </TabsContent>
-              
-              <TabsContent value="rights" className="focus:outline-none">
-                <PatientRightsTab />
-              </TabsContent>
             </Tabs>
+          )}
+          
+          {/* Patient Rights Section - Bottom placement */}
+          {hasConsented && (
+            <div className="mb-6">
+              <details className="group">
+                <summary className="flex items-center justify-between w-full p-3 bg-gradient-to-r from-cvmhw-light/30 to-white rounded-lg border border-cvmhw-light/50 cursor-pointer hover:from-cvmhw-light/40 hover:to-white transition-all duration-200">
+                  <div className="flex items-center gap-2">
+                    <Shield size={16} className="text-cvmhw-orange" />
+                    <span className="text-sm font-medium text-gray-700">Patient Rights & Policies (Educational Information)</span>
+                  </div>
+                  <span className="text-cvmhw-blue group-open:rotate-180 transition-transform duration-200">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="m6 9 6 6 6-6"/>
+                    </svg>
+                  </span>
+                </summary>
+                <div className="mt-3">
+                  <PatientRightsTab />
+                </div>
+              </details>
+            </div>
           )}
           
           {/* Show message if not consented */}

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Shield, Heart, Phone, DollarSign, FileText, Users, Stethoscope } from 'lucide-react';
+import { Shield, Heart, Phone, DollarSign, FileText, Users, Stethoscope, Info } from 'lucide-react';
 import { patientRights, mandatedReportingInfo, getAffordabilityOptions } from '../utils/cvmhw/cvmhwKnowledgeBase';
 
 const PatientRightsTab: React.FC = () => {
@@ -20,6 +20,24 @@ const PatientRightsTab: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      {/* Educational Disclaimer */}
+      <Card className="border-blue-200 shadow-sm bg-blue-50">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-blue-800 text-sm">Educational Information Only</h3>
+              <p className="text-sm text-blue-700 mt-1">
+                Roger is a peer support companion, not a licensed therapist. This information is provided for educational purposes only to help you understand your rights and decide if Cuyahoga Valley Mindful Health and Wellness services are right for you.
+              </p>
+              <p className="text-xs text-blue-600 mt-1 font-medium">
+                For specific questions about your rights or services, please contact the practice directly.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-cvmhw-light shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold text-cvmhw-blue flex items-center gap-2">
