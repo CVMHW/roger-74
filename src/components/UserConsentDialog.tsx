@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Shield, Heart, Lock, Phone, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertTriangle, Shield, Heart, Lock, Phone, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -56,11 +57,18 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-xl">
+        <DialogHeader className="relative">
+          <DialogTitle className="flex items-center gap-2 text-xl pr-32">
             <Shield className="text-cvmhw-orange fill-cvmhw-orange" size={24} />
             Important Information About Roger AI
           </DialogTitle>
+          <Button
+            onClick={() => window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer')}
+            className="absolute top-0 right-8 bg-gradient-to-r from-blue-500 to-teal-500 hover:from-blue-600 hover:to-teal-600 text-white text-sm px-3 py-1 h-8 transition-all duration-300 shadow-sm hover:shadow-md"
+          >
+            <span className="font-medium">Visit CVMHW.com</span>
+            <ExternalLink size={14} className="ml-1" />
+          </Button>
           <DialogDescription className="text-base">
             Before you begin chatting with Roger, please read and acknowledge the following important information.
           </DialogDescription>
