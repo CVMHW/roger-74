@@ -99,7 +99,7 @@ const PatientRightsTab: React.FC = () => {
 
       <div className="text-center text-xs text-gray-500 mt-4 p-3 bg-gray-50 rounded-lg">
         <p>This information helps you understand CVMHW professional services.</p>
-        <p className="mt-1">For specific questions, contact the practice directly at (440) 409-4303.</p>
+        <p className="mt-1">For specific questions, contact the practice directly at (440) 294-8068.</p>
       </div>
     </div>
   );
