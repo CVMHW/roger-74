@@ -16,12 +16,12 @@ export const useCrisisDetection = (
   const lastCrisisTime = useRef<number>(0);
   const crisisPatterns = useRef<Set<string>>(new Set());
 
-  // Enhanced crisis detection patterns
-  const detectCrisisLevel = useCallback((userInput: string): 'none' | 'mild' | 'moderate' | 'severe' | 'immediate' => {
+  // Enhanced crisis detection patterns - ALWAYS use "severe" level for proper location-aware responses
+  const detectCrisisLevel = useCallback((userInput: string): 'none' | 'severe' => {
     const input = userInput.toLowerCase();
     
-    // Immediate crisis indicators (suicide)
-    const immediateCrisis = [
+    // All crisis indicators should use "severe" level to get location-aware responses
+    const crisisIndicators = [
       /i am going to (kill myself|end my life|commit suicide)/,
       /i have a plan to (die|kill myself|end it)/,
       /i'm going to hurt myself (today|tonight|now)/,
@@ -31,11 +31,7 @@ export const useCrisisDetection = (
       /want to kill myself/,
       /kill myself/,
       /suicide/,
-      /suicidal/
-    ];
-
-    // Severe crisis indicators
-    const severeCrisis = [
+      /suicidal/,
       /want to (die|kill myself|end my life|not be here)/,
       /thoughts of (suicide|killing myself|ending it)/,
       /don'?t want to (live|be alive|exist)/,
@@ -51,13 +47,8 @@ export const useCrisisDetection = (
       /seeing things.*aren'?t there/
     ];
 
-    // Check for immediate crisis
-    if (immediateCrisis.some(pattern => pattern.test(input))) {
-      return 'immediate';
-    }
-
-    // Check for severe crisis
-    if (severeCrisis.some(pattern => pattern.test(input))) {
+    // Check for any crisis indicators
+    if (crisisIndicators.some(pattern => pattern.test(input))) {
       return 'severe';
     }
 
@@ -88,45 +79,64 @@ export const useCrisisDetection = (
       return 'psychosis';
     }
     
-    return 'general-crisis';
+    return 'suicide'; // Default to suicide for safety
   }, []);
 
-  const generateCrisisResponse = useCallback((crisisLevel: string, crisisType: string, userInput: string): string => {
-    switch (crisisLevel) {
-      case 'immediate':
-        return `🚨 **This sounds extremely serious, and I'm very concerned about your safety.** 
-
-**Please take immediate action:**
-• **Call 911** if you're in immediate danger
-• **Call or text 988** for the Suicide & Crisis Lifeline (24/7)
-• **Go to your nearest emergency room** right away
-• **Call a trusted friend or family member** to stay with you
-
-You don't have to face this alone. Help is available right now, and your life has value.
-
-**Important:** Roger provides peer support only. For professional mental health services, CVMHW offers therapy with Eric Riesterer, LPC, under supervision of Wendy Nathan, LPCC-S. As mandated reporters, they are required by Ohio law to report imminent safety concerns to appropriate authorities.`;
-
-      case 'severe':
-        return getSpecificCrisisResponse(crisisType, userInput);
-
-      default:
-        return `I'm listening and want to make sure you have the support you need. If you're having thoughts of self-harm, please know that help is available 24/7 through the 988 Suicide & Crisis Lifeline.`;
-    }
-  }, []);
-
-  const getSpecificCrisisResponse = useCallback((crisisType: string, userInput: string): string => {
+  const generateCrisisResponse = useCallback((crisisType: string, userInput: string, locationInfo: any): string => {
+    // ALWAYS use location-aware responses for proper geolocation and hospital referrals
     switch (crisisType) {
       case 'suicide':
-        return `I'm very concerned about what you're sharing regarding thoughts of suicide. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room. Would you like me to provide additional resources? To help connect you with the most appropriate local crisis services and support, could you let me know what area or city you're in right now?`;
+        let response = `I'm very concerned about what you're sharing regarding thoughts of suicide. This is serious, and it's important you speak with a crisis professional right away. Please call the 988 Suicide & Crisis Lifeline (call or text 988) immediately, or go to your nearest emergency room.`;
+        
+        // Add location-specific resources if we have location data
+        if (locationInfo) {
+          if (locationInfo.region === 'Ohio' || locationInfo.city === 'Cleveland') {
+            response += ` For immediate local support in your area, Cuyahoga County Mobile Crisis is available at 1-216-623-6555.`;
+          }
+        } else {
+          response += ` To help connect you with the most appropriate local crisis services and support, could you let me know what area or city you're in right now?`;
+        }
+        
+        return response;
       
       case 'eating-disorder':
-        return `I'm concerned about what you're sharing regarding your eating patterns. This sounds serious, and it's important that you speak with a healthcare professional. The National Eating Disorders Association (NEDA) helpline (1-800-931-2237) can provide immediate support and resources. I'd like to help you find specialized eating disorder treatment resources in your area. What city or region are you located in?`;
+        let edResponse = `I'm concerned about what you're sharing regarding your eating patterns. This sounds serious, and it's important that you speak with a healthcare professional. The National Eating Disorders Association (NEDA) helpline (1-800-931-2237) can provide immediate support and resources.`;
+        
+        if (locationInfo) {
+          if (locationInfo.region === 'Ohio' || locationInfo.city === 'Cleveland') {
+            edResponse += ` For local specialized treatment, the Cleveland Emily Program offers eating disorder support at 1-888-272-0836.`;
+          }
+        } else {
+          edResponse += ` I'd like to help you find specialized eating disorder treatment resources in your area. What city or region are you located in?`;
+        }
+        
+        return edResponse;
       
       case 'substance-use':
-        return `I'm concerned about what you're sharing regarding substance use. This situation sounds serious, and it's important that you speak with a healthcare professional. The SAMHSA National Helpline (1-800-662-4357) provides free, confidential, 24/7 treatment referral and information. To provide you with the best local treatment options and support services, could you share what area you're in?`;
+        let suResponse = `I'm concerned about what you're sharing regarding substance use. This situation sounds serious, and it's important that you speak with a healthcare professional. The SAMHSA National Helpline (1-800-662-4357) provides free, confidential, 24/7 treatment referral and information.`;
+        
+        if (locationInfo) {
+          if (locationInfo.region === 'Ohio' || locationInfo.city === 'Cleveland') {
+            suResponse += ` For local treatment options, Cleveland Project DAWN provides substance abuse support at 1-216-387-6290.`;
+          }
+        } else {
+          suResponse += ` To provide you with the best local treatment options and support services, could you share what area you're in?`;
+        }
+        
+        return suResponse;
       
       case 'self-harm':
-        return `I'm very concerned about what you're sharing regarding self-harm. Your safety is important, and it would be beneficial to speak with a crisis professional who can provide immediate support. The 988 Suicide & Crisis Lifeline (call or text 988) is available 24/7. I want to help you find immediate local support services. What city or area are you currently in?`;
+        let shResponse = `I'm very concerned about what you're sharing regarding self-harm. Your safety is important, and it would be beneficial to speak with a crisis professional who can provide immediate support. The 988 Suicide & Crisis Lifeline (call or text 988) is available 24/7.`;
+        
+        if (locationInfo) {
+          if (locationInfo.region === 'Ohio' || locationInfo.city === 'Cleveland') {
+            shResponse += ` For immediate local support, Cuyahoga County Mobile Crisis is available at 1-216-623-6555.`;
+          }
+        } else {
+          shResponse += ` I want to help you find immediate local support services. What city or area are you currently in?`;
+        }
+        
+        return shResponse;
       
       case 'psychosis':
         return `I'm concerned about what you're describing. These experiences sound distressing, and it's important to speak with a mental health professional who can help. The 988 Suicide & Crisis Lifeline (call or text 988) is available 24/7 for immediate support. Would it be possible for you to reach out to them or go to your nearest emergency room today?`;
@@ -155,10 +165,6 @@ You don't have to face this alone. Help is available right now, and your life ha
       // Add pattern to tracking
       const normalizedInput = userInput.toLowerCase().substring(0, 50);
       crisisPatterns.current.add(normalizedInput);
-      
-      // Generate appropriate crisis response
-      const crisisResponse = generateCrisisResponse(crisisLevel, crisisType, userInput);
-      console.log("CRISIS DETECTION: Generated response");
       
       // Get location data from browser if available
       let locationInfo = null;
@@ -192,6 +198,10 @@ You don't have to face this alone. Help is available right now, and your life ha
         };
       }
       
+      // Generate appropriate crisis response with location awareness
+      const crisisResponse = generateCrisisResponse(crisisType, userInput, locationInfo);
+      console.log("CRISIS DETECTION: Generated response");
+      
       // Log crisis event with comprehensive data
       try {
         console.log("CRISIS DETECTION: Logging crisis event");
@@ -200,13 +210,13 @@ You don't have to face this alone. Help is available right now, and your life ha
           sessionId: getCurrentSessionId(),
           userInput,
           crisisType,
-          severity: crisisLevel === 'immediate' ? 'critical' : crisisLevel === 'severe' ? 'high' : 'medium',
+          severity: 'critical', // Always use critical for immediate intervention
           rogerResponse: crisisResponse,
           detectionMethod: 'multi-crisis-detection-with-location',
           userAgent: navigator.userAgent,
           locationInfo,
-          clinicalNotes: `Patient expressed ${crisisType} concerns with ${crisisLevel} severity level`,
-          riskAssessment: crisisLevel === 'immediate' ? 'Immediate safety assessment required - consider involuntary hold if imminent risk' : 'Standard risk assessment protocol applied'
+          clinicalNotes: `Patient expressed ${crisisType} concerns with severe level - immediate intervention required`,
+          riskAssessment: 'CRITICAL RISK - Immediate safety assessment required - consider involuntary hold if imminent risk'
         });
         console.log("CRISIS DETECTION: Crisis event logged successfully");
       } catch (error) {

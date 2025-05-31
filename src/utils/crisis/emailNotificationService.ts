@@ -25,7 +25,7 @@ interface CrisisEmailData {
 }
 
 /**
- * Initialize EmailJS service
+ * Initialize EmailJS service with proper error handling
  */
 export const initializeEmailService = () => {
   try {
@@ -44,11 +44,11 @@ export const initializeEmailService = () => {
 export const sendCrisisEmailAlert = async (crisisData: CrisisEmailData): Promise<boolean> => {
   try {
     console.log("CRISIS EMAIL: Preparing to send comprehensive email alert");
+    console.log("CRISIS EMAIL: Crisis data:", crisisData);
     
-    // Initialize EmailJS if not already done
-    if (!initializeEmailService()) {
-      throw new Error("EmailJS initialization failed");
-    }
+    // Force initialize EmailJS
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+    console.log("CRISIS EMAIL: EmailJS re-initialized");
     
     // Format location information
     const locationText = crisisData.locationInfo 
@@ -78,19 +78,34 @@ export const sendCrisisEmailAlert = async (crisisData: CrisisEmailData): Promise
 
     console.log("CRISIS EMAIL: Sending email with template params:", templateParams);
 
-    // Send email using EmailJS
+    // Send email using EmailJS with explicit configuration
     const response = await emailjs.send(
       EMAILJS_SERVICE_ID,
       EMAILJS_TEMPLATE_ID,
       templateParams,
-      EMAILJS_PUBLIC_KEY
+      {
+        publicKey: EMAILJS_PUBLIC_KEY
+      }
     );
 
     console.log("CRISIS EMAIL: Email sent successfully:", response);
-    return true;
+    
+    // Verify the response indicates success
+    if (response.status === 200 || response.text === 'OK') {
+      console.log("CRISIS EMAIL: Confirmed successful email delivery");
+      return true;
+    } else {
+      console.error("CRISIS EMAIL: Unexpected response:", response);
+      return false;
+    }
 
   } catch (error) {
     console.error("CRISIS EMAIL: Failed to send crisis email:", error);
+    console.error("CRISIS EMAIL: Error details:", {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
     return false;
   }
 };
@@ -208,5 +223,6 @@ GENERAL CRISIS ASSESSMENT:
   }
 };
 
-// Initialize the service when module loads
+// Force initialize the service when module loads
+console.log("CRISIS EMAIL: Initializing EmailJS service on module load");
 initializeEmailService();

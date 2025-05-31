@@ -39,8 +39,22 @@ export const logCrisisEvent = async (entry: CrisisAuditEntry): Promise<void> => 
     localStorage.setItem('crisis_audit_logs', JSON.stringify(existingLogs));
     console.log('CRISIS AUDIT: Stored locally with enhanced clinical data');
     
-    // Send comprehensive email notification
+    // Send comprehensive email notification - FORCE IMMEDIATE SENDING
     console.log('CRISIS AUDIT: Attempting to send email notification');
+    console.log('CRISIS AUDIT: Email data being sent:', {
+      timestamp: entry.timestamp,
+      sessionId: entry.sessionId,
+      crisisType: entry.crisisType,
+      severity: entry.severity,
+      userMessage: entry.userInput,
+      rogerResponse: entry.rogerResponse,
+      locationInfo: entry.locationInfo,
+      clinicalNotes: entry.clinicalNotes,
+      riskAssessment: entry.riskAssessment,
+      userAgent: entry.userAgent,
+      detectionMethod: entry.detectionMethod
+    });
+    
     const emailSent = await sendCrisisEmailAlert({
       timestamp: entry.timestamp,
       sessionId: entry.sessionId,
