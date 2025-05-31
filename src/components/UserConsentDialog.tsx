@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -242,7 +243,9 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                 <CollapsibleContent className="mt-4 space-y-3">
                   <div className="grid gap-2">
                     <div className="p-3 bg-white border border-red-200 rounded-lg">
-                      <h4 className="font-semibold text-red-800 mb-2">Emergency Support</h4>
+                      <h4 className="relative font-semibold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-red-700 animate-pulse drop-shadow-lg">
+                        Emergency Support
+                      </h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between items-center">
                           <span className="font-medium text-gray-800">National Suicide Prevention Lifeline</span>
@@ -391,9 +394,16 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
           
           <TabsContent value="crisis" className="space-y-4 py-4">
             <div className="p-4 bg-red-50 border border-red-300 rounded-lg mb-4">
-              <h3 className="text-red-700 font-bold flex items-center gap-2 mb-2">
+              <h3 className="relative text-red-700 font-bold flex items-center gap-2 mb-2">
                 <AlertTriangle size={20} />
-                <span>Immediate Help Available</span>
+                <span className="relative animate-pulse">
+                  <span className="absolute inset-0 text-transparent bg-clip-text bg-gradient-to-r from-white via-red-100 to-white animate-pulse">
+                    Immediate Help Available
+                  </span>
+                  <span className="relative text-red-700 drop-shadow-lg animate-pulse">
+                    Immediate Help Available
+                  </span>
+                </span>
               </h3>
               <p className="text-red-700">
                 If you or someone you know is in immediate danger, please call 911 or your local emergency services immediately.
