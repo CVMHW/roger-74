@@ -6,7 +6,7 @@
 
 import emailjs from '@emailjs/browser';
 
-// EmailJS Configuration
+// EmailJS Configuration - CORRECT IDs from your setup
 const EMAILJS_SERVICE_ID = 'service_fqqp3ta';
 const EMAILJS_TEMPLATE_ID = 'template_u3w9maq';  
 const EMAILJS_PUBLIC_KEY = 'eFkOj3YAK3s86h8hL';
@@ -50,34 +50,20 @@ export const sendCrisisEmailAlert = async (crisisData: CrisisEmailData): Promise
     // Force initialize EmailJS every time
     emailjs.init(EMAILJS_PUBLIC_KEY);
     
-    // Format location information
-    const locationText = crisisData.locationInfo 
-      ? `${crisisData.locationInfo.city || 'Cleveland'}, ${crisisData.locationInfo.region || 'Ohio'}`
-      : 'Cleveland, Ohio (default)';
-
-    // Get severity-specific actions
-    const severityActions = getSeveritySpecificActions(crisisData.severity);
-    const crisisSpecificInfo = getCrisisSpecificInformation(crisisData.crisisType, crisisData.severity);
-
     // Create comprehensive email body
-    const emailBody = `🚨 ROGER AI CRISIS DETECTION ALERT 🚨
-SEVERITY: ${crisisData.severity.toUpperCase()}
+    const emailBody = `🚨 ENHANCED CRISIS DETECTION ALERT - Roger AI Clinical Documentation 🚨
 
-=== IMMEDIATE ATTENTION REQUIRED ===
+=== IMMEDIATE CLINICAL ASSESSMENT ===
 Timestamp: ${crisisData.timestamp}
 Session ID: ${crisisData.sessionId}
 Crisis Type: ${crisisData.crisisType}
-Patient Location: ${locationText}
-Detection Method: ${crisisData.detectionMethod}
+Severity Level: ${crisisData.severity.toUpperCase()}
+Risk Assessment: CRITICAL RISK - Immediate intervention required
 
-=== PATIENT COMMUNICATION ===
+=== PATIENT PRESENTATION ===
 User Message: "${crisisData.userMessage}"
 
 Roger's Response: "${crisisData.rogerResponse}"
-
-${crisisSpecificInfo}
-
-${severityActions}
 
 === CLEVELAND/CUYAHOGA RESOURCES ===
 • Cuyahoga County Mobile Crisis: 1-216-623-6555
@@ -93,25 +79,25 @@ Risk Assessment: ${crisisData.riskAssessment}
 User Agent: ${crisisData.userAgent}
 Location Data: ${JSON.stringify(crisisData.locationInfo, null, 2)}
 
-This is an automated alert from Roger AI Crisis Detection System.
-ALL SEVERITY LEVELS trigger immediate email notification.
-Cuyahoga Valley Mindful Health and Wellness`;
+===================================================
+IMMEDIATE ACTION REQUIRED - LICENSED CLINICAL REVIEW
+===================================================
 
-    // Prepare template parameters for EmailJS
+This automated alert requires immediate clinical assessment.
+
+---
+Roger AI Enhanced Crisis Detection & Clinical Documentation System
+Cuyahoga Valley Mindful Health and Wellness
+Generated: ${new Date().toISOString()}`;
+
+    // Prepare template parameters for EmailJS - matching your template
     const templateParams = {
       to_email: 'ericmriesterer@gmail.com',
       from_name: 'Roger AI Crisis Detection',
       subject: `🚨 CRISIS ALERT - ${crisisData.severity.toUpperCase()} - ${crisisData.crisisType}`,
       message: emailBody,
-      timestamp: crisisData.timestamp,
-      session_id: crisisData.sessionId,
-      crisis_type: crisisData.crisisType,
-      severity: crisisData.severity.toUpperCase(),
-      user_message: crisisData.userMessage,
-      roger_response: crisisData.rogerResponse,
-      location: locationText,
-      clinical_notes: crisisData.clinicalNotes,
-      risk_assessment: crisisData.riskAssessment
+      name: 'Roger AI Crisis Detection System',
+      email: 'crisis@cvmhw.com'
     };
 
     console.log("CRISIS EMAIL: Sending with template params:", templateParams);
@@ -142,108 +128,6 @@ Cuyahoga Valley Mindful Health and Wellness`;
       crisisData
     });
     return false;
-  }
-};
-
-/**
- * Get severity-specific immediate actions
- */
-const getSeveritySpecificActions = (severity: string): string => {
-  switch (severity.toLowerCase()) {
-    case 'critical':
-      return `
-🚨 CRITICAL ACTIONS REQUIRED IMMEDIATELY:
-- CONTACT PATIENT IMMEDIATELY if contact information available
-- Consider emergency services notification (911) for imminent risk
-- Involuntary hold assessment may be necessary
-- HIGHEST PRIORITY - Review within 15 minutes
-- May require immediate intervention by licensed clinician`;
-
-    case 'high':
-      return `
-⚠️ HIGH PRIORITY ACTIONS REQUIRED:
-- Contact patient within 1 hour if possible
-- Safety assessment required today
-- Consider crisis intervention team involvement
-- HIGH PRIORITY - Review within 1 hour
-- Schedule immediate appointment if possible`;
-
-    case 'medium':
-      return `
-📋 MODERATE ACTIONS REQUIRED:
-- Follow up with patient within 24 hours
-- Safety planning needed
-- Consider outpatient crisis services
-- MODERATE PRIORITY - Review within 4 hours`;
-
-    case 'low':
-      return `
-📝 FOLLOW-UP ACTIONS REQUIRED:
-- Check in with patient within 48 hours
-- Monitor for escalation
-- Provide appropriate resources
-- STANDARD PRIORITY - Review within 24 hours`;
-
-    default:
-      return `
-📋 GENERAL ACTIONS REQUIRED:
-- Review and assess as appropriate
-- Standard follow-up protocols
-- Monitor for changes`;
-  }
-};
-
-/**
- * Get crisis-specific clinical information
- */
-const getCrisisSpecificInformation = (crisisType: string, severity: string): string => {
-  const severityNote = `SEVERITY: ${severity.toUpperCase()} LEVEL`;
-  
-  switch (crisisType.toLowerCase()) {
-    case 'suicide':
-    case 'suicide-direct-detection':
-    case 'suicidal-ideation':
-      return `
-🔴 SUICIDE RISK ASSESSMENT (${severityNote}):
-- Patient has expressed suicidal ideation
-- IMMEDIATE safety assessment required
-- Contact emergency services if patient has plan/means
-- Consider involuntary hold if imminent risk indicated
-- Ohio law requires mandated reporting for imminent risk`;
-
-    case 'eating-disorder':
-    case 'eating_disorder':
-      return `
-🟡 EATING DISORDER CRISIS ASSESSMENT (${severityNote}):
-- Patient showing concerning eating behaviors
-- Risk of medical complications possible
-- Cleveland Emily Program referral recommended
-- High comorbidity with mood disorders`;
-
-    case 'substance-use':
-    case 'substance_abuse':
-      return `
-🟠 SUBSTANCE ABUSE CRISIS ASSESSMENT (${severityNote}):
-- Patient showing concerning substance use patterns
-- Risk of overdose or withdrawal complications
-- May require detoxification support
-- Assess for dual diagnosis conditions`;
-
-    case 'self-harm':
-    case 'cutting':
-      return `
-🔴 SELF-HARM CRISIS ASSESSMENT (${severityNote}):
-- Patient has expressed self-harm intentions/behaviors
-- Risk of escalation to suicidal behavior
-- IMMEDIATE safety planning needed
-- May require medical attention for injuries`;
-
-    default:
-      return `
-🟡 GENERAL CRISIS ASSESSMENT (${severityNote}):
-- Patient requires professional attention
-- Assess for safety risks
-- Provide appropriate intervention based on severity`;
   }
 };
 
