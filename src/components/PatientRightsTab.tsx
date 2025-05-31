@@ -26,12 +26,12 @@ const PatientRightsTab: React.FC = () => {
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-blue-600 mt-0.5" />
             <div>
-              <h3 className="font-medium text-blue-800 text-sm">Educational Information Only</h3>
+              <h3 className="font-medium text-blue-800 text-sm">Considering CVMHW Services?</h3>
               <p className="text-sm text-blue-700 mt-1">
-                Roger is a peer support companion, not a licensed therapist. This information is provided for educational purposes only to help you understand your rights and decide if Cuyahoga Valley Mindful Health and Wellness services are right for you.
+                Roger is sharing this information to help you understand what to expect from Cuyahoga Valley Mindful Health and Wellness professional services. This helps you decide if their therapy, life coaching, or athletic coaching might be right for you.
               </p>
               <p className="text-xs text-blue-600 mt-1 font-medium">
-                For specific questions about your rights or services, please contact the practice directly.
+                Roger is peer support only - not a therapist or medical provider.
               </p>
             </div>
           </div>
@@ -42,7 +42,7 @@ const PatientRightsTab: React.FC = () => {
         <CardHeader className="pb-3">
           <CardTitle className="text-lg font-semibold text-cvmhw-blue flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Your Rights as a Patient
+            Your Rights with CVMHW Professional Services
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -98,8 +98,8 @@ const PatientRightsTab: React.FC = () => {
       </Card>
 
       <div className="text-center text-xs text-gray-500 mt-4 p-3 bg-gray-50 rounded-lg">
-        <p>This information is provided for your understanding of rights and policies.</p>
-        <p className="mt-1">For detailed legal terms, please refer to your signed service agreement.</p>
+        <p>This information helps you understand CVMHW professional services.</p>
+        <p className="mt-1">For specific questions, contact the practice directly at (440) 409-4303.</p>
       </div>
     </div>
   );

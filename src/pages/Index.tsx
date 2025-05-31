@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -189,7 +188,7 @@ const Index = () => {
                 <summary className="flex items-center justify-between w-full p-3 bg-gradient-to-r from-cvmhw-light/30 to-white rounded-lg border border-cvmhw-light/50 cursor-pointer hover:from-cvmhw-light/40 hover:to-white transition-all duration-200">
                   <div className="flex items-center gap-2">
                     <Shield size={16} className="text-cvmhw-orange" />
-                    <span className="text-sm font-medium text-gray-700">Patient Rights & Policies (Educational Information)</span>
+                    <span className="text-sm font-medium text-gray-700">About CVMHW Services & Your Rights</span>
                   </div>
                   <span className="text-cvmhw-blue group-open:rotate-180 transition-transform duration-200">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
