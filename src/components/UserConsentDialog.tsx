@@ -266,72 +266,285 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
             </div>
             
             <div className="space-y-4">
+              {/* Ohio/National Crisis Support */}
               <div className="p-4 bg-white border border-red-200 rounded-lg">
-                <h4 className="font-semibold text-red-800 mb-3">Emergency Crisis Support</h4>
+                <h4 className="font-semibold text-red-800 mb-3">Ohio/National Crisis Support</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between items-center p-2 hover:bg-red-50 rounded">
-                    <span className="font-medium">National Suicide Prevention Lifeline</span>
-                    <a href="tel:988" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                    <span className="font-medium">National Suicide Prevention Hotline</span>
+                    <a href="tel:18002738255" className="flex items-center gap-1 text-red-600 hover:text-red-800">
                       <Phone size={14} />
-                      <span className="font-bold">988</span>
+                      <span className="font-bold">1-800-273-8255</span>
                     </a>
                   </div>
                   <div className="flex justify-between items-center p-2 hover:bg-red-50 rounded">
-                    <span className="font-medium">Crisis Text Line</span>
-                    <span className="text-red-600 font-bold">Text 741741</span>
+                    <span className="font-medium">Ohio Crisis Text-Line</span>
+                    <span className="text-red-600 font-bold">Text 241-241</span>
                   </div>
                   <div className="flex justify-between items-center p-2 hover:bg-red-50 rounded">
-                    <span className="font-medium">Emergency Services</span>
-                    <a href="tel:911" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                    <span className="font-medium">Ohio Veteran Crisis-Line</span>
+                    <a href="tel:18002738255" className="flex items-center gap-1 text-red-600 hover:text-red-800">
                       <Phone size={14} />
-                      <span className="font-bold">911</span>
+                      <span className="font-bold">1-800-273-8255</span>
                     </a>
                   </div>
-                </div>
-              </div>
-              
-              <div className="p-4 bg-white border border-red-200 rounded-lg">
-                <h4 className="font-semibold text-red-800 mb-3">Cleveland/Ohio Crisis Support</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded">
-                    <span className="font-medium">Cuyahoga County Mobile Crisis</span>
-                    <a href="tel:2166236555" className="flex items-center gap-1 text-blue-600 hover:text-blue-800">
-                      <Phone size={14} />
-                      <span className="font-bold">216-623-6555</span>
-                    </a>
-                  </div>
-                  <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded">
-                    <span className="font-medium">Highland Springs Hospital</span>
-                    <a href="tel:2163023070" className="flex items-center gap-1 text-blue-600 hover:text-blue-800">
-                      <Phone size={14} />
-                      <span className="font-bold">216-302-3070</span>
-                    </a>
-                  </div>
-                  <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded">
-                    <span className="font-medium">Windsor-Laurelwood Hospital</span>
-                    <a href="tel:4409533000" className="flex items-center gap-1 text-blue-600 hover:text-blue-800">
-                      <Phone size={14} />
-                      <span className="font-bold">440-953-3000</span>
-                    </a>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-4 bg-white border border-blue-200 rounded-lg">
-                <h4 className="font-semibold text-blue-800 mb-3">Additional Support</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded">
-                    <span className="font-medium">Trevor Project (LGBTQ+ Crisis)</span>
-                    <a href="tel:8664887386" className="flex items-center gap-1 text-blue-600 hover:text-blue-800">
+                  <div className="flex justify-between items-center p-2 hover:bg-red-50 rounded">
+                    <span className="font-medium">Trevor Project LGBTQ+ Crisis</span>
+                    <a href="tel:8664887386" className="flex items-center gap-1 text-red-600 hover:text-red-800">
                       <Phone size={14} />
                       <span className="font-bold">866-488-7386</span>
                     </a>
                   </div>
-                  <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded">
-                    <span className="font-medium">Domestic Violence Hotline</span>
-                    <a href="tel:3304537233" className="flex items-center gap-1 text-blue-600 hover:text-blue-800">
+                  <div className="flex justify-between items-center p-2 hover:bg-red-50 rounded">
+                    <span className="font-medium">Ohio Trans-Lifeline</span>
+                    <a href="tel:8775658860" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                      <Phone size={14} />
+                      <span className="font-bold">877-565-8860</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-red-50 rounded">
+                    <span className="font-medium">Domestic Violence Lifeline</span>
+                    <a href="tel:3304537233" className="flex items-center gap-1 text-red-600 hover:text-red-800">
                       <Phone size={14} />
                       <span className="font-bold">330-453-7233</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-red-50 rounded">
+                    <span className="font-medium">Opiate Hotline</span>
+                    <a href="tel:3304534357" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                      <Phone size={14} />
+                      <span className="font-bold">330-453-4357</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-red-50 rounded">
+                    <span className="font-medium">Ohio Gambling Hotline</span>
+                    <a href="tel:18884263500" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-888-532-3500</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-red-50 rounded">
+                    <span className="font-medium">United Way of Ohio</span>
+                    <a href="tel:211" className="flex items-center gap-1 text-red-600 hover:text-red-800">
+                      <Phone size={14} />
+                      <span className="font-bold">211</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Akron/Canton Crisis Support */}
+              <div className="p-4 bg-white border border-blue-200 rounded-lg">
+                <h4 className="font-semibold text-blue-800 mb-3">Akron/Canton Crisis Support</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded">
+                    <span className="font-medium">Summit County Mobile Crisis</span>
+                    <a href="tel:3304349144" className="flex items-center gap-1 text-blue-600 hover:text-blue-800">
+                      <Phone size={14} />
+                      <span className="font-bold">330-434-9144</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded">
+                    <span className="font-medium">Akron Children's Crisis Line</span>
+                    <a href="tel:3305437472" className="flex items-center gap-1 text-blue-600 hover:text-blue-800">
+                      <Phone size={14} />
+                      <span className="font-bold">330-543-7472</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded">
+                    <span className="font-medium">Stark County Mobile Crisis</span>
+                    <a href="tel:3304526000" className="flex items-center gap-1 text-blue-600 hover:text-blue-800">
+                      <Phone size={14} />
+                      <span className="font-bold">330-452-6000</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded">
+                    <span className="font-medium">Homeless Hotline: Stark County</span>
+                    <a href="tel:3304524363" className="flex items-center gap-1 text-blue-600 hover:text-blue-800">
+                      <Phone size={14} />
+                      <span className="font-bold">330-452-4363</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-blue-50 rounded">
+                    <span className="font-medium">Homeless Hotline: Summit County</span>
+                    <a href="tel:3306150577" className="flex items-center gap-1 text-blue-600 hover:text-blue-800">
+                      <Phone size={14} />
+                      <span className="font-bold">330-615-0577</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Ashtabula/Jefferson Crisis Support */}
+              <div className="p-4 bg-white border border-green-200 rounded-lg">
+                <h4 className="font-semibold text-green-800 mb-3">Ashtabula/Jefferson Crisis Support</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded">
+                    <span className="font-medium">Ashtabula County 24/7 Substance Use Disorder Crisis</span>
+                    <a href="tel:18005777849" className="flex items-center gap-1 text-green-600 hover:text-green-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-800-577-7849</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded">
+                    <span className="font-medium">Ashtabula Rape Crisis Center</span>
+                    <a href="tel:14403547364" className="flex items-center gap-1 text-green-600 hover:text-green-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-440-354-7364</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded">
+                    <span className="font-medium">Ashtabula County Children Services 24/7</span>
+                    <a href="tel:18889981811" className="flex items-center gap-1 text-green-600 hover:text-green-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-888-998-1811</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded">
+                    <span className="font-medium">Ashtabula Homesafe Domestic Violence</span>
+                    <a href="tel:18009522873" className="flex items-center gap-1 text-green-600 hover:text-green-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-800-952-2873</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded">
+                    <span className="font-medium">Ashtabula Frontline Services</span>
+                    <a href="tel:14403818347" className="flex items-center gap-1 text-green-600 hover:text-green-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-440-381-8347</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded">
+                    <span className="font-medium">Ashtabula Catholic Charities</span>
+                    <a href="tel:14409922121" className="flex items-center gap-1 text-green-600 hover:text-green-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-440-992-2121</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded">
+                    <span className="font-medium">Ashtabula Samaritan House</span>
+                    <a href="tel:14409923178" className="flex items-center gap-1 text-green-600 hover:text-green-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-440-992-3178</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded">
+                    <span className="font-medium">Rock Creek Glenbeigh Substance Abuse Hospital</span>
+                    <a href="tel:18774875126" className="flex items-center gap-1 text-green-600 hover:text-green-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-877-487-5126</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded">
+                    <span className="font-medium">Ashtabula County Regional Medical Center</span>
+                    <a href="tel:14409972262" className="flex items-center gap-1 text-green-600 hover:text-green-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-440-997-2262</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-green-50 rounded">
+                    <span className="font-medium">Chardon Ravenwood Psychiatric Hospital</span>
+                    <a href="tel:14402854552" className="flex items-center gap-1 text-green-600 hover:text-green-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-440-285-4552</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cleveland/Mentor/Chardon Crisis Support */}
+              <div className="p-4 bg-white border border-purple-200 rounded-lg">
+                <h4 className="font-semibold text-purple-800 mb-3">Cleveland/Mentor/Chardon Crisis Support</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium">Cuyahoga County Mobile Crisis (Emergency)</span>
+                    <a href="tel:2166236555" className="flex items-center gap-1 text-purple-600 hover:text-purple-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-216-623-6555</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium">Cleveland Frontline Services</span>
+                    <a href="tel:2166236555" className="flex items-center gap-1 text-purple-600 hover:text-purple-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-216-623-6555</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium">Lake County Frontline Services</span>
+                    <a href="tel:14403818347" className="flex items-center gap-1 text-purple-600 hover:text-purple-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-440-381-8347</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium">Cuyahoga County Catholic Charities</span>
+                    <a href="tel:12163342900" className="flex items-center gap-1 text-purple-600 hover:text-purple-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-216-334-2900</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium">Homeless Hotline: Cuyahoga County</span>
+                    <a href="tel:12166746700" className="flex items-center gap-1 text-purple-600 hover:text-purple-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-216-674-6700</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium">Cleveland Project DAWN Expanded Mobile Unit</span>
+                    <a href="tel:12163876290" className="flex items-center gap-1 text-purple-600 hover:text-purple-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-216-387-6290</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium">Cleveland Emergency Medical Services</span>
+                    <a href="tel:12166642555" className="flex items-center gap-1 text-purple-600 hover:text-purple-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-216-664-2555</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium">Cleveland Emily Program Eating Disorders</span>
+                    <a href="tel:18882720836" className="flex items-center gap-1 text-purple-600 hover:text-purple-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-888-272-0836</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium">Cleveland Windsor-Laurelwood Hospital</span>
+                    <a href="tel:14409533000" className="flex items-center gap-1 text-purple-600 hover:text-purple-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-440-953-3000</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium">Cleveland Highland Springs Hospital</span>
+                    <a href="tel:12163023070" className="flex items-center gap-1 text-purple-600 hover:text-purple-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-216-302-3070</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium">Cleveland Bluestone Pediatric Psychiatric Hospital</span>
+                    <a href="tel:12162005030" className="flex items-center gap-1 text-purple-600 hover:text-purple-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-216-200-5030</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium">Cleveland Veteran's Affairs Mental Healthcare</span>
+                    <a href="tel:12167913800" className="flex items-center gap-1 text-purple-600 hover:text-purple-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-216-791-3800 x61035</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium">Chardon Ravenwood Psychiatric Hospital</span>
+                    <a href="tel:14402854552" className="flex items-center gap-1 text-purple-600 hover:text-purple-800">
+                      <Phone size={14} />
+                      <span className="font-bold">1-440-285-4552</span>
                     </a>
                   </div>
                 </div>
