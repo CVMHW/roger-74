@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -381,6 +380,14 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                 {passwordError && (
                   <p className="text-red-500 text-xs mt-1">Incorrect password</p>
                 )}
+                
+                {/* Teddy Bear Icon */}
+                <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                  <div className="w-4 h-4 bg-amber-100 rounded-full flex items-center justify-center">
+                    🧸
+                  </div>
+                  <span>A Teddy LLC Company</span>
+                </div>
               </div>
               <Button 
                 onClick={handleConsent}
