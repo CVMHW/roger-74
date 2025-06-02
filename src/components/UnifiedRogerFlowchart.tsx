@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import {
   ReactFlow,
@@ -14,7 +13,7 @@ import {
 import '@xyflow/react/dist/style.css';
 
 // Type definitions for node data
-interface NodeData {
+interface NodeData extends Record<string, unknown> {
   label: string;
   subsystem: string;
   details: string;
@@ -355,8 +354,9 @@ export const UnifiedRogerFlowchart: React.FC = () => {
   });
 
   // Handle node clicks for drill-down
-  const onNodeClick = useCallback((event: React.MouseEvent, node: Node<NodeData>) => {
-    const subsystem = node.data.subsystem;
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+    const nodeData = node.data as NodeData;
+    const subsystem = nodeData.subsystem;
     
     if (drillDown.activeSubsystem === subsystem) {
       // Toggle details view
@@ -377,25 +377,37 @@ export const UnifiedRogerFlowchart: React.FC = () => {
   const getActiveNodeDetails = (): string | null => {
     if (!drillDown.activeSubsystem || !drillDown.showDetails) return null;
     
-    const activeNode = nodes.find(node => node.data.subsystem === drillDown.activeSubsystem);
-    return activeNode?.data.details || null;
+    const activeNode = nodes.find(node => {
+      const nodeData = node.data as NodeData;
+      return nodeData.subsystem === drillDown.activeSubsystem;
+    });
+    
+    if (activeNode) {
+      const nodeData = activeNode.data as NodeData;
+      return nodeData.details;
+    }
+    
+    return null;
   };
 
   // Update node styles based on selection
-  const enhancedNodes = nodes.map(node => ({
-    ...node,
-    style: {
-      ...node.style,
-      ...(drillDown.activeSubsystem === node.data.subsystem 
-        ? { 
-            border: '3px solid #ff4081', 
-            boxShadow: '0 0 20px rgba(255, 64, 129, 0.5)',
-            transform: 'scale(1.05)'
-          }
-        : {}
-      )
-    }
-  }));
+  const enhancedNodes = nodes.map(node => {
+    const nodeData = node.data as NodeData;
+    return {
+      ...node,
+      style: {
+        ...node.style,
+        ...(drillDown.activeSubsystem === nodeData.subsystem 
+          ? { 
+              border: '3px solid #ff4081', 
+              boxShadow: '0 0 20px rgba(255, 64, 129, 0.5)',
+              transform: 'scale(1.05)'
+            }
+          : {}
+        )
+      }
+    };
+  });
 
   const activeDetails = getActiveNodeDetails();
 
@@ -444,7 +456,8 @@ export const UnifiedRogerFlowchart: React.FC = () => {
           <Controls />
           <MiniMap 
             nodeColor={(node) => {
-              if (node.data?.subsystem === drillDown.activeSubsystem) return '#ff4081';
+              const nodeData = node.data as NodeData;
+              if (nodeData?.subsystem === drillDown.activeSubsystem) return '#ff4081';
               if (node.id.includes('crisis')) return '#ffcdd2';
               if (node.id.includes('fast') || node.id.includes('greeting')) return '#c8e6c9';
               if (node.id.includes('emotional') || node.id.includes('emotion')) return '#e1bee7';
