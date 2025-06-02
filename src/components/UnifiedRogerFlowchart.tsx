@@ -13,6 +13,13 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
+// Type definitions for node data
+interface NodeData {
+  label: string;
+  subsystem: string;
+  details: string;
+}
+
 // Drill-down state interface
 interface DrillDownState {
   activeSubsystem: string | null;
@@ -20,7 +27,7 @@ interface DrillDownState {
 }
 
 // Base nodes for the unified view
-const baseNodes: Node[] = [
+const baseNodes: Node<NodeData>[] = [
   // User Input
   {
     id: 'user-input',
@@ -348,7 +355,7 @@ export const UnifiedRogerFlowchart: React.FC = () => {
   });
 
   // Handle node clicks for drill-down
-  const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
+  const onNodeClick = useCallback((event: React.MouseEvent, node: Node<NodeData>) => {
     const subsystem = node.data.subsystem;
     
     if (drillDown.activeSubsystem === subsystem) {
@@ -367,7 +374,7 @@ export const UnifiedRogerFlowchart: React.FC = () => {
   }, [drillDown.activeSubsystem]);
 
   // Get active node details
-  const getActiveNodeDetails = () => {
+  const getActiveNodeDetails = (): string | null => {
     if (!drillDown.activeSubsystem || !drillDown.showDetails) return null;
     
     const activeNode = nodes.find(node => node.data.subsystem === drillDown.activeSubsystem);
