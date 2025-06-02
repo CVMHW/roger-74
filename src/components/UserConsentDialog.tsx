@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -386,7 +387,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                   <div className="w-4 h-4 bg-amber-100 rounded-full flex items-center justify-center">
                     🧸
                   </div>
-                  <span>A Teddy LLC Company</span>
+                  <span>A Teddy Holdings Company</span>
                 </div>
               </div>
               <Button 
