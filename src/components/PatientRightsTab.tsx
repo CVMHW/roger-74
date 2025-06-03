@@ -27,7 +27,7 @@ const PatientRightsTab: React.FC = () => {
           <div className="flex items-start gap-3">
             <Info className="h-5 w-5 text-cvmhw-blue mt-0.5 drop-shadow-lg filter brightness-110" />
             <div>
-              <h3 className="font-medium text-blue-800 text-sm bg-gradient-to-r from-cvmhw-blue to-blue-900 bg-clip-text text-transparent font-semibold">Considering CVMHW Services?</h3>
+              <h3 className="font-medium text-blue-800 text-sm bg-gradient-to-r from-cvmhw-blue to-blue-900 bg-clip-text text-transparent font-semibold">Tailored Services For Your Individualized Needs</h3>
               <p className="text-sm text-blue-700 mt-1 drop-shadow-sm">
                 Roger is sharing this information to help you understand what to expect from Cuyahoga Valley Mindful Health and Wellness professional services. This helps you decide if their therapy, life coaching, or athletic coaching might be right for you.
               </p>
@@ -50,7 +50,7 @@ const PatientRightsTab: React.FC = () => {
         <CardHeader className="pb-3 relative z-10">
           <CardTitle className="text-lg font-semibold text-transparent bg-gradient-to-r from-cvmhw-blue via-cyan-600 to-slate-700 bg-clip-text flex items-center gap-2 drop-shadow-lg">
             <Shield className="h-5 w-5 text-cvmhw-blue drop-shadow-lg filter brightness-125" />
-            Your Rights with CVMHW Professional Services
+            Your Rights at Cuyahoga Valley Mindful Health & Wellness
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3 relative z-10">
