@@ -5,7 +5,7 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import { MessageType } from './Message';
 import useRogerianResponse from '../hooks/useRogerianResponse';
-import { useCrisisDetection } from '../hooks/chat/useCrisisDetection';
+import { useCrisisDetection } from '../hooks/useCrisisDetection';
 import { useToast } from "@/hooks/use-toast";
 import ProfileBubble from './ProfileBubble';
 
@@ -112,11 +112,9 @@ const ChatInterface = () => {
         <div className="bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple p-4 rounded-t-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <ProfileBubble>
-                <div className="rounded-full bg-white/20 h-10 w-10 flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer">
-                  <span className="text-white font-bold text-lg">R</span>
-                </div>
-              </ProfileBubble>
+              <div className="rounded-full bg-white/20 h-10 w-10 flex items-center justify-center hover:bg-white/30 transition-colors cursor-pointer">
+                <span className="text-white font-bold text-lg">R</span>
+              </div>
               <div>
                 <ProfileBubble>
                   <h3 className="text-white font-semibold cursor-pointer hover:opacity-80 transition-opacity">
