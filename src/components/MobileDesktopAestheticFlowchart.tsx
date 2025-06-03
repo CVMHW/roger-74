@@ -1,14 +1,13 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Smartphone, Monitor, ArrowRight, ArrowDown, CheckCircle, XCircle } from 'lucide-react';
+import { Smartphone, Monitor, ArrowRight, ArrowDown, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 
 const MobileDesktopAestheticFlowchart = () => {
   return (
     <div className="p-4 max-w-6xl mx-auto bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-blue-900 mb-2">
-          Roger Mobile vs Desktop Aesthetic Analysis
+          Roger Mobile vs Desktop Aesthetic Analysis - Progress Update
         </h1>
         <p className="text-blue-700">
           Visual decision tree for responsive design optimization
@@ -56,229 +55,191 @@ const MobileDesktopAestheticFlowchart = () => {
           </CardContent>
         </Card>
 
-        {/* Mobile Version - Current Issues */}
-        <Card className="border-2 border-red-500 shadow-lg">
-          <CardHeader className="bg-red-50">
-            <CardTitle className="flex items-center gap-2 text-red-800">
+        {/* Mobile Version - Updated Progress */}
+        <Card className="border-2 border-yellow-500 shadow-lg">
+          <CardHeader className="bg-yellow-50">
+            <CardTitle className="flex items-center gap-2 text-yellow-800">
               <Smartphone size={24} />
-              Mobile Version (❌ Issues)
+              Mobile Version (🔄 In Progress)
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="space-y-2">
-              <h4 className="font-semibold text-red-700">Header Problems:</h4>
-              <ul className="text-sm space-y-1 text-red-600">
-                <li>• Buttons flowing off screen edge</li>
-                <li>• Navigation elements overlapping</li>
-                <li>• Logo/branding too large</li>
-                <li>• Crisis button not properly positioned</li>
+              <h4 className="font-semibold text-green-700 flex items-center gap-1">
+                <CheckCircle size={16} className="text-green-600" />
+                Header Improvements (✅ Done):
+              </h4>
+              <ul className="text-sm space-y-1 text-green-600">
+                <li>• Hamburger menu implemented</li>
+                <li>• Mobile-optimized logo sizing</li>
+                <li>• Responsive navigation overlay</li>
+                <li>• Basic touch target improvements</li>
               </ul>
             </div>
             
             <div className="space-y-2">
-              <h4 className="font-semibold text-red-700">Layout Issues:</h4>
-              <ul className="text-sm space-y-1 text-red-600">
-                <li>• Text wrapping poorly</li>
-                <li>• Inadequate touch targets</li>
-                <li>• Poor spacing/padding</li>
-                <li>• Elements cut off at edges</li>
+              <h4 className="font-semibold text-yellow-700 flex items-center gap-1">
+                <AlertTriangle size={16} className="text-yellow-600" />
+                Still Working On:
+              </h4>
+              <ul className="text-sm space-y-1 text-yellow-600">
+                <li>• Buttons still flowing off screen edge</li>
+                <li>• Some navigation elements need refinement</li>
+                <li>• Crisis button positioning needs work</li>
+                <li>• Message input area optimization pending</li>
               </ul>
             </div>
 
             <div className="space-y-2">
-              <h4 className="font-semibold text-red-700">User Experience:</h4>
+              <h4 className="font-semibold text-red-700 flex items-center gap-1">
+                <XCircle size={16} className="text-red-600" />
+                Next Priority Issues:
+              </h4>
               <ul className="text-sm space-y-1 text-red-600">
-                <li>• Difficult to interact with</li>
-                <li>• Poor visual hierarchy</li>
-                <li>• Cluttered appearance</li>
+                <li>• Message bubble sizing needs work</li>
+                <li>• Text wrapping improvements needed</li>
+                <li>• Touch targets still too small in some areas</li>
+                <li>• Visual hierarchy needs improvement</li>
               </ul>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Decision Flow */}
-      <div className="space-y-6">
-        <Card className="border-2 border-blue-500">
-          <CardHeader className="bg-blue-50">
-            <CardTitle className="text-blue-800 text-center">
-              Mobile Optimization Decision Flow
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="flex flex-col items-center space-y-4">
-              
-              {/* Step 1 */}
-              <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 w-full max-w-md text-center">
-                <h3 className="font-bold text-yellow-800">Screen Size Detection</h3>
-                <p className="text-sm text-yellow-700">Is viewport width less than 768px?</p>
+      {/* Progress Tracker */}
+      <Card className="border-2 border-blue-500 mb-6">
+        <CardHeader className="bg-blue-50">
+          <CardTitle className="text-blue-800 text-center">
+            Implementation Progress Tracker
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            
+            {/* Priority 1 - Header */}
+            <div className="bg-green-100 border-2 border-green-400 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="text-green-600" size={20} />
+                <h3 className="font-bold text-green-800">Priority 1: Header (✅ 80% Complete)</h3>
               </div>
-              
-              <ArrowDown className="text-blue-600" size={24} />
-              
-              {/* Branch */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                
-                {/* Mobile Path */}
-                <div className="space-y-3">
-                  <div className="bg-orange-100 border-2 border-orange-400 rounded-lg p-4 text-center">
-                    <h4 className="font-bold text-orange-800">Mobile Layout</h4>
-                    <p className="text-xs text-orange-700">Apply mobile-specific styles</p>
-                  </div>
-                  
-                  <ArrowDown className="text-orange-600 mx-auto" size={20} />
-                  
-                  <div className="space-y-2">
-                    <div className="bg-green-100 border border-green-400 rounded p-2 text-xs">
-                      <strong>Header:</strong> Hamburger menu, compact logo
-                    </div>
-                    <div className="bg-green-100 border border-green-400 rounded p-2 text-xs">
-                      <strong>Buttons:</strong> Stack vertically, larger touch targets
-                    </div>
-                    <div className="bg-green-100 border border-green-400 rounded p-2 text-xs">
-                      <strong>Chat:</strong> Full-width bubbles, larger text
-                    </div>
-                    <div className="bg-green-100 border border-green-400 rounded p-2 text-xs">
-                      <strong>Input:</strong> Optimized keyboard, larger send button
-                    </div>
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <strong className="text-green-700">✅ Completed:</strong>
+                  <ul className="mt-1 space-y-1 text-green-600">
+                    <li>• Hamburger menu implemented</li>
+                    <li>• Mobile navigation overlay</li>
+                    <li>• Responsive logo sizing</li>
+                    <li>• Basic touch improvements</li>
+                  </ul>
                 </div>
-                
-                {/* Desktop Path */}
-                <div className="space-y-3">
-                  <div className="bg-blue-100 border-2 border-blue-400 rounded-lg p-4 text-center">
-                    <h4 className="font-bold text-blue-800">Desktop Layout</h4>
-                    <p className="text-xs text-blue-700">Keep existing styles</p>
-                  </div>
-                  
-                  <ArrowDown className="text-blue-600 mx-auto" size={20} />
-                  
-                  <div className="space-y-2">
-                    <div className="bg-blue-100 border border-blue-400 rounded p-2 text-xs">
-                      <strong>Header:</strong> Full navigation bar
-                    </div>
-                    <div className="bg-blue-100 border border-blue-400 rounded p-2 text-xs">
-                      <strong>Buttons:</strong> Horizontal layout
-                    </div>
-                    <div className="bg-blue-100 border border-blue-400 rounded p-2 text-xs">
-                      <strong>Chat:</strong> Constrained width
-                    </div>
-                    <div className="bg-blue-100 border border-blue-400 rounded p-2 text-xs">
-                      <strong>Input:</strong> Standard sizing
-                    </div>
-                  </div>
+                <div>
+                  <strong className="text-yellow-700">🔄 In Progress:</strong>
+                  <ul className="mt-1 space-y-1 text-yellow-600">
+                    <li>• Button overflow fixes</li>
+                    <li>• Crisis button positioning</li>
+                    <li>• Touch target optimization</li>
+                  </ul>
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Implementation Strategy */}
-        <Card className="border-2 border-purple-500">
-          <CardHeader className="bg-purple-50">
-            <CardTitle className="text-purple-800">
-              Implementation Strategy for Roger Mobile
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              
-              <div className="space-y-2">
-                <h4 className="font-semibold text-purple-700 flex items-center gap-2">
-                  <CheckCircle size={16} className="text-green-600" />
-                  Priority 1: Header
-                </h4>
-                <ul className="text-sm space-y-1 text-gray-700">
-                  <li>• Implement responsive navigation</li>
-                  <li>• Add hamburger menu for mobile</li>
-                  <li>• Optimize button placement</li>
-                  <li>• Ensure nothing overflows</li>
-                </ul>
+            {/* Priority 2 - Layout */}
+            <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle className="text-yellow-600" size={20} />
+                <h3 className="font-bold text-yellow-800">Priority 2: Layout (🔄 Next Up)</h3>
               </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-semibold text-purple-700 flex items-center gap-2">
-                  <CheckCircle size={16} className="text-yellow-600" />
-                  Priority 2: Layout
-                </h4>
-                <ul className="text-sm space-y-1 text-gray-700">
-                  <li>• Adjust chat container sizing</li>
-                  <li>• Improve message spacing</li>
-                  <li>• Optimize touch targets</li>
-                  <li>• Fix text wrapping</li>
-                </ul>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="font-semibold text-purple-700 flex items-center gap-2">
-                  <CheckCircle size={16} className="text-blue-600" />
-                  Priority 3: Polish
-                </h4>
-                <ul className="text-sm space-y-1 text-gray-700">
-                  <li>• Fine-tune animations</li>
-                  <li>• Improve visual hierarchy</li>
-                  <li>• Optimize loading states</li>
-                  <li>• Test on real devices</li>
-                </ul>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <strong className="text-yellow-700">🎯 Next Tasks:</strong>
+                  <ul className="mt-1 space-y-1 text-yellow-600">
+                    <li>• Fix button overflow completely</li>
+                    <li>• Optimize chat container sizing</li>
+                    <li>• Improve message bubble layout</li>
+                    <li>• Enhanced touch targets</li>
+                  </ul>
+                </div>
+                <div>
+                  <strong className="text-yellow-700">🔧 Pending:</strong>
+                  <ul className="mt-1 space-y-1 text-yellow-600">
+                    <li>• Message input optimization</li>
+                    <li>• Text wrapping improvements</li>
+                    <li>• Spacing refinements</li>
+                    <li>• Visual hierarchy fixes</li>
+                  </ul>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Technical Approach */}
-        <Card className="border-2 border-indigo-500">
-          <CardHeader className="bg-indigo-50">
-            <CardTitle className="text-indigo-800">
-              Technical Implementation Approach
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-800 mb-2">CSS Strategy:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <strong>Tailwind Responsive Classes:</strong>
-                    <ul className="mt-1 space-y-1 text-gray-600">
-                      <li>• Use sm:, md:, lg: prefixes</li>
-                      <li>• Mobile-first approach</li>
-                      <li>• Conditional class application</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <strong>Component Logic:</strong>
-                    <ul className="mt-1 space-y-1 text-gray-600">
-                      <li>• useIsMobile hook for detection</li>
-                      <li>• Conditional rendering</li>
-                      <li>• Separate mobile components</li>
-                    </ul>
-                  </div>
-                </div>
+            {/* Priority 3 - Polish */}
+            <div className="bg-gray-100 border-2 border-gray-400 rounded-lg p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-5 h-5 border-2 border-gray-400 rounded bg-gray-200" />
+                <h3 className="font-bold text-gray-800">Priority 3: Polish (⏳ Future)</h3>
               </div>
-              
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-800 mb-2">Files to Modify:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <ul className="space-y-1 text-blue-700">
-                      <li>• Header.tsx (navigation)</li>
-                      <li>• ChatContainer.tsx (layout)</li>
-                      <li>• MessageInput.tsx (input area)</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <ul className="space-y-1 text-blue-700">
-                      <li>• index.css (responsive styles)</li>
-                      <li>• use-mobile.tsx (detection)</li>
-                      <li>• Message.tsx (chat bubbles)</li>
-                    </ul>
-                  </div>
-                </div>
+              <div className="text-sm text-gray-600">
+                <strong>Future Enhancements:</strong> Fine-tune animations, improve visual hierarchy, optimize loading states, device testing
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Current Focus - Button Overflow Fix */}
+      <Card className="border-2 border-orange-500">
+        <CardHeader className="bg-orange-50">
+          <CardTitle className="text-orange-800">
+            🎯 Current Focus: Fixing Button Overflow Issues
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="bg-orange-100 rounded-lg p-4">
+            <h4 className="font-semibold text-orange-800 mb-2">Immediate Next Steps:</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              
+              <div className="space-y-2">
+                <h5 className="font-semibold text-orange-700">Header Refinements:</h5>
+                <ul className="space-y-1 text-orange-600">
+                  <li>• Fix crisis button mobile positioning</li>
+                  <li>• Ensure no elements overflow viewport</li>
+                  <li>• Optimize hamburger menu button size</li>
+                  <li>• Perfect mobile logo scaling</li>
+                </ul>
+              </div>
+              
+              <div className="space-y-2">
+                <h5 className="font-semibold text-orange-700">Layout Fixes:</h5>
+                <ul className="space-y-1 text-orange-600">
+                  <li>• Message input area mobile optimization</li>
+                  <li>• Chat bubble responsive sizing</li>
+                  <li>• Touch target size compliance (44px min)</li>
+                  <li>• Proper text wrapping implementation</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-blue-50 rounded-lg p-4">
+            <h4 className="font-semibold text-blue-800 mb-2">Files Being Modified:</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+              <div>
+                <ul className="space-y-1 text-blue-700">
+                  <li>• ✅ Header.tsx (navigation) - In Progress</li>
+                  <li>• ✅ ChatContainer.tsx (layout) - Started</li>
+                  <li>• 🔄 MessageInput.tsx (input area) - Next</li>
+                </ul>
+              </div>
+              <div>
+                <ul className="space-y-1 text-blue-700">
+                  <li>• ✅ index.css (responsive styles) - Updated</li>
+                  <li>• ✅ use-mobile.tsx (detection) - Working</li>
+                  <li>• 🔄 Message.tsx (chat bubbles) - Pending</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
