@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Shield, AlertTriangle } from 'lucide-react';
@@ -83,23 +81,6 @@ const ChatInterface = () => {
           </div>
         </div>
         
-        {/* Security Status Bar */}
-        <div className="mt-3 p-2 bg-gradient-to-r from-green-50 to-blue-50 rounded-md border border-green-200/50">
-          <div className="flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-green-600" />
-              <span className="font-medium text-green-700">
-                Welcome to Roger's Secure Environment
-              </span>
-            </div>
-            <div className="flex items-center gap-4 text-gray-600">
-              <span>🔒 HIPAA Protected</span>
-              <span>🛡️ Crisis Support Ready</span>
-              <span>⚡ Real-time Processing</span>
-            </div>
-          </div>
-        </div>
-        
         {/* Crisis Warning Banner */}
         {showCrisisWarning && (
           <div className="mt-2 p-3 bg-gradient-to-r from-red-50 to-orange-50 rounded-lg border border-red-200">
@@ -157,4 +138,3 @@ const ChatInterface = () => {
 };
 
 export default ChatInterface;
-
