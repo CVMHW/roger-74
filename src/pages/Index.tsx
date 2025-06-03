@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -166,17 +165,6 @@ const Index = () => {
                 I'm here to chat with you while you wait for your therapist. I'm not a licensed professional, 
                 but I can provide a listening ear and supportive perspective as I continue my training under professional guidance.
               </p>
-              
-              {/* Enhanced Crisis Resources Link with mobile-optimized styling */}
-              <div className="mb-4">
-                <div className={isMobile ? 'w-full' : ''}>
-                  <ExternalCrisisLink className={
-                    isMobile 
-                      ? 'w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg py-4 px-4 text-sm font-bold shadow-lg flex items-center justify-center min-h-[52px] transition-all duration-300 leading-tight break-words text-center' 
-                      : ''
-                  } />
-                </div>
-              </div>
               
               {isMobile ? (
                 <div className="space-y-3">
