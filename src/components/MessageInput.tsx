@@ -86,6 +86,11 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // Prevent input changes when access is not granted
+    if (!hasAccess) {
+      return;
+    }
+    
     const value = e.target.value;
     setUserInput(value);
     
@@ -149,21 +154,22 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
           </form>
         </div>
 
-        {/* Locked message input area - calming aesthetic */}
+        {/* Properly locked message input area */}
         <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-100/80 via-blue-50/60 to-cyan-50/80 rounded-lg backdrop-blur-sm border border-blue-200/40 z-10 flex items-center justify-center">
-            <div className="flex items-center gap-2 text-blue-600/70">
+          <Textarea
+            value=""
+            placeholder="Type your message here..."
+            className="resize-none bg-gradient-to-r from-slate-100/90 via-blue-50/70 to-cyan-50/90 border-blue-200/60 text-slate-400 cursor-not-allowed backdrop-blur-sm"
+            rows={2}
+            disabled={true}
+            readOnly={true}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-100/60 via-blue-50/40 to-cyan-50/60 rounded-lg backdrop-blur-sm border border-blue-200/40 flex items-center justify-center pointer-events-none">
+            <div className="flex items-center gap-2 text-blue-600/70 bg-white/80 px-3 py-1.5 rounded-lg shadow-sm">
               <Lock size={16} className="animate-pulse" />
               <span className="text-sm font-medium">Chat locked - please enter password above</span>
             </div>
           </div>
-          <Textarea
-            value=""
-            placeholder="Type your message here..."
-            className="resize-none bg-gray-100/50 border-gray-300/50 text-gray-400"
-            rows={2}
-            disabled={true}
-          />
         </div>
 
         <div className="p-4 bg-gradient-to-r from-red-50/80 via-orange-50/60 to-red-50/80 border border-red-200/60 rounded-lg mt-4 shadow-sm backdrop-blur-sm">

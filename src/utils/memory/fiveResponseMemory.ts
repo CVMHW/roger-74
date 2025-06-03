@@ -1,3 +1,4 @@
+
 /**
  * 5ResponseMemory System - Robust Short-Term Memory Failsafe
  * 
@@ -129,6 +130,19 @@ export const getLastPatientMessage = (): string | null => {
   } catch (error) {
     console.error('Error retrieving last patient message from 5ResponseMemory:', error);
     return null;
+  }
+};
+
+/**
+ * Check if we have enough conversation history to reference previous interactions
+ */
+export const hasValidConversationHistory = (): boolean => {
+  try {
+    // Need at least 4 entries (2 patient + 2 roger) to reference previous conversation
+    return memoryStore.length >= 4;
+  } catch (error) {
+    console.error('Error checking conversation history validity:', error);
+    return false;
   }
 };
 

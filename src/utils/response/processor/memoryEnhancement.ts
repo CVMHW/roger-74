@@ -5,6 +5,8 @@
  * Enhances responses with memory awareness and context
  */
 
+import { hasValidConversationHistory } from '../../memory/fiveResponseMemory';
+
 /**
  * Enhance a response with memory awareness
  */
@@ -18,11 +20,13 @@ export const enhanceResponseWithMemory = ({
   conversationHistory?: string[];
 }): string => {
   try {
-    // Basic checks for early conversation issues
+    // Check if we actually have valid conversation history
+    const hasValidHistory = hasValidConversationHistory();
     const isEarlyConversation = conversationHistory.length < 3;
     
-    if (isEarlyConversation) {
-      // For early conversation, remove any claims about past discussions
+    // For new conversations or early conversations, prevent memory references
+    if (!hasValidHistory || isEarlyConversation) {
+      console.log("MEMORY ENHANCEMENT: Preventing false memory references in new/early conversation");
       return removeEarlyConversationMemoryReferences(response);
     }
     
@@ -52,7 +56,9 @@ const hasMemoryReference = (response: string): boolean => {
     /you've been telling me/i,
     /we (discussed|talked about)/i,
     /I remember/i,
-    /as you (said|mentioned|noted)/i
+    /as you (said|mentioned|noted)/i,
+    /drawing from our previous conversation/i,
+    /from our conversation/i
   ];
   
   return memoryPhrases.some(phrase => phrase.test(response));
@@ -64,21 +70,30 @@ const hasMemoryReference = (response: string): boolean => {
 const removeEarlyConversationMemoryReferences = (response: string): string => {
   let modified = response;
   
+  console.log("MEMORY ENHANCEMENT: Removing false memory references");
+  
   // Replace memory claims with present-focused language
   modified = modified
+    .replace(/Drawing from our previous conversation,?\s*/gi, "")
     .replace(/you (mentioned|said|told me) that/gi, "it sounds like")
     .replace(/earlier you (mentioned|said|indicated)/gi, "you just shared")
     .replace(/as you mentioned/gi, "from what you're saying")
     .replace(/we (discussed|talked about)/gi, "regarding")
     .replace(/I remember you saying/gi, "I understand")
-    .replace(/from our previous conversation/gi, "from what you've shared");
+    .replace(/from our previous conversation/gi, "from what you've shared")
+    .replace(/I remember you mentioned about/gi, "you mentioned")
+    .replace(/from our conversation/gi, "from what you're telling me");
   
-  // If we've made changes, ensure the response flows naturally
-  if (modified !== response) {
-    // Clean up any awkward transitions that might have been created
-    modified = modified
-      .replace(/\s+/g, ' ')
-      .trim();
+  // Clean up any awkward sentence starts
+  modified = modified
+    .replace(/^,?\s*Emotional Regulation:/gi, "Emotional Regulation:")
+    .replace(/^,?\s*/gi, "")
+    .replace(/\s+/g, ' ')
+    .trim();
+  
+  // If the response starts with a topic like "Emotional Regulation:" without context, add intro
+  if (/^[A-Z][^.]*:\s*The ability/.test(modified)) {
+    modified = "Let's talk about " + modified.toLowerCase();
   }
   
   return modified;
