@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, Heart, Lock, Phone, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertTriangle, Heart, Lock, Phone, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
   const [acknowledgedBeta, setAcknowledgedBeta] = useState(false);
   const [canProceed, setCanProceed] = useState(false);
   const [crisisResourcesOpen, setCrisisResourcesOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('consent');
 
   useEffect(() => {
     setCanProceed(acknowledgedLimitations && acknowledgedEmergency && acknowledgedBeta);
@@ -68,7 +70,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs defaultValue="consent" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 p-1 bg-gray-100">
             <TabsTrigger 
               value="consent" 
@@ -376,6 +378,18 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
           </TabsContent>
           
           <TabsContent value="crisis" className="space-y-4 py-4">
+            {/* Return to Roger Information Button */}
+            <div className="flex justify-center mb-6">
+              <Button
+                onClick={() => setActiveTab('consent')}
+                variant="outline"
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-blue-300 text-blue-700 font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-300"
+              >
+                <ArrowLeft size={18} />
+                Return to Roger Information
+              </Button>
+            </div>
+
             <div className="p-4 bg-red-50 border border-red-300 rounded-lg mb-4">
               <h3 className="relative text-red-700 font-bold flex items-center gap-2 mb-2">
                 <AlertTriangle size={20} />
