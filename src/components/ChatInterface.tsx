@@ -5,7 +5,7 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import { MessageType } from './Message';
 import useRogerianResponse from '../hooks/useRogerianResponse';
-import { useCrisisDetection } from '../hooks/useCrisisDetection';
+import { useCrisisDetection } from '../hooks/chat/useCrisisDetection';
 import { useToast } from "@/hooks/use-toast";
 import ProfileBubble from './ProfileBubble';
 
