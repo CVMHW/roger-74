@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Heart, Brain, Shield, Users, Target, Calendar, Building2, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -163,9 +164,29 @@ const RogerBio = () => {
           <p className="mb-2">
             Roger cannot provide emergency services or crisis coordination efforts comparable to trained professionals.
           </p>
-          <p className="mb-2">
-            <span className="font-medium">For immediate help:</span> 911 or 988 Suicide & Crisis Lifeline.
-          </p>
+          <div className="mb-2 space-y-1">
+            <p className="font-medium">For immediate help:</p>
+            <div className="flex flex-wrap gap-2">
+              <a 
+                href="tel:911" 
+                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors font-medium"
+              >
+                Call 911
+              </a>
+              <a 
+                href="tel:988" 
+                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors font-medium"
+              >
+                Call 988
+              </a>
+              <a 
+                href="sms:741741" 
+                className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors font-medium"
+              >
+                Text 741741
+              </a>
+            </div>
+          </div>
           <p className="text-red-500 italic">
             Roger's responses may contain errors.
           </p>
