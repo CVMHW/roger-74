@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Heart, Brain, Menu, X } from 'lucide-react';
 import BetaBadge from './BetaBadge';
@@ -60,14 +61,14 @@ const Header = () => {
                     <Brain className="h-3 w-3 text-cvmhw-purple" />
                   </div>
                   <p className="text-xs font-medium text-slate-700 leading-relaxed">
-                    Mental Health Services Ages 4+ • Family Therapy • PTSD Treatment • Veterans • Men's Issues
+                    Comprehensive Mental Health Services Ages 4+ • Family Therapy • PTSD Treatment • Veterans • Men's Issues
                   </p>
                 </div>
               </div>
             </div>
           </div>
         ) : (
-          // Desktop Header Layout (restored to original)
+          // Desktop Header Layout - Restored to original structure
           <div className="flex items-center justify-between">
             {/* Logo Section */}
             <div className="flex items-center space-x-3">
@@ -130,7 +131,6 @@ const Header = () => {
         {/* Mobile Menu Overlay */}
         {isMobile && mobileMenuOpen && (
           <div className="absolute top-full left-0 right-0 bg-white border-t-2 border-blue-200 shadow-xl z-50 max-w-full animate-fadeInUp">
-            {/* ... keep existing code (mobile menu content) */}
             <div className="p-4 space-y-4 max-w-full">
               {/* Enhanced Title Section for Mobile */}
               <div className="text-center border-b border-blue-100 pb-4">
