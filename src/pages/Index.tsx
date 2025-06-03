@@ -18,17 +18,14 @@ import ProfileBubble from '../components/ProfileBubble';
 import { useIsMobile } from '../hooks/use-mobile';
 
 const Index = () => {
-  const [showConsentDialog, setShowConsentDialog] = useState(true); // Always start with dialog shown
+  const [showConsentDialog, setShowConsentDialog] = useState(true);
   const [hasConsented, setHasConsented] = useState(false);
   const isMobile = useIsMobile();
 
-  // Remove the useEffect that was checking localStorage - we want consent dialog every session
-  
   const handleConsent = () => {
     setHasConsented(true);
     setShowConsentDialog(false);
     
-    // Still store consent with session timestamp for tracking purposes
     const consentData = {
       timestamp: new Date().toISOString(),
       sessionId: sessionStorage.getItem('roger_session_id') || 'unknown',
@@ -71,9 +68,19 @@ const Index = () => {
   const InsuranceButton = () => (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className={`flex items-center gap-2 bg-gradient-to-r from-cvmhw-blue to-cvmhw-light text-white border-0 hover:from-cvmhw-light hover:to-cvmhw-blue hover:text-cvmhw-blue transition-all duration-300 shadow-md ${isMobile ? 'text-xs px-2 py-1' : ''}`}>
-          <CreditCard size={isMobile ? 14 : 16} />
-          <span className="font-medium">{isMobile ? 'Insurance' : 'Insurance Accepted'}</span>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className={`flex items-center gap-2 bg-gradient-to-r from-cvmhw-blue to-cvmhw-light text-white border-0 hover:from-cvmhw-light hover:to-cvmhw-blue hover:text-cvmhw-blue transition-all duration-300 shadow-md ${
+            isMobile 
+              ? 'text-sm px-4 py-3 min-h-[48px] min-w-[48px] w-full justify-center' 
+              : 'text-sm px-3 py-2'
+          }`}
+        >
+          <CreditCard size={isMobile ? 16 : 16} />
+          <span className="font-medium leading-tight">
+            {isMobile ? 'Insurance Accepted' : 'Insurance Accepted'}
+          </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-4 bg-gradient-to-b from-cvmhw-light/50 to-white border border-cvmhw-light shadow-lg">
@@ -100,9 +107,13 @@ const Index = () => {
       href="https://cvmhw.com" 
       target="_blank" 
       rel="noopener noreferrer" 
-      className={`inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white font-medium rounded-md hover:from-cvmhw-blue hover:to-cvmhw-blue transition-all duration-200 shadow-sm ${isMobile ? 'text-xs px-2 py-1' : 'text-sm'}`}
+      className={`inline-flex items-center gap-2 bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white font-medium rounded-md hover:from-cvmhw-blue hover:to-cvmhw-blue transition-all duration-200 shadow-sm touch-manipulation ${
+        isMobile 
+          ? 'text-sm px-4 py-3 min-h-[48px] min-w-[48px] w-full justify-center leading-tight' 
+          : 'text-sm px-3 py-2'
+      }`}
     >
-      <div className={`relative ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`}>
+      <div className={`relative ${isMobile ? 'w-5 h-5 flex-shrink-0' : 'w-5 h-5'}`}>
         <img 
           src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
           alt="CVMHW Logo" 
@@ -110,7 +121,7 @@ const Index = () => {
           onError={handleImageError}
         />
       </div>
-      <span>Visit CVMHW</span>
+      <span className="font-medium">Visit CVMHW</span>
     </a>
   );
 
@@ -118,19 +129,15 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-cvmhw-light to-white relative">
       <Header />
       
-      {/* User Consent Dialog - now shows every session */}
       <UserConsentDialog 
         isOpen={showConsentDialog}
         onConsent={handleConsent}
       />
       
-      {/* Floating Crisis Button - always visible when consented */}
       {hasConsented && <FloatingCrisisButton />}
       
-      {/* Main content with proper top padding for fixed header on desktop */}
       <main className={`container mx-auto px-4 py-6 ${!isMobile ? 'pt-24' : ''}`}>
         <div className="max-w-4xl mx-auto">
-          {/* Welcome Card - Mobile-optimized layout */}
           <Card className="shadow-md border-cvmhw-blue border mb-6">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-3">
@@ -160,12 +167,17 @@ const Index = () => {
                 but I can provide a listening ear and supportive perspective as I continue my training under professional guidance.
               </p>
               
-              {/* External Crisis Resources Link - Mobile optimized */}
+              {/* Enhanced Crisis Resources Link with mobile-optimized styling */}
               <div className="mb-4">
-                <ExternalCrisisLink />
+                <div className={isMobile ? 'w-full' : ''}>
+                  <ExternalCrisisLink className={
+                    isMobile 
+                      ? 'w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg py-4 px-4 text-sm font-bold shadow-lg flex items-center justify-center min-h-[52px] transition-all duration-300 leading-tight break-words text-center' 
+                      : ''
+                  } />
+                </div>
               </div>
               
-              {/* Mobile-optimized layout for the reminder section */}
               {isMobile ? (
                 <div className="space-y-3">
                   <div className="flex items-start gap-3 p-3 bg-gradient-to-r from-blue-50 to-cvmhw-light/30 rounded-md border border-cvmhw-light">
@@ -180,8 +192,8 @@ const Index = () => {
                     </p>
                   </div>
                   
-                  {/* Mobile button layout - stacked vertically */}
-                  <div className="flex flex-col gap-2">
+                  {/* Mobile button layout - improved spacing and sizing */}
+                  <div className="flex flex-col gap-3 w-full">
                     <CVMHWButton />
                     <InsuranceButton />
                   </div>
@@ -206,19 +218,18 @@ const Index = () => {
             </CardContent>
           </Card>
           
-          {/* Crisis Resources Section - Always Visible for Legal Compliance */}
+          {/* Crisis Resources Section */}
           {hasConsented && (
             <div className="mb-6">
               <CrisisResources />
             </div>
           )}
           
-          {/* Patient Rights Section - Softer, more compassionate design */}
+          {/* Patient Rights Section */}
           {hasConsented && (
             <div className="mb-6">
               <details className="group">
                 <summary className="flex items-center justify-between w-full p-4 bg-gradient-to-r from-slate-50/90 via-blue-50/60 to-cyan-50/70 rounded-lg border border-blue-200/50 cursor-pointer hover:from-blue-50/80 hover:via-cyan-50/70 hover:to-slate-50/80 transition-all duration-200 shadow-md backdrop-blur-sm relative overflow-hidden">
-                  {/* Gentle shimmer effect - much softer */}
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-100/30 to-transparent transform -skew-x-12 animate-pulse opacity-30" />
                   
                   <div className="flex items-center gap-3 relative z-10">
@@ -240,7 +251,7 @@ const Index = () => {
             </div>
           )}
           
-          {/* Tabbed Content for Chat and About - Only show if user has consented */}
+          {/* Tabbed Content */}
           {hasConsented && (
             <Tabs defaultValue="chat" className="mb-6">
               <TabsList className="w-full mb-2">
@@ -356,7 +367,6 @@ const Index = () => {
             </Tabs>
           )}
           
-          {/* Show message if not consented */}
           {!hasConsented && (
             <Card className="shadow-md border-gray-300 border mb-6">
               <CardContent className="p-6 text-center">
