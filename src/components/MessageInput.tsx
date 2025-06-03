@@ -86,8 +86,9 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // Prevent input changes when access is not granted
+    // Prevent any input changes when access is not granted
     if (!hasAccess) {
+      e.preventDefault();
       return;
     }
     
@@ -114,67 +115,104 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
   // Show password gate if no access
   if (!hasAccess) {
     return (
-      <div className="border-t p-4">
-        <div className="bg-gradient-to-r from-blue-50/80 via-cyan-50/60 to-slate-50/90 border border-blue-200/60 rounded-lg p-4 mb-4 shadow-sm backdrop-blur-sm relative overflow-hidden">
-          {/* Gentle shimmer effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-100/20 to-transparent transform -skew-x-12 animate-pulse opacity-40" />
+      <div className="border-t bg-gradient-to-b from-cvmhw-light/30 via-blue-50/60 to-cyan-50/40 p-6">
+        {/* Main Password Protection Zone */}
+        <div className="bg-gradient-to-br from-white/90 via-blue-50/80 to-cvmhw-light/60 border-2 border-cvmhw-blue/30 rounded-xl p-6 mb-6 shadow-lg backdrop-blur-sm relative overflow-hidden">
+          {/* Gentle animated background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-cvmhw-blue/5 via-cyan-100/20 to-cvmhw-light/10 animate-pulse opacity-60" />
           
-          <div className="flex items-center gap-2 mb-2 relative z-10">
-            <div className="bg-gradient-to-br from-blue-400 to-cyan-500 p-1.5 rounded-lg shadow-sm">
-              <Lock className="text-white" size={14} />
+          <div className="flex items-center gap-3 mb-4 relative z-10">
+            <div className="bg-gradient-to-br from-cvmhw-blue to-cvmhw-purple p-3 rounded-xl shadow-md">
+              <div className="relative w-8 h-8">
+                <img 
+                  src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                  alt="CVMHW Logo" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
             </div>
-            <span className="text-sm font-medium bg-gradient-to-r from-blue-700 to-cyan-600 bg-clip-text text-transparent">Testing Mode - Access Required</span>
+            <div>
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent">
+                Welcome to Roger's Secure Environment
+              </h3>
+              <p className="text-sm text-cvmhw-blue/80">
+                Authorized access required for investor demonstration
+              </p>
+            </div>
           </div>
-          <p className="text-xs text-blue-600/80 mb-3 relative z-10">
-            This is a demonstration environment for investors and authorized personnel only.
-          </p>
-          
-          <form onSubmit={handlePasswordSubmit} className="space-y-2 relative z-10">
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setPasswordError(false);
-              }}
-              onKeyDown={handleKeyPress}
-              placeholder="Enter access password to chat..."
-              className={`text-sm bg-white/80 backdrop-blur-sm border-blue-200/60 focus:border-cyan-400 focus:ring-cyan-200/50 ${passwordError ? 'border-red-400 focus:border-red-400 focus:ring-red-200/50' : ''}`}
+
+          <div className="bg-white/70 backdrop-blur-sm rounded-lg p-4 mb-4 border border-cvmhw-light/50 relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <Lock className="text-cvmhw-blue" size={16} />
+              <span className="text-sm font-medium text-cvmhw-blue">Secure Access Portal</span>
+            </div>
+            <p className="text-xs text-gray-600 mb-3">
+              This demonstration environment requires authentication for investor and authorized personnel access.
+            </p>
+            
+            <form onSubmit={handlePasswordSubmit} className="space-y-3">
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordError(false);
+                }}
+                onKeyDown={handleKeyPress}
+                placeholder="Enter demonstration access password..."
+                className={`bg-white/90 backdrop-blur-sm border-cvmhw-light focus:border-cvmhw-blue focus:ring-cvmhw-blue/20 transition-all duration-200 ${passwordError ? 'border-red-400 focus:border-red-400 focus:ring-red-200/50' : ''}`}
+              />
+              {passwordError && (
+                <div className="flex items-center gap-1 text-red-500 text-xs">
+                  <AlertTriangle size={12} />
+                  <span>Incorrect access password</span>
+                </div>
+              )}
+              <Button 
+                type="submit"
+                className="w-full bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple hover:from-cvmhw-purple hover:to-cvmhw-blue text-white shadow-md transition-all duration-300"
+              >
+                <Lock size={16} className="mr-2" />
+                Access Roger Chat
+              </Button>
+            </form>
+          </div>
+        </div>
+
+        {/* Locked Chat Interface Preview */}
+        <div className="relative mb-6">
+          <div className="bg-gradient-to-r from-gray-100/90 via-blue-50/70 to-cvmhw-light/60 border-2 border-cvmhw-light/50 rounded-lg p-4 backdrop-blur-sm">
+            <Textarea
+              value=""
+              placeholder="Type your message here..."
+              className="resize-none bg-white/50 border-cvmhw-light/40 text-gray-400 cursor-not-allowed"
+              rows={2}
+              disabled={true}
+              readOnly={true}
             />
-            {passwordError && (
-              <p className="text-red-500 text-xs">Incorrect password</p>
-            )}
-            <Button 
-              type="submit"
-              size="sm"
-              className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-sm transition-all duration-200"
-            >
-              Access Chat
-            </Button>
-          </form>
-        </div>
+            
+            {/* Lock Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-cvmhw-light/20 via-blue-50/30 to-cvmhw-light/20 rounded-lg backdrop-blur-[2px] border-2 border-cvmhw-light/40 flex items-center justify-center">
+              <div className="flex items-center gap-3 text-cvmhw-blue bg-white/90 px-4 py-2 rounded-lg shadow-sm border border-cvmhw-light/50">
+                <Lock size={18} className="animate-pulse" />
+                <span className="font-medium">Chat interface locked - please authenticate above</span>
+              </div>
+            </div>
+          </div>
 
-        {/* Properly locked message input area */}
-        <div className="relative">
-          <Textarea
-            value=""
-            placeholder="Type your message here..."
-            className="resize-none bg-gradient-to-r from-slate-100/90 via-blue-50/70 to-cyan-50/90 border-blue-200/60 text-slate-400 cursor-not-allowed backdrop-blur-sm"
-            rows={2}
-            disabled={true}
-            readOnly={true}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-100/60 via-blue-50/40 to-cyan-50/60 rounded-lg backdrop-blur-sm border border-blue-200/40 flex items-center justify-center pointer-events-none">
-            <div className="flex items-center gap-2 text-blue-600/70 bg-white/80 px-3 py-1.5 rounded-lg shadow-sm">
-              <Lock size={16} className="animate-pulse" />
-              <span className="text-sm font-medium">Chat locked - please enter password above</span>
+          <div className="flex justify-between items-center mt-2 text-xs text-gray-500 px-2">
+            <span>0/2000 characters</span>
+            <div className="flex items-center gap-2">
+              <Shield size={12} className="text-gray-400" />
+              <span className="text-gray-400">Messages remaining: --</span>
             </div>
           </div>
         </div>
 
-        <div className="p-4 bg-gradient-to-r from-red-50/80 via-orange-50/60 to-red-50/80 border border-red-200/60 rounded-lg mt-4 shadow-sm backdrop-blur-sm">
+        {/* Patient Safety Notice */}
+        <div className="p-4 bg-gradient-to-r from-red-50/80 via-orange-50/60 to-red-50/80 border border-red-200/60 rounded-lg shadow-sm backdrop-blur-sm">
           <div className="flex items-start gap-2">
-            <AlertTriangle className="text-red-600 mt-0.5" size={16} />
+            <AlertTriangle className="text-red-600 mt-0.5 flex-shrink-0" size={16} />
             <div>
               <p className="text-xs text-red-700 font-medium mb-1">
                 Patient Safety Notice
@@ -190,6 +228,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
     );
   }
 
+  // Authenticated interface
   return (
     <div className="border-t p-4">
       <div className="flex space-x-2">
