@@ -35,7 +35,7 @@ const Header = () => {
               <div className="bg-white/80 rounded-lg px-3 py-1.5 shadow-sm border border-blue-100/40 backdrop-blur-sm">
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-3.5 w-3.5 text-cvmhw-blue" />
-                  <p className="text-xs font-medium text-slate-700">Comprehensive mental health services for all ages</p>
+                  <p className="text-xs font-medium text-slate-700">Comprehensive Mental Health Services Ages 4+ specializing in Family Psychotherapy, PTSD Treatment, and Veteran's Issues</p>
                 </div>
               </div>
             </div>
