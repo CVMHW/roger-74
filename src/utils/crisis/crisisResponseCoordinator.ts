@@ -141,9 +141,16 @@ const getLocalResourcesForResponse = (
 /**
  * Detect Ohio region from location info
  */
-const detectOhioRegion = (locationInfo: LocationInfo): 'summit' | 'stark' | 'cuyahoga' | 'ashtabula' | 'lake' | null => {
+const detectOhioRegion = (locationInfo: LocationInfo): 'summit' | 'stark' | 'cuyahoga' | 'ashtabula' | 'lake' | 'lorain' | null => {
   const city = locationInfo.city?.toLowerCase();
   const region = locationInfo.region?.toLowerCase();
+  
+  // Lorain County
+  if (city?.includes('lorain') || city?.includes('north olmsted') || city?.includes('brook park') || 
+      city?.includes('elyria') || city?.includes('avon') || city?.includes('westlake') || 
+      city?.includes('bay village') || region?.includes('lorain')) {
+    return 'lorain';
+  }
   
   // Ashtabula County
   if (city?.includes('ashtabula') || city?.includes('jefferson') || city?.includes('geneva') || 
@@ -183,6 +190,9 @@ const detectOhioRegion = (locationInfo: LocationInfo): 'summit' | 'stark' | 'cuy
  */
 const getLocalCrisisResourcesText = (region: string): string => {
   switch (region) {
+    case 'lorain':
+      return "For immediate local support, you can contact Riveon/Nord Center Crisis Line at 1-800-888-6161 or 988. For non-emergency scheduling, call 440-233-7232.";
+    
     case 'ashtabula':
       return "For immediate local support, you can contact Ashtabula County 24/7 Crisis Hotline at 1-800-577-7849, or Frontline Services at 1-440-381-8347.";
     
@@ -281,6 +291,7 @@ export const getCrisisResources = (crisisType: CrisisType | ConcernType): string
              "- Summit County Mobile Crisis: 330-434-9144\n" +
              "- Stark County Mobile Crisis: 330-452-6000\n" +
              "- Cuyahoga County Mobile Crisis: 1-216-623-6555\n" +
+             "- Riveon/Nord Center Crisis Line: 1-800-888-6161\n" +
              "- Your nearest emergency room\n" +
              "- 911 for immediate danger";
     
@@ -308,8 +319,15 @@ export const getCrisisResources = (crisisType: CrisisType | ConcernType): string
   }
 };
 
-export const getLocalCrisisResources = (region: 'summit' | 'stark' | 'cuyahoga' | 'ashtabula' | 'general' = 'general'): string => {
+export const getLocalCrisisResources = (region: 'summit' | 'stark' | 'cuyahoga' | 'ashtabula' | 'lorain' | 'general' = 'general'): string => {
   switch (region) {
+    case 'lorain':
+      return "- Riveon/Nord Center Crisis Line (Emergency): 1-800-888-6161\n" +
+             "- Riveon/Nord Center Crisis Line (Emergency - Alternative): 988\n" +
+             "- Riveon/Nord Center (Non-Emergency) Scheduling: 440-233-7232\n" +
+             "- Homeless Hotline (Catholic Charities) Lorain County: 440-242-0455\n" +
+             "- University Hospitals St. John Medical Center: 888-496-3730";
+    
     case 'summit':
       return "- Summit County Mobile Crisis: 330-434-9144\n" +
              "- Akron Children's Crisis Line: 330-543-7472\n" +

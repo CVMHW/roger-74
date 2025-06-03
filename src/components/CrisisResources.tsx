@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -165,6 +164,21 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
                 { label: "Cuyahoga County Catholic Charities (Non-Emergency)", phone: "1-216-334-2900" },
                 { label: "Lake County Frontline Services", phone: "1-440-381-8347" },
                 { label: "Chardon Ravenwood Psychiatric Hospital & Outpatient Clinic", phone: "1-440-285-4552" }
+              ]}
+            />
+
+            <ResourceCategory 
+              title="Lorain/North Olmsted/Brook Park Crisis Support"
+              resources={[
+                { label: "Riveon/Nord Center Crisis Line (Emergency)", phone: "1-800-888-6161", isPrimary: true },
+                { label: "Riveon/Nord Center Crisis Line (Emergency - Alternative)", phone: "988", isPrimary: true },
+                { label: "Riveon/Nord Center (Non-Emergency) Scheduling", phone: "440-233-7232" },
+                { label: "Homeless Hotline (Catholic Charities) Lorain County", phone: "440-242-0455" },
+                { label: "Catholic Charities Lorain County", phone: "440-366-1106" },
+                { label: "University Hospitals St. John Medical Center", phone: "888-496-3730" },
+                { label: "Safe Harbor & Genesis House", phone: "440-323-3400" },
+                { label: "The Gathering Place", phone: "216-595-9546" },
+                { label: "The Navigator", phone: "440-240-7025" }
               ]}
             />
           </div>
