@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -381,11 +382,31 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
             <div className="flex justify-center mb-6">
               <Button
                 onClick={() => setActiveTab('consent')}
-                variant="outline"
-                className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-blue-300 text-blue-700 font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-300"
+                className="group relative bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 hover:from-blue-500 hover:via-blue-600 hover:to-blue-700 text-white px-6 py-3 transition-all duration-500 shadow-xl hover:shadow-2xl flex items-center gap-2 rounded-xl font-bold border-2 border-blue-300/40 backdrop-blur-sm overflow-hidden transform hover:scale-105 hover:-translate-y-1"
               >
-                <ArrowLeft size={18} />
-                Return to Roger Information
+                {/* Animated shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                
+                {/* Pulsing background overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-300/20 via-blue-400/30 to-blue-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" />
+                
+                {/* Glowing border effect */}
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 opacity-20 blur-sm group-hover:opacity-40 transition-opacity duration-300" />
+                
+                <img 
+                  src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                  alt="CVMHW" 
+                  className="w-5 h-5 relative z-10 drop-shadow-lg filter brightness-110"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <ArrowLeft size={18} className="relative z-10" />
+                <span className="relative z-10 tracking-wide">Return to Roger Information</span>
+                
+                {/* Corner highlights */}
+                <div className="absolute top-0 left-0 w-3 h-3 bg-white/30 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 bg-white/20 rounded-full opacity-40 group-hover:opacity-80 transition-opacity duration-300" />
               </Button>
             </div>
 
@@ -777,11 +798,31 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
             <div className="flex justify-center mt-8 pt-6 border-t border-gray-200">
               <Button
                 onClick={() => setActiveTab('consent')}
-                variant="outline"
-                className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-blue-300 text-blue-700 font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-300"
+                className="group relative bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 hover:from-blue-500 hover:via-blue-600 hover:to-blue-700 text-white px-6 py-3 transition-all duration-500 shadow-xl hover:shadow-2xl flex items-center gap-2 rounded-xl font-bold border-2 border-blue-300/40 backdrop-blur-sm overflow-hidden transform hover:scale-105 hover:-translate-y-1"
               >
-                <ArrowLeft size={18} />
-                Return to Roger Information
+                {/* Animated shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+                
+                {/* Pulsing background overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-300/20 via-blue-400/30 to-blue-300/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse" />
+                
+                {/* Glowing border effect */}
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 opacity-20 blur-sm group-hover:opacity-40 transition-opacity duration-300" />
+                
+                <img 
+                  src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                  alt="CVMHW" 
+                  className="w-5 h-5 relative z-10 drop-shadow-lg filter brightness-110"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+                <ArrowLeft size={18} className="relative z-10" />
+                <span className="relative z-10 tracking-wide">Return to Roger Information</span>
+                
+                {/* Corner highlights */}
+                <div className="absolute top-0 left-0 w-3 h-3 bg-white/30 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute bottom-0 right-0 w-2 h-2 bg-white/20 rounded-full opacity-40 group-hover:opacity-80 transition-opacity duration-300" />
               </Button>
             </div>
           </TabsContent>
