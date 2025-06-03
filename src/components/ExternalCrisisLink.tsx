@@ -27,7 +27,8 @@ const ExternalCrisisLink: React.FC<ExternalCrisisLinkProps> = ({
     if (variant === 'footer') {
       return "Crisis Support Available 24/7";
     }
-    return isMobile ? "Crisis Help Available 24/7" : "Professional help available anytime you need it";
+    // For default variant: show long text only on mobile, short text on desktop
+    return isMobile ? "Crisis Help Available 24/7" : "Crisis Resources";
   };
 
   // Mobile-optimized styling
@@ -36,20 +37,20 @@ const ExternalCrisisLink: React.FC<ExternalCrisisLinkProps> = ({
     
     if (variant === 'header') {
       return `${baseStyles} ${isMobile 
-        ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-sm px-4 py-3 min-h-[52px] w-full leading-tight text-center break-words' 
+        ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white text-xs px-3 py-3 min-h-[44px] w-full leading-tight text-center break-words' 
         : 'bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple hover:from-cvmhw-purple hover:to-cvmhw-blue text-white border-0 px-3 py-2 text-xs'
       }`;
     }
     
     if (variant === 'footer') {
       return `${baseStyles} bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white ${
-        isMobile ? 'text-sm px-4 py-3 min-h-[48px]' : 'text-sm px-4 py-2'
+        isMobile ? 'text-xs px-3 py-3 min-h-[44px]' : 'text-sm px-4 py-2'
       }`;
     }
     
     return `${baseStyles} bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white ${
       isMobile 
-        ? 'text-sm px-4 py-4 min-h-[56px] w-full leading-tight text-center break-words hyphens-auto' 
+        ? 'text-xs px-3 py-3 min-h-[44px] w-full leading-tight text-center break-words' 
         : 'text-sm px-6 py-3'
     }`;
   };
@@ -69,9 +70,9 @@ const ExternalCrisisLink: React.FC<ExternalCrisisLinkProps> = ({
       } : {}}
     >
       {variant === 'header' ? (
-        <Phone size={isMobile ? 18 : 16} className="flex-shrink-0" />
+        <Phone size={isMobile ? 16 : 16} className="flex-shrink-0" />
       ) : (
-        <AlertTriangle size={isMobile ? 20 : 18} className="flex-shrink-0" />
+        <AlertTriangle size={isMobile ? 18 : 18} className="flex-shrink-0" />
       )}
       <span className={`font-semibold ${isMobile ? 'text-center leading-tight' : ''}`}>
         {getButtonText()}
