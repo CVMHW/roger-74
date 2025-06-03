@@ -36,10 +36,10 @@ const ChatContainer: React.FC = () => {
         </div>
       )}
       
-      {/* Main chat area with ScrollArea for proper scrolling */}
-      <ScrollArea className="flex-1 h-[400px] md:h-[500px]">
+      {/* Main chat area with ScrollArea for proper scrolling - mobile optimized heights */}
+      <ScrollArea className="flex-1 h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]">
         <div 
-          className="p-4" 
+          className="p-2 sm:p-4" 
           ref={chatContainerRef}
         >
           <MessageList 

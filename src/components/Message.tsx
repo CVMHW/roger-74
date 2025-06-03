@@ -80,13 +80,13 @@ const Message: React.FC<MessageProps> = ({ message, onFeedback }) => {
   };
 
   return (
-    <div className={`flex mb-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex mb-2 sm:mb-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
       {message.sender === 'roger' && (
-        <div className="h-8 w-8 rounded-full bg-roger flex items-center justify-center mr-2 mt-1">
-          <span className="text-white font-medium text-sm">R</span>
+        <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-roger flex items-center justify-center mr-1 sm:mr-2 mt-1 shrink-0">
+          <span className="text-white font-medium text-xs sm:text-sm">R</span>
         </div>
       )}
-      <div className="flex flex-col">
+      <div className="flex flex-col max-w-[85%] sm:max-w-[80%]">
         {message.sender === 'roger' && message.isRollingBack && (
           <RollbackIndicator 
             isActive={true} 
@@ -95,33 +95,33 @@ const Message: React.FC<MessageProps> = ({ message, onFeedback }) => {
           />
         )}
         <div 
-          className={`chat-bubble ${message.sender === 'user' ? 'user-message' : 'roger-message'} ${message.concernType ? getConcernClass() : ''}`}
+          className={`chat-bubble ${message.sender === 'user' ? 'user-message' : 'roger-message'} ${message.concernType ? getConcernClass() : ''} px-2 sm:px-4 py-1 sm:py-2 text-sm sm:text-base`}
         >
           <div>
             {textParagraphs.map((paragraph, index) => (
-              <p key={index} className={index > 0 ? 'mt-2' : ''}>
+              <p key={index} className={index > 0 ? 'mt-1 sm:mt-2' : ''}>
                 {paragraph.trim()}
               </p>
             ))}
           </div>
-          <div className={`flex justify-between items-center mt-2 ${message.sender === 'user' ? 'text-gray-500' : 'text-roger-light'}`}>
+          <div className={`flex justify-between items-center mt-1 sm:mt-2 ${message.sender === 'user' ? 'text-gray-500' : 'text-roger-light'}`}>
             <div className="text-xs">{formattedTime}</div>
             
             {message.sender === 'roger' && onFeedback && (
-              <div className="flex space-x-2">
+              <div className="flex space-x-1 sm:space-x-2">
                 <button 
                   onClick={() => onFeedback(message.id, 'positive')} 
-                  className={`p-1 rounded-full hover:bg-gray-100 transition-colors ${message.feedback === 'positive' ? 'text-green-500' : 'text-gray-400'}`}
+                  className={`p-1 rounded-full hover:bg-gray-100 transition-colors touch-manipulation ${message.feedback === 'positive' ? 'text-green-500' : 'text-gray-400'}`}
                   aria-label="Helpful response"
                 >
-                  <ThumbsUp size={14} />
+                  <ThumbsUp size={12} className="sm:w-3.5 sm:h-3.5" />
                 </button>
                 <button 
                   onClick={() => onFeedback(message.id, 'negative')} 
-                  className={`p-1 rounded-full hover:bg-gray-100 transition-colors ${message.feedback === 'negative' ? 'text-red-500' : 'text-gray-400'}`}
+                  className={`p-1 rounded-full hover:bg-gray-100 transition-colors touch-manipulation ${message.feedback === 'negative' ? 'text-red-500' : 'text-gray-400'}`}
                   aria-label="Unhelpful response"
                 >
-                  <ThumbsDown size={14} />
+                  <ThumbsDown size={12} className="sm:w-3.5 sm:h-3.5" />
                 </button>
               </div>
             )}

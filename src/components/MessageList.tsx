@@ -59,7 +59,7 @@ const MessageList: React.FC<MessageListProps> = ({
   return (
     <ScrollArea className="h-full overflow-y-auto" scrollHideDelay={0}>
       <div 
-        className="flex flex-col space-y-4 p-4"
+        className="flex flex-col space-y-2 sm:space-y-4 p-1 sm:p-4"
         ref={scrollContainerRef}
       >
         {messages.map((message) => (
@@ -73,7 +73,7 @@ const MessageList: React.FC<MessageListProps> = ({
         {/* Show typing indicator when messages are being typed */}
         {isTyping && (
           <div className="flex items-start">
-            <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm shrink-0">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs sm:text-sm shrink-0">
               R
             </div>
             <div className="ml-2 p-2">
@@ -89,7 +89,7 @@ const MessageList: React.FC<MessageListProps> = ({
         {/* Show processing context even without typing indicator if appropriate */}
         {!isTyping && processingContext && (
           <div className="flex items-start">
-            <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm shrink-0">
+            <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs sm:text-sm shrink-0">
               R
             </div>
             <div className="ml-2 p-2">

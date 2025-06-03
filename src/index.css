@@ -81,7 +81,8 @@
 }
 
 .chat-bubble {
-  @apply relative px-4 py-2 rounded-lg max-w-[80%] animate-fade-in;
+  @apply relative rounded-lg animate-fade-in break-words;
+  max-width: 100%;
 }
 
 .user-message {
@@ -93,7 +94,14 @@
 }
 
 .chat-container {
-  @apply h-[500px] overflow-y-auto p-4 flex flex-col space-y-3;
+  @apply overflow-y-auto flex flex-col;
+  height: 300px;
+}
+
+@media (min-width: 640px) {
+  .chat-container {
+    height: 500px;
+  }
 }
 
 /* Crisis Resources Scrollbar Styles */
@@ -192,3 +200,13 @@
   @apply bg-gradient-to-b from-white to-blue-50 border-t border-blue-100;
 }
 
+/* Mobile optimizations */
+@media (max-width: 640px) {
+  .chat-bubble {
+    @apply text-sm leading-relaxed;
+  }
+  
+  .chat-container {
+    @apply space-y-2;
+  }
+}
