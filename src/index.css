@@ -83,6 +83,9 @@
 .chat-bubble {
   @apply relative rounded-lg animate-fade-in break-words;
   max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 .user-message {
@@ -200,13 +203,58 @@
   @apply bg-gradient-to-b from-white to-blue-50 border-t border-blue-100;
 }
 
-/* Mobile optimizations */
+/* Mobile optimizations - Enhanced */
 @media (max-width: 640px) {
   .chat-bubble {
     @apply text-sm leading-relaxed;
+    max-width: 90%;
+    word-break: break-word;
   }
   
   .chat-container {
     @apply space-y-2;
   }
+  
+  /* Better mobile text handling */
+  .chat-bubble p {
+    line-height: 1.5;
+    margin-bottom: 0.5rem;
+  }
+  
+  .chat-bubble p:last-child {
+    margin-bottom: 0;
+  }
+  
+  /* Mobile dialog improvements */
+  .dialog-content {
+    margin: 0.5rem;
+    max-height: 95vh;
+  }
+  
+  /* Mobile button improvements */
+  .mobile-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Mobile text inputs */
+  .mobile-input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .chat-bubble {
+    max-width: 85%;
+  }
+}
+
+/* Text overflow handling for all devices */
+.text-container {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
 }
