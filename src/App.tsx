@@ -1,26 +1,33 @@
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from '@/components/ui/sonner';
-import Index from './pages/Index';
-import FlowchartPage from './pages/FlowchartPage';
-import ConversationProcessingPage from './pages/ConversationProcessingPage';
-import UnifiedFlowchartPage from './pages/UnifiedFlowchartPage';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Index from "./pages/Index";
+import FlowchartPage from "./pages/FlowchartPage";
+import UnifiedFlowchartPage from "./pages/UnifiedFlowchartPage";
+import ConversationProcessingPage from "./pages/ConversationProcessingPage";
+import WrappingHellAnalysisPage from "./pages/WrappingHellAnalysisPage";
 
-function App() {
-  return (
-    <Router>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+const queryClient = new QueryClient();
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/flowchart" element={<FlowchartPage />} />
-          <Route path="/conversation-processing" element={<ConversationProcessingPage />} />
           <Route path="/unified-flowchart" element={<UnifiedFlowchartPage />} />
+          <Route path="/conversation-processing" element={<ConversationProcessingPage />} />
+          <Route path="/wrapping-hell-analysis" element={<WrappingHellAnalysisPage />} />
         </Routes>
-        <Toaster />
-      </div>
-    </Router>
-  );
-}
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;
