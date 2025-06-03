@@ -145,6 +145,9 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
             <div className="flex items-center gap-2 mb-2">
               <Lock className="text-cvmhw-blue" size={16} />
               <span className="text-sm font-medium text-cvmhw-blue">Secure Access Portal</span>
+              <div className="w-6 h-6 bg-amber-100 rounded-full flex items-center justify-center ml-2">
+                🧸
+              </div>
             </div>
             <p className="text-xs text-gray-600 mb-3">
               This demonstration environment requires authentication for investor and authorized personnel access.

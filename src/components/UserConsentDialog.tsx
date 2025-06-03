@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -363,9 +362,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
 
             <div className="flex items-center justify-between gap-4 pt-4">
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-amber-100 rounded-full flex items-center justify-center">
-                  🧸
-                </div>
+                {/* Removed teddy bear from here */}
               </div>
               <Button 
                 onClick={handleConsent}
