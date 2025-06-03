@@ -686,6 +686,78 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                   </div>
                 </div>
               </div>
+
+              {/* Lorain/North Olmsted/Brook Park Crisis Support */}
+              <div className="p-4 bg-white border border-purple-200 rounded-lg">
+                <h4 className="relative font-semibold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-purple-600 to-red-700 animate-pulse drop-shadow-lg">
+                  Lorain/North Olmsted/Brook Park Crisis Support
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium text-gray-800">Riveon/Nord Center Crisis Line (Emergency)</span>
+                    <a href="tel:18008886161" className="flex items-center gap-1 text-purple-700 hover:text-purple-900 font-medium">
+                      <Phone size={14} />
+                      <span>1-800-888-6161</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium text-gray-800">Riveon/Nord Center Crisis Line (Emergency - Alternative)</span>
+                    <a href="tel:988" className="flex items-center gap-1 text-purple-700 hover:text-purple-900 font-medium">
+                      <Phone size={14} />
+                      <span>988</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium text-gray-800">Riveon/Nord Center (Non-Emergency) Scheduling</span>
+                    <a href="tel:4402337232" className="flex items-center gap-1 text-purple-700 hover:text-purple-900 font-medium">
+                      <Phone size={14} />
+                      <span>440-233-7232</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium text-gray-800">Homeless Hotline (Catholic Charities) Lorain County</span>
+                    <a href="tel:4402420455" className="flex items-center gap-1 text-purple-700 hover:text-purple-900 font-medium">
+                      <Phone size={14} />
+                      <span>440-242-0455</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium text-gray-800">Catholic Charities Lorain County</span>
+                    <a href="tel:4403661106" className="flex items-center gap-1 text-purple-700 hover:text-purple-900 font-medium">
+                      <Phone size={14} />
+                      <span>440-366-1106</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium text-gray-800">University Hospitals St. John Medical Center</span>
+                    <a href="tel:8884963730" className="flex items-center gap-1 text-purple-700 hover:text-purple-900 font-medium">
+                      <Phone size={14} />
+                      <span>888-496-3730</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium text-gray-800">Safe Harbor & Genesis House</span>
+                    <a href="tel:4403233400" className="flex items-center gap-1 text-purple-700 hover:text-purple-900 font-medium">
+                      <Phone size={14} />
+                      <span>440-323-3400</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium text-gray-800">The Gathering Place</span>
+                    <a href="tel:2165959546" className="flex items-center gap-1 text-purple-700 hover:text-purple-900 font-medium">
+                      <Phone size={14} />
+                      <span>216-595-9546</span>
+                    </a>
+                  </div>
+                  <div className="flex justify-between items-center p-2 hover:bg-purple-50 rounded">
+                    <span className="font-medium text-gray-800">The Navigator</span>
+                    <a href="tel:4402407025" className="flex items-center gap-1 text-purple-700 hover:text-purple-900 font-medium">
+                      <Phone size={14} />
+                      <span>440-240-7025</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
