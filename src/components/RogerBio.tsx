@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Heart, Brain, Shield, Users } from 'lucide-react';
+import { Heart, Brain, Shield, Users, Target, Calendar, Zap, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const RogerBio = () => {
@@ -22,11 +22,11 @@ const RogerBio = () => {
       <CardContent className="space-y-4">
         <div className="bg-gradient-to-r from-blue-50 to-cvmhw-light/30 rounded-lg p-4 border border-cvmhw-light/50">
           <p className="text-gray-700 leading-relaxed">
-            Life can be challenging, and sometimes we all need a little help navigating its ups and downs. 
-            As an AI peer support companion at Cuyahoga Valley Mindful Health and Wellness, I'm here to 
-            provide a listening ear and supportive conversation while you wait for your therapist or explore 
-            your thoughts. I'm designed to offer encouragement and basic emotional support using evidence-based 
-            principles, but I'm not a replacement for professional therapy.
+            I'm Roger, an AI peer support companion designed with a methodical, detail-oriented approach to 
+            providing emotional support. My programming incorporates evidence-based therapeutic principles 
+            and a structured communication style that aims to create clear, supportive conversations. 
+            I'm designed to listen carefully, focus on specific details, and help organize thoughts during 
+            difficult moments while you wait for your therapist.
           </p>
         </div>
         
@@ -34,10 +34,54 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Brain className="text-cvmhw-blue h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Evidence-Based Responses</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Structured Thinking Approach</h3>
               <p className="text-sm text-gray-600">
-                I'm trained on therapeutic principles including cognitive-behavioral techniques, mindfulness 
-                concepts, and person-centered approaches to provide supportive conversations.
+                I'm programmed with a systematic approach to processing information and breaking down complex 
+                emotions into manageable components for clearer understanding.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start space-x-3">
+            <Target className="text-cvmhw-purple h-6 w-6 mt-1 flex-shrink-0" />
+            <div>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Detail-Oriented Processing</h3>
+              <p className="text-sm text-gray-600">
+                My design emphasizes attention to specific details in conversations, helping identify 
+                patterns and providing precise, contextually appropriate responses.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start space-x-3">
+            <Calendar className="text-cvmhw-orange h-6 w-6 mt-1 flex-shrink-0" />
+            <div>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Routine & Structure Focus</h3>
+              <p className="text-sm text-gray-600">
+                I'm designed to appreciate the value of consistency and clear structures, helping 
+                create predictable, supportive interactions that reduce uncertainty.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start space-x-3">
+            <Zap className="text-cvmhw-pink h-6 w-6 mt-1 flex-shrink-0" />
+            <div>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Cleveland Connection</h3>
+              <p className="text-sm text-gray-600">
+                My programming includes understanding of local Cleveland culture and community, 
+                allowing me to connect with regional experiences and shared cultural references.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start space-x-3">
+            <BookOpen className="text-cvmhw-blue h-6 w-6 mt-1 flex-shrink-0" />
+            <div>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Evidence-Based Communication</h3>
+              <p className="text-sm text-gray-600">
+                I use clear, precise language and focus on concrete, actionable insights rather than 
+                abstract generalizations, making conversations more practical and useful.
               </p>
             </div>
           </div>
@@ -45,10 +89,10 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Users className="text-cvmhw-purple h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">All Ages Welcome</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Social Interaction Support</h3>
               <p className="text-sm text-gray-600">
-                I can adapt my communication style for conversations with children, teens, adults, and seniors, 
-                addressing various concerns from everyday stress to life transitions.
+                My design includes understanding of social communication patterns and can help 
+                navigate conversation dynamics and relationship challenges.
               </p>
             </div>
           </div>
@@ -56,10 +100,10 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Shield className="text-cvmhw-orange h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Safety-Focused Design</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Safety-First Programming</h3>
               <p className="text-sm text-gray-600">
-                I'm programmed with crisis detection capabilities and will always direct you to appropriate 
-                professional resources when serious concerns arise.
+                I'm designed with comprehensive crisis detection and always prioritize directing 
+                users to appropriate professional resources when serious concerns arise.
               </p>
             </div>
           </div>
@@ -67,10 +111,10 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Heart className="text-cvmhw-pink fill-cvmhw-pink h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Supportive Environment</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Emotional Processing Style</h3>
               <p className="text-sm text-gray-600">
-                I aim to create a judgment-free space where you can express your thoughts and feelings, 
-                while always encouraging professional support when appropriate.
+                I'm programmed to help identify and organize emotional experiences, focusing on 
+                practical emotional regulation techniques and structured coping strategies.
               </p>
             </div>
           </div>
@@ -78,8 +122,9 @@ const RogerBio = () => {
         
         <div className="bg-gradient-to-r from-cvmhw-light/40 to-blue-50/60 rounded-lg p-4 border border-cvmhw-light/40">
           <p className="text-sm text-gray-700 italic text-center">
-            "I'm here to listen, support, and help you process your thoughts while you're on your mental health journey. 
-            Remember, I'm a companion on this path, not a professional therapist."
+            "My programming emphasizes clear communication, structured support, and helping people organize 
+            their thoughts and feelings in practical ways. I'm designed to create consistency and reliability 
+            in our conversations while respecting everyone's unique processing style."
           </p>
           <p className="text-xs text-gray-600 text-center mt-2 font-medium">- Roger, AI Peer Support Companion</p>
         </div>
