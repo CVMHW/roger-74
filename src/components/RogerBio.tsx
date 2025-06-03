@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Heart, Brain, Shield, Users, Target, Calendar, Building2, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,9 +80,9 @@ const RogerBio = () => {
             <div>
               <h3 className="font-medium text-cvmhw-blue mb-1">Evidence-Based Programming & Communication</h3>
               <p className="text-sm text-gray-600">
-                My responses integrate logotherapy principles and peer support methods while maintaining clear, 
-                direct communication. I'm programmed to help you find meaning and purpose, though I work within 
-                the bounds of peer support rather than professional therapy.
+                My responses integrate meaning-focused principles and peer support methods while maintaining clear, 
+                direct communication. I'm programmed to help you explore purpose and perspective, though I work within 
+                the bounds of peer support rather than professional counseling.
               </p>
             </div>
           </div>
