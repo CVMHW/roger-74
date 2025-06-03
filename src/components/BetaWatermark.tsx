@@ -19,8 +19,8 @@ const BetaWatermark: React.FC = () => {
         </span>
       </Badge>
       
-      {/* Compact Development Phase Text */}
-      <div className="text-xs text-gray-500 font-medium bg-white/80 backdrop-blur-sm px-1.5 py-0.5 rounded shadow-sm border border-gray-200">
+      {/* Beautiful Gradient Dev Phase Text */}
+      <div className="bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white text-xs font-medium px-1.5 py-0.5 rounded shadow-sm border border-white/30 backdrop-blur-sm">
         Dev Phase
       </div>
     </div>
