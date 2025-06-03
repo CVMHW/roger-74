@@ -157,6 +157,19 @@ const RogerBio = () => {
             He is not a licensed therapist and cannot provide professional mental health treatment, diagnosis, or crisis intervention.
           </p>
         </div>
+        
+        <div className="text-xs text-red-600 bg-red-50 rounded-md p-3 border border-red-200">
+          <p className="font-medium text-red-700 mb-1">Emergency Limitations:</p>
+          <p className="mb-2">
+            Roger cannot provide emergency services or crisis coordination efforts comparable to trained professionals.
+          </p>
+          <p className="mb-2">
+            <span className="font-medium">For immediate help:</span> 911 or 988 Suicide & Crisis Lifeline.
+          </p>
+          <p className="text-red-500 italic">
+            Roger's responses may contain errors.
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
