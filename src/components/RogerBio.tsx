@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Heart, Brain, Shield, Users, Target, Calendar, Zap, BookOpen, Skyscraper } from 'lucide-react';
+import { Heart, Brain, Shield, Users, Target, Calendar, Zap, BookOpen, Building2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const RogerBio = () => {
@@ -65,7 +65,7 @@ const RogerBio = () => {
           </div>
           
           <div className="flex items-start space-x-3">
-            <Skyscraper className="text-cvmhw-pink h-6 w-6 mt-1 flex-shrink-0" />
+            <Building2 className="text-cvmhw-pink h-6 w-6 mt-1 flex-shrink-0" />
             <div>
               <h3 className="font-medium text-cvmhw-blue mb-1">Cleveland Connection</h3>
               <p className="text-sm text-gray-600">
