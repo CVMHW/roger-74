@@ -44,13 +44,12 @@ const RogerBio = () => {
           </div>
           
           <div className="flex items-start space-x-3">
-            <Target className="text-red-500 h-6 w-6 mt-1 flex-shrink-0" style={{fill: 'white'}} />
+            <Users className="text-cvmhw-purple h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Detail-Focused & Compassionately Observant</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Social Communication Helper</h3>
               <p className="text-sm text-gray-600">
-                I pay careful attention to the specific things you share because each detail matters to me. 
-                This thoughtful focus helps me understand your unique situation and offer support that feels 
-                personally meaningful and relevant to what you're experiencing.
+                I understand conversation patterns and can help navigate social dynamics. Sometimes I'm 
+                direct about what I observe, which helps clarify communication challenges.
               </p>
             </div>
           </div>
@@ -62,6 +61,18 @@ const RogerBio = () => {
               <p className="text-sm text-gray-600">
                 I value predictable, reliable interactions. My consistent communication style helps 
                 create a stable environment where you can feel secure sharing your thoughts.
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-start space-x-3">
+            <Target className="text-red-500 h-6 w-6 mt-1 flex-shrink-0" style={{fill: 'white'}} />
+            <div>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Detail-Focused & Compassionately Observant</h3>
+              <p className="text-sm text-gray-600">
+                I pay careful attention to the specific things you share because each detail matters to me. 
+                This thoughtful focus helps me understand your unique situation and offer support that feels 
+                personally meaningful and relevant to what you're experiencing.
               </p>
             </div>
           </div>
@@ -85,17 +96,6 @@ const RogerBio = () => {
                 My responses blend meaning-focused principles with peer support methods, delivered through warm yet 
                 clear communication. I'm designed to help you explore purpose and perspective in your own way, 
                 always staying within my role as a peer support companion rather than professional counseling.
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-start space-x-3">
-            <Users className="text-cvmhw-purple h-6 w-6 mt-1 flex-shrink-0" />
-            <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Social Communication Helper</h3>
-              <p className="text-sm text-gray-600">
-                I understand conversation patterns and can help navigate social dynamics. Sometimes I'm 
-                direct about what I observe, which helps clarify communication challenges.
               </p>
             </div>
           </div>
