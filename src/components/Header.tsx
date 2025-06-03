@@ -26,18 +26,20 @@ const Header = () => {
             </div>
           </div>
           
-          {/* Center Title Section - Perfect alignment */}
-          <div className="flex-1 px-6 flex flex-col items-center">
+          {/* Center Title Section - Perfect alignment with natural text flow */}
+          <div className="flex-1 px-4 flex flex-col items-center">
             <h1 className="text-xl font-bold bg-gradient-to-r from-cvmhw-blue via-cvmhw-purple to-cvmhw-blue bg-clip-text text-transparent mb-1.5 tracking-tight">
               Cuyahoga Valley Mindful Health and Wellness
             </h1>
-            <div className="bg-white/80 rounded-lg px-4 py-2 shadow-sm border border-blue-100/40 backdrop-blur-sm">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1">
+            <div className="bg-white/80 rounded-lg px-5 py-2 shadow-sm border border-blue-100/40 backdrop-blur-sm max-w-2xl">
+              <div className="flex items-start gap-3">
+                <div className="flex items-center gap-1 mt-0.5 flex-shrink-0">
                   <Heart className="h-4 w-4 text-cvmhw-blue" />
                   <Brain className="h-4 w-4 text-cvmhw-purple" />
                 </div>
-                <p className="text-xs font-medium text-slate-700">Comprehensive Mental Health Services Ages 4+ specializing in Family Psychotherapy, PTSD Treatment, Veteran's Issues, and Boy's and Men's Issues</p>
+                <p className="text-xs font-medium text-slate-700 leading-relaxed text-center">
+                  Comprehensive Mental Health Services Ages 4+ specializing in Family Psychotherapy, PTSD Treatment, Veteran's Issues, and Boy's and Men's Issues
+                </p>
               </div>
             </div>
           </div>
