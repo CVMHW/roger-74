@@ -363,7 +363,7 @@ const Index = () => {
             <p className="font-medium">Roger is a Peer Support companion in-training. He is not a substitute for professional mental health services.</p>
             <div className="bg-gray-50 rounded-md p-3 text-xs">
               <p className="font-semibold text-orange-600 mb-1">⚠️ BETA SOFTWARE DISCLAIMER</p>
-              <p className="mb-2">This is experimental beta software. Roger AI is not FDA approved or clinically validated. For informational purposes only - not medical advice, diagnosis, or treatment. Always consult licensed healthcare professionals.</p>
+              <p className="mb-2">This is experimental beta software. Roger AI is not FDA approved or clinically validated as a medical device. For informational purposes only - not medical advice, diagnosis, or treatment. Always consult licensed healthcare professionals.</p>
               <p><span className="font-medium">Emergency Limitations:</span> Roger cannot provide emergency services or crisis coordination efforts comparable to trained professionals. For immediate help: <a href="tel:911" className="text-cvmhw-blue hover:underline font-medium">911</a> or <a href="tel:988" className="text-cvmhw-blue hover:underline font-medium">988 Suicide & Crisis Lifeline</a>. Roger's responses may contain errors.</p>
             </div>
           </div>

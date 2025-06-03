@@ -16,7 +16,7 @@ const LegalDisclaimer: React.FC = () => {
               </span>
             </p>
             <p className="text-xs leading-tight">
-              Experimental beta software • Not FDA approved • Informational only • Always consult healthcare professionals • 
+              Experimental beta software • Not FDA approved or clinically validated as a medical device • Informational only • Always consult healthcare professionals • 
               Emergency: <a href="tel:911" className="text-cvmhw-blue hover:underline font-medium">911</a> or <a href="tel:988" className="text-cvmhw-blue hover:underline font-medium">988 Crisis Lifeline</a> • Responses may contain errors • Not a substitute for professional care
             </p>
           </div>
