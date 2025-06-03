@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -7,6 +6,7 @@ import LegalDisclaimer from '../components/LegalDisclaimer';
 import ExternalCrisisLink from '../components/ExternalCrisisLink';
 import UserConsentDialog from '../components/UserConsentDialog';
 import FloatingCrisisButton from '../components/FloatingCrisisButton';
+import CrisisResources from '../components/CrisisResources';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -192,7 +192,13 @@ const Index = () => {
                     </svg>
                   </span>
                 </summary>
-                <div className="mt-3">
+                <div className="mt-3 space-y-4">
+                  {/* Crisis Resources Section */}
+                  <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
+                    <CrisisResources />
+                  </div>
+                  
+                  {/* Patient Rights Content */}
                   <PatientRightsTab />
                 </div>
               </details>
