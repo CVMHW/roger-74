@@ -17,7 +17,7 @@ const LegalDisclaimer: React.FC = () => {
             </p>
             <p className="text-xs leading-tight">
               Experimental beta software • Not FDA approved • Informational only • Always consult healthcare professionals • 
-              Emergency: 911 or 988 Crisis Lifeline • Responses may contain errors • Not a substitute for professional care
+              Emergency: <a href="tel:911" className="text-cvmhw-blue hover:underline font-medium">911</a> or <a href="tel:988" className="text-cvmhw-blue hover:underline font-medium">988 Crisis Lifeline</a> • Responses may contain errors • Not a substitute for professional care
             </p>
           </div>
         </div>
