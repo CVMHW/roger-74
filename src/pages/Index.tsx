@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -172,6 +173,15 @@ const Index = () => {
             </CardContent>
           </Card>
           
+          {/* Crisis Resources Section - Always Visible for Legal Compliance */}
+          {hasConsented && (
+            <div className="mb-6">
+              <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+                <CrisisResources forceOpen={true} />
+              </div>
+            </div>
+          )}
+          
           {/* Patient Rights Section - Softer, more compassionate design */}
           {hasConsented && (
             <div className="mb-6">
@@ -192,13 +202,7 @@ const Index = () => {
                     </svg>
                   </span>
                 </summary>
-                <div className="mt-3 space-y-4">
-                  {/* Crisis Resources Section */}
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-                    <CrisisResources />
-                  </div>
-                  
-                  {/* Patient Rights Content */}
+                <div className="mt-3">
                   <PatientRightsTab />
                 </div>
               </details>
