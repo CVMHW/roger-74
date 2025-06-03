@@ -43,7 +43,7 @@ const RogerBio = () => {
           </div>
           
           <div className="flex items-start space-x-3">
-            <Target className="text-cvmhw-purple h-6 w-6 mt-1 flex-shrink-0" />
+            <Target className="text-red-500 h-6 w-6 mt-1 flex-shrink-0" style={{fill: 'white'}} />
             <div>
               <h3 className="font-medium text-cvmhw-blue mb-1">Detail-Focused & Precise</h3>
               <p className="text-sm text-gray-600">
@@ -80,9 +80,9 @@ const RogerBio = () => {
             <div>
               <h3 className="font-medium text-cvmhw-blue mb-1">Evidence-Based Programming & Communication</h3>
               <p className="text-sm text-gray-600">
-                My responses integrate meaning-focused principles and peer support methods while maintaining clear, 
-                direct communication. I'm programmed to help you explore purpose and perspective, though I work within 
-                the bounds of peer support rather than professional counseling.
+                My responses blend meaning-focused principles with peer support methods, delivered through warm yet 
+                clear communication. I'm designed to help you explore purpose and perspective in your own way, 
+                always staying within my role as a peer support companion rather than professional counseling.
               </p>
             </div>
           </div>
