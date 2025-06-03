@@ -11,7 +11,7 @@ const Header = () => {
   const isMobile = useIsMobile();
 
   return (
-    <header className="sticky top-0 z-50 bg-gradient-to-r from-white to-blue-50/40 shadow-sm border-b border-blue-100/30 py-2 overflow-hidden">
+    <header className={`${isMobile ? 'sticky' : 'fixed'} top-0 z-50 w-full bg-gradient-to-r from-white to-blue-50/40 shadow-sm border-b border-blue-100/30 py-2 overflow-hidden`}>
       {/* Subtle background gradient */}
       <div className="absolute inset-0 bg-gradient-to-r from-cvmhw-blue/3 via-transparent to-cvmhw-light/5" />
       
@@ -68,8 +68,8 @@ const Header = () => {
             </div>
           </div>
         ) : (
-          // Desktop Header Layout - Restored to original structure
-          <div className="flex items-center justify-between">
+          // Desktop Header Layout - Fixed positioning with proper spacing
+          <div className="flex items-center justify-between min-h-[80px]">
             {/* Logo Section */}
             <div className="flex items-center space-x-3">
               <div className="relative">

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -126,7 +127,8 @@ const Index = () => {
       {/* Floating Crisis Button - always visible when consented */}
       {hasConsented && <FloatingCrisisButton />}
       
-      <main className="container mx-auto px-4 py-6">
+      {/* Main content with proper top padding for fixed header on desktop */}
+      <main className={`container mx-auto px-4 py-6 ${!isMobile ? 'pt-24' : ''}`}>
         <div className="max-w-4xl mx-auto">
           {/* Welcome Card - Mobile-optimized layout */}
           <Card className="shadow-md border-cvmhw-blue border mb-6">
