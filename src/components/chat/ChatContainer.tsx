@@ -1,29 +1,13 @@
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import MessageList from '../MessageList';
 import MessageInput from '../MessageInput';
 import useChatLogic from '../../hooks/chat/useChatLogic';
 import CrisisResources from '../CrisisResources';
-import AccessPasswordGate from '../AccessPasswordGate';
 import { useStrictResponseVerification } from '../../hooks/useStrictResponseVerification';
 
 const ChatContainer: React.FC = () => {
-  const [hasAccess, setHasAccess] = useState(false);
-  
-  // Check if access was previously granted in this session
-  useEffect(() => {
-    const sessionAccess = sessionStorage.getItem('roger_system_access');
-    if (sessionAccess === 'granted') {
-      setHasAccess(true);
-    }
-  }, []);
-
-  const handleAccessGranted = () => {
-    setHasAccess(true);
-    sessionStorage.setItem('roger_system_access', 'granted');
-  };
-
   const { 
     messages, 
     isTyping, 
@@ -42,15 +26,6 @@ const ChatContainer: React.FC = () => {
   const messagesWithRollbackState = messages.map(message => applyRollbackState(message));
   
   const chatContainerRef = useRef<HTMLDivElement>(null);
-
-  // Show access gate if user doesn't have access
-  if (!hasAccess) {
-    return (
-      <div className="flex flex-col h-full max-h-full overflow-hidden rounded-lg border border-cvmhw-blue shadow-md">
-        <AccessPasswordGate onAccessGranted={handleAccessGranted} />
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col h-full max-h-full overflow-hidden rounded-lg border border-cvmhw-blue shadow-md">
@@ -76,7 +51,7 @@ const ChatContainer: React.FC = () => {
         </div>
       </ScrollArea>
       
-      {/* Message input */}
+      {/* Message input with integrated password protection */}
       <div className="border-t border-cvmhw-blue mt-auto">
         <MessageInput onSendMessage={handleSendMessage} />
       </div>

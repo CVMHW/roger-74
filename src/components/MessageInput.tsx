@@ -1,8 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Shield, AlertTriangle } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Send, Shield, AlertTriangle, Lock } from 'lucide-react';
 import { useSecureInput } from '../hooks/useSecureInput';
 
 interface MessageInputProps {
@@ -12,6 +13,19 @@ interface MessageInputProps {
 const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
   const [userInput, setUserInput] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [hasAccess, setHasAccess] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState(false);
+  
+  const REQUIRED_PASSWORD = 'Jefferson00!!';
+  
+  // Check if access was previously granted in this session
+  useEffect(() => {
+    const sessionAccess = sessionStorage.getItem('roger_system_access');
+    if (sessionAccess === 'granted') {
+      setHasAccess(true);
+    }
+  }, []);
   
   const { 
     validateAndSanitize, 
@@ -25,8 +39,19 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
     enableRateLimit: true
   });
 
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password === REQUIRED_PASSWORD) {
+      setPasswordError(false);
+      setHasAccess(true);
+      sessionStorage.setItem('roger_system_access', 'granted');
+    } else {
+      setPasswordError(true);
+    }
+  };
+
   const handleSendMessage = () => {
-    if (!userInput.trim() || isRateLimited) return;
+    if (!userInput.trim() || isRateLimited || !hasAccess) return;
 
     // Check rate limiting first
     if (!checkRateLimit()) {
@@ -52,7 +77,11 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      if (hasAccess) {
+        handleSendMessage();
+      } else {
+        handlePasswordSubmit(e);
+      }
     }
   };
 
@@ -76,6 +105,62 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
     if (rateLimitStatus.remaining < 10) return 'text-yellow-500';
     return 'text-green-500';
   };
+
+  // Show password gate if no access
+  if (!hasAccess) {
+    return (
+      <div className="border-t p-4">
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Lock className="text-amber-600" size={16} />
+            <span className="text-sm font-medium text-amber-700">Testing Mode - Access Required</span>
+          </div>
+          <p className="text-xs text-amber-600 mb-3">
+            This is a demonstration environment for investors and authorized personnel only.
+          </p>
+          
+          <form onSubmit={handlePasswordSubmit} className="space-y-2">
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setPasswordError(false);
+              }}
+              onKeyDown={handleKeyPress}
+              placeholder="Enter access password to chat..."
+              className={`text-sm ${passwordError ? 'border-red-500' : ''}`}
+            />
+            {passwordError && (
+              <p className="text-red-500 text-xs">Incorrect password</p>
+            )}
+            <Button 
+              type="submit"
+              size="sm"
+              className="w-full bg-cvmhw-blue hover:bg-cvmhw-purple"
+            >
+              Access Chat
+            </Button>
+          </form>
+        </div>
+
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-start gap-2">
+            <AlertTriangle className="text-red-600 mt-0.5" size={16} />
+            <div>
+              <p className="text-xs text-red-700 font-medium mb-1">
+                Patient Safety Notice
+              </p>
+              <p className="text-xs text-red-600">
+                If you are experiencing a mental health crisis, please call 911 or 988 immediately. 
+                This system is not for emergency use.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="border-t p-4">
