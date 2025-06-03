@@ -158,37 +158,33 @@ const RogerBio = () => {
           </p>
         </div>
         
-        <div className="text-xs text-red-600 bg-red-50 rounded-md p-3 border border-red-200">
+        <div className="text-xs text-red-600 bg-red-50 rounded-md p-2 border border-red-200">
           <p className="font-medium text-red-700 mb-1">Emergency Limitations:</p>
-          <p className="mb-2">
+          <p className="mb-1">
             Roger cannot provide emergency services or crisis coordination efforts comparable to trained professionals.
           </p>
-          <div className="mb-2 space-y-1">
-            <p className="font-medium">For immediate help:</p>
-            <div className="flex flex-wrap gap-2">
-              <a 
-                href="tel:911" 
-                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors font-medium"
-              >
-                Call 911
-              </a>
-              <a 
-                href="tel:988" 
-                className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors font-medium"
-              >
-                Call 988
-              </a>
-              <a 
-                href="sms:741741" 
-                className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors font-medium"
-              >
-                Text 741741
-              </a>
-            </div>
+          <div className="mb-1">
+            <span className="font-medium">For immediate help: </span>
+            <a 
+              href="tel:911" 
+              className="bg-red-600 text-white px-2 py-0.5 rounded hover:bg-red-700 transition-colors font-medium text-xs mr-1"
+            >
+              Call 911
+            </a>
+            <a 
+              href="tel:988" 
+              className="bg-red-600 text-white px-2 py-0.5 rounded hover:bg-red-700 transition-colors font-medium text-xs mr-1"
+            >
+              Call 988
+            </a>
+            <a 
+              href="sms:741741" 
+              className="bg-blue-600 text-white px-2 py-0.5 rounded hover:bg-blue-700 transition-colors font-medium text-xs"
+            >
+              Text 741741
+            </a>
           </div>
-          <p className="text-red-500 italic">
-            Roger's responses may contain errors.
-          </p>
+          <p className="text-red-500 italic">Roger's responses may contain errors.</p>
         </div>
       </CardContent>
     </Card>
