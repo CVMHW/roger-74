@@ -163,7 +163,7 @@ const Index = () => {
                 </div>
                 <p className="text-sm text-gray-600 flex-1">
                   <span className="font-medium">Remember:</span> Roger is a peer support companion, not a licensed therapist. 
-                  For immediate crisis support, please use the resources above.
+                  For immediate crisis support, please use the resources below.
                 </p>
                 <div className="ml-3 flex items-center gap-2">
                   <CVMHWButton />
@@ -176,9 +176,7 @@ const Index = () => {
           {/* Crisis Resources Section - Always Visible for Legal Compliance */}
           {hasConsented && (
             <div className="mb-6">
-              <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4">
-                <CrisisResources forceOpen={true} />
-              </div>
+              <CrisisResources />
             </div>
           )}
           
