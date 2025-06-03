@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Heart, Brain, Menu, X } from 'lucide-react';
 import BetaBadge from './BetaBadge';
@@ -17,40 +16,58 @@ const Header = () => {
       
       <div className="container mx-auto px-3 sm:px-6 relative z-10">
         {isMobile ? (
-          // Mobile Header Layout - Enhanced visibility and branding
-          <div className="flex items-center justify-between w-full min-h-[60px]">
-            {/* Mobile Logo Section - Enhanced with better visibility */}
-            <div className="flex items-center space-x-2 flex-shrink-0 min-w-0 max-w-[70%]">
-              <div className="relative bg-white rounded-lg p-1 shadow-sm border border-blue-100">
-                <img 
-                  src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
-                  alt="CVMHW Logo" 
-                  className="h-8 w-8 object-contain flex-shrink-0"
-                  onError={(e) => {
-                    e.currentTarget.src = '/placeholder.svg';
-                  }}
-                />
+          // Mobile Header Layout - Enhanced with service description
+          <div className="flex flex-col w-full min-h-[60px]">
+            {/* Top row with logo and menu button */}
+            <div className="flex items-center justify-between w-full">
+              {/* Mobile Logo Section */}
+              <div className="flex items-center space-x-2 flex-shrink-0 min-w-0 max-w-[70%]">
+                <div className="relative bg-white rounded-lg p-1 shadow-sm border border-blue-100">
+                  <img 
+                    src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                    alt="CVMHW Logo" 
+                    className="h-8 w-8 object-contain flex-shrink-0"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
+                  />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-base font-bold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent truncate leading-tight">
+                    CVMHW
+                  </span>
+                  <span className="text-xs text-slate-600 truncate">Roger.AI Peer Support</span>
+                </div>
               </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-base font-bold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent truncate leading-tight">
-                  CVMHW
-                </span>
-                <span className="text-xs text-slate-600 truncate">Roger.AI Peer Support</span>
-              </div>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="flex-shrink-0 p-3 rounded-lg bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white hover:from-cvmhw-purple hover:to-cvmhw-blue transition-all duration-200 shadow-md"
+                style={{ minWidth: '48px', minHeight: '48px' }}
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+              </button>
             </div>
 
-            {/* Mobile Menu Button - Enhanced visibility */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex-shrink-0 p-3 rounded-lg bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white hover:from-cvmhw-purple hover:to-cvmhw-blue transition-all duration-200 shadow-md"
-              style={{ minWidth: '48px', minHeight: '48px' }}
-              aria-label="Toggle menu"
-            >
-              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-            </button>
+            {/* Mobile Service Description - Always Visible */}
+            <div className="mt-2 px-1">
+              <div className="bg-white/80 rounded-lg px-3 py-2 shadow-sm border border-blue-100/40 backdrop-blur-sm">
+                <div className="flex items-start gap-2">
+                  <div className="flex items-center gap-1 mt-0.5 flex-shrink-0">
+                    <Heart className="h-3 w-3 text-cvmhw-blue" />
+                    <Brain className="h-3 w-3 text-cvmhw-purple" />
+                  </div>
+                  <p className="text-xs font-medium text-slate-700 leading-relaxed">
+                    Mental Health Services Ages 4+ • Family Therapy • PTSD Treatment • Veterans • Men's Issues
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
-          // Desktop Header Layout (unchanged)
+          // Desktop Header Layout (restored to original)
           <div className="flex items-center justify-between">
             {/* Logo Section */}
             <div className="flex items-center space-x-3">
@@ -110,9 +127,10 @@ const Header = () => {
           </div>
         )}
 
-        {/* Mobile Menu Overlay - Enhanced design and functionality */}
+        {/* Mobile Menu Overlay */}
         {isMobile && mobileMenuOpen && (
           <div className="absolute top-full left-0 right-0 bg-white border-t-2 border-blue-200 shadow-xl z-50 max-w-full animate-fadeInUp">
+            {/* ... keep existing code (mobile menu content) */}
             <div className="p-4 space-y-4 max-w-full">
               {/* Enhanced Title Section for Mobile */}
               <div className="text-center border-b border-blue-100 pb-4">
