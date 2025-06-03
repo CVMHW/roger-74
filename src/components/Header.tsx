@@ -3,6 +3,7 @@ import React from 'react';
 import { Heart, Brain } from 'lucide-react';
 import BetaBadge from './BetaBadge';
 import ExternalCrisisLink from './ExternalCrisisLink';
+import ProfileBubble from './ProfileBubble';
 
 const Header = () => {
   return (
@@ -31,13 +32,13 @@ const Header = () => {
             <h1 className="text-xl font-bold bg-gradient-to-r from-cvmhw-blue via-cvmhw-purple to-cvmhw-blue bg-clip-text text-transparent mb-1.5 tracking-tight">
               Cuyahoga Valley Mindful Health and Wellness
             </h1>
-            <div className="bg-white/80 rounded-lg px-5 py-2 shadow-sm border border-blue-100/40 backdrop-blur-sm max-w-2xl">
+            <div className="bg-white/80 rounded-lg px-5 py-2 shadow-sm border border-blue-100/40 backdrop-blur-sm max-w-3xl">
               <div className="flex items-start gap-3">
                 <div className="flex items-center gap-1 mt-0.5 flex-shrink-0">
                   <Heart className="h-4 w-4 text-cvmhw-blue" />
                   <Brain className="h-4 w-4 text-cvmhw-purple" />
                 </div>
-                <p className="text-xs font-medium text-slate-700 leading-relaxed text-center">
+                <p className="text-xs font-medium text-slate-700 leading-relaxed text-center break-words">
                   Comprehensive Mental Health Services Ages 4+ specializing in Family Psychotherapy, PTSD Treatment, Veteran's Issues, and Boy's and Men's Issues
                 </p>
               </div>
@@ -54,9 +55,11 @@ const Header = () => {
             {/* Roger Profile Section */}
             <div className="flex items-center space-x-2">
               <div className="relative">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-cvmhw-blue to-cvmhw-purple flex items-center justify-center shadow-md border border-white/30">
-                  <span className="text-white font-bold text-sm">R</span>
-                </div>
+                <ProfileBubble className="block">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-cvmhw-blue to-cvmhw-purple flex items-center justify-center shadow-md border border-white/30 hover:scale-105 transition-transform">
+                    <span className="text-white font-bold text-sm">R</span>
+                  </div>
+                </ProfileBubble>
               </div>
               <div className="flex flex-col items-start">
                 <div className="flex items-center gap-1.5">

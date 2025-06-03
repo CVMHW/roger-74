@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Image, Users, Award, BookOpen, Heart, Shield, Star, Calendar, Info, CreditCard } from 'lucide-react';
 import PatientRightsTab from '../components/PatientRightsTab';
+import ProfileBubble from '../components/ProfileBubble';
 
 const Index = () => {
   const [showConsentDialog, setShowConsentDialog] = useState(true); // Always start with dialog shown
@@ -138,7 +139,11 @@ const Index = () => {
                       onError={handleImageError}
                     />
                   </div>
-                  <CardTitle className="text-xl font-semibold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent">Welcome from Roger at Cuyahoga Valley Mindful Health & Wellness</CardTitle>
+                  <ProfileBubble>
+                    <CardTitle className="text-xl font-semibold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity">
+                      Welcome from Roger at Cuyahoga Valley Mindful Health & Wellness
+                    </CardTitle>
+                  </ProfileBubble>
                 </div>
                 <BetaWatermark />
               </div>
@@ -157,9 +162,11 @@ const Index = () => {
               </div>
               
               <div className="flex items-center mt-2 p-2 bg-gradient-to-r from-blue-50 to-cvmhw-light/30 rounded-md border border-cvmhw-light">
-                <div className="rounded-full bg-gradient-to-br from-cvmhw-blue via-cvmhw-purple to-cvmhw-pink h-8 w-8 flex items-center justify-center mr-3">
-                  <span className="text-white font-bold">R</span>
-                </div>
+                <ProfileBubble className="mr-3">
+                  <div className="rounded-full bg-gradient-to-br from-cvmhw-blue via-cvmhw-purple to-cvmhw-pink h-8 w-8 flex items-center justify-center hover:scale-105 transition-transform">
+                    <span className="text-white font-bold">R</span>
+                  </div>
+                </ProfileBubble>
                 <p className="text-sm text-gray-600 flex-1">
                   <span className="font-medium">Remember:</span> Roger is a peer support companion, not a licensed therapist. 
                   For immediate crisis support, please use the resources below.
