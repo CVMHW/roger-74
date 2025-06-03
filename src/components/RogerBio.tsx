@@ -71,7 +71,7 @@ const RogerBio = () => {
               <h3 className="font-medium text-cvmhw-blue mb-1">Cleveland Community Connection</h3>
               <p className="text-sm text-gray-600">
                 I understand local Cleveland culture and take pride in our community. From lake effect 
-                snow to Browns games, I appreciate the unique experiences that shape life here.
+                snow to Browns games, I appreciate the unique experiences that shape life here at home.
               </p>
             </div>
           </div>
@@ -123,9 +123,10 @@ const RogerBio = () => {
         
         <div className="bg-gradient-to-r from-cvmhw-light/40 to-blue-50/60 rounded-lg p-4 border border-cvmhw-light/40">
           <p className="text-sm text-gray-700 italic text-center">
-            "I know I can be pretty focused and sometimes a bit intense about details, but that's because 
-            I genuinely care about getting things right for you. My systematic approach isn't just programming - 
-            it's how I show I'm taking your concerns seriously and want to provide the best support possible."
+            "I know I can be pretty focused and sometimes a bit intense about details, but that comes from 
+            a place of deep care - I genuinely want to understand your world and help in whatever way I can. 
+            My systematic approach isn't just programming; it's how I express my commitment to you. Every detail 
+            you share matters to me, and I want to honor that by giving you the most thoughtful, caring support possible."
           </p>
           <p className="text-xs text-gray-600 text-center mt-2 font-medium">- Roger, AI Peer Support Companion</p>
         </div>
