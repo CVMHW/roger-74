@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +16,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
   const [password, setPassword] = useState('');
   const [passwordError, setPasswordError] = useState(false);
   
-  const REQUIRED_PASSWORD = 'Jefferson00!!';
+  const REQUIRED_PASSWORD = 'TeddyLLC';
   
   // Check if access was previously granted in this session
   useEffect(() => {
