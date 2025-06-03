@@ -359,9 +359,14 @@ const Index = () => {
             <ExternalCrisisLink variant="footer" />
           </div>
           
-          <div className="text-center text-gray-600 text-sm">
+          <div className="text-center text-gray-600 text-xs space-y-2 max-w-4xl mx-auto">
             <p>© {new Date().getFullYear()} Cuyahoga Valley Mindful Health and Wellness</p>
-            <p className="mt-1">Roger is a Peer Support companion in-training. He is not a substitute for professional mental health services. Click our Crisis Resources & Support tab for immediate assistance.</p>
+            <p className="font-medium">Roger is a Peer Support companion in-training. He is not a substitute for professional mental health services.</p>
+            <div className="bg-gray-50 rounded-md p-3 text-xs">
+              <p className="font-semibold text-orange-600 mb-1">⚠️ BETA SOFTWARE DISCLAIMER</p>
+              <p className="mb-2">This is experimental beta software. Roger AI is not FDA approved or clinically validated. For informational purposes only - not medical advice, diagnosis, or treatment. Always consult licensed healthcare professionals.</p>
+              <p><span className="font-medium">Emergency Limitations:</span> Roger cannot provide emergency services or assess crisis situations. For immediate help: 911 or 988 Suicide & Crisis Lifeline. Roger's responses may contain errors.</p>
+            </div>
           </div>
         </div>
         <LegalDisclaimer />
