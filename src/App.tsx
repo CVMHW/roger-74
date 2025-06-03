@@ -9,6 +9,7 @@ import FlowchartPage from "./pages/FlowchartPage";
 import UnifiedFlowchartPage from "./pages/UnifiedFlowchartPage";
 import ConversationProcessingPage from "./pages/ConversationProcessingPage";
 import WrappingHellAnalysisPage from "./pages/WrappingHellAnalysisPage";
+import MobileDesktopAnalysisPage from "./pages/MobileDesktopAnalysisPage";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/unified-flowchart" element={<UnifiedFlowchartPage />} />
           <Route path="/conversation-processing" element={<ConversationProcessingPage />} />
           <Route path="/wrapping-hell-analysis" element={<WrappingHellAnalysisPage />} />
+          <Route path="/mobile-desktop-analysis" element={<MobileDesktopAnalysisPage />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
