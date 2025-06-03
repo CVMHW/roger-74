@@ -18,7 +18,6 @@ export type MessageType = {
   isRollingBack?: boolean;
   rollbackLevel?: 'low' | 'medium' | 'high';
   rollbackMessage?: string;
-  isWelcome?: boolean;
 };
 
 interface MessageProps {

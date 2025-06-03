@@ -2,13 +2,12 @@
 import React, { useEffect, useRef, useLayoutEffect } from 'react';
 import Message, { MessageType } from './Message';
 import TypingIndicator from './TypingIndicator';
-import ProfileBubble from './ProfileBubble';
 import { ScrollArea } from './ui/scroll-area';
 
 interface MessageListProps {
   messages: MessageType[];
   isTyping: boolean;
-  processingContext?: string | null;
+  processingContext?: string | null; // Add processing context
   onFeedback?: (messageId: string, feedback: 'positive' | 'negative') => void;
 }
 
@@ -63,34 +62,13 @@ const MessageList: React.FC<MessageListProps> = ({
         className="flex flex-col space-y-4 p-4"
         ref={scrollContainerRef}
       >
-        {messages.map((message) => {
-          // Special handling for welcome message to add profile bubble to R
-          if (message.isWelcome && message.sender === 'roger') {
-            return (
-              <div key={message.id} className="flex items-start">
-                <ProfileBubble>
-                  <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm shrink-0 cursor-pointer hover:bg-blue-600 transition-colors">
-                    R
-                  </div>
-                </ProfileBubble>
-                <div className="ml-2 p-2 bg-gray-100 rounded-lg max-w-[80%]">
-                  <p className="text-sm text-gray-800">{message.text}</p>
-                  <span className="text-xs text-gray-500 mt-1 block">
-                    {message.timestamp.toLocaleTimeString()}
-                  </span>
-                </div>
-              </div>
-            );
-          }
-          
-          return (
-            <Message 
-              key={message.id} 
-              message={message} 
-              onFeedback={onFeedback}
-            />
-          );
-        })}
+        {messages.map((message) => (
+          <Message 
+            key={message.id} 
+            message={message} 
+            onFeedback={onFeedback}
+          />
+        ))}
         
         {/* Show typing indicator when messages are being typed */}
         {isTyping && (
