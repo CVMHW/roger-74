@@ -1,9 +1,9 @@
 
 import React from 'react';
 import { BookOpen } from 'lucide-react';
-import ThemeToggle from './ThemeToggle';
 import BetaBadge from './BetaBadge';
 import ExternalCrisisLink from './ExternalCrisisLink';
+import CrisisResources from './CrisisResources';
 
 const Header = () => {
   return (
@@ -22,17 +22,18 @@ const Header = () => {
                 }}
               />
             </div>
-            <div>
+            <div className="text-center flex-1">
               <h1 className="text-2xl font-semibold gradient-text">Cuyahoga Valley Mindful Health and Wellness</h1>
-              <div className="flex items-center text-gray-600">
+              <div className="flex items-center justify-center text-gray-600">
                 <BookOpen className="h-4 w-4 mr-1" />
                 <p className="text-sm">Comprehensive mental health services for all ages - children to adults</p>
               </div>
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <ExternalCrisisLink variant="header" />
-            <ThemeToggle />
+            <div className="w-80">
+              <CrisisResources forceOpen={false} />
+            </div>
             <div className="flex items-center space-x-2">
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-cvmhw-purple via-cvmhw-blue to-cvmhw-pink flex items-center justify-center">
                 <span className="text-white font-medium text-lg">R</span>

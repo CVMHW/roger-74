@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
-import CrisisResources from '../components/CrisisResources';
 import BetaWatermark from '../components/BetaWatermark';
 import LegalDisclaimer from '../components/LegalDisclaimer';
 import ExternalCrisisLink from '../components/ExternalCrisisLink';
@@ -163,7 +162,7 @@ const Index = () => {
                 </div>
                 <p className="text-sm text-gray-600 flex-1">
                   <span className="font-medium">Remember:</span> Roger is a peer support companion, not a licensed therapist. 
-                  For immediate crisis support, please use the resources below.
+                  For immediate crisis support, please use the resources above.
                 </p>
                 <div className="ml-3 flex items-center gap-2">
                   <CVMHWButton />
@@ -172,11 +171,6 @@ const Index = () => {
               </div>
             </CardContent>
           </Card>
-
-          {/* Crisis Resources - Always visible but collapsed by default */}
-          <div className="mb-6">
-            <CrisisResources forceOpen={false} />
-          </div>
           
           {/* Patient Rights Section - Softer, more compassionate design */}
           {hasConsented && (
