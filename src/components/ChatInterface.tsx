@@ -23,7 +23,7 @@ const ChatInterface = () => {
     scrollToBottom();
   }, [messages]);
 
-  const { processUserMessage, resetConversation } = useRogerianResponse();
+  const { processUserMessage } = useRogerianResponse();
   const crisisDetection = useCrisisDetection();
 
   const handleSendMessage = async (content: string) => {
@@ -32,7 +32,7 @@ const ChatInterface = () => {
     const userMessage: MessageType = {
       id: Date.now().toString(),
       text: content,
-      isUser: true,
+      sender: 'user',
       timestamp: new Date(),
     };
 
@@ -55,8 +55,8 @@ const ChatInterface = () => {
       
       const rogerMessage: MessageType = {
         id: (Date.now() + 1).toString(),
-        text: response.text || response.content || "I'm here to listen. Could you tell me more?",
-        isUser: false,
+        text: response.text || "I'm here to listen. Could you tell me more?",
+        sender: 'roger',
         timestamp: new Date(),
       };
 
@@ -67,7 +67,7 @@ const ChatInterface = () => {
       const errorMessage: MessageType = {
         id: (Date.now() + 1).toString(),
         text: "I'm having some technical difficulties right now. Please try again, or if this is urgent, please contact CVMHW directly or use the crisis resources below.",
-        isUser: false,
+        sender: 'roger',
         timestamp: new Date(),
       };
 
@@ -85,7 +85,6 @@ const ChatInterface = () => {
 
   const handleNewConversation = () => {
     setMessages([]);
-    resetConversation();
     toast({
       title: "New Conversation Started",
       description: "Your chat history has been cleared for a fresh start.",
@@ -98,7 +97,7 @@ const ChatInterface = () => {
       const welcomeMessage: MessageType = {
         id: 'welcome',
         text: "Hi, I'm Roger, your peer support companion. How can I help you today?",
-        isUser: false,
+        sender: 'roger',
         timestamp: new Date(),
         isWelcome: true
       };

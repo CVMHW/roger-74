@@ -65,7 +65,7 @@ const MessageList: React.FC<MessageListProps> = ({
       >
         {messages.map((message) => {
           // Special handling for welcome message to add profile bubble to R
-          if (message.isWelcome && !message.isUser) {
+          if (message.isWelcome && message.sender === 'roger') {
             return (
               <div key={message.id} className="flex items-start">
                 <ProfileBubble>
