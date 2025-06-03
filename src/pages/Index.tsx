@@ -177,17 +177,22 @@ const Index = () => {
             <CrisisResources forceOpen={false} />
           </div>
           
-          {/* Patient Rights Section - Next to Crisis Resources */}
+          {/* Patient Rights Section - Enhanced visibility for clickable area */}
           {hasConsented && (
             <div className="mb-6">
               <details className="group">
-                <summary className="flex items-center justify-between w-full p-3 bg-gradient-to-r from-cvmhw-light/30 to-white rounded-lg border border-cvmhw-light/50 cursor-pointer hover:from-cvmhw-light/40 hover:to-white transition-all duration-200">
-                  <div className="flex items-center gap-2">
-                    <Shield size={16} className="text-cvmhw-orange" />
-                    <span className="text-sm font-medium text-gray-700">About CVMHW Services & Your Rights</span>
+                <summary className="flex items-center justify-between w-full p-4 bg-gradient-to-r from-cvmhw-blue/20 via-cyan-50/80 to-cvmhw-light/70 rounded-lg border-2 border-cvmhw-blue/40 cursor-pointer hover:from-cvmhw-blue/30 hover:to-cvmhw-light/80 transition-all duration-200 shadow-lg backdrop-blur-sm relative overflow-hidden">
+                  {/* Enhanced shimmering effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cvmhw-blue/30 to-transparent transform -skew-x-12 animate-pulse opacity-60" />
+                  
+                  <div className="flex items-center gap-3 relative z-10">
+                    <div className="bg-gradient-to-br from-cvmhw-blue to-cvmhw-purple p-2 rounded-lg shadow-lg">
+                      <Shield size={20} className="text-white drop-shadow-lg" />
+                    </div>
+                    <span className="text-base font-semibold bg-gradient-to-r from-cvmhw-blue via-cvmhw-purple to-slate-700 bg-clip-text text-transparent drop-shadow-lg">About CVMHW Services & Your Rights</span>
                   </div>
-                  <span className="text-cvmhw-blue group-open:rotate-180 transition-transform duration-200">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <span className="text-cvmhw-blue group-open:rotate-180 transition-transform duration-200 relative z-10 bg-white/80 p-1 rounded-full shadow-md">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="m6 9 6 6 6-6"/>
                     </svg>
                   </span>
