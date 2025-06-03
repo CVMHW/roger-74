@@ -31,7 +31,7 @@ const Header = () => {
             </div>
           </div>
           <div className="flex items-center space-x-3">
-            <div className="w-80">
+            <div className="w-48">
               <CrisisResources forceOpen={false} />
             </div>
             <div className="flex items-center space-x-2">
