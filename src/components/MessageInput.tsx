@@ -110,16 +110,21 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
   if (!hasAccess) {
     return (
       <div className="border-t p-4">
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Lock className="text-amber-600" size={16} />
-            <span className="text-sm font-medium text-amber-700">Testing Mode - Access Required</span>
+        <div className="bg-gradient-to-r from-blue-50/80 via-cyan-50/60 to-slate-50/90 border border-blue-200/60 rounded-lg p-4 mb-4 shadow-sm backdrop-blur-sm relative overflow-hidden">
+          {/* Gentle shimmer effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-100/20 to-transparent transform -skew-x-12 animate-pulse opacity-40" />
+          
+          <div className="flex items-center gap-2 mb-2 relative z-10">
+            <div className="bg-gradient-to-br from-blue-400 to-cyan-500 p-1.5 rounded-lg shadow-sm">
+              <Lock className="text-white" size={14} />
+            </div>
+            <span className="text-sm font-medium bg-gradient-to-r from-blue-700 to-cyan-600 bg-clip-text text-transparent">Testing Mode - Access Required</span>
           </div>
-          <p className="text-xs text-amber-600 mb-3">
+          <p className="text-xs text-blue-600/80 mb-3 relative z-10">
             This is a demonstration environment for investors and authorized personnel only.
           </p>
           
-          <form onSubmit={handlePasswordSubmit} className="space-y-2">
+          <form onSubmit={handlePasswordSubmit} className="space-y-2 relative z-10">
             <Input
               type="password"
               value={password}
@@ -129,7 +134,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
               }}
               onKeyDown={handleKeyPress}
               placeholder="Enter access password to chat..."
-              className={`text-sm ${passwordError ? 'border-red-500' : ''}`}
+              className={`text-sm bg-white/80 backdrop-blur-sm border-blue-200/60 focus:border-cyan-400 focus:ring-cyan-200/50 ${passwordError ? 'border-red-400 focus:border-red-400 focus:ring-red-200/50' : ''}`}
             />
             {passwordError && (
               <p className="text-red-500 text-xs">Incorrect password</p>
@@ -137,14 +142,31 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage }) => {
             <Button 
               type="submit"
               size="sm"
-              className="w-full bg-cvmhw-blue hover:bg-cvmhw-purple"
+              className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-sm transition-all duration-200"
             >
               Access Chat
             </Button>
           </form>
         </div>
 
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+        {/* Locked message input area - calming aesthetic */}
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-100/80 via-blue-50/60 to-cyan-50/80 rounded-lg backdrop-blur-sm border border-blue-200/40 z-10 flex items-center justify-center">
+            <div className="flex items-center gap-2 text-blue-600/70">
+              <Lock size={16} className="animate-pulse" />
+              <span className="text-sm font-medium">Chat locked - please enter password above</span>
+            </div>
+          </div>
+          <Textarea
+            value=""
+            placeholder="Type your message here..."
+            className="resize-none bg-gray-100/50 border-gray-300/50 text-gray-400"
+            rows={2}
+            disabled={true}
+          />
+        </div>
+
+        <div className="p-4 bg-gradient-to-r from-red-50/80 via-orange-50/60 to-red-50/80 border border-red-200/60 rounded-lg mt-4 shadow-sm backdrop-blur-sm">
           <div className="flex items-start gap-2">
             <AlertTriangle className="text-red-600 mt-0.5" size={16} />
             <div>
