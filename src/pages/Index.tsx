@@ -14,10 +14,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Image, Users, Award, BookOpen, Heart, Shield, Star, Calendar, Info, CreditCard } from 'lucide-react';
 import PatientRightsTab from '../components/PatientRightsTab';
 import ProfileBubble from '../components/ProfileBubble';
+import { useIsMobile } from '../hooks/use-mobile';
 
 const Index = () => {
   const [showConsentDialog, setShowConsentDialog] = useState(true); // Always start with dialog shown
   const [hasConsented, setHasConsented] = useState(false);
+  const isMobile = useIsMobile();
 
   // Remove the useEffect that was checking localStorage - we want consent dialog every session
   
@@ -68,9 +70,9 @@ const Index = () => {
   const InsuranceButton = () => (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="flex items-center gap-2 bg-gradient-to-r from-cvmhw-blue to-cvmhw-light text-white border-0 hover:from-cvmhw-light hover:to-cvmhw-blue hover:text-cvmhw-blue transition-all duration-300 shadow-md">
-          <CreditCard size={16} />
-          <span className="font-medium">Insurance Accepted</span>
+        <Button variant="outline" size="sm" className={`flex items-center gap-2 bg-gradient-to-r from-cvmhw-blue to-cvmhw-light text-white border-0 hover:from-cvmhw-light hover:to-cvmhw-blue hover:text-cvmhw-blue transition-all duration-300 shadow-md ${isMobile ? 'text-xs px-2 py-1' : ''}`}>
+          <CreditCard size={isMobile ? 14 : 16} />
+          <span className="font-medium">{isMobile ? 'Insurance' : 'Insurance Accepted'}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-4 bg-gradient-to-b from-cvmhw-light/50 to-white border border-cvmhw-light shadow-lg">
@@ -97,9 +99,9 @@ const Index = () => {
       href="https://cvmhw.com" 
       target="_blank" 
       rel="noopener noreferrer" 
-      className="inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white text-sm font-medium rounded-md hover:from-cvmhw-blue hover:to-cvmhw-blue transition-all duration-200 shadow-sm"
+      className={`inline-flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white font-medium rounded-md hover:from-cvmhw-blue hover:to-cvmhw-blue transition-all duration-200 shadow-sm ${isMobile ? 'text-xs px-2 py-1' : 'text-sm'}`}
     >
-      <div className="relative w-5 h-5">
+      <div className={`relative ${isMobile ? 'w-4 h-4' : 'w-5 h-5'}`}>
         <img 
           src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
           alt="CVMHW Logo" 
@@ -126,7 +128,7 @@ const Index = () => {
       
       <main className="container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
-          {/* Welcome Card - More compact */}
+          {/* Welcome Card - Mobile-optimized layout */}
           <Card className="shadow-md border-cvmhw-blue border mb-6">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-3">
@@ -140,42 +142,65 @@ const Index = () => {
                     />
                   </div>
                   <ProfileBubble>
-                    <CardTitle className="text-xl font-semibold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity">
+                    <CardTitle className={`font-semibold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity ${isMobile ? 'text-lg leading-tight' : 'text-xl'}`}>
                       Welcome from Roger at Cuyahoga Valley Mindful Health & Wellness
                     </CardTitle>
                   </ProfileBubble>
                 </div>
                 <BetaWatermark />
               </div>
-              <CardDescription>Your Peer Mental Health Support Companion</CardDescription>
+              <CardDescription className={isMobile ? 'text-sm' : ''}>Your Peer Mental Health Support Companion</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-gray-600 mb-4">
+              <p className={`text-gray-600 mb-4 ${isMobile ? 'text-sm leading-relaxed' : ''}`}>
                 I'm Roger, your Peer Support companion at Cuyahoga Valley Mindful Health and Wellness. 
                 I'm here to chat with you while you wait for your therapist. I'm not a licensed professional, 
                 but I can provide a listening ear and supportive perspective as I continue my training under professional guidance.
               </p>
               
-              {/* External Crisis Resources Link */}
+              {/* External Crisis Resources Link - Mobile optimized */}
               <div className="mb-4">
                 <ExternalCrisisLink />
               </div>
               
-              <div className="flex items-center mt-2 p-2 bg-gradient-to-r from-blue-50 to-cvmhw-light/30 rounded-md border border-cvmhw-light">
-                <ProfileBubble className="mr-3">
-                  <div className="rounded-full bg-gradient-to-br from-cvmhw-blue via-cvmhw-purple to-cvmhw-pink h-8 w-8 flex items-center justify-center hover:scale-105 transition-transform">
-                    <span className="text-white font-bold">R</span>
+              {/* Mobile-optimized layout for the reminder section */}
+              {isMobile ? (
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3 p-3 bg-gradient-to-r from-blue-50 to-cvmhw-light/30 rounded-md border border-cvmhw-light">
+                    <ProfileBubble className="flex-shrink-0">
+                      <div className="rounded-full bg-gradient-to-br from-cvmhw-blue via-cvmhw-purple to-cvmhw-pink h-8 w-8 flex items-center justify-center hover:scale-105 transition-transform">
+                        <span className="text-white font-bold text-sm">R</span>
+                      </div>
+                    </ProfileBubble>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      <span className="font-medium">Remember:</span> Roger is a peer support companion, not a licensed therapist. 
+                      For immediate crisis support, please use the resources below.
+                    </p>
                   </div>
-                </ProfileBubble>
-                <p className="text-sm text-gray-600 flex-1">
-                  <span className="font-medium">Remember:</span> Roger is a peer support companion, not a licensed therapist. 
-                  For immediate crisis support, please use the resources below.
-                </p>
-                <div className="ml-3 flex items-center gap-2">
-                  <CVMHWButton />
-                  <InsuranceButton />
+                  
+                  {/* Mobile button layout - stacked vertically */}
+                  <div className="flex flex-col gap-2">
+                    <CVMHWButton />
+                    <InsuranceButton />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-center mt-2 p-2 bg-gradient-to-r from-blue-50 to-cvmhw-light/30 rounded-md border border-cvmhw-light">
+                  <ProfileBubble className="mr-3">
+                    <div className="rounded-full bg-gradient-to-br from-cvmhw-blue via-cvmhw-purple to-cvmhw-pink h-8 w-8 flex items-center justify-center hover:scale-105 transition-transform">
+                      <span className="text-white font-bold">R</span>
+                    </div>
+                  </ProfileBubble>
+                  <p className="text-sm text-gray-600 flex-1">
+                    <span className="font-medium">Remember:</span> Roger is a peer support companion, not a licensed therapist. 
+                    For immediate crisis support, please use the resources below.
+                  </p>
+                  <div className="ml-3 flex items-center gap-2">
+                    <CVMHWButton />
+                    <InsuranceButton />
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
           
