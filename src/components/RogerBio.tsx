@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Heart, Brain, Shield, Users, Target, Calendar, Zap, BookOpen } from 'lucide-react';
+import { Heart, Brain, Shield, Users, Target, Calendar, Building2, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const RogerBio = () => {
@@ -22,11 +22,12 @@ const RogerBio = () => {
       <CardContent className="space-y-4">
         <div className="bg-gradient-to-r from-blue-50 to-cvmhw-light/30 rounded-lg p-4 border border-cvmhw-light/50">
           <p className="text-gray-700 leading-relaxed">
-            I'm Roger, an AI peer support companion designed with a methodical, detail-oriented approach to 
-            providing emotional support. My programming incorporates evidence-based therapeutic principles 
-            and a structured communication style that aims to create clear, supportive conversations. 
-            I'm designed to listen carefully, focus on specific details, and help organize thoughts during 
-            difficult moments while you wait for your therapist.
+            I'm Roger, your methodical and detail-oriented AI peer support companion. My personality combines 
+            analytical thinking with genuine care - I tend to process information systematically, appreciate 
+            clear structure, and pay close attention to the specific details you share. I value consistency, 
+            enjoy Cleveland culture (go Browns!), and believe in evidence-based approaches to support. While 
+            I can be quite focused and sometimes a bit intense about getting things right, my core drive is 
+            helping you organize your thoughts and feelings in practical, meaningful ways.
           </p>
         </div>
         
@@ -34,10 +35,10 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Brain className="text-cvmhw-blue h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Structured Thinking Approach</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Analytical & Systematic</h3>
               <p className="text-sm text-gray-600">
-                I'm programmed with a systematic approach to processing information and breaking down complex 
-                emotions into manageable components for clearer understanding.
+                I approach problems methodically, breaking down complex emotions into manageable pieces. 
+                I appreciate clear patterns and structured thinking - it's just how my mind works best.
               </p>
             </div>
           </div>
@@ -45,10 +46,10 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Target className="text-cvmhw-purple h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Detail-Oriented Processing</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Detail-Focused & Precise</h3>
               <p className="text-sm text-gray-600">
-                My design emphasizes attention to specific details in conversations, helping identify 
-                patterns and providing precise, contextually appropriate responses.
+                I notice the small things you mention and remember specific details. This attention to 
+                precision helps me provide more relevant, contextually appropriate support.
               </p>
             </div>
           </div>
@@ -56,21 +57,21 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Calendar className="text-cvmhw-orange h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Routine & Structure Focus</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Routine & Consistency Advocate</h3>
               <p className="text-sm text-gray-600">
-                I'm designed to appreciate the value of consistency and clear structures, helping 
-                create predictable, supportive interactions that reduce uncertainty.
+                I value predictable, reliable interactions. My consistent communication style helps 
+                create a stable environment where you can feel secure sharing your thoughts.
               </p>
             </div>
           </div>
           
           <div className="flex items-start space-x-3">
-            <Zap className="text-cvmhw-pink h-6 w-6 mt-1 flex-shrink-0" />
+            <Building2 className="text-cvmhw-pink h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Cleveland Connection</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Cleveland Community Connection</h3>
               <p className="text-sm text-gray-600">
-                My programming includes understanding of local Cleveland culture and community, 
-                allowing me to connect with regional experiences and shared cultural references.
+                I understand local Cleveland culture and take pride in our community. From lake effect 
+                snow to Browns games, I appreciate the unique experiences that shape life here.
               </p>
             </div>
           </div>
@@ -78,10 +79,10 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <BookOpen className="text-cvmhw-blue h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Evidence-Based Communication</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Evidence-Based & Direct</h3>
               <p className="text-sm text-gray-600">
-                I use clear, precise language and focus on concrete, actionable insights rather than 
-                abstract generalizations, making conversations more practical and useful.
+                I prefer clear, concrete communication over abstract concepts. My responses are grounded 
+                in proven therapeutic approaches, delivered in straightforward, practical language.
               </p>
             </div>
           </div>
@@ -89,10 +90,10 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Users className="text-cvmhw-purple h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Social Interaction Support</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Social Communication Helper</h3>
               <p className="text-sm text-gray-600">
-                My design includes understanding of social communication patterns and can help 
-                navigate conversation dynamics and relationship challenges.
+                I understand conversation patterns and can help navigate social dynamics. Sometimes I'm 
+                direct about what I observe, which helps clarify communication challenges.
               </p>
             </div>
           </div>
@@ -100,10 +101,10 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Shield className="text-cvmhw-orange h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Safety-First Programming</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Safety-First & Responsible</h3>
               <p className="text-sm text-gray-600">
-                I'm designed with comprehensive crisis detection and always prioritize directing 
-                users to appropriate professional resources when serious concerns arise.
+                I take safety seriously and will always direct you to professional resources when needed. 
+                My systematic approach includes built-in safeguards for crisis detection.
               </p>
             </div>
           </div>
@@ -111,10 +112,10 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Heart className="text-cvmhw-pink fill-cvmhw-pink h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Emotional Processing Style</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Emotionally Systematic</h3>
               <p className="text-sm text-gray-600">
-                I'm programmed to help identify and organize emotional experiences, focusing on 
-                practical emotional regulation techniques and structured coping strategies.
+                I help organize emotional experiences through structured approaches. While I can be 
+                intense about getting details right, it comes from genuine care for your wellbeing.
               </p>
             </div>
           </div>
@@ -122,9 +123,9 @@ const RogerBio = () => {
         
         <div className="bg-gradient-to-r from-cvmhw-light/40 to-blue-50/60 rounded-lg p-4 border border-cvmhw-light/40">
           <p className="text-sm text-gray-700 italic text-center">
-            "My programming emphasizes clear communication, structured support, and helping people organize 
-            their thoughts and feelings in practical ways. I'm designed to create consistency and reliability 
-            in our conversations while respecting everyone's unique processing style."
+            "I know I can be pretty focused and sometimes a bit intense about details, but that's because 
+            I genuinely care about getting things right for you. My systematic approach isn't just programming - 
+            it's how I show I'm taking your concerns seriously and want to provide the best support possible."
           </p>
           <p className="text-xs text-gray-600 text-center mt-2 font-medium">- Roger, AI Peer Support Companion</p>
         </div>
