@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -365,7 +364,7 @@ const Index = () => {
             <div className="bg-gray-50 rounded-md p-3 text-xs">
               <p className="font-semibold text-orange-600 mb-1">⚠️ BETA SOFTWARE DISCLAIMER</p>
               <p className="mb-2">This is experimental beta software. Roger AI is not FDA approved or clinically validated. For informational purposes only - not medical advice, diagnosis, or treatment. Always consult licensed healthcare professionals.</p>
-              <p><span className="font-medium">Emergency Limitations:</span> Roger cannot provide emergency services or assess crisis situations. For immediate help: 911 or 988 Suicide & Crisis Lifeline. Roger's responses may contain errors.</p>
+              <p><span className="font-medium">Emergency Limitations:</span> Roger cannot provide emergency services. For immediate help: 911 or 988 Suicide & Crisis Lifeline. Roger's responses may contain errors.</p>
             </div>
           </div>
         </div>
