@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Phone } from 'lucide-react';
 import BetaBadge from './BetaBadge';
 import ExternalCrisisLink from './ExternalCrisisLink';
 import CrisisResources from './CrisisResources';
@@ -22,18 +22,22 @@ const Header = () => {
                 }}
               />
             </div>
-            <div className="text-center flex-1">
-              <h1 className="text-2xl font-semibold gradient-text">Cuyahoga Valley Mindful Health and Wellness</h1>
-              <div className="flex items-center justify-center text-gray-600">
-                <BookOpen className="h-4 w-4 mr-1" />
-                <p className="text-sm">Comprehensive mental health services for all ages - children to adults</p>
-              </div>
+          </div>
+          
+          <div className="text-center flex-1">
+            <h1 className="text-2xl font-semibold gradient-text">Cuyahoga Valley Mindful Health and Wellness</h1>
+            <div className="flex items-center justify-center text-gray-600">
+              <BookOpen className="h-4 w-4 mr-1" />
+              <p className="text-sm">Comprehensive mental health services for all ages - children to adults</p>
             </div>
           </div>
+          
           <div className="flex items-center space-x-3">
-            <div className="w-48">
-              <CrisisResources forceOpen={false} />
-            </div>
+            <button className="flex items-center gap-2 px-3 py-2 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors">
+              <Phone size={16} className="text-red-600" />
+              <span className="text-sm font-medium text-red-700">Crisis Help</span>
+            </button>
+            
             <div className="flex items-center space-x-2">
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-cvmhw-purple via-cvmhw-blue to-cvmhw-pink flex items-center justify-center">
                 <span className="text-white font-medium text-lg">R</span>
