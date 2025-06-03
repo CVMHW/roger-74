@@ -34,13 +34,13 @@ const Message: React.FC<MessageProps> = ({ message, onFeedback }) => {
     minute: '2-digit' 
   });
   
-  // Enhanced text processing for better mobile display
+  // Enhanced text processing for better mobile display with aggressive wrapping
   const textParagraphs = message.text
     .split(/(?<=\.|\?|\!) /) // Split at sentence endings
     .reduce((acc: string[], sentence, index, array) => {
-      // Group related sentences into paragraphs (max 3 sentences per paragraph)
-      // This creates a more natural reading pattern
-      if (index % 3 === 0 || index === 0) {
+      // Group related sentences into paragraphs (max 2 sentences per paragraph on mobile)
+      const maxSentencesPerParagraph = isMobile ? 2 : 3;
+      if (index % maxSentencesPerParagraph === 0 || index === 0) {
         acc.push(sentence);
       } else {
         acc[acc.length - 1] += ' ' + sentence;
@@ -82,13 +82,13 @@ const Message: React.FC<MessageProps> = ({ message, onFeedback }) => {
   };
 
   return (
-    <div className={`flex ${isMobile ? 'mb-3' : 'mb-2 sm:mb-4'} ${message.sender === 'user' ? 'justify-end' : 'justify-start'} w-full max-w-full`}>
+    <div className={`flex ${isMobile ? 'mb-2 px-1' : 'mb-2 sm:mb-4'} ${message.sender === 'user' ? 'justify-end' : 'justify-start'} w-full`}>
       {message.sender === 'roger' && (
-        <div className={`rounded-full bg-roger flex items-center justify-center text-white font-medium mr-2 mt-1 flex-shrink-0 ${isMobile ? 'h-8 w-8 text-xs' : 'h-6 w-6 sm:h-8 sm:w-8 text-xs sm:text-sm'}`}>
+        <div className={`rounded-full bg-roger flex items-center justify-center text-white font-medium mr-2 mt-1 flex-shrink-0 ${isMobile ? 'h-7 w-7 text-xs' : 'h-6 w-6 sm:h-8 sm:w-8 text-xs sm:text-sm'}`}>
           R
         </div>
       )}
-      <div className={`flex flex-col ${isMobile ? 'max-w-[90%]' : 'max-w-[85%] sm:max-w-[80%]'}`} style={{ minWidth: 0 }}>
+      <div className={`flex flex-col ${isMobile ? 'max-w-[85%]' : 'max-w-[85%] sm:max-w-[80%]'} min-w-0`}>
         {message.sender === 'roger' && message.isRollingBack && (
           <RollbackIndicator 
             isActive={true} 
@@ -101,43 +101,44 @@ const Message: React.FC<MessageProps> = ({ message, onFeedback }) => {
             chat-bubble 
             ${message.sender === 'user' ? 'user-message' : 'roger-message'} 
             ${message.concernType ? getConcernClass() : ''} 
-            ${isMobile ? 'px-3 py-2 text-sm' : 'px-2 sm:px-4 py-1 sm:py-2 text-sm sm:text-base'}
-            word-wrap break-words overflow-wrap break-word
+            ${isMobile ? 'px-2 py-2 text-sm' : 'px-2 sm:px-4 py-1 sm:py-2 text-sm sm:text-base'}
+            break-words overflow-hidden
           `}
           style={{
             wordBreak: 'break-word',
             overflowWrap: 'break-word',
             hyphens: 'auto',
-            maxWidth: '100%'
+            maxWidth: '100%',
+            minWidth: 0
           }}
         >
-          <div>
+          <div className="overflow-hidden">
             {textParagraphs.map((paragraph, index) => (
-              <p key={index} className={`${index > 0 ? (isMobile ? 'mt-1' : 'mt-1 sm:mt-2') : ''} leading-relaxed`} style={{ wordBreak: 'break-word' }}>
+              <p key={index} className={`${index > 0 ? (isMobile ? 'mt-1' : 'mt-1 sm:mt-2') : ''} leading-relaxed break-words`} style={{ wordBreak: 'break-word', overflowWrap: 'break-word', hyphens: 'auto' }}>
                 {paragraph.trim()}
               </p>
             ))}
           </div>
-          <div className={`flex justify-between items-center ${isMobile ? 'mt-2' : 'mt-1 sm:mt-2'} ${message.sender === 'user' ? 'text-gray-500' : 'text-roger-light'}`}>
-            <div className={`${isMobile ? 'text-xs' : 'text-xs'}`}>{formattedTime}</div>
+          <div className={`flex justify-between items-center ${isMobile ? 'mt-1.5 gap-2' : 'mt-1 sm:mt-2 gap-2'} ${message.sender === 'user' ? 'text-gray-500' : 'text-roger-light'}`}>
+            <div className={`${isMobile ? 'text-xs' : 'text-xs'} flex-shrink-0`}>{formattedTime}</div>
             
             {message.sender === 'roger' && onFeedback && (
-              <div className={`flex ${isMobile ? 'space-x-2' : 'space-x-1 sm:space-x-2'}`}>
+              <div className={`flex ${isMobile ? 'space-x-1' : 'space-x-1 sm:space-x-2'} flex-shrink-0`}>
                 <button 
                   onClick={() => onFeedback(message.id, 'positive')} 
-                  className={`rounded-full hover:bg-gray-100 transition-colors ${isMobile ? 'p-2' : 'p-1'} ${message.feedback === 'positive' ? 'text-green-500' : 'text-gray-400'}`}
-                  style={{ minWidth: '44px', minHeight: '44px' }}
+                  className={`rounded-full hover:bg-gray-100 transition-colors ${isMobile ? 'p-1.5' : 'p-1'} ${message.feedback === 'positive' ? 'text-green-500' : 'text-gray-400'} flex items-center justify-center`}
+                  style={{ minWidth: '36px', minHeight: '36px' }}
                   aria-label="Helpful response"
                 >
-                  <ThumbsUp size={isMobile ? 14 : 12} className="sm:w-3.5 sm:h-3.5" />
+                  <ThumbsUp size={isMobile ? 12 : 12} className="sm:w-3.5 sm:h-3.5" />
                 </button>
                 <button 
                   onClick={() => onFeedback(message.id, 'negative')} 
-                  className={`rounded-full hover:bg-gray-100 transition-colors ${isMobile ? 'p-2' : 'p-1'} ${message.feedback === 'negative' ? 'text-red-500' : 'text-gray-400'}`}
-                  style={{ minWidth: '44px', minHeight: '44px' }}
+                  className={`rounded-full hover:bg-gray-100 transition-colors ${isMobile ? 'p-1.5' : 'p-1'} ${message.feedback === 'negative' ? 'text-red-500' : 'text-gray-400'} flex items-center justify-center`}
+                  style={{ minWidth: '36px', minHeight: '36px' }}
                   aria-label="Unhelpful response"
                 >
-                  <ThumbsDown size={isMobile ? 14 : 12} className="sm:w-3.5 sm:h-3.5" />
+                  <ThumbsDown size={isMobile ? 12 : 12} className="sm:w-3.5 sm:h-3.5" />
                 </button>
               </div>
             )}
