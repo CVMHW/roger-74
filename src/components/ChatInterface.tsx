@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Shield, AlertTriangle } from 'lucide-react';
@@ -15,48 +16,40 @@ const ChatInterface = () => {
   const [showCrisisWarning, setShowCrisisWarning] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { 
-    sendMessage, 
-    isDeceptive,
-    isPersistentCrisis,
-    crisisLevel,
-    processing,
-    error,
-    errorMessage 
-  } = useChatLogic(setMessages, setIsTyping, setProcessingContext);
+    messages: hookMessages,
+    isTyping: hookIsTyping,
+    isProcessing,
+    handleSendMessage,
+    handleFeedback,
+    showCrisisResources,
+    processingContext: hookProcessingContext
+  } = useChatLogic();
+
+  // Use hook values
+  useEffect(() => {
+    setMessages(hookMessages);
+  }, [hookMessages]);
 
   useEffect(() => {
-    if (isDeceptive) {
-      setProcessingContext("Deception Detected");
-    } else if (isPersistentCrisis) {
-      setProcessingContext(`Persistent Crisis (${crisisLevel})`);
-    } else if (processing) {
-      setProcessingContext(processing);
-    } else {
-      setProcessingContext(null);
-    }
-  }, [isDeceptive, isPersistentCrisis, crisisLevel, processing]);
+    setIsTyping(hookIsTyping);
+  }, [hookIsTyping]);
 
   useEffect(() => {
-    if (error && errorMessage) {
-      console.error("Chat Error:", errorMessage);
-      setProcessingContext(`Error: ${errorMessage}`);
-    }
-  }, [error, errorMessage]);
+    setProcessingContext(hookProcessingContext);
+  }, [hookProcessingContext]);
 
   useEffect(() => {
-    if (crisisLevel === 'high') {
-      setShowCrisisWarning(true);
-    }
-  }, [crisisLevel]);
+    setShowCrisisWarning(showCrisisResources);
+  }, [showCrisisResources]);
 
-  const handleSendMessage = async (text: string) => {
-    await sendMessage(text);
+  const handleSendMessageWrapper = async (text: string) => {
+    await handleSendMessage(text);
     if (inputRef.current) {
       inputRef.current.style.height = 'inherit';
     }
   };
 
-  const handleFeedback = (messageId: string, feedback: 'positive' | 'negative') => {
+  const handleFeedbackWrapper = (messageId: string, feedback: 'positive' | 'negative') => {
     setMessages(prevMessages =>
       prevMessages.map(msg =>
         msg.id === messageId ? { ...msg, feedback } : msg
@@ -147,15 +140,14 @@ const ChatInterface = () => {
           <MessageList 
             messages={messages} 
             isTyping={isTyping}
-            onFeedback={handleFeedback}
+            onFeedback={handleFeedbackWrapper}
           />
           {isTyping && <TypingIndicator />}
         </div>
         
         <div className="border-t border-gray-100 p-4 bg-white">
           <MessageInput 
-            onSendMessage={handleSendMessage}
-            disabled={isTyping}
+            onSendMessage={handleSendMessageWrapper}
             inputRef={inputRef}
           />
         </div>
