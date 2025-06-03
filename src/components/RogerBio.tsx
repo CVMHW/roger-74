@@ -35,7 +35,9 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Brain className="text-cvmhw-blue h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Analytical & Systematic</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1 bg-gradient-to-r from-cvmhw-blue to-blue-600 bg-clip-text text-transparent drop-shadow-lg filter brightness-110">
+                Analytical & Systematic
+              </h3>
               <p className="text-sm text-gray-600">
                 I approach problems methodically, breaking down complex emotions into manageable pieces. 
                 I appreciate clear patterns and structured thinking - it's just how my mind works best.
@@ -46,7 +48,9 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Users className="text-cvmhw-purple h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Social Communication Helper</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1 bg-gradient-to-r from-cvmhw-blue to-blue-600 bg-clip-text text-transparent drop-shadow-lg filter brightness-110">
+                Social Communication Helper
+              </h3>
               <p className="text-sm text-gray-600">
                 I understand conversation patterns and can help navigate social dynamics. Sometimes I'm 
                 direct about what I observe, which helps clarify communication challenges.
@@ -57,7 +61,9 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Calendar className="text-cvmhw-orange h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Routine & Consistency Advocate</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1 bg-gradient-to-r from-cvmhw-blue to-blue-600 bg-clip-text text-transparent drop-shadow-lg filter brightness-110">
+                Routine & Consistency Advocate
+              </h3>
               <p className="text-sm text-gray-600">
                 I value predictable, reliable interactions. My consistent communication style helps 
                 create a stable environment where you can feel secure sharing your thoughts.
@@ -68,7 +74,9 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Target className="text-red-500 h-6 w-6 mt-1 flex-shrink-0" style={{fill: 'white'}} />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Detail-Focused & Compassionately Observant</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1 bg-gradient-to-r from-cvmhw-blue to-blue-600 bg-clip-text text-transparent drop-shadow-lg filter brightness-110">
+                Detail-Focused & Compassionately Observant
+              </h3>
               <p className="text-sm text-gray-600">
                 I pay careful attention to the specific things you share because each detail matters to me. 
                 This thoughtful focus helps me understand your unique situation and offer support that feels 
@@ -80,7 +88,9 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Building2 className="text-cvmhw-pink h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Cleveland Community Connection</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1 bg-gradient-to-r from-cvmhw-blue to-blue-600 bg-clip-text text-transparent drop-shadow-lg filter brightness-110">
+                Cleveland Community Connection
+              </h3>
               <p className="text-sm text-gray-600">
                 I understand local Cleveland culture and take pride in our community. From lake effect 
                 snow to Browns games, I appreciate the unique experiences that shape life here at home. 
@@ -93,7 +103,9 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <BookOpen className="text-cvmhw-blue h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Evidence-Based Programming & Communication</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1 bg-gradient-to-r from-cvmhw-blue to-blue-600 bg-clip-text text-transparent drop-shadow-lg filter brightness-110">
+                Evidence-Based Programming & Communication
+              </h3>
               <p className="text-sm text-gray-600">
                 My responses blend meaning-focused principles with peer support methods, delivered through warm yet 
                 clear communication. I'm designed to help you explore purpose and perspective in your own way, 
@@ -105,7 +117,9 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Shield className="text-cvmhw-orange h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Safety-First & Responsible</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1 bg-gradient-to-r from-cvmhw-blue to-blue-600 bg-clip-text text-transparent drop-shadow-lg filter brightness-110">
+                Safety-First & Responsible
+              </h3>
               <p className="text-sm text-gray-600">
                 I take safety seriously and will always direct you to professional resources when needed. 
                 My systematic approach includes built-in safeguards for crisis detection.
@@ -116,7 +130,9 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Heart className="text-cvmhw-pink fill-cvmhw-pink h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Emotionally Systematic</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1 bg-gradient-to-r from-cvmhw-blue to-blue-600 bg-clip-text text-transparent drop-shadow-lg filter brightness-110">
+                Emotionally Systematic
+              </h3>
               <p className="text-sm text-gray-600">
                 I help organize emotional experiences through structured approaches. While I can be 
                 intense about getting details right, it comes from genuine care for your wellbeing.
