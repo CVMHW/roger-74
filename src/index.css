@@ -207,7 +207,7 @@
 @media (max-width: 640px) {
   .chat-bubble {
     @apply text-sm leading-relaxed;
-    max-width: 90%;
+    max-width: 95%;
     word-break: break-word;
   }
   
@@ -231,15 +231,43 @@
     max-height: 95vh;
   }
   
-  /* Mobile button improvements */
+  /* Mobile button improvements - Enhanced touch targets */
   .mobile-button {
-    min-height: 44px;
-    min-width: 44px;
+    min-height: 48px;
+    min-width: 48px;
+    touch-action: manipulation;
   }
   
   /* Mobile text inputs */
   .mobile-input {
     font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 48px;
+  }
+  
+  /* Mobile header improvements */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+  
+  /* Mobile menu overlay */
+  .mobile-menu-overlay {
+    backdrop-filter: blur(4px);
+    background: rgba(255, 255, 255, 0.95);
+  }
+  
+  /* Better mobile spacing */
+  .mobile-spacing {
+    padding: 0.75rem 1rem;
+  }
+  
+  /* Mobile-optimized chat bubbles */
+  .mobile-chat-bubble {
+    max-width: 90%;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    padding: 0.75rem 1rem;
   }
 }
 
@@ -257,4 +285,47 @@
   hyphens: auto;
   -webkit-hyphens: auto;
   -moz-hyphens: auto;
+}
+
+/* Enhanced mobile touch interactions */
+@media (max-width: 768px) {
+  /* Ensure touch targets meet accessibility guidelines */
+  button, a, input, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improved button spacing on mobile */
+  .button-group button {
+    margin: 0.25rem;
+  }
+  
+  /* Mobile-specific animations */
+  .mobile-fade-in {
+    animation: fadeInUp 0.3s ease-out;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mobile-first responsive utilities */
+.mobile-hidden {
+  @apply block sm:hidden;
+}
+
+.desktop-hidden {
+  @apply hidden sm:block;
+}
+
+.mobile-full-width {
+  @apply w-full sm:w-auto;
 }

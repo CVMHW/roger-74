@@ -6,6 +6,7 @@ import MessageInput from '../MessageInput';
 import useChatLogic from '../../hooks/chat/useChatLogic';
 import CrisisResources from '../CrisisResources';
 import { useStrictResponseVerification } from '../../hooks/useStrictResponseVerification';
+import { useIsMobile } from '../../hooks/use-mobile';
 
 const ChatContainer: React.FC = () => {
   const { 
@@ -26,9 +27,10 @@ const ChatContainer: React.FC = () => {
   const messagesWithRollbackState = messages.map(message => applyRollbackState(message));
   
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   return (
-    <div className="flex flex-col h-full max-h-full overflow-hidden rounded-lg border border-cvmhw-blue shadow-md">
+    <div className={`flex flex-col h-full max-h-full overflow-hidden rounded-lg border border-cvmhw-blue shadow-md ${isMobile ? 'mobile-spacing' : ''}`}>
       {/* Header with crisis resources - only shown when triggered */}
       {showCrisisResources && (
         <div className="sticky top-0 z-10">
@@ -37,9 +39,9 @@ const ChatContainer: React.FC = () => {
       )}
       
       {/* Main chat area with ScrollArea for proper scrolling - mobile optimized heights */}
-      <ScrollArea className="flex-1 h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]">
+      <ScrollArea className={`flex-1 ${isMobile ? 'h-[350px]' : 'h-[300px] sm:h-[400px] md:h-[500px] lg:h-[600px]'}`}>
         <div 
-          className="p-2 sm:p-4" 
+          className={`${isMobile ? 'p-2' : 'p-2 sm:p-4'}`}
           ref={chatContainerRef}
         >
           <MessageList 
@@ -52,7 +54,7 @@ const ChatContainer: React.FC = () => {
       </ScrollArea>
       
       {/* Message input with integrated password protection */}
-      <div className="border-t border-cvmhw-blue mt-auto">
+      <div className={`border-t border-cvmhw-blue mt-auto ${isMobile ? 'border-t-2' : ''}`}>
         <MessageInput onSendMessage={handleSendMessage} />
       </div>
     </div>
