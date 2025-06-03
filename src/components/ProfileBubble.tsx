@@ -38,7 +38,7 @@ const ProfileBubble = ({ children, className = "" }: ProfileBubbleProps) => {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-white mb-1 drop-shadow-lg">Roger's Profile</h2>
-                  <p className="text-white/90 text-sm drop-shadow-md">Peer Support Specialist at CVMHW</p>
+                  <p className="text-white/90 text-sm drop-shadow-md">Peer Support Specialist at Cuyahoga Valley Mindful Health and Wellness</p>
                 </div>
               </div>
             </div>

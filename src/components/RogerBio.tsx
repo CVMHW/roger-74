@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Heart, Brain, Shield, Users, Target, Calendar, Building2, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,14 +7,14 @@ const RogerBio = () => {
     <Card className="shadow-md border-cvmhw-blue border">
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="rounded-full bg-gradient-to-br from-cvmhw-blue to-cvmhw-purple h-12 w-12 flex items-center justify-center shadow-md border border-white/30">
+          <div className="rounded-full bg-cvmhw-blue h-12 w-12 flex items-center justify-center shadow-md border border-white/30">
             <span className="text-white font-bold text-lg">R</span>
           </div>
           <div>
-            <CardTitle className="text-xl font-semibold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent">
+            <CardTitle className="text-xl font-semibold text-cvmhw-blue">
               Meet Roger - Your Peer Support Companion
             </CardTitle>
-            <p className="text-sm text-gray-600">AI Peer Support Assistant at CVMHW</p>
+            <p className="text-sm text-gray-600">AI Peer Support Assistant at Cuyahoga Valley Mindful Health and Wellness</p>
           </div>
         </div>
       </CardHeader>
