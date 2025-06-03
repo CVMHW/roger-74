@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -177,22 +178,22 @@ const Index = () => {
             <CrisisResources forceOpen={false} />
           </div>
           
-          {/* Patient Rights Section - Enhanced visibility for clickable area */}
+          {/* Patient Rights Section - Softer, more compassionate design */}
           {hasConsented && (
             <div className="mb-6">
               <details className="group">
-                <summary className="flex items-center justify-between w-full p-4 bg-gradient-to-r from-cvmhw-blue/20 via-cyan-50/80 to-cvmhw-light/70 rounded-lg border-2 border-cvmhw-blue/40 cursor-pointer hover:from-cvmhw-blue/30 hover:to-cvmhw-light/80 transition-all duration-200 shadow-lg backdrop-blur-sm relative overflow-hidden">
-                  {/* Enhanced shimmering effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-cvmhw-blue/30 to-transparent transform -skew-x-12 animate-pulse opacity-60" />
+                <summary className="flex items-center justify-between w-full p-4 bg-gradient-to-r from-slate-50/90 via-blue-50/60 to-cyan-50/70 rounded-lg border border-blue-200/50 cursor-pointer hover:from-blue-50/80 hover:via-cyan-50/70 hover:to-slate-50/80 transition-all duration-200 shadow-md backdrop-blur-sm relative overflow-hidden">
+                  {/* Gentle shimmer effect - much softer */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-100/30 to-transparent transform -skew-x-12 animate-pulse opacity-30" />
                   
                   <div className="flex items-center gap-3 relative z-10">
-                    <div className="bg-gradient-to-br from-cvmhw-blue to-cvmhw-purple p-2 rounded-lg shadow-lg">
-                      <Shield size={20} className="text-white drop-shadow-lg" />
+                    <div className="bg-gradient-to-br from-blue-400 to-cyan-500 p-2 rounded-lg shadow-sm">
+                      <Shield size={18} className="text-white drop-shadow-sm" />
                     </div>
-                    <span className="text-base font-semibold bg-gradient-to-r from-cvmhw-blue via-cvmhw-purple to-slate-700 bg-clip-text text-transparent drop-shadow-lg">About CVMHW Services & Your Rights</span>
+                    <span className="text-base font-medium bg-gradient-to-r from-slate-700 via-blue-600 to-cyan-600 bg-clip-text text-transparent">About CVMHW Services & Your Rights</span>
                   </div>
-                  <span className="text-cvmhw-blue group-open:rotate-180 transition-transform duration-200 relative z-10 bg-white/80 p-1 rounded-full shadow-md">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <span className="text-blue-500 group-open:rotate-180 transition-transform duration-200 relative z-10 bg-white/70 p-1.5 rounded-full shadow-sm">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="m6 9 6 6 6-6"/>
                     </svg>
                   </span>
