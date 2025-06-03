@@ -45,9 +45,9 @@ const Header = () => {
           
           {/* Right Section - Crisis Resources & Roger */}
           <div className="flex items-center space-x-4">
-            {/* Crisis Resources Button */}
+            {/* Crisis Resources Button - Professional & Sleek */}
             <div className="relative">
-              <ExternalCrisisLink variant="header" className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white border-0 shadow-sm hover:shadow-md transition-all duration-200 px-3 py-2 text-sm font-medium" />
+              <ExternalCrisisLink variant="header" className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 hover:from-purple-700 hover:via-pink-700 hover:to-purple-800 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 px-4 py-2.5 text-sm font-semibold rounded-lg backdrop-blur-sm" />
             </div>
             
             {/* Roger Profile Section */}
