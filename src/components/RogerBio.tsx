@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Heart, Brain, Shield, Users, Target, Calendar, Building2, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -78,10 +79,11 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <BookOpen className="text-cvmhw-blue h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Evidence-Based & Direct</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Evidence-Based Programming & Communication</h3>
               <p className="text-sm text-gray-600">
-                I prefer clear, concrete communication over abstract concepts. My responses are grounded 
-                in proven therapeutic approaches, delivered in straightforward, practical language.
+                My responses integrate logotherapy principles and peer support methods while maintaining clear, 
+                direct communication. I'm programmed to help you find meaning and purpose, though I work within 
+                the bounds of peer support rather than professional therapy.
               </p>
             </div>
           </div>
