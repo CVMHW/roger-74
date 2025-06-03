@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Heart, Brain, Shield, Users, Target, Calendar, Building2, BookOpen } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,7 +31,7 @@ const RogerBio = () => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4">
           <div className="flex items-start space-x-3">
             <Brain className="text-cvmhw-blue h-6 w-6 mt-1 flex-shrink-0" />
             <div>
