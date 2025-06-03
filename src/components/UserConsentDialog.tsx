@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -772,6 +771,18 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Bottom Return to Roger Information Button */}
+            <div className="flex justify-center mt-8 pt-6 border-t border-gray-200">
+              <Button
+                onClick={() => setActiveTab('consent')}
+                variant="outline"
+                className="flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 border-blue-300 text-blue-700 font-semibold px-6 py-3 rounded-lg shadow-md transition-all duration-300"
+              >
+                <ArrowLeft size={18} />
+                Return to Roger Information
+              </Button>
             </div>
           </TabsContent>
         </Tabs>
