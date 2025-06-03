@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import { MessageType } from './Message';
-import { useRogerianResponse } from '../hooks/useRogerianResponse';
+import useRogerianResponse from '../hooks/useRogerianResponse';
 import { useCrisisDetection } from '../hooks/chat/useCrisisDetection';
 import { useToast } from "@/hooks/use-toast";
 import ProfileBubble from './ProfileBubble';
@@ -24,14 +24,14 @@ const ChatInterface = () => {
   }, [messages]);
 
   const { processUserMessage, resetConversation } = useRogerianResponse();
-  const { checkForCrisis } = useCrisisDetection();
+  const crisisDetection = useCrisisDetection();
 
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
 
     const userMessage: MessageType = {
       id: Date.now().toString(),
-      content,
+      text: content,
       isUser: true,
       timestamp: new Date(),
     };
@@ -40,28 +40,22 @@ const ChatInterface = () => {
     setIsTyping(true);
 
     try {
-      // Check for crisis first
-      const crisisDetected = checkForCrisis(content);
-      if (crisisDetected.isCrisis) {
-        const crisisResponse: MessageType = {
-          id: (Date.now() + 1).toString(),
-          content: crisisDetected.response,
-          isUser: false,
-          timestamp: new Date(),
-          isCrisis: true
-        };
-        
-        setMessages(prev => [...prev, crisisResponse]);
-        setIsTyping(false);
-        return;
+      // Check for crisis first if method exists
+      if (crisisDetection.handleCrisisMessage) {
+        const crisisResponse = await crisisDetection.handleCrisisMessage(content);
+        if (crisisResponse) {
+          setMessages(prev => [...prev, crisisResponse]);
+          setIsTyping(false);
+          return;
+        }
       }
 
       // Process the message normally
-      const response = await processUserMessage(content, messages);
+      const response = await processUserMessage(content);
       
       const rogerMessage: MessageType = {
         id: (Date.now() + 1).toString(),
-        content: response.content,
+        text: response.text || response.content || "I'm here to listen. Could you tell me more?",
         isUser: false,
         timestamp: new Date(),
       };
@@ -72,7 +66,7 @@ const ChatInterface = () => {
       
       const errorMessage: MessageType = {
         id: (Date.now() + 1).toString(),
-        content: "I'm having some technical difficulties right now. Please try again, or if this is urgent, please contact CVMHW directly or use the crisis resources below.",
+        text: "I'm having some technical difficulties right now. Please try again, or if this is urgent, please contact CVMHW directly or use the crisis resources below.",
         isUser: false,
         timestamp: new Date(),
       };
@@ -103,7 +97,7 @@ const ChatInterface = () => {
     if (messages.length === 0) {
       const welcomeMessage: MessageType = {
         id: 'welcome',
-        content: "Hi, I'm Roger, your peer support companion. How can I help you today?",
+        text: "Hi, I'm Roger, your peer support companion. How can I help you today?",
         isUser: false,
         timestamp: new Date(),
         isWelcome: true
@@ -146,7 +140,6 @@ const ChatInterface = () => {
           <MessageList 
             messages={messages} 
             isTyping={isTyping}
-            onNewConversation={handleNewConversation}
           />
           <div ref={messagesEndRef} />
         </div>
