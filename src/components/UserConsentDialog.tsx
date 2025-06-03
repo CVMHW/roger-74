@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,17 +26,12 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
   const [acknowledgedLimitations, setAcknowledgedLimitations] = useState(false);
   const [acknowledgedEmergency, setAcknowledgedEmergency] = useState(false);
   const [acknowledgedBeta, setAcknowledgedBeta] = useState(false);
-  const [password, setPassword] = useState('');
   const [canProceed, setCanProceed] = useState(false);
-  const [passwordError, setPasswordError] = useState(false);
   const [crisisResourcesOpen, setCrisisResourcesOpen] = useState(false);
 
-  const REQUIRED_PASSWORD = 'Jefferson00!!';
-
   useEffect(() => {
-    setCanProceed(acknowledgedLimitations && acknowledgedEmergency && acknowledgedBeta && password === REQUIRED_PASSWORD);
-    setPasswordError(password.length > 0 && password !== REQUIRED_PASSWORD);
-  }, [acknowledgedLimitations, acknowledgedEmergency, acknowledgedBeta, password]);
+    setCanProceed(acknowledgedLimitations && acknowledgedEmergency && acknowledgedBeta);
+  }, [acknowledgedLimitations, acknowledgedEmergency, acknowledgedBeta]);
 
   const handleConsent = () => {
     if (canProceed) {
@@ -101,7 +94,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                   <div>
                     <h3 className="font-semibold text-slate-800 mb-2">System Testing Mode</h3>
                     <p className="text-sm text-slate-700 mb-3">
-                      Roger is currently in testing mode. Access is restricted to authorized personnel only.
+                      Roger is currently in testing mode. Full access requires authorization after reviewing the information below.
                     </p>
                   </div>
                 </div>
@@ -219,7 +212,7 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
               </ul>
             </div>
 
-            {/* Crisis Resources Section Above Password */}
+            {/* Crisis Resources Section */}
             <div className="p-4 bg-red-50 border-2 border-red-300 rounded-lg">
               <Collapsible open={crisisResourcesOpen} onOpenChange={setCrisisResourcesOpen}>
                 <CollapsibleTrigger asChild>
@@ -367,27 +360,9 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
             </div>
 
             <div className="flex items-center justify-between gap-4 pt-4">
-              <div className="flex-1">
-                <label htmlFor="access-password" className="block text-sm font-medium text-gray-700 mb-2">
-                  Access Password (Testing Mode)
-                </label>
-                <Input
-                  id="access-password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter access password"
-                  className={passwordError ? 'border-red-500' : ''}
-                />
-                {passwordError && (
-                  <p className="text-red-500 text-xs mt-1">Incorrect password</p>
-                )}
-                
-                {/* Teddy Bear Icon */}
-                <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                  <div className="w-4 h-4 bg-amber-100 rounded-full flex items-center justify-center">
-                    🧸
-                  </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-amber-100 rounded-full flex items-center justify-center">
+                  🧸
                 </div>
               </div>
               <Button 
@@ -720,4 +695,3 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
 };
 
 export default UserConsentDialog;
-
