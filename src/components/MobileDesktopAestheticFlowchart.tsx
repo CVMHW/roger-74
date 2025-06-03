@@ -111,7 +111,7 @@ const MobileDesktopAestheticFlowchart = () => {
               {/* Step 1 */}
               <div className="bg-yellow-100 border-2 border-yellow-400 rounded-lg p-4 w-full max-w-md text-center">
                 <h3 className="font-bold text-yellow-800">Screen Size Detection</h3>
-                <p className="text-sm text-yellow-700">Is viewport width < 768px?</p>
+                <p className="text-sm text-yellow-700">Is viewport width less than 768px?</p>
               </div>
               
               <ArrowDown className="text-blue-600" size={24} />
