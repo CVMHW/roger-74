@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Heart, Brain, Menu, X } from 'lucide-react';
 import BetaBadge from './BetaBadge';
@@ -19,7 +18,7 @@ const Header = () => {
         {isMobile ? (
           // Mobile Header Layout - Enhanced with service description
           <div className="flex flex-col w-full min-h-[60px]">
-            {/* Top row with logo and menu button */}
+            {/* Top row with logo and Roger's Bio button */}
             <div className="flex items-center justify-between w-full">
               {/* Mobile Logo Section */}
               <div className="flex items-center space-x-2 flex-shrink-0 min-w-0 max-w-[70%]">
@@ -41,15 +40,19 @@ const Header = () => {
                 </div>
               </div>
 
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="flex-shrink-0 p-3 rounded-lg bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white hover:from-cvmhw-purple hover:to-cvmhw-blue transition-all duration-200 shadow-md"
-                style={{ minWidth: '48px', minHeight: '48px' }}
-                aria-label="Toggle menu"
-              >
-                {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-              </button>
+              {/* Mobile Roger's Bio Button */}
+              <ProfileBubble className="flex-shrink-0">
+                <button
+                  className="flex-shrink-0 p-3 rounded-lg bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white hover:from-cvmhw-purple hover:to-cvmhw-blue transition-all duration-200 shadow-md flex items-center gap-2"
+                  style={{ minWidth: '48px', minHeight: '48px' }}
+                  aria-label="View Roger's Profile"
+                >
+                  <div className="rounded-full bg-white/20 h-6 w-6 flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">R</span>
+                  </div>
+                  <span className="text-xs font-medium">Roger's Bio</span>
+                </button>
+              </ProfileBubble>
             </div>
 
             {/* Mobile Service Description - Always Visible */}

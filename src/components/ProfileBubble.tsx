@@ -3,6 +3,7 @@ import React from 'react';
 import { X } from 'lucide-react';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import RogerBio from './RogerBio';
+import { useIsMobile } from '../hooks/use-mobile';
 
 interface ProfileBubbleProps {
   children: React.ReactNode;
@@ -10,6 +11,8 @@ interface ProfileBubbleProps {
 }
 
 const ProfileBubble = ({ children, className = "" }: ProfileBubbleProps) => {
+  const isMobile = useIsMobile();
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -17,8 +20,19 @@ const ProfileBubble = ({ children, className = "" }: ProfileBubbleProps) => {
           {children}
         </button>
       </DialogTrigger>
-      <DialogContent className="max-w-[96vw] sm:max-w-2xl lg:max-w-4xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto p-0 bg-white border-2 border-cvmhw-blue rounded-xl shadow-2xl m-2 sm:m-0">
+      <DialogContent className={`${isMobile ? 'max-w-[95vw] max-h-[95vh] m-2' : 'max-w-[96vw] sm:max-w-2xl lg:max-w-4xl max-h-[92vh] sm:max-h-[90vh] sm:m-0'} overflow-y-auto p-0 bg-white border-2 border-cvmhw-blue rounded-xl shadow-2xl`}>
         <div className="relative">
+          {/* Mobile-optimized close button */}
+          {isMobile && (
+            <button
+              className="absolute top-2 right-2 z-50 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white transition-all duration-200"
+              aria-label="Close Roger's Profile"
+              style={{ minWidth: '44px', minHeight: '44px' }}
+            >
+              <X size={20} className="text-gray-600" />
+            </button>
+          )}
+
           {/* Header with CVMHW branding - Mobile Optimized */}
           <div className="bg-cvmhw-blue p-2 sm:p-3 lg:p-6 rounded-t-xl relative overflow-hidden">
             {/* Enhanced shimmer effect */}
@@ -41,6 +55,16 @@ const ProfileBubble = ({ children, className = "" }: ProfileBubbleProps) => {
                   <p className="text-white/90 text-xs sm:text-sm drop-shadow-md leading-tight">Peer Support Specialist at Cuyahoga Valley Mindful Health and Wellness</p>
                 </div>
               </div>
+              
+              {/* Desktop close button */}
+              {!isMobile && (
+                <button
+                  className="text-white/80 hover:text-white transition-colors p-1"
+                  aria-label="Close Roger's Profile"
+                >
+                  <X size={24} />
+                </button>
+              )}
             </div>
           </div>
           
