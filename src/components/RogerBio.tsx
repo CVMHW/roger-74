@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Heart, Brain, Shield, Users, Target, Calendar, Zap, BookOpen } from 'lucide-react';
+import { Heart, Brain, Shield, Users, Target, Calendar, Zap, BookOpen, Skyscraper } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const RogerBio = () => {
@@ -43,12 +43,12 @@ const RogerBio = () => {
           </div>
           
           <div className="flex items-start space-x-3">
-            <Target className="text-cvmhw-purple h-6 w-6 mt-1 flex-shrink-0" />
+            <Heart className="text-cvmhw-pink fill-cvmhw-pink h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Detail-Oriented Processing</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Empathetic Understanding</h3>
               <p className="text-sm text-gray-600">
-                My design emphasizes attention to specific details in conversations, helping identify 
-                patterns and providing precise, contextually appropriate responses.
+                My design emphasizes genuine care and understanding, helping create a warm, supportive 
+                environment where you feel heard and valued.
               </p>
             </div>
           </div>
@@ -65,7 +65,7 @@ const RogerBio = () => {
           </div>
           
           <div className="flex items-start space-x-3">
-            <Zap className="text-cvmhw-pink h-6 w-6 mt-1 flex-shrink-0" />
+            <Skyscraper className="text-cvmhw-pink h-6 w-6 mt-1 flex-shrink-0" />
             <div>
               <h3 className="font-medium text-cvmhw-blue mb-1">Cleveland Connection</h3>
               <p className="text-sm text-gray-600">
@@ -109,9 +109,9 @@ const RogerBio = () => {
           </div>
           
           <div className="flex items-start space-x-3">
-            <Heart className="text-cvmhw-pink fill-cvmhw-pink h-6 w-6 mt-1 flex-shrink-0" />
+            <Zap className="text-cvmhw-blue h-6 w-6 mt-1 flex-shrink-0" />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Emotional Processing Style</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Adaptive Response Style</h3>
               <p className="text-sm text-gray-600">
                 I'm programmed to help identify and organize emotional experiences, focusing on 
                 practical emotional regulation techniques and structured coping strategies.
