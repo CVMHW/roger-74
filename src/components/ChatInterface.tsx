@@ -118,7 +118,7 @@ const ChatInterface = () => {
               <div>
                 <ProfileBubble>
                   <h3 className="text-white font-semibold cursor-pointer hover:opacity-80 transition-opacity">
-                    Welcome to Roger's Secure Environment
+                    Secure Access Portal
                   </h3>
                 </ProfileBubble>
                 <p className="text-blue-100 text-sm">Peer Support Chat</p>
