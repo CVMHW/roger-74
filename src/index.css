@@ -437,7 +437,7 @@
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
@@ -471,4 +471,88 @@
   padding: 0.5rem;
   max-width: 100%;
   box-sizing: border-box;
+}
+
+/* Enhanced mobile header visibility and animations */
+@media (max-width: 768px) {
+  /* Ensure header is always visible and properly styled on mobile */
+  header {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 50 !important;
+    background: linear-gradient(to right, #ffffff, rgba(239, 246, 255, 0.4)) !important;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.3) !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+    min-height: 60px !important;
+  }
+
+  /* Enhanced mobile menu animation */
+  .animate-fadeInUp {
+    animation: fadeInUp 0.2s ease-out forwards;
+  }
+
+  /* Better mobile button touch targets */
+  .mobile-touch-target {
+    min-height: 48px !important;
+    min-width: 48px !important;
+    touch-action: manipulation;
+  }
+
+  /* Enhanced mobile header logo visibility */
+  header img {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* Mobile header brand text enhancement */
+  header .gradient-text {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Mobile menu overlay improvements */
+  .mobile-menu-overlay {
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(8px) !important;
+    border-top: 2px solid rgba(59, 130, 246, 0.2) !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  /* Force visibility for critical mobile elements */
+  .mobile-critical {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Cross-device compatibility fixes */
+@media screen and (max-width: 767px) {
+  /* iOS Safari specific fixes */
+  body {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Android Chrome specific fixes */
+  button, input, select, textarea {
+    font-size: 16px; /* Prevents zoom on focus */
+  }
+
+  /* Universal mobile viewport fixes */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Mobile-specific brand identity preservation */
+@media (max-width: 640px) {
+  .mobile-brand-container {
+    background: linear-gradient(135deg, #ffffff 0%, rgba(239, 246, 255, 0.8) 100%) !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+    border-radius: 0.5rem !important;
+    padding: 0.25rem !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+  }
 }

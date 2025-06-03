@@ -11,40 +11,42 @@ const Header = () => {
   const isMobile = useIsMobile();
 
   return (
-    <header className="relative bg-gradient-to-r from-white to-blue-50/40 shadow-sm border-b border-blue-100/30 py-2 overflow-hidden">
+    <header className="sticky top-0 z-50 bg-gradient-to-r from-white to-blue-50/40 shadow-sm border-b border-blue-100/30 py-2 overflow-hidden">
       {/* Subtle background gradient */}
       <div className="absolute inset-0 bg-gradient-to-r from-cvmhw-blue/3 via-transparent to-cvmhw-light/5" />
       
       <div className="container mx-auto px-3 sm:px-6 relative z-10">
         {isMobile ? (
-          // Mobile Header Layout - Completely redesigned for no overflow
-          <div className="flex items-center justify-between w-full">
-            {/* Mobile Logo Section - Constrained */}
-            <div className="flex items-center space-x-2 flex-shrink-0 min-w-0 max-w-[60%]">
-              <img 
-                src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
-                alt="CVMHW Logo" 
-                className="h-7 w-7 object-contain flex-shrink-0"
-                onError={(e) => {
-                  e.currentTarget.src = '/placeholder.svg';
-                }}
-              />
+          // Mobile Header Layout - Enhanced visibility and branding
+          <div className="flex items-center justify-between w-full min-h-[60px]">
+            {/* Mobile Logo Section - Enhanced with better visibility */}
+            <div className="flex items-center space-x-2 flex-shrink-0 min-w-0 max-w-[70%]">
+              <div className="relative bg-white rounded-lg p-1 shadow-sm border border-blue-100">
+                <img 
+                  src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                  alt="CVMHW Logo" 
+                  className="h-8 w-8 object-contain flex-shrink-0"
+                  onError={(e) => {
+                    e.currentTarget.src = '/placeholder.svg';
+                  }}
+                />
+              </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-sm font-bold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent truncate">
+                <span className="text-base font-bold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent truncate leading-tight">
                   CVMHW
                 </span>
-                <span className="text-xs text-slate-600 truncate">Roger.AI</span>
+                <span className="text-xs text-slate-600 truncate">Roger.AI Peer Support</span>
               </div>
             </div>
 
-            {/* Mobile Menu Button - Fixed size, no overflow */}
+            {/* Mobile Menu Button - Enhanced visibility */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="flex-shrink-0 p-2 rounded-lg bg-cvmhw-blue text-white hover:bg-cvmhw-purple transition-colors"
-              style={{ minWidth: '44px', minHeight: '44px' }}
+              className="flex-shrink-0 p-3 rounded-lg bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white hover:from-cvmhw-purple hover:to-cvmhw-blue transition-all duration-200 shadow-md"
+              style={{ minWidth: '48px', minHeight: '48px' }}
               aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         ) : (
@@ -108,45 +110,59 @@ const Header = () => {
           </div>
         )}
 
-        {/* Mobile Menu Overlay - Better constrained */}
+        {/* Mobile Menu Overlay - Enhanced design and functionality */}
         {isMobile && mobileMenuOpen && (
-          <div className="absolute top-full left-0 right-0 bg-white border-t border-blue-100 shadow-lg z-50 max-w-full">
+          <div className="absolute top-full left-0 right-0 bg-white border-t-2 border-blue-200 shadow-xl z-50 max-w-full animate-fadeInUp">
             <div className="p-4 space-y-4 max-w-full">
-              {/* Title Section for Mobile - Better text wrapping */}
-              <div className="text-center border-b border-blue-100 pb-3">
-                <h2 className="text-sm font-bold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent leading-tight">
+              {/* Enhanced Title Section for Mobile */}
+              <div className="text-center border-b border-blue-100 pb-4">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <div className="bg-gradient-to-br from-cvmhw-blue to-cvmhw-purple rounded-lg p-2 shadow-sm">
+                    <img 
+                      src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                      alt="CVMHW Logo" 
+                      className="h-6 w-6 object-contain"
+                    />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent leading-tight">
+                      CVMHW
+                    </h2>
+                  </div>
+                </div>
+                <h3 className="text-sm font-semibold text-slate-700 mb-1">
                   Cuyahoga Valley Mindful Health & Wellness
-                </h2>
-                <p className="text-xs text-slate-600 mt-1 leading-relaxed break-words">
-                  Mental Health Services Ages 4+ • Family Therapy • PTSD Treatment
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed break-words">
+                  Mental Health Services Ages 4+ • Family Therapy • PTSD Treatment • Veteran's Issues
                 </p>
               </div>
 
-              {/* Crisis Resources - Mobile Optimized with proper sizing */}
+              {/* Crisis Resources - Enhanced mobile layout */}
               <div className="flex flex-col space-y-3">
                 <div className="w-full max-w-full">
                   <ExternalCrisisLink 
                     variant="header" 
-                    className="w-full bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white rounded-lg py-3 text-sm font-semibold shadow-md flex items-center justify-center min-h-[48px]"
+                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg py-4 text-sm font-bold shadow-lg flex items-center justify-center min-h-[52px] transition-all duration-300"
                   />
                 </div>
                 
-                {/* Roger Profile - Mobile with proper constraints */}
-                <div className="flex items-center justify-center space-x-3 bg-blue-50 rounded-lg p-3 max-w-full">
+                {/* Roger Profile - Enhanced mobile design */}
+                <div className="flex items-center justify-center space-x-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 max-w-full border border-blue-100">
                   <ProfileBubble className="block flex-shrink-0">
                     <div 
-                      className="rounded-full bg-gradient-to-br from-cvmhw-blue to-cvmhw-purple flex items-center justify-center shadow-md border border-white/30"
-                      style={{ width: '44px', height: '44px' }}
+                      className="rounded-full bg-gradient-to-br from-cvmhw-blue to-cvmhw-purple flex items-center justify-center shadow-lg border-2 border-white"
+                      style={{ width: '48px', height: '48px' }}
                     >
-                      <span className="text-white font-bold">R</span>
+                      <span className="text-white font-bold text-lg">R</span>
                     </div>
                   </ProfileBubble>
                   <div className="flex flex-col items-start min-w-0 flex-1">
                     <div className="flex items-center gap-2 max-w-full">
-                      <span className="font-bold text-sm bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent truncate">Roger.AI</span>
+                      <span className="font-bold text-base bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent truncate">Roger.AI</span>
                       <BetaBadge />
                     </div>
-                    <span className="text-xs text-slate-600 font-semibold truncate">Peer Support Specialist</span>
+                    <span className="text-sm text-slate-600 font-semibold truncate">Peer Support Specialist</span>
                   </div>
                 </div>
               </div>
