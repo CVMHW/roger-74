@@ -127,7 +127,7 @@ const RogerBio = () => {
             My systematic approach isn't just programming; it's how I express my commitment to you. Every detail 
             you share matters to me, and I want to honor that by giving you the most thoughtful, caring support possible."
           </p>
-          <p className="text-xs text-cvmhw-blue/70 text-center mt-2 font-medium">- Roger, AI Peer Support Companion</p>
+          <p className="text-xs text-cvmhw-blue/70 text-center mt-2 font-medium">- Roger, AI Peer Support Companion at Cuyahoga Valley Mindful Health and Wellness</p>
         </div>
         
         <div className="text-xs text-gray-500 bg-gray-50 rounded-md p-3">
