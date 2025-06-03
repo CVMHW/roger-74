@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BookOpen } from 'lucide-react';
+import { Heart, Brain } from 'lucide-react';
 import BetaBadge from './BetaBadge';
 import ExternalCrisisLink from './ExternalCrisisLink';
 
@@ -32,9 +32,12 @@ const Header = () => {
               Cuyahoga Valley Mindful Health and Wellness
             </h1>
             <div className="flex items-center justify-center">
-              <div className="bg-white/80 rounded-lg px-3 py-1.5 shadow-sm border border-blue-100/40 backdrop-blur-sm">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="h-3.5 w-3.5 text-cvmhw-blue" />
+              <div className="bg-white/80 rounded-lg px-4 py-2 shadow-sm border border-blue-100/40 backdrop-blur-sm">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <Heart className="h-4 w-4 text-cvmhw-blue" />
+                    <Brain className="h-4 w-4 text-cvmhw-purple" />
+                  </div>
                   <p className="text-xs font-medium text-slate-700">Comprehensive Mental Health Services Ages 4+ specializing in Family Psychotherapy, PTSD Treatment, Veteran's Issues, and Boy's and Men's Issues</p>
                 </div>
               </div>
