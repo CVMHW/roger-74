@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Shield, AlertTriangle } from 'lucide-react';
@@ -68,7 +69,9 @@ const ChatInterface = () => {
           </ProfileBubble>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-lg font-semibold text-cvmhw-blue">Hi, I'm Roger, your peer support companion.</h3>
+              <ProfileBubble>
+                <h3 className="text-lg font-semibold text-cvmhw-blue cursor-pointer hover:text-cvmhw-purple transition-colors">Hi, I'm Roger, your peer support companion.</h3>
+              </ProfileBubble>
               {processingContext && (
                 <div className="flex items-center gap-1 text-xs text-cvmhw-purple bg-cvmhw-light/50 px-2 py-1 rounded-full">
                   <div className="w-2 h-2 bg-cvmhw-purple rounded-full animate-pulse"></div>
@@ -85,11 +88,9 @@ const ChatInterface = () => {
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-2">
               <Shield className="h-4 w-4 text-green-600" />
-              <ProfileBubble>
-                <span className="font-medium text-green-700 cursor-pointer hover:text-green-800 transition-colors">
-                  Welcome to Roger's Secure Environment
-                </span>
-              </ProfileBubble>
+              <span className="font-medium text-green-700">
+                Welcome to Roger's Secure Environment
+              </span>
             </div>
             <div className="flex items-center gap-4 text-gray-600">
               <span>🔒 HIPAA Protected</span>
@@ -148,7 +149,6 @@ const ChatInterface = () => {
         <div className="border-t border-gray-100 p-4 bg-white">
           <MessageInput 
             onSendMessage={handleSendMessageWrapper}
-            inputRef={inputRef}
           />
         </div>
       </CardContent>
@@ -157,3 +157,4 @@ const ChatInterface = () => {
 };
 
 export default ChatInterface;
+
