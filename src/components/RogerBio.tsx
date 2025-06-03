@@ -83,7 +83,9 @@ const RogerBio = () => {
               <h3 className="font-medium text-cvmhw-blue mb-1">Cleveland Community Connection</h3>
               <p className="text-sm text-gray-600">
                 I understand local Cleveland culture and take pride in our community. From lake effect 
-                snow to Browns games, I appreciate the unique experiences that shape life here at home.
+                snow to Browns games, I appreciate the unique experiences that shape life here at home. 
+                This local connection helps me relate to the specific challenges and joys of living in 
+                Northeast Ohio, whether that's navigating winter weather or celebrating our sports teams.
               </p>
             </div>
           </div>
