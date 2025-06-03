@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Heart, Brain, Menu, X } from 'lucide-react';
 import BetaBadge from './BetaBadge';
@@ -126,8 +127,7 @@ const Header = () => {
                 <div className="w-full max-w-full">
                   <ExternalCrisisLink 
                     variant="header" 
-                    className="w-full bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white rounded-lg py-3 text-sm font-semibold shadow-md flex items-center justify-center"
-                    style={{ minHeight: '48px', maxWidth: '100%' }}
+                    className="w-full bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple text-white rounded-lg py-3 text-sm font-semibold shadow-md flex items-center justify-center min-h-[48px]"
                   />
                 </div>
                 
