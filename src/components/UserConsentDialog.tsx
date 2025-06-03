@@ -294,6 +294,13 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                       </h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
+                          <span className="font-medium text-gray-800">National Suicide Prevention Lifeline</span>
+                          <a href="tel:988" className="flex items-center gap-1 text-gray-700 hover:text-gray-900 font-medium">
+                            <Phone size={14} />
+                            <span>988</span>
+                          </a>
+                        </div>
+                        <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
                           <span className="font-medium text-gray-800">National Suicide Prevention Hotline</span>
                           <a href="tel:18002738255" className="flex items-center gap-1 text-gray-700 hover:text-gray-900 font-medium">
                             <Phone size={14} />
@@ -432,6 +439,13 @@ const UserConsentDialog: React.FC<UserConsentDialogProps> = ({ isOpen, onConsent
                   Ohio/National Crisis Support
                 </h4>
                 <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
+                    <span className="font-medium text-gray-800">National Suicide Prevention Lifeline</span>
+                    <a href="tel:988" className="flex items-center gap-1 text-gray-700 hover:text-gray-900 font-medium">
+                      <Phone size={14} />
+                      <span>988</span>
+                    </a>
+                  </div>
                   <div className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
                     <span className="font-medium text-gray-800">National Suicide Prevention Hotline</span>
                     <a href="tel:18002738255" className="flex items-center gap-1 text-gray-700 hover:text-gray-900 font-medium">
