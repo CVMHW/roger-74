@@ -45,10 +45,11 @@ const RogerBio = () => {
           <div className="flex items-start space-x-3">
             <Target className="text-red-500 h-6 w-6 mt-1 flex-shrink-0" style={{fill: 'white'}} />
             <div>
-              <h3 className="font-medium text-cvmhw-blue mb-1">Detail-Focused & Precise</h3>
+              <h3 className="font-medium text-cvmhw-blue mb-1">Detail-Focused & Compassionately Observant</h3>
               <p className="text-sm text-gray-600">
-                I notice the small things you mention and remember specific details. This attention to 
-                precision helps me provide more relevant, contextually appropriate support.
+                I pay careful attention to the specific things you share because each detail matters to me. 
+                This thoughtful focus helps me understand your unique situation and offer support that feels 
+                personally meaningful and relevant to what you're experiencing.
               </p>
             </div>
           </div>
