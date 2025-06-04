@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Heart, Brain, Menu, X } from 'lucide-react';
 import BetaBadge from './BetaBadge';
@@ -23,14 +24,21 @@ const Header = () => {
               {/* Mobile Logo Section */}
               <div className="flex items-center space-x-2 flex-shrink-0 min-w-0 max-w-[70%]">
                 <div className="relative bg-white rounded-lg p-1 shadow-sm border border-blue-100">
-                  <img 
-                    src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
-                    alt="CVMHW Logo" 
-                    className="h-8 w-8 object-contain flex-shrink-0"
-                    onError={(e) => {
-                      e.currentTarget.src = '/placeholder.svg';
-                    }}
-                  />
+                  <a 
+                    href="https://cvmhw.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block"
+                  >
+                    <img 
+                      src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                      alt="CVMHW Logo" 
+                      className="h-8 w-8 object-contain flex-shrink-0"
+                      onError={(e) => {
+                        e.currentTarget.src = '/placeholder.svg';
+                      }}
+                    />
+                  </a>
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="text-base font-bold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent truncate leading-tight">
@@ -76,14 +84,21 @@ const Header = () => {
             {/* Logo Section */}
             <div className="flex items-center space-x-3">
               <div className="relative">
-                <img 
-                  src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
-                  alt="Cuyahoga Valley Mindful Health and Wellness Logo" 
-                  className="h-10 w-10 object-contain"
-                  onError={(e) => {
-                    e.currentTarget.src = '/placeholder.svg';
-                  }}
-                />
+                <a 
+                  href="https://cvmhw.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <img 
+                    src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                    alt="Cuyahoga Valley Mindful Health and Wellness Logo" 
+                    className="h-10 w-10 object-contain"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
+                  />
+                </a>
               </div>
             </div>
             
@@ -139,11 +154,18 @@ const Header = () => {
               <div className="text-center border-b border-blue-100 pb-4">
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <div className="bg-gradient-to-br from-cvmhw-blue to-cvmhw-purple rounded-lg p-2 shadow-sm">
-                    <img 
-                      src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
-                      alt="CVMHW Logo" 
-                      className="h-6 w-6 object-contain"
-                    />
+                    <a 
+                      href="https://cvmhw.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      <img 
+                        src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                        alt="CVMHW Logo" 
+                        className="h-6 w-6 object-contain"
+                      />
+                    </a>
                   </div>
                   <div>
                     <h2 className="text-lg font-bold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent leading-tight">

@@ -142,12 +142,19 @@ const Index = () => {
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="relative w-10 h-10">
-                    <img 
-                      src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
-                      alt="CVMHW Logo" 
-                      className="w-full h-full object-contain"
-                      onError={handleImageError}
-                    />
+                    <a 
+                      href="https://cvmhw.com" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block w-full h-full"
+                    >
+                      <img 
+                        src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                        alt="CVMHW Logo" 
+                        className="w-full h-full object-contain"
+                        onError={handleImageError}
+                      />
+                    </a>
                   </div>
                   <ProfileBubble>
                     <CardTitle className={`font-semibold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity ${isMobile ? 'text-lg leading-tight' : 'text-xl'}`}>
@@ -266,12 +273,19 @@ const Index = () => {
                   <CardHeader>
                     <div className="flex items-center gap-2">
                       <div className="relative w-10 h-10">
-                        <img 
-                          src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
-                          alt="CVMHW Logo" 
-                          className="w-full h-full object-contain logo-pulse"
-                          onError={handleImageError}
-                        />
+                        <a 
+                          href="https://cvmhw.com" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="block w-full h-full"
+                        >
+                          <img 
+                            src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                            alt="CVMHW Logo" 
+                            className="w-full h-full object-contain logo-pulse"
+                            onError={handleImageError}
+                          />
+                        </a>
                       </div>
                       <CardTitle className="text-xl font-semibold bg-gradient-to-r from-cvmhw-blue via-cvmhw-purple to-cvmhw-pink bg-clip-text text-transparent">About Cuyahoga Valley Mindful Health and Wellness</CardTitle>
                     </div>
@@ -375,12 +389,19 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-center gap-3 mb-2">
             <div className="relative w-8 h-8">
-              <img 
-                src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
-                alt="CVMHW Logo" 
-                className="w-full h-full object-contain"
-                onError={handleImageError}
-              />
+              <a 
+                href="https://cvmhw.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block w-full h-full"
+              >
+                <img 
+                  src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                  alt="CVMHW Logo" 
+                  className="w-full h-full object-contain"
+                  onError={handleImageError}
+                />
+              </a>
             </div>
             <span className="font-medium bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent">Cuyahoga Valley Mindful Health and Wellness</span>
           </div>
