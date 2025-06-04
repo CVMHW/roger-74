@@ -41,14 +41,25 @@ const ProfileBubble = ({ children, className = "" }: ProfileBubbleProps) => {
             <div className="flex items-center justify-between relative z-10">
               <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 flex-1 min-w-0">
                 <div className="relative w-8 h-8 sm:w-12 sm:h-12 lg:w-16 lg:h-16 flex-shrink-0">
-                  <img 
-                    src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
-                    alt="CVMHW Logo" 
-                    className="w-full h-full object-contain drop-shadow-lg"
-                    onError={(e) => {
-                      e.currentTarget.src = '/placeholder.svg';
+                  <a 
+                    href="https://cvmhw.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="block w-full h-full cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer');
                     }}
-                  />
+                  >
+                    <img 
+                      src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                      alt="CVMHW Logo" 
+                      className="w-full h-full object-contain drop-shadow-lg cursor-pointer"
+                      onError={(e) => {
+                        e.currentTarget.src = '/placeholder.svg';
+                      }}
+                    />
+                  </a>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h2 className="text-sm sm:text-lg lg:text-2xl font-bold text-white mb-1 drop-shadow-lg leading-tight">Roger's Profile</h2>
