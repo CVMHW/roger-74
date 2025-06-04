@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Heart, Brain, Menu, X } from 'lucide-react';
 import BetaBadge from './BetaBadge';
@@ -20,7 +21,7 @@ const Header = () => {
           <div className="flex flex-col w-full min-h-[60px]">
             {/* Top row with logo and Roger's Bio button */}
             <div className="flex items-center justify-between w-full">
-              {/* Mobile Logo Section - Simplified without box */}
+              {/* Mobile Logo Section - No background, seamless blend */}
               <div className="flex items-center space-x-2 flex-shrink-0 min-w-0 max-w-[70%]">
                 <a 
                   href="https://cvmhw.com" 
