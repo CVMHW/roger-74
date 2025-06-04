@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Heart, Brain, Menu, X } from 'lucide-react';
 import BetaBadge from './BetaBadge';
@@ -28,12 +27,16 @@ const Header = () => {
                     href="https://cvmhw.com" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="block"
+                    className="block cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer');
+                    }}
                   >
                     <img 
                       src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
                       alt="CVMHW Logo" 
-                      className="h-8 w-8 object-contain flex-shrink-0"
+                      className="h-8 w-8 object-contain flex-shrink-0 cursor-pointer"
                       onError={(e) => {
                         e.currentTarget.src = '/placeholder.svg';
                       }}
@@ -88,12 +91,16 @@ const Header = () => {
                   href="https://cvmhw.com" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="block"
+                  className="block cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer');
+                  }}
                 >
                   <img 
                     src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
                     alt="Cuyahoga Valley Mindful Health and Wellness Logo" 
-                    className="h-10 w-10 object-contain"
+                    className="h-10 w-10 object-contain cursor-pointer"
                     onError={(e) => {
                       e.currentTarget.src = '/placeholder.svg';
                     }}
@@ -158,12 +165,16 @@ const Header = () => {
                       href="https://cvmhw.com" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="block"
+                      className="block cursor-pointer"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer');
+                      }}
                     >
                       <img 
                         src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
                         alt="CVMHW Logo" 
-                        className="h-6 w-6 object-contain"
+                        className="h-6 w-6 object-contain cursor-pointer"
                       />
                     </a>
                   </div>
