@@ -20,29 +20,27 @@ const Header = () => {
           <div className="flex flex-col w-full min-h-[60px]">
             {/* Top row with logo and Roger's Bio button */}
             <div className="flex items-center justify-between w-full">
-              {/* Mobile Logo Section */}
+              {/* Mobile Logo Section - Simplified without box */}
               <div className="flex items-center space-x-2 flex-shrink-0 min-w-0 max-w-[70%]">
-                <div className="relative bg-white rounded-lg p-1 shadow-sm border border-blue-100">
-                  <a 
-                    href="https://cvmhw.com" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="block cursor-pointer"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer');
+                <a 
+                  href="https://cvmhw.com" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.open('https://cvmhw.com', '_blank', 'noopener,noreferrer');
+                  }}
+                >
+                  <img 
+                    src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
+                    alt="CVMHW Logo" 
+                    className="h-8 w-8 object-contain flex-shrink-0 cursor-pointer"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg';
                     }}
-                  >
-                    <img 
-                      src="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" 
-                      alt="CVMHW Logo" 
-                      className="h-8 w-8 object-contain flex-shrink-0 cursor-pointer"
-                      onError={(e) => {
-                        e.currentTarget.src = '/placeholder.svg';
-                      }}
-                    />
-                  </a>
-                </div>
+                  />
+                </a>
                 <div className="flex flex-col min-w-0">
                   <span className="text-base font-bold bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent truncate leading-tight">
                     CVMHW
