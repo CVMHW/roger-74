@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { Shield, Lock, Users, Eye, EyeOff } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -76,16 +74,15 @@ const AccessPasswordGate = ({ onPasswordSubmit, isValidating = false, error }: A
           <div className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
             <Shield className="w-5 h-5 text-blue-600" />
             <span className="text-sm font-semibold text-blue-700">Secure Access Portal</span>
-          </div>
-          
-          {/* Teddy Bear Link - Outside of any form */}
-          <div className="flex justify-center">
             <a 
               href="https://www.teddyholdings.com/" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-lg cursor-pointer hover:scale-110 transition-transform"
-              style={{ textDecoration: 'none' }}
+              className="text-lg cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault();
+                window.open('https://www.teddyholdings.com/', '_blank', 'noopener,noreferrer');
+              }}
             >
               🧸
             </a>
@@ -174,4 +171,3 @@ const AccessPasswordGate = ({ onPasswordSubmit, isValidating = false, error }: A
 };
 
 export default AccessPasswordGate;
-
