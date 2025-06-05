@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Shield, Lock, Users, Eye, EyeOff } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -79,7 +80,8 @@ const AccessPasswordGate = ({ onPasswordSubmit, isValidating = false, error }: A
               href="https://www.teddyholdings.com/" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-lg cursor-pointer"
+              className="text-lg cursor-pointer hover:scale-110 transition-transform"
+              style={{ textDecoration: 'none' }}
             >
               🧸
             </a>
@@ -168,3 +170,4 @@ const AccessPasswordGate = ({ onPasswordSubmit, isValidating = false, error }: A
 };
 
 export default AccessPasswordGate;
+
