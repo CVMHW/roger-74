@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Shield, Lock, Users, Eye, EyeOff } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -75,7 +74,18 @@ const AccessPasswordGate = ({ onPasswordSubmit, isValidating = false, error }: A
           <div className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-3 border border-blue-100">
             <Shield className="w-5 h-5 text-blue-600" />
             <span className="text-sm font-semibold text-blue-700">Secure Access Portal</span>
-            <span className="text-lg">🧸</span>
+            <a 
+              href="https://www.teddyholdings.com/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-lg cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault();
+                window.open('https://www.teddyholdings.com/', '_blank', 'noopener,noreferrer');
+              }}
+            >
+              🧸
+            </a>
           </div>
           
           <p className="text-xs text-slate-600 leading-relaxed bg-slate-50/80 rounded-lg p-3 border border-slate-200">
