@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Shield, Lock, Users, Eye, EyeOff } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,13 +61,18 @@ const AccessPasswordGate = ({ onPasswordSubmit, isValidating = false, error }: A
                 </a>
               </div>
             </div>
-            <div className="text-left">
-              <CardTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
-                Welcome to Roger's Secure Environment
-              </CardTitle>
-              <CardDescription className="text-xs text-slate-600 font-medium">
-                Authorized access required for investor demonstration
-              </CardDescription>
+            <div className="text-left flex-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
+                    Welcome to Roger's Secure Environment
+                  </CardTitle>
+                  <CardDescription className="text-xs text-slate-600 font-medium">
+                    Authorized access required for investor demonstration
+                  </CardDescription>
+                </div>
+                <span className="text-lg opacity-30 ml-2">🧸</span>
+              </div>
             </div>
           </div>
           
