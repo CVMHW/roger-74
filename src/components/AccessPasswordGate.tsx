@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Shield, Lock, Users, Eye, EyeOff } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -79,10 +80,6 @@ const AccessPasswordGate = ({ onPasswordSubmit, isValidating = false, error }: A
               target="_blank" 
               rel="noopener noreferrer"
               className="text-lg cursor-pointer"
-              onClick={(e) => {
-                e.preventDefault();
-                window.open('https://www.teddyholdings.com/', '_blank', 'noopener,noreferrer');
-              }}
             >
               🧸
             </a>
