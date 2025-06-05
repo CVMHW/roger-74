@@ -62,8 +62,8 @@ const AccessPasswordGate = ({ onPasswordSubmit, isValidating = false, error }: A
               </div>
             </div>
             <div className="text-left flex-1">
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex items-start justify-between w-full">
+                <div className="flex-1">
                   <CardTitle className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
                     Welcome to Roger's Secure Environment
                   </CardTitle>
@@ -71,7 +71,7 @@ const AccessPasswordGate = ({ onPasswordSubmit, isValidating = false, error }: A
                     Authorized access required for investor demonstration
                   </CardDescription>
                 </div>
-                <span className="text-lg opacity-30 ml-2">🧸</span>
+                <span className="text-xl opacity-40 ml-3 mt-1">🧸</span>
               </div>
             </div>
           </div>
