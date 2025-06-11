@@ -1,4 +1,6 @@
 
+import React from 'react';
+
 /**
  * Comprehensive Bug Testing Suite
  * Identifies potential issues before they cause React failures
