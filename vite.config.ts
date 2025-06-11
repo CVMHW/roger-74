@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -25,10 +24,9 @@ export default defineConfig(({ mode }) => ({
   build: {
     // Ensure public directory files are copied to dist
     copyPublicDir: true,
-    // Remove the problematic external function that was blocking sitemaps
     rollupOptions: {
       output: {
-        // Ensure static assets are properly named
+        // Ensure static assets are properly named - keep XML and TXT files as-is
         assetFileNames: (assetInfo) => {
           if (assetInfo.name?.endsWith('.xml') || assetInfo.name?.endsWith('.txt')) {
             return '[name][extname]';

@@ -8,20 +8,27 @@ import CrisisResources from '../components/CrisisResources';
 import WelcomeCard from '../components/WelcomeCard';
 import AboutCVMHWTab from '../components/AboutCVMHWTab';
 import MainFooter from '../components/MainFooter';
+import SitemapTester from '../components/SitemapTester';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Info, Shield } from 'lucide-react';
+import { Heart, Info, Shield, Globe } from 'lucide-react';
 import PatientRightsTab from '../components/PatientRightsTab';
 import { useIsMobile } from '../hooks/use-mobile';
 
 const Index = () => {
   const [showConsentDialog, setShowConsentDialog] = useState(false);
   const [hasConsented, setHasConsented] = useState(false);
+  const [showSitemapTester, setShowSitemapTester] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
     console.log('Index component: Initializing...');
     setShowConsentDialog(true);
+    
+    // Show sitemap tester in development mode or when URL contains sitemap-test
+    const shouldShowTester = window.location.search.includes('sitemap-test') || 
+                           window.location.hostname === 'localhost';
+    setShowSitemapTester(shouldShowTester);
   }, []);
 
   const handleConsent = () => {
@@ -60,6 +67,13 @@ const Index = () => {
         <div className="max-w-4xl mx-auto">
           <WelcomeCard onImageError={handleImageError} />
           
+          {/* Sitemap Tester - Development/Testing Only */}
+          {showSitemapTester && (
+            <div className="mb-6">
+              <SitemapTester />
+            </div>
+          )}
+          
           {/* Crisis Resources Section */}
           {hasConsented && (
             <div className="mb-6">
@@ -97,18 +111,26 @@ const Index = () => {
           {hasConsented && (
             <Tabs defaultValue="chat" className="mb-6">
               <TabsList className="w-full mb-2">
-                <TabsTrigger className="w-1/2" value="chat">
+                <TabsTrigger className="w-1/3" value="chat">
                   <div className="flex items-center">
                     <Heart size={18} className="mr-2 text-cvmhw-pink fill-cvmhw-pink" />
                     <span>Chat with Roger</span>
                   </div>
                 </TabsTrigger>
-                <TabsTrigger className="w-1/2" value="about">
+                <TabsTrigger className="w-1/3" value="about">
                   <div className="flex items-center">
                     <Info size={18} className="mr-2 text-cvmhw-blue" />
                     <span>About CVMHW</span>
                   </div>
                 </TabsTrigger>
+                {showSitemapTester && (
+                  <TabsTrigger className="w-1/3" value="sitemap">
+                    <div className="flex items-center">
+                      <Globe size={18} className="mr-2 text-green-600" />
+                      <span>SEO Test</span>
+                    </div>
+                  </TabsTrigger>
+                )}
               </TabsList>
               
               <TabsContent value="chat" className="focus:outline-none">
@@ -118,6 +140,12 @@ const Index = () => {
               <TabsContent value="about" className="focus:outline-none">
                 <AboutCVMHWTab onImageError={handleImageError} />
               </TabsContent>
+              
+              {showSitemapTester && (
+                <TabsContent value="sitemap" className="focus:outline-none">
+                  <SitemapTester />
+                </TabsContent>
+              )}
             </Tabs>
           )}
           
