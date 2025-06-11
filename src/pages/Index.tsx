@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -420,6 +421,15 @@ const Index = () => {
               </a>
             </div>
             <span className="font-medium bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent">Cuyahoga Valley Mindful Health and Wellness</span>
+          </div>
+          
+          {/* Additional Roger Bio Profile Link */}
+          <div className="flex justify-center mb-3">
+            <ProfileBubble>
+              <button className="text-cvmhw-blue hover:text-cvmhw-purple transition-colors text-sm font-medium underline decoration-cvmhw-blue/30 hover:decoration-cvmhw-purple/50">
+                Learn More About Roger - Your AI Peer Support Companion
+              </button>
+            </ProfileBubble>
           </div>
           
           {/* External Crisis Link in Footer */}
