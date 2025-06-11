@@ -2,9 +2,15 @@
 # Enable rewrite engine
 RewriteEngine On
 
-# Handle client routing, redirect all requests to index.html
+# Serve sitemap and robots files directly
+RewriteRule ^sitemap\.xml$ sitemap.xml [L,T=application/xml]
+RewriteRule ^sitemap-production\.xml$ sitemap-production.xml [L,T=application/xml]
+RewriteRule ^robots\.txt$ robots.txt [L,T=text/plain]
+
+# Handle client routing for everything else
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/(sitemap.*\.xml|robots\.txt)$
 RewriteRule . /index.html [L]
 
 # Set proper MIME types for XML files

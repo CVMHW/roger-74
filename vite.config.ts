@@ -19,20 +19,27 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Ensure XML files are properly served with correct MIME types
-  assetsInclude: ['**/*.xml'],
+  // Ensure XML files are properly included in the build
+  assetsInclude: ['**/*.xml', '**/*.txt'],
   build: {
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        sitemap: path.resolve(__dirname, 'public/sitemap.xml'),
+        sitemapProduction: path.resolve(__dirname, 'public/sitemap-production.xml'),
+        robots: path.resolve(__dirname, 'public/robots.txt'),
+      },
       output: {
         assetFileNames: (assetInfo) => {
-          // Keep XML files in root directory with original names
-          if (assetInfo.name?.endsWith('.xml')) {
+          // Keep XML and txt files in root directory with original names
+          if (assetInfo.name?.endsWith('.xml') || assetInfo.name?.endsWith('.txt')) {
             return '[name][extname]';
           }
           return 'assets/[name]-[hash][extname]';
         },
       },
     },
+    copyPublicDir: true,
   },
   // Configure dev server to serve XML files with correct headers
   preview: {
