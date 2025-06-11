@@ -1,8 +1,15 @@
+
+User-agent: *
+Allow: /
+
+# Specific bot permissions
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Twitterbot
 Allow: /
@@ -10,5 +17,17 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
+User-agent: LinkedInBot
 Allow: /
+
+# Disallow sensitive areas
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /src/
+
+# Sitemap location
+Sitemap: https://roger-peer-companion.lovable.app/sitemap.xml
+
+# RSS feed
+Sitemap: https://roger-peer-companion.lovable.app/rss.xml

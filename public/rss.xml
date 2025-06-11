@@ -1,0 +1,28 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Roger Peer Support Companion Updates</title>
+    <description>Latest updates and improvements to Roger, the AI peer support companion for mental health</description>
+    <link>https://roger-peer-companion.lovable.app</link>
+    <atom:link href="https://roger-peer-companion.lovable.app/rss.xml" rel="self" type="application/rss+xml" />
+    <language>en-US</language>
+    <managingEditor>support@cvmhw.com (CVMHW Support)</managingEditor>
+    <webMaster>support@cvmhw.com (CVMHW Support)</webMaster>
+    <lastBuildDate>Sat, 11 Jan 2025 12:00:00 GMT</lastBuildDate>
+    <category>Mental Health</category>
+    <category>AI Technology</category>
+    <category>Peer Support</category>
+    
+    <item>
+      <title>Roger Peer Support Platform Launch</title>
+      <description>Introducing Roger, a secure AI peer support companion for mental health with professional supervision and crisis intervention protocols.</description>
+      <link>https://roger-peer-companion.lovable.app</link>
+      <guid isPermaLink="true">https://roger-peer-companion.lovable.app</guid>
+      <pubDate>Sat, 11 Jan 2025 12:00:00 GMT</pubDate>
+      <category>Product Launch</category>
+    </item>
+    
+  </channel>
+</rss>
+</rss>
