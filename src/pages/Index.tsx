@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
 import BetaWatermark from '../components/BetaWatermark';
 import LegalDisclaimer from '../components/LegalDisclaimer';
 import ExternalCrisisLink from '../components/ExternalCrisisLink';
-import UserConsentDialog from '../components/UserConsentDialog';
+import LazyUserConsentDialog from '../components/LazyUserConsentDialog';
 import FloatingCrisisButton from '../components/FloatingCrisisButton';
 import CrisisResources from '../components/CrisisResources';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -20,7 +19,16 @@ import { useIsMobile } from '../hooks/use-mobile';
 const Index = () => {
   const [showConsentDialog, setShowConsentDialog] = useState(true);
   const [hasConsented, setHasConsented] = useState(false);
+  const [isReactReady, setIsReactReady] = useState(false);
   const isMobile = useIsMobile();
+
+  // Ensure React is fully ready before rendering complex components
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsReactReady(true);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleConsent = () => {
     setHasConsented(true);
@@ -129,11 +137,22 @@ const Index = () => {
     </a>
   );
 
+  if (!isReactReady) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-cvmhw-light to-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cvmhw-blue mx-auto mb-4"></div>
+          <p className="text-cvmhw-blue">Loading Roger...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-cvmhw-light to-white relative">
       <Header />
       
-      <UserConsentDialog 
+      <LazyUserConsentDialog 
         isOpen={showConsentDialog}
         onConsent={handleConsent}
       />
