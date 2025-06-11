@@ -11,21 +11,11 @@ import {
 } from "@/components/ui/toast"
 
 export function Toaster() {
-  // Defensive hook usage with error handling
-  let toasts = { toasts: [] };
-  
-  try {
-    const toastHook = useToast();
-    toasts = toastHook;
-  } catch (error) {
-    console.warn('Toast system failed to initialize:', error);
-    // Return early with empty component if toast system fails
-    return null;
-  }
+  const { toasts } = useToast()
 
   return (
     <ToastProvider>
-      {toasts.toasts.map(function ({ id, title, description, action, ...props }) {
+      {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
           <Toast key={id} {...props}>
             <div className="grid gap-1">

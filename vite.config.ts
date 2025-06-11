@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -9,6 +8,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    // CRITICAL: Explicit static file serving BEFORE any middleware
     middlewareMode: false,
     fs: {
       strict: false
@@ -16,45 +16,46 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
-    mode === 'development' && componentTagger(),
-    // CRITICAL SEO FIX: Enhanced static file handler with aggressive priority
+    mode === 'development' &&
+    componentTagger(),
+    // Custom plugin to handle static files with highest priority
     {
-      name: 'seo-optimized-static-handler',
-      configureServer(server: any) {
-        // HIGHEST PRIORITY: Intercept ALL SEO-critical files BEFORE any other middleware
-        const seoFiles = ['/sitemap.xml', '/sitemap-production.xml', '/robots.txt', '/manifest.json'];
+      name: 'static-file-handler',
+      configureServer(server) {
+        server.middlewares.use('/sitemap.xml', (req, res, next) => {
+          console.log('🚨 STATIC HANDLER: Intercepting sitemap.xml request');
+          res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+          res.setHeader('Cache-Control', 'public, max-age=3600');
+          
+          // Force serve the static file
+          const fs = require('fs');
+          const sitemapPath = path.join(__dirname, 'public', 'sitemap.xml');
+          
+          try {
+            const content = fs.readFileSync(sitemapPath, 'utf8');
+            console.log('✅ STATIC HANDLER: Serving sitemap.xml content');
+            res.end(content);
+          } catch (error) {
+            console.error('❌ STATIC HANDLER: Error reading sitemap.xml:', error);
+            res.status(404).end('Sitemap not found');
+          }
+        });
         
-        seoFiles.forEach(filePath => {
-          server.middlewares.use(filePath, async (req: any, res: any, next: any) => {
-            console.log(`🚨 SEO INTERCEPT: ${filePath} request detected`);
-            
-            try {
-              // Use dynamic import instead of require for fs
-              const { readFileSync } = await import('fs');
-              const staticPath = path.join(process.cwd(), 'public', filePath.substring(1));
-              
-              // Set appropriate headers based on file type
-              if (filePath.includes('.xml')) {
-                res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-                res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
-                res.setHeader('X-Content-Type-Options', 'nosniff');
-                res.setHeader('X-Robots-Tag', 'index, follow');
-              } else if (filePath.includes('.txt')) {
-                res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-                res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
-              } else if (filePath.includes('.json')) {
-                res.setHeader('Content-Type', 'application/json; charset=utf-8');
-                res.setHeader('Cache-Control', 'public, max-age=86400');
-              }
-              
-              const content = readFileSync(staticPath, 'utf8');
-              console.log(`✅ SERVING SEO FILE: ${filePath} (${content.length} bytes)`);
-              res.end(content);
-            } catch (error) {
-              console.error(`❌ SEO FILE ERROR: ${filePath}`, error);
-              res.status(404).end(`${filePath.substring(1)} not found`);
-            }
-          });
+        server.middlewares.use('/robots.txt', (req, res, next) => {
+          console.log('🚨 STATIC HANDLER: Intercepting robots.txt request');
+          res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+          
+          const fs = require('fs');
+          const robotsPath = path.join(__dirname, 'public', 'robots.txt');
+          
+          try {
+            const content = fs.readFileSync(robotsPath, 'utf8');
+            console.log('✅ STATIC HANDLER: Serving robots.txt content');
+            res.end(content);
+          } catch (error) {
+            console.error('❌ STATIC HANDLER: Error reading robots.txt:', error);
+            res.status(404).end('Robots not found');
+          }
         });
       }
     }
@@ -64,45 +65,32 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // SEO OPTIMIZATION: Enhanced build configuration
+  // CRITICAL: Ensure static files are properly handled
   publicDir: 'public',
   build: {
+    // Ensure public directory files are copied to dist with exact names
     copyPublicDir: true,
     rollupOptions: {
+      // Ensure static files are not processed by bundler
       external: [],
       output: {
-        // Ensure SEO-critical files maintain their names
-        assetFileNames: (assetInfo: any) => {
-          if (assetInfo.name?.match(/\.(xml|txt|json)$/)) {
+        // Keep static assets with original names
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name?.endsWith('.xml') || assetInfo.name?.endsWith('.txt')) {
             return '[name][extname]';
           }
           return 'assets/[name]-[hash][extname]';
-        },
-        // Code splitting for better Core Web Vitals
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          router: ['react-router-dom'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-tabs']
         }
       }
     },
-    // Performance optimization
-    target: 'esnext',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: mode === 'production',
-        drop_debugger: mode === 'production'
-      }
-    }
   },
+  // Configure dev server to serve static files FIRST
   preview: {
     open: false,
     headers: {
-      'Cache-Control': 'public, max-age=3600',
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY'
+      'Cache-Control': 'public, max-age=3600'
     }
   },
-  assetsInclude: ['**/*.xml', '**/*.txt', '**/*.json']
+  // Add explicit static file handling
+  assetsInclude: ['**/*.xml', '**/*.txt']
 }));

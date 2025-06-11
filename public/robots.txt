@@ -1,9 +1,8 @@
 
-# Healthcare IT Platform - Optimized for Academic & Professional Indexing
 User-agent: *
 Allow: /
 
-# Enhanced bot permissions for academic and professional crawlers
+# Specific bot permissions
 User-agent: Googlebot
 Allow: /
 Crawl-delay: 1
@@ -12,22 +11,6 @@ User-agent: Bingbot
 Allow: /
 Crawl-delay: 1
 
-User-agent: Slurp
-Allow: /
-Crawl-delay: 2
-
-User-agent: DuckDuckBot
-Allow: /
-Crawl-delay: 1
-
-# Academic and research crawlers
-User-agent: ia_archiver
-Allow: /
-
-User-agent: Scooter
-Allow: /
-
-# Social media bots for professional networking
 User-agent: Twitterbot
 Allow: /
 
@@ -37,33 +20,19 @@ Allow: /
 User-agent: LinkedInBot
 Allow: /
 
-# Disallow sensitive technical areas
+# Disallow sensitive areas
 Disallow: /api/
 Disallow: /admin/
 Disallow: /_next/
 Disallow: /src/
-Disallow: /node_modules/
-Disallow: /.git/
 
-# Allow specific technical documentation paths
+# Sitemap location - production domain
+Sitemap: https://peersupportai.com/sitemap.xml
+
+# Enhanced for mental health SEO
+# Allow specific mental health content crawling
 Allow: /flowchart
 Allow: /unified-flowchart
 Allow: /conversation-processing
 Allow: /mobile-desktop-analysis
 Allow: /wrapping-hell-analysis
-Allow: /test-dashboard
-
-# Enhanced for medical programming and IT professional SEO
-# Allow healthcare IT documentation
-Allow: /docs/
-Allow: /api-docs/
-Allow: /technical/
-Allow: /research/
-Allow: /implementation/
-
-# Sitemap locations - production domain
-Sitemap: https://peersupportai.com/sitemap.xml
-Sitemap: https://peersupportai.com/sitemap-production.xml
-
-# Host directive for primary domain
-Host: https://peersupportai.com
