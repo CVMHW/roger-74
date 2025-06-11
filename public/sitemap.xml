@@ -1,8 +1,10 @@
 
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">
   
+  <!-- Primary Homepage - Healthcare IT Platform -->
   <url>
     <loc>https://peersupportai.com/</loc>
     <lastmod>2025-06-11T21:00:00Z</lastmod>
@@ -10,52 +12,58 @@
     <priority>1.0</priority>
     <image:image>
       <image:loc>https://peersupportai.com/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png</image:loc>
-      <image:title>CVMHW Logo - Cuyahoga Valley Mindful Health and Wellness</image:title>
-      <image:caption>Logo for Cuyahoga Valley Mindful Health and Wellness, providing mental health services in Cleveland and surrounding Ohio areas</image:caption>
+      <image:title>CVMHW Healthcare IT Platform - Mental Health Technology</image:title>
+      <image:caption>Advanced healthcare IT platform for mental health services, demonstrating enterprise-level medical programming and system architecture</image:caption>
       <image:geo_location>Cleveland, OH</image:geo_location>
     </image:image>
   </url>
   
+  <!-- Technical Architecture Documentation -->
   <url>
     <loc>https://peersupportai.com/flowchart</loc>
+    <lastmod>2025-06-11T21:00:00Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Advanced System Integration -->
+  <url>
+    <loc>https://peersupportai.com/unified-flowchart</loc>
+    <lastmod>2025-06-11T21:00:00Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Healthcare Data Processing Pipeline -->
+  <url>
+    <loc>https://peersupportai.com/conversation-processing</loc>
     <lastmod>2025-06-11T21:00:00Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   
+  <!-- Cross-Platform Healthcare IT Analysis -->
   <url>
-    <loc>https://peersupportai.com/unified-flowchart</loc>
+    <loc>https://peersupportai.com/mobile-desktop-analysis</loc>
+    <lastmod>2025-06-11T21:00:00Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Enterprise UI/UX Optimization -->
+  <url>
+    <loc>https://peersupportai.com/wrapping-hell-analysis</loc>
     <lastmod>2025-06-11T21:00:00Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   
-  <url>
-    <loc>https://peersupportai.com/conversation-processing</loc>
-    <lastmod>2025-06-11T21:00:00Z</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://peersupportai.com/mobile-desktop-analysis</loc>
-    <lastmod>2025-06-11T21:00:00Z</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
-  <url>
-    <loc>https://peersupportai.com/wrapping-hell-analysis</loc>
-    <lastmod>2025-06-11T21:00:00Z</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  
+  <!-- Technical Testing & Quality Assurance -->
   <url>
     <loc>https://peersupportai.com/test-dashboard</loc>
     <lastmod>2025-06-11T21:00:00Z</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
   </url>
 
 </urlset>

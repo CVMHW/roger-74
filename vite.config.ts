@@ -17,47 +17,43 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === 'development' && componentTagger(),
-    // CRITICAL FIX #1: Static file handler with proper types
+    // CRITICAL SEO FIX: Enhanced static file handler with aggressive priority
     {
-      name: 'static-file-priority-handler',
+      name: 'seo-optimized-static-handler',
       configureServer(server: any) {
-        // HIGHEST PRIORITY: Intercept sitemap.xml BEFORE any other middleware
-        server.middlewares.use('/sitemap.xml', (req: any, res: any, next: any) => {
-          console.log('🚨 CRITICAL INTERCEPT: sitemap.xml request detected');
-          res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-          res.setHeader('Cache-Control', 'public, max-age=3600');
-          res.setHeader('X-Robots-Tag', 'index, follow');
-          
-          const fs = require('fs');
-          const sitemapPath = path.join(__dirname, 'public', 'sitemap.xml');
-          
-          try {
-            const content = fs.readFileSync(sitemapPath, 'utf8');
-            console.log('✅ SERVING STATIC SITEMAP:', content.length, 'bytes');
-            res.end(content);
-          } catch (error) {
-            console.error('❌ STATIC SITEMAP ERROR:', error);
-            res.status(404).end('Sitemap not found');
-          }
-        });
+        // HIGHEST PRIORITY: Intercept ALL SEO-critical files BEFORE any other middleware
+        const seoFiles = ['/sitemap.xml', '/sitemap-production.xml', '/robots.txt', '/manifest.json'];
         
-        // HIGHEST PRIORITY: Intercept robots.txt 
-        server.middlewares.use('/robots.txt', (req: any, res: any, next: any) => {
-          console.log('🚨 CRITICAL INTERCEPT: robots.txt request detected');
-          res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-          res.setHeader('Cache-Control', 'public, max-age=3600');
-          
-          const fs = require('fs');
-          const robotsPath = path.join(__dirname, 'public', 'robots.txt');
-          
-          try {
-            const content = fs.readFileSync(robotsPath, 'utf8');
-            console.log('✅ SERVING STATIC ROBOTS:', content.length, 'bytes');
-            res.end(content);
-          } catch (error) {
-            console.error('❌ STATIC ROBOTS ERROR:', error);
-            res.status(404).end('Robots not found');
-          }
+        seoFiles.forEach(filePath => {
+          server.middlewares.use(filePath, (req: any, res: any, next: any) => {
+            console.log(`🚨 SEO INTERCEPT: ${filePath} request detected`);
+            
+            const fs = require('fs');
+            const staticPath = path.join(__dirname, 'public', filePath.substring(1));
+            
+            // Set appropriate headers based on file type
+            if (filePath.includes('.xml')) {
+              res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+              res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+              res.setHeader('X-Content-Type-Options', 'nosniff');
+              res.setHeader('X-Robots-Tag', 'index, follow');
+            } else if (filePath.includes('.txt')) {
+              res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+              res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+            } else if (filePath.includes('.json')) {
+              res.setHeader('Content-Type', 'application/json; charset=utf-8');
+              res.setHeader('Cache-Control', 'public, max-age=86400');
+            }
+            
+            try {
+              const content = fs.readFileSync(staticPath, 'utf8');
+              console.log(`✅ SERVING SEO FILE: ${filePath} (${content.length} bytes)`);
+              res.end(content);
+            } catch (error) {
+              console.error(`❌ SEO FILE ERROR: ${filePath}`, error);
+              res.status(404).end(`${filePath.substring(1)} not found`);
+            }
+          });
         });
       }
     }
@@ -67,27 +63,45 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // CRITICAL FIX #2: Ensure static files are properly handled
+  // SEO OPTIMIZATION: Enhanced build configuration
   publicDir: 'public',
   build: {
     copyPublicDir: true,
     rollupOptions: {
       external: [],
       output: {
+        // Ensure SEO-critical files maintain their names
         assetFileNames: (assetInfo: any) => {
-          if (assetInfo.name?.endsWith('.xml') || assetInfo.name?.endsWith('.txt')) {
+          if (assetInfo.name?.match(/\.(xml|txt|json)$/)) {
             return '[name][extname]';
           }
           return 'assets/[name]-[hash][extname]';
+        },
+        // Code splitting for better Core Web Vitals
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-tabs', '@radix-ui/react-card']
         }
       }
     },
+    // Performance optimization
+    target: 'esnext',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: mode === 'production',
+        drop_debugger: mode === 'production'
+      }
+    }
   },
   preview: {
     open: false,
     headers: {
-      'Cache-Control': 'public, max-age=3600'
+      'Cache-Control': 'public, max-age=3600',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY'
     }
   },
-  assetsInclude: ['**/*.xml', '**/*.txt']
+  assetsInclude: ['**/*.xml', '**/*.txt', '**/*.json']
 }));

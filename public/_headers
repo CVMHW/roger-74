@@ -1,12 +1,16 @@
 
-# CRITICAL FIX #3: Enhanced Content-Type Headers - HIGHEST PRIORITY
+# SEO-OPTIMIZED HEADERS - CRITICAL FOR SEARCH ENGINE CRAWLING
+
+# Primary sitemap with enhanced SEO headers
 /sitemap.xml
   Content-Type: application/xml; charset=utf-8
   Cache-Control: public, max-age=3600, must-revalidate
   X-Content-Type-Options: nosniff
   X-Robots-Tag: index, follow
   Vary: Accept-Encoding
+  ETag: "sitemap-v1"
 
+# Production sitemap variant
 /sitemap-production.xml
   Content-Type: application/xml; charset=utf-8
   Cache-Control: public, max-age=3600, must-revalidate
@@ -14,17 +18,28 @@
   X-Robots-Tag: index, follow
   Vary: Accept-Encoding
 
+# Robots.txt with proper headers
 /robots.txt
   Content-Type: text/plain; charset=utf-8
   Cache-Control: public, max-age=3600, must-revalidate
   X-Robots-Tag: index, follow
 
-# Force XML MIME type for all XML files
+# Progressive Web App manifest
+/manifest.json
+  Content-Type: application/json; charset=utf-8
+  Cache-Control: public, max-age=86400
+
+# Force XML MIME type for all XML files (backup)
 *.xml
   Content-Type: application/xml; charset=utf-8
   X-Content-Type-Options: nosniff
 
-# Block SPA routing from intercepting static files
-/sitemap*
-  X-Static-File: true
-  X-No-SPA-Routing: true
+# SEO Performance headers for static assets
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Security headers for main app
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
