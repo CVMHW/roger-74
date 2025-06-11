@@ -11,21 +11,23 @@ import ConversationProcessingPage from "./pages/ConversationProcessingPage";
 import WrappingHellAnalysisPage from "./pages/WrappingHellAnalysisPage";
 import MobileDesktopAnalysisPage from "./pages/MobileDesktopAnalysisPage";
 
-const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-    <BrowserRouter>
-      <Toaster />
-      <Sonner />
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/flowchart" element={<FlowchartPage />} />
-        <Route path="/unified-flowchart" element={<UnifiedFlowchartPage />} />
-        <Route path="/conversation-processing" element={<ConversationProcessingPage />} />
-        <Route path="/wrapping-hell-analysis" element={<WrappingHellAnalysisPage />} />
-        <Route path="/mobile-desktop-analysis" element={<MobileDesktopAnalysisPage />} />
-      </Routes>
-    </BrowserRouter>
-  </ThemeProvider>
-);
+const App: React.FC = () => {
+  return (
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <BrowserRouter>
+        <Toaster />
+        <Sonner />
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/flowchart" element={<FlowchartPage />} />
+          <Route path="/unified-flowchart" element={<UnifiedFlowchartPage />} />
+          <Route path="/conversation-processing" element={<ConversationProcessingPage />} />
+          <Route path="/wrapping-hell-analysis" element={<WrappingHellAnalysisPage />} />
+          <Route path="/mobile-desktop-analysis" element={<MobileDesktopAnalysisPage />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
+  );
+};
 
 export default App;
