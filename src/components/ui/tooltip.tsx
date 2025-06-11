@@ -1,4 +1,5 @@
 
+
 import * as React from "react"
 
 const TooltipProvider = ({ children, delayDuration }: { children: React.ReactNode; delayDuration?: number }) => {
@@ -14,9 +15,9 @@ const TooltipTrigger = React.forwardRef<
   React.HTMLAttributes<HTMLElement> & { asChild?: boolean }
 >(({ children, asChild, ...props }, ref) => {
   if (asChild && React.isValidElement(children)) {
-    return React.cloneElement(children, { ref, ...props })
+    return React.cloneElement(children, { ...props })
   }
-  return React.cloneElement(children as React.ReactElement, { ref, ...props })
+  return React.cloneElement(children as React.ReactElement, { ...props })
 })
 TooltipTrigger.displayName = "TooltipTrigger"
 
@@ -41,3 +42,4 @@ const TooltipContent = React.forwardRef<
 TooltipContent.displayName = "TooltipContent"
 
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider }
+
