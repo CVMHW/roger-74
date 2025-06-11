@@ -43,11 +43,11 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header />
       <main className="container mx-auto px-4 pt-20">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-140px)]">
-          <div className="lg:col-span-1">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 min-h-[calc(100vh-140px)]">
+          <div className="lg:col-span-1 h-fit">
             <WelcomeCard onImageError={handleImageError} />
           </div>
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 h-full">
             <ChatInterface />
           </div>
         </div>
