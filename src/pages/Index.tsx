@@ -17,20 +17,36 @@ import ProfileBubble from '../components/ProfileBubble';
 import { useIsMobile } from '../hooks/use-mobile';
 
 const Index = () => {
-  const [showConsentDialog, setShowConsentDialog] = useState(true);
+  const [showConsentDialog, setShowConsentDialog] = useState(false);
   const [hasConsented, setHasConsented] = useState(false);
-  const [isReactReady, setIsReactReady] = useState(false);
+  const [isAppReady, setIsAppReady] = useState(false);
+  const [initializationStage, setInitializationStage] = useState('loading');
   const isMobile = useIsMobile();
 
-  // Ensure React is fully ready before rendering complex components
+  // Multi-stage initialization to prevent React hook errors
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsReactReady(true);
+    console.log('Index component: Starting initialization...');
+    setInitializationStage('hooks');
+    
+    const initTimer = setTimeout(() => {
+      console.log('Index component: Hooks ready, initializing consent...');
+      setInitializationStage('consent');
+      
+      const consentTimer = setTimeout(() => {
+        console.log('Index component: Consent ready, app ready');
+        setIsAppReady(true);
+        setShowConsentDialog(true);
+        setInitializationStage('ready');
+      }, 150);
+      
+      return () => clearTimeout(consentTimer);
     }, 100);
-    return () => clearTimeout(timer);
+    
+    return () => clearTimeout(initTimer);
   }, []);
 
   const handleConsent = () => {
+    console.log('User consented');
     setHasConsented(true);
     setShowConsentDialog(false);
     
@@ -137,12 +153,13 @@ const Index = () => {
     </a>
   );
 
-  if (!isReactReady) {
+  // Show loading state during initialization
+  if (!isAppReady) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-cvmhw-light to-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cvmhw-blue mx-auto mb-4"></div>
-          <p className="text-cvmhw-blue">Loading Roger...</p>
+          <p className="text-cvmhw-blue">Initializing Roger... ({initializationStage})</p>
         </div>
       </div>
     );
@@ -152,8 +169,8 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-cvmhw-light to-white relative">
       <Header />
       
-      {/* Only render LazyUserConsentDialog when React is ready */}
-      {isReactReady && (
+      {/* Only render LazyUserConsentDialog when app is fully ready */}
+      {isAppReady && (
         <LazyUserConsentDialog 
           isOpen={showConsentDialog}
           onConsent={handleConsent}
@@ -218,7 +235,6 @@ const Index = () => {
                     </p>
                   </div>
                   
-                  {/* Mobile button layout - improved spacing and sizing */}
                   <div className="flex flex-col gap-3 w-full">
                     <CVMHWButton />
                     <InsuranceButton />
@@ -445,7 +461,6 @@ const Index = () => {
             <span className="font-medium bg-gradient-to-r from-cvmhw-blue to-cvmhw-purple bg-clip-text text-transparent">Cuyahoga Valley Mindful Health and Wellness</span>
           </div>
           
-          {/* Additional Roger Bio Profile Link */}
           <div className="flex justify-center mb-3">
             <ProfileBubble>
               <button className="text-cvmhw-blue hover:text-cvmhw-purple transition-colors text-sm font-medium underline decoration-cvmhw-blue/30 hover:decoration-cvmhw-purple/50">
@@ -454,7 +469,6 @@ const Index = () => {
             </ProfileBubble>
           </div>
           
-          {/* External Crisis Link in Footer */}
           <div className="flex justify-center mb-3">
             <ExternalCrisisLink variant="footer" />
           </div>
