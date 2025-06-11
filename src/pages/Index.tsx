@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Header from '../components/Header';
 import ChatInterface from '../components/ChatInterface';
@@ -67,9 +66,21 @@ const Index = () => {
         <div className="max-w-4xl mx-auto">
           <WelcomeCard onImageError={handleImageError} />
           
-          {/* Sitemap Tester - Development/Testing Only */}
+          {/* Comprehensive Test Dashboard - Development/Testing Only */}
           {showSitemapTester && (
             <div className="mb-6">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                <h3 className="font-semibold text-yellow-800 mb-2">🔧 Developer Testing Mode</h3>
+                <p className="text-yellow-700 text-sm mb-3">
+                  Comprehensive sitemap testing suite with 100 automated tests and rated solutions.
+                </p>
+                <a 
+                  href="/test-dashboard" 
+                  className="inline-block bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-700 transition-colors"
+                >
+                  Open Test Dashboard
+                </a>
+              </div>
               <SitemapTester />
             </div>
           )}
