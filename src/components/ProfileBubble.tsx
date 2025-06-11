@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { X } from 'lucide-react';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import RogerBio from './RogerBio';
 import { useIsMobile } from '../hooks/use-mobile';
 
@@ -24,13 +24,15 @@ const ProfileBubble = ({ children, className = "" }: ProfileBubbleProps) => {
         <div className="relative">
           {/* Mobile-optimized close button */}
           {isMobile && (
-            <button
-              className="absolute top-2 right-2 z-50 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white transition-all duration-200"
-              aria-label="Close Roger's Profile"
-              style={{ minWidth: '44px', minHeight: '44px' }}
-            >
-              <X size={20} className="text-gray-600" />
-            </button>
+            <DialogClose asChild>
+              <button
+                className="absolute top-2 right-2 z-50 bg-white/90 backdrop-blur-sm rounded-full p-2 shadow-lg border border-gray-200 hover:bg-white transition-all duration-200"
+                aria-label="Close Roger's Profile"
+                style={{ minWidth: '44px', minHeight: '44px' }}
+              >
+                <X size={20} className="text-gray-600" />
+              </button>
+            </DialogClose>
           )}
 
           {/* Header with CVMHW branding - Mobile Optimized */}
