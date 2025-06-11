@@ -19,4 +19,25 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Ensure XML files are properly served with correct MIME types
+  assetsInclude: ['**/*.xml'],
+  build: {
+    rollupOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          // Keep XML files in root directory with original names
+          if (assetInfo.name?.endsWith('.xml')) {
+            return '[name][extname]';
+          }
+          return 'assets/[name]-[hash][extname]';
+        },
+      },
+    },
+  },
+  // Configure dev server to serve XML files with correct headers
+  preview: {
+    headers: {
+      'Content-Type': 'application/xml; charset=utf-8',
+    },
+  },
 }));

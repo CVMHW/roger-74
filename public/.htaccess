@@ -1,0 +1,26 @@
+
+# Enable rewrite engine
+RewriteEngine On
+
+# Handle client routing, redirect all requests to index.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
+
+# Set proper MIME types for XML files
+<Files "sitemap.xml">
+    Header set Content-Type "application/xml; charset=utf-8"
+    Header set Cache-Control "public, max-age=3600"
+</Files>
+
+<Files "sitemap-production.xml">
+    Header set Content-Type "application/xml; charset=utf-8"
+    Header set Cache-Control "public, max-age=3600"
+</Files>
+
+<Files "robots.txt">
+    Header set Content-Type "text/plain; charset=utf-8"
+</Files>
+
+# Ensure XML files are served correctly
+AddType application/xml .xml
