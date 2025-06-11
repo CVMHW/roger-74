@@ -66,16 +66,6 @@ const ProfileBubble = ({ children, className = "" }: ProfileBubbleProps) => {
                   <p className="text-white/90 text-xs sm:text-sm drop-shadow-md leading-tight">Peer Support Specialist at Cuyahoga Valley Mindful Health and Wellness</p>
                 </div>
               </div>
-              
-              {/* Desktop close button */}
-              {!isMobile && (
-                <button
-                  className="text-white/80 hover:text-white transition-colors p-1"
-                  aria-label="Close Roger's Profile"
-                >
-                  <X size={24} />
-                </button>
-              )}
             </div>
           </div>
           
