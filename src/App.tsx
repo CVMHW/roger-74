@@ -11,7 +11,14 @@ import ConversationProcessingPage from "./pages/ConversationProcessingPage";
 import WrappingHellAnalysisPage from "./pages/WrappingHellAnalysisPage";
 import MobileDesktopAnalysisPage from "./pages/MobileDesktopAnalysisPage";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 3,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
