@@ -8,11 +8,37 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    // CRITICAL: Configure dev server to serve static files first
+    // CRITICAL: Static files must be served BEFORE any SPA routing
     middlewareMode: false,
     fs: {
       strict: false
-    }
+    },
+    // Add explicit static file handling
+    proxy: mode === 'development' ? {
+      '/sitemap.xml': {
+        target: 'http://localhost:8080',
+        changeOrigin: false,
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            // Force static file serving
+            if (req.url === '/sitemap.xml') {
+              res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+            }
+          });
+        }
+      },
+      '/robots.txt': {
+        target: 'http://localhost:8080',
+        changeOrigin: false,
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            if (req.url === '/robots.txt') {
+              res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+            }
+          });
+        }
+      }
+    } : undefined
   },
   plugins: [
     react(),
@@ -51,6 +77,10 @@ export default defineConfig(({ mode }) => ({
       'Cache-Control': 'public, max-age=3600'
     }
   },
-  // Add explicit static file handling
-  assetsInclude: ['**/*.xml', '**/*.txt']
+  // Add explicit static file handling at the root level
+  assetsInclude: ['**/*.xml', '**/*.txt'],
+  // Add static file handling at the root level
+  define: {
+    __STATIC_FILES__: JSON.stringify(['sitemap.xml', 'sitemap-production.xml', 'robots.txt'])
+  }
 }));

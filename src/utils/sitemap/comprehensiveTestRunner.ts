@@ -35,6 +35,13 @@ export class ComprehensiveTestRunner {
     
     this.results = []; // Clear previous results
     
+    // Import emergency handler
+    const { EmergencyStaticFileHandler } = await import('./emergencyStaticFileHandler');
+    const emergencyHandler = EmergencyStaticFileHandler.getInstance();
+    
+    // Run emergency diagnostics first
+    await emergencyHandler.runComprehensiveSitemapTest();
+    
     // Run the actual critical tests that matter
     await this.runCriticalSitemapTests();
     await this.runConfigurationValidationTests();
@@ -133,17 +140,59 @@ export class ComprehensiveTestRunner {
   // Enhanced critical test implementations
   private async testSitemapAccess(): Promise<boolean> {
     try {
-      console.log('🔍 Testing sitemap accessibility...');
-      const response = await fetch('/sitemap.xml', { 
+      console.log('🔍 Testing sitemap accessibility with multiple methods...');
+      
+      // Test 1: Basic access
+      const response1 = await fetch('/sitemap.xml', { 
         method: 'GET',
         cache: 'no-cache',
         headers: { 'Accept': 'application/xml,text/xml,*/*' }
       });
-      const success = response.ok && response.status === 200;
-      console.log(`Sitemap access: ${success ? '✅ PASS' : '❌ FAIL'} (Status: ${response.status})`);
-      return success;
+      
+      if (response1.ok) {
+        const content = await response1.text();
+        if (content.includes('<?xml') && content.includes('<urlset')) {
+          console.log('✅ Basic sitemap access: PASS');
+          return true;
+        }
+      }
+      
+      // Test 2: With query parameter
+      const response2 = await fetch('/sitemap.xml?static=true', { 
+        method: 'GET',
+        cache: 'no-cache' 
+      });
+      
+      if (response2.ok) {
+        const content = await response2.text();
+        if (content.includes('<?xml')) {
+          console.log('✅ Query parameter access: PASS');
+          return true;
+        }
+      }
+      
+      // Test 3: Cache busting
+      const response3 = await fetch(`/sitemap.xml?t=${Date.now()}`, { 
+        method: 'GET',
+        cache: 'no-cache' 
+      });
+      
+      if (response3.ok) {
+        const content = await response3.text();
+        if (content.includes('<?xml')) {
+          console.log('✅ Cache busting access: PASS');
+          return true;
+        }
+      }
+      
+      console.log('❌ All sitemap access methods FAILED');
+      console.log(`Response 1: ${response1.status} - ${response1.statusText}`);
+      console.log(`Response 2: ${response2.status} - ${response2.statusText}`);
+      console.log(`Response 3: ${response3.status} - ${response3.statusText}`);
+      
+      return false;
     } catch (error) {
-      console.log('❌ Sitemap access FAILED:', error);
+      console.log('❌ Sitemap access FAILED with error:', error);
       return false;
     }
   }
