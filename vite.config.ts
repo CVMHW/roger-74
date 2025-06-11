@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -21,8 +22,8 @@ export default defineConfig(({ mode }) => ({
     // Custom plugin to handle static files with highest priority
     {
       name: 'static-file-handler',
-      configureServer(server) {
-        server.middlewares.use('/sitemap.xml', (req, res, next) => {
+      configureServer(server: any) {
+        server.middlewares.use('/sitemap.xml', (req: any, res: any, next: any) => {
           console.log('🚨 STATIC HANDLER: Intercepting sitemap.xml request');
           res.setHeader('Content-Type', 'application/xml; charset=utf-8');
           res.setHeader('Cache-Control', 'public, max-age=3600');
@@ -41,7 +42,7 @@ export default defineConfig(({ mode }) => ({
           }
         });
         
-        server.middlewares.use('/robots.txt', (req, res, next) => {
+        server.middlewares.use('/robots.txt', (req: any, res: any, next: any) => {
           console.log('🚨 STATIC HANDLER: Intercepting robots.txt request');
           res.setHeader('Content-Type', 'text/plain; charset=utf-8');
           
