@@ -152,10 +152,13 @@ const Index = () => {
     <div className="min-h-screen bg-gradient-to-b from-cvmhw-light to-white relative">
       <Header />
       
-      <LazyUserConsentDialog 
-        isOpen={showConsentDialog}
-        onConsent={handleConsent}
-      />
+      {/* Only render LazyUserConsentDialog when React is ready */}
+      {isReactReady && (
+        <LazyUserConsentDialog 
+          isOpen={showConsentDialog}
+          onConsent={handleConsent}
+        />
+      )}
       
       {hasConsented && <FloatingCrisisButton />}
       
