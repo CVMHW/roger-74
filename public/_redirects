@@ -1,14 +1,18 @@
 
-# NETLIFY REDIRECTS - CRITICAL STATIC FILE PRIORITY
+# NETLIFY REDIRECTS - HIGHEST PRIORITY STATIC FILES
 
-# Force static XML files to be served directly - HIGHEST PRIORITY
+# Force serve sitemap.xml and robots.txt directly from filesystem - NO SPA ROUTING
 /sitemap.xml /sitemap.xml 200!
 /sitemap-production.xml /sitemap-production.xml 200!
 /robots.txt /robots.txt 200!
 
-# Block SPA routing for static files explicitly
+# Ensure no wildcards catch these files
 /sitemap* /sitemap.xml 200!
 /robots* /robots.txt 200!
 
-# All other routes go to SPA - MUST BE LAST
+# Block any React routing for these specific files
+/sitemap.xml/* /sitemap.xml 200!
+/robots.txt/* /robots.txt 200!
+
+# SPA routing for everything else - MUST BE LAST
 /* /index.html 200
