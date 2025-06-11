@@ -1,5 +1,5 @@
 
-# Netlify redirects file - Static files FIRST
+# Static files FIRST - exact matches
 /sitemap.xml /sitemap.xml 200
 /sitemap-production.xml /sitemap-production.xml 200
 /robots.txt /robots.txt 200

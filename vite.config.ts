@@ -25,11 +25,17 @@ export default defineConfig(({ mode }) => ({
   build: {
     // Ensure public directory files are copied to dist
     copyPublicDir: true,
+    // Remove the problematic external function that was blocking sitemaps
     rollupOptions: {
-      // Don't bundle these files - serve them as static assets
-      external: (id) => {
-        return id.includes('sitemap') || id.includes('robots.txt');
-      },
+      output: {
+        // Ensure static assets are properly named
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name?.endsWith('.xml') || assetInfo.name?.endsWith('.txt')) {
+            return '[name][extname]';
+          }
+          return 'assets/[name]-[hash][extname]';
+        }
+      }
     },
   },
   // Configure dev server to properly serve static files
