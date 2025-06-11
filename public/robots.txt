@@ -29,5 +29,5 @@ Disallow: /src/
 # Sitemap location
 Sitemap: https://roger-peer-companion.lovable.app/sitemap.xml
 
-# RSS feed
-Sitemap: https://roger-peer-companion.lovable.app/rss.xml
+# RSS feed available at:
+# https://roger-peer-companion.lovable.app/rss.xml

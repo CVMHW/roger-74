@@ -11,6 +11,20 @@
     <meta name="theme-color" content="#3b82f6" />
     <meta name="keywords" content="mental health peer support, AI therapy companion, crisis intervention, HIPAA compliant mental health, peer counseling demo, therapeutic AI, secure mental health chat platform" />
     
+    <!-- Geographic Location Meta Tags -->
+    <meta name="geo.region" content="US-OH" />
+    <meta name="geo.placename" content="Cleveland, Ohio" />
+    <meta name="geo.position" content="41.4993;-81.6944" />
+    <meta name="ICBM" content="41.4993, -81.6944" />
+    <meta name="geo.location" content="Cleveland, Lorain, Brook Park, Mentor, Hudson, Parma, Cuyahoga Falls, Madison, Jefferson, Ashtabula, Conneaut, Wickliffe, Richmond Heights, Willoughby, Chardon, Burton, Ohio" />
+    
+    <!-- Content Rating -->
+    <meta name="rating" content="general" />
+    <meta name="audience" content="all" />
+    
+    <!-- Content Security Policy -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' wss: https://uvyoyatygljyudljxdfb.supabase.co wss://uvyoyatygljyudljxdfb.supabase.co; frame-ancestors 'none'; base-uri 'self'; object-src 'none';" />
+    
     <!-- Canonical URL - replace with actual domain when deployed -->
     <link rel="canonical" href="https://roger-peer-companion.lovable.app" />
     
@@ -20,9 +34,36 @@
     <link rel="dns-prefetch" href="//uvyoyatygljyudljxdfb.supabase.co" />
     <link rel="dns-prefetch" href="//cdn.gpteng.co" />
     
+    <!-- Critical CSS Inlined for Above-the-Fold Content -->
+    <style>
+      /* Critical CSS for above-the-fold content */
+      body { margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+      .min-h-screen { min-height: 100vh; }
+      .bg-gradient-to-b { background: linear-gradient(to bottom, var(--tw-gradient-stops)); }
+      .from-cvmhw-light { --tw-gradient-from: #e0f2fe; }
+      .to-white { --tw-gradient-to: #ffffff; }
+      .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+      .shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+      .border-cvmhw-blue { border-color: #3b82f6; }
+      .bg-gradient-to-r { background: linear-gradient(to right, var(--tw-gradient-stops)); }
+      .from-cvmhw-blue { --tw-gradient-from: #3b82f6; }
+      .to-cvmhw-purple { --tw-gradient-to: #8b5cf6; }
+      .text-white { color: #ffffff; }
+      .rounded-md { border-radius: 0.375rem; }
+      .p-4 { padding: 1rem; }
+      .mb-6 { margin-bottom: 1.5rem; }
+      .flex { display: flex; }
+      .items-center { align-items: center; }
+      .gap-3 { gap: 0.75rem; }
+    </style>
+    
     <!-- Preload critical resources -->
     <link rel="preload" href="/src/index.css" as="style" />
     <link rel="preload" href="/src/main.tsx" as="script" />
+    <link rel="preload" href="/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png" as="image" type="image/png" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -42,7 +83,7 @@
     <meta name="twitter:site" content="@lovable_dev" />
     <meta name="twitter:creator" content="@cvmhw" />
 
-    <!-- Structured Data for Healthcare Service -->
+    <!-- Enhanced Structured Data for Healthcare Service -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -50,15 +91,43 @@
       "name": "Cuyahoga Valley Mindful Health and Wellness - Roger Peer Support",
       "description": "AI-powered peer support companion for mental health with professional supervision and crisis intervention protocols",
       "url": "https://roger-peer-companion.lovable.app",
-      "logo": "https://roger-peer-companion.lovable.app/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png",
-      "image": "https://lovable.dev/opengraph-image-p98pqg.png",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://roger-peer-companion.lovable.app/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png",
+        "width": 512,
+        "height": 512
+      },
+      "image": {
+        "@type": "ImageObject",
+        "url": "https://lovable.dev/opengraph-image-p98pqg.png",
+        "width": 1200,
+        "height": 630
+      },
       "telephone": "(440) 294-8068",
       "address": {
         "@type": "PostalAddress",
-        "addressLocality": "Cuyahoga Valley",
+        "addressLocality": "Cleveland",
         "addressRegion": "OH",
         "addressCountry": "US"
       },
+      "areaServed": [
+        "Cleveland, OH",
+        "Lorain, OH",
+        "Brook Park, OH",
+        "Mentor, OH",
+        "Hudson, OH",
+        "Parma, OH",
+        "Cuyahoga Falls, OH",
+        "Madison, OH",
+        "Jefferson, OH",
+        "Ashtabula, OH",
+        "Conneaut, OH",
+        "Wickliffe, OH",
+        "Richmond Heights, OH",
+        "Willoughby, OH",
+        "Chardon, OH",
+        "Burton, OH"
+      ],
       "medicalSpecialty": [
         "Mental Health",
         "Peer Support",
@@ -81,7 +150,57 @@
     }
     </script>
 
-    <!-- Additional Structured Data for Software Application -->
+    <!-- FAQ Structured Data for Mental Health Questions -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Roger and how can it help with mental health support?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Roger is an AI peer support companion designed to provide mental health support while you wait for professional therapy. Roger offers a listening ear and supportive perspective under professional supervision, available for residents in Cleveland, Lorain, Brook Park, Mentor, Hudson, Parma, Cuyahoga Falls, Madison, Jefferson, Ashtabula, Conneaut, Wickliffe, Richmond Heights, Willoughby, Chardon, and Burton, Ohio."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Roger a replacement for professional mental health treatment?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No, Roger is not a licensed therapist and cannot replace professional mental health treatment. Roger is a peer support companion in training under professional supervision at Cuyahoga Valley Mindful Health and Wellness. For clinical treatment, please consult with licensed healthcare professionals."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What should I do in a mental health crisis?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "In a mental health crisis, immediately contact emergency services at 911 or the 988 Suicide & Crisis Lifeline. Roger cannot provide emergency services or crisis coordination comparable to trained professionals. Crisis resources are available throughout Ohio including Cleveland, Lorain, and surrounding areas."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What areas does CVMHW serve in Ohio?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Cuyahoga Valley Mindful Health and Wellness serves clients throughout Northeast Ohio, including Cleveland, Lorain, Brook Park, Mentor, Hudson, Parma, Cuyahoga Falls, Madison, Jefferson, Ashtabula, Conneaut, Wickliffe, Richmond Heights, Willoughby, Chardon, and Burton. We accept most major insurance providers including Medicaid."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How secure is my conversation with Roger?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Roger operates under HIPAA-compliant protocols with professional supervision. All conversations are secured and confidential. However, Roger is experimental beta software and should not be used for sharing sensitive medical information. Always consult licensed healthcare professionals for clinical matters."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- Software Application Schema with Enhanced Details -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -103,6 +222,10 @@
         "@type": "AggregateRating",
         "ratingValue": "4.8",
         "ratingCount": "12"
+      },
+      "screenshot": {
+        "@type": "ImageObject",
+        "url": "https://lovable.dev/opengraph-image-p98pqg.png"
       }
     }
     </script>
@@ -131,5 +254,20 @@
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+              console.log('ServiceWorker registration successful');
+            })
+            .catch(function(error) {
+              console.log('ServiceWorker registration failed');
+            });
+        });
+      }
+    </script>
   </body>
 </html>
