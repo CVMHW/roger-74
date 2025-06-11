@@ -50,6 +50,12 @@ export const getSitemapEntries = (): SitemapEntry[] => {
       lastmod: currentDate,
       changefreq: 'monthly',
       priority: '0.5'
+    },
+    {
+      loc: `${DOMAIN}/test-dashboard`,
+      lastmod: currentDate,
+      changefreq: 'monthly',
+      priority: '0.4'
     }
   ];
 };

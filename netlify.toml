@@ -21,7 +21,7 @@
   [headers.values]
     Content-Type = "text/plain; charset=utf-8"
 
-# Static file redirects - these must come FIRST
+# Static file redirects - these must come FIRST with force
 [[redirects]]
   from = "/sitemap.xml"
   to = "/sitemap.xml"

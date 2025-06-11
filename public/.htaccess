@@ -2,7 +2,7 @@
 # Enable rewrite engine
 RewriteEngine On
 
-# Serve static XML and txt files directly - FIRST PRIORITY
+# CRITICAL: Serve static XML and txt files directly - FIRST PRIORITY
 RewriteRule ^sitemap\.xml$ - [L]
 RewriteRule ^sitemap-production\.xml$ - [L] 
 RewriteRule ^robots\.txt$ - [L]

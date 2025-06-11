@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -9,7 +8,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    // Ensure static files are served first in development
+    // CRITICAL: Configure dev server to serve static files first
     middlewareMode: false,
     fs: {
       strict: false
