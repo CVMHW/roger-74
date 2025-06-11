@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import ErrorBoundary from "./components/ErrorBoundary";
 import Index from "./pages/Index";
 import FlowchartPage from "./pages/FlowchartPage";
 import UnifiedFlowchartPage from "./pages/UnifiedFlowchartPage";
@@ -25,23 +26,59 @@ const queryClient = new QueryClient({
 
 const App: React.FC = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <BrowserRouter>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/flowchart" element={<FlowchartPage />} />
-            <Route path="/unified-flowchart" element={<UnifiedFlowchartPage />} />
-            <Route path="/conversation-processing" element={<ConversationProcessingPage />} />
-            <Route path="/wrapping-hell-analysis" element={<WrappingHellAnalysisPage />} />
-            <Route path="/mobile-desktop-analysis" element={<MobileDesktopAnalysisPage />} />
-            <Route path="/test-dashboard" element={<TestDashboardPage />} />
-          </Routes>
-        </BrowserRouter>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary componentName="App Root">
+      <QueryClientProvider client={queryClient}>
+        <ErrorBoundary componentName="Theme Provider">
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <ErrorBoundary componentName="Router">
+              <BrowserRouter>
+                <ErrorBoundary componentName="Toast System">
+                  <Toaster />
+                  <Sonner />
+                </ErrorBoundary>
+                <Routes>
+                  <Route path="/" element={
+                    <ErrorBoundary componentName="Index Page">
+                      <Index />
+                    </ErrorBoundary>
+                  } />
+                  <Route path="/flowchart" element={
+                    <ErrorBoundary componentName="Flowchart Page">
+                      <FlowchartPage />
+                    </ErrorBoundary>
+                  } />
+                  <Route path="/unified-flowchart" element={
+                    <ErrorBoundary componentName="Unified Flowchart Page">
+                      <UnifiedFlowchartPage />
+                    </ErrorBoundary>
+                  } />
+                  <Route path="/conversation-processing" element={
+                    <ErrorBoundary componentName="Conversation Processing Page">
+                      <ConversationProcessingPage />
+                    </ErrorBoundary>
+                  } />
+                  <Route path="/wrapping-hell-analysis" element={
+                    <ErrorBoundary componentName="Wrapping Hell Analysis Page">
+                      <WrappingHellAnalysisPage />
+                    </ErrorBoundary>
+                  } />
+                  <Route path="/mobile-desktop-analysis" element={
+                    <ErrorBoundary componentName="Mobile Desktop Analysis Page">
+                      <MobileDesktopAnalysisPage />
+                    </ErrorBoundary>
+                  } />
+                  <Route path="/test-dashboard" element={
+                    <ErrorBoundary componentName="Test Dashboard Page">
+                      <TestDashboardPage />
+                    </ErrorBoundary>
+                  } />
+                </Routes>
+              </BrowserRouter>
+            </ErrorBoundary>
+          </ThemeProvider>
+        </ErrorBoundary>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
