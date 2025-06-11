@@ -12,10 +12,6 @@ if (!rootElement) {
 console.log('Initializing React application...');
 
 const root = createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+root.render(<App />);
 
 console.log('React application initialized successfully');

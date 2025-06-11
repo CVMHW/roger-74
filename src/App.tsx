@@ -28,8 +28,6 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <BrowserRouter>
-          <Toaster />
-          <Sonner />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/flowchart" element={<FlowchartPage />} />
@@ -39,6 +37,8 @@ const App: React.FC = () => {
             <Route path="/mobile-desktop-analysis" element={<MobileDesktopAnalysisPage />} />
             <Route path="/test-dashboard" element={<TestDashboardPage />} />
           </Routes>
+          <Toaster />
+          <Sonner />
         </BrowserRouter>
       </ThemeProvider>
     </QueryClientProvider>

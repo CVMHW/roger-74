@@ -1,16 +1,21 @@
 
+import React from "react"
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, toast } from "sonner"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  // Provide fallback for theme in case ThemeProvider is not available
-  let theme;
+  // Enhanced error handling for theme hook
+  let theme = "system";
+  
   try {
     const themeHook = useTheme();
-    theme = themeHook?.theme || "system";
-  } catch {
+    if (themeHook && themeHook.theme) {
+      theme = themeHook.theme;
+    }
+  } catch (error) {
+    console.warn('Theme hook failed, using system theme:', error);
     theme = "system";
   }
 
