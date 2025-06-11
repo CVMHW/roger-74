@@ -11,11 +11,17 @@ if (!rootElement) {
 
 console.log('Initializing React application...');
 
-const root = createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
-
-console.log('React application initialized successfully');
+try {
+  const root = createRoot(rootElement);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
+  console.log('React application initialized successfully');
+} catch (error) {
+  console.error('Failed to initialize React application:', error);
+  // Fallback: try without StrictMode
+  const root = createRoot(rootElement);
+  root.render(<App />);
+}
