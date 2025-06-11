@@ -41,8 +41,8 @@ const ProfileBubble = ({ children, className = "" }: ProfileBubbleProps) => {
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 animate-pulse" />
             
             <div className="flex items-start justify-between relative z-10 gap-2">
-              <div className="flex items-start gap-2 sm:gap-3 lg:gap-4 flex-1 min-w-0">
-                <div className="relative w-6 h-6 sm:w-12 sm:h-12 lg:w-16 lg:h-16 flex-shrink-0">
+              <div className="flex items-start gap-1 sm:gap-3 lg:gap-4 flex-1 min-w-0">
+                <div className="relative w-4 h-4 sm:w-12 sm:h-12 lg:w-16 lg:h-16 flex-shrink-0">
                   <a 
                     href="https://cvmhw.com" 
                     target="_blank" 
@@ -63,7 +63,7 @@ const ProfileBubble = ({ children, className = "" }: ProfileBubbleProps) => {
                     />
                   </a>
                 </div>
-                <div className="flex-1 min-w-0 pr-16 sm:pr-0">
+                <div className="flex-1 min-w-0">
                   <h2 className="text-xs sm:text-lg lg:text-2xl font-bold text-white mb-0.5 sm:mb-1 drop-shadow-lg leading-tight">Roger's Profile</h2>
                   <p className="text-white/90 text-xs sm:text-sm drop-shadow-md leading-tight">Peer Support Specialist at Cuyahoga Valley Mindful Health and Wellness</p>
                 </div>
