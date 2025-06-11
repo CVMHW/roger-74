@@ -41,8 +41,7 @@ const useRogerianResponse = (): RogerianResponseHook => {
         id: `roger-${Date.now()}`,
         text: randomResponse,
         sender: 'roger' as const,
-        timestamp: new Date(),
-        type: 'response' as const
+        timestamp: new Date()
       };
     } catch (error) {
       console.error('Error processing message:', error);
@@ -50,8 +49,7 @@ const useRogerianResponse = (): RogerianResponseHook => {
         id: `roger-error-${Date.now()}`,
         text: "I'm having some technical difficulties right now. Could you please try again?",
         sender: 'roger' as const,
-        timestamp: new Date(),
-        type: 'response' as const
+        timestamp: new Date()
       };
     } finally {
       setIsTyping(false);
