@@ -1,8 +1,12 @@
 
-# Static files FIRST - exact matches
-/sitemap.xml /sitemap.xml 200
-/sitemap-production.xml /sitemap-production.xml 200
-/robots.txt /robots.txt 200
+# CRITICAL: Static files MUST come first with exact matches and force=true
+/sitemap.xml /sitemap.xml 200!
+/sitemap-production.xml /sitemap-production.xml 200!
+/robots.txt /robots.txt 200!
 
-# SPA fallback for everything else - LAST
+# Block any attempt to route these as SPA routes
+/sitemap* /sitemap.xml 200!
+/robots* /robots.txt 200!
+
+# SPA fallback for everything else - MUST be last
 /* /index.html 200
