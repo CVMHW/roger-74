@@ -19,30 +19,11 @@ import { useIsMobile } from '../hooks/use-mobile';
 const Index = () => {
   const [showConsentDialog, setShowConsentDialog] = useState(false);
   const [hasConsented, setHasConsented] = useState(false);
-  const [isAppReady, setIsAppReady] = useState(false);
-  const [initializationStage, setInitializationStage] = useState('loading');
   const isMobile = useIsMobile();
 
-  // Multi-stage initialization to prevent React hook errors
   useEffect(() => {
-    console.log('Index component: Starting initialization...');
-    setInitializationStage('hooks');
-    
-    const initTimer = setTimeout(() => {
-      console.log('Index component: Hooks ready, initializing consent...');
-      setInitializationStage('consent');
-      
-      const consentTimer = setTimeout(() => {
-        console.log('Index component: Consent ready, app ready');
-        setIsAppReady(true);
-        setShowConsentDialog(true);
-        setInitializationStage('ready');
-      }, 150);
-      
-      return () => clearTimeout(consentTimer);
-    }, 100);
-    
-    return () => clearTimeout(initTimer);
+    console.log('Index component: Initializing...');
+    setShowConsentDialog(true);
   }, []);
 
   const handleConsent = () => {
@@ -153,29 +134,14 @@ const Index = () => {
     </a>
   );
 
-  // Show loading state during initialization
-  if (!isAppReady) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-cvmhw-light to-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cvmhw-blue mx-auto mb-4"></div>
-          <p className="text-cvmhw-blue">Initializing Roger... ({initializationStage})</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-cvmhw-light to-white relative">
       <Header />
       
-      {/* Only render LazyUserConsentDialog when app is fully ready */}
-      {isAppReady && (
-        <LazyUserConsentDialog 
-          isOpen={showConsentDialog}
-          onConsent={handleConsent}
-        />
-      )}
+      <LazyUserConsentDialog 
+        isOpen={showConsentDialog}
+        onConsent={handleConsent}
+      />
       
       {hasConsented && <FloatingCrisisButton />}
       
