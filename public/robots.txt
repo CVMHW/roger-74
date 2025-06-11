@@ -26,15 +26,14 @@ Disallow: /admin/
 Disallow: /_next/
 Disallow: /src/
 
-# Sitemap location - CORRECTED DOMAIN
-Sitemap: https://peersupportAI.com/sitemap.xml
+# Sitemap location - CORRECTED DOMAIN CASING
+Sitemap: https://peersupportai.com/sitemap.xml
 
 # RSS feed available at:
-# https://peersupportAI.com/rss.xml
+# https://peersupportai.com/rss.xml
 
 # Enhanced for mental health SEO
 # Allow specific mental health content crawling
 Allow: /ohio-mental-health-resources
 Allow: /crisis-resources
 Allow: /peer-support
-
