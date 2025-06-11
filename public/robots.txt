@@ -26,8 +26,15 @@ Disallow: /admin/
 Disallow: /_next/
 Disallow: /src/
 
-# Sitemap location
-Sitemap: https://roger-peer-companion.lovable.app/sitemap.xml
+# Sitemap location - CORRECTED DOMAIN
+Sitemap: https://peersupportAI.com/sitemap.xml
 
 # RSS feed available at:
-# https://roger-peer-companion.lovable.app/rss.xml
+# https://peersupportAI.com/rss.xml
+
+# Enhanced for mental health SEO
+# Allow specific mental health content crawling
+Allow: /ohio-mental-health-resources
+Allow: /crisis-resources
+Allow: /peer-support
+

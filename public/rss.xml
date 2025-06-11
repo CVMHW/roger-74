@@ -3,9 +3,9 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Roger Peer Support Companion Updates</title>
-    <description>Latest updates and improvements to Roger, the AI peer support companion for mental health</description>
-    <link>https://roger-peer-companion.lovable.app</link>
-    <atom:link href="https://roger-peer-companion.lovable.app/rss.xml" rel="self" type="application/rss+xml" />
+    <description>Latest updates and improvements to Roger, the AI peer support companion for mental health serving Cleveland, Lorain, and Northeast Ohio</description>
+    <link>https://peersupportAI.com</link>
+    <atom:link href="https://peersupportAI.com/rss.xml" rel="self" type="application/rss+xml" />
     <language>en-US</language>
     <managingEditor>support@cvmhw.com (CVMHW Support)</managingEditor>
     <webMaster>support@cvmhw.com (CVMHW Support)</webMaster>
@@ -13,16 +13,28 @@
     <category>Mental Health</category>
     <category>AI Technology</category>
     <category>Peer Support</category>
+    <category>Ohio Mental Health</category>
+    <category>Cleveland Mental Health</category>
     
     <item>
-      <title>Roger Peer Support Platform Launch</title>
-      <description>Introducing Roger, a secure AI peer support companion for mental health with professional supervision and crisis intervention protocols.</description>
-      <link>https://roger-peer-companion.lovable.app</link>
-      <guid isPermaLink="true">https://roger-peer-companion.lovable.app</guid>
+      <title>Roger Peer Support Platform Launch for Ohio Communities</title>
+      <description>Introducing Roger, a secure AI peer support companion for mental health with professional supervision and crisis intervention protocols, now serving Cleveland, Lorain, Brook Park, Mentor, Hudson, Parma, Cuyahoga Falls, Madison, Jefferson, Ashtabula, Conneaut, Wickliffe, Richmond Heights, Willoughby, Chardon, and Burton, Ohio.</description>
+      <link>https://peersupportAI.com</link>
+      <guid isPermaLink="true">https://peersupportAI.com</guid>
       <pubDate>Sat, 11 Jan 2025 12:00:00 GMT</pubDate>
       <category>Product Launch</category>
+      <category>Ohio Mental Health Services</category>
+    </item>
+    
+    <item>
+      <title>Ohio Mental Health Resources Now Available</title>
+      <description>Comprehensive mental health resources and crisis intervention support now available for Northeast Ohio communities including Cleveland, Lorain, and surrounding areas.</description>
+      <link>https://peersupportAI.com/ohio-mental-health-resources</link>
+      <guid isPermaLink="true">https://peersupportAI.com/ohio-mental-health-resources</guid>
+      <pubDate>Sat, 11 Jan 2025 12:00:00 GMT</pubDate>
+      <category>Mental Health Resources</category>
+      <category>Ohio Community Support</category>
     </item>
     
   </channel>
-</rss>
 </rss>

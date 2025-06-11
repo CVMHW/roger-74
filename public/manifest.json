@@ -1,8 +1,8 @@
 
 {
-  "name": "Roger Peer Support Companion",
+  "name": "Roger Peer Support Companion - Ohio Mental Health",
   "short_name": "Roger Support",
-  "description": "Secure AI peer support companion for mental health with professional supervision",
+  "description": "Secure AI peer support companion for mental health with professional supervision serving Northeast Ohio communities",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -30,7 +30,7 @@
       "src": "https://lovable.dev/opengraph-image-p98pqg.png",
       "sizes": "1200x630",
       "type": "image/png",
-      "label": "Roger Support Interface"
+      "label": "Roger Support Interface - Ohio Mental Health"
     }
   ],
   "prefer_related_applications": false,

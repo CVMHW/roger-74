@@ -7,12 +7,12 @@
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
   
   <url>
-    <loc>https://roger-peer-companion.lovable.app/</loc>
+    <loc>https://peersupportAI.com/</loc>
     <lastmod>2025-01-11T12:00:00Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://roger-peer-companion.lovable.app/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png</image:loc>
+      <image:loc>https://peersupportAI.com/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png</image:loc>
       <image:title>CVMHW Logo - Cuyahoga Valley Mindful Health and Wellness</image:title>
       <image:caption>Logo for Cuyahoga Valley Mindful Health and Wellness, providing mental health services in Cleveland and surrounding Ohio areas</image:caption>
       <image:geo_location>Cleveland, OH</image:geo_location>
@@ -25,75 +25,77 @@
   </url>
   
   <url>
-    <loc>https://roger-peer-companion.lovable.app/flowchart</loc>
+    <loc>https://peersupportAI.com/flowchart</loc>
     <lastmod>2025-01-11T12:00:00Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://roger-peer-companion.lovable.app/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png</image:loc>
+      <image:loc>https://peersupportAI.com/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png</image:loc>
       <image:title>CVMHW Logo</image:title>
       <image:caption>Mental health flowchart documentation</image:caption>
     </image:image>
   </url>
   
   <url>
-    <loc>https://roger-peer-companion.lovable.app/unified-flowchart</loc>
+    <loc>https://peersupportAI.com/unified-flowchart</loc>
     <lastmod>2025-01-11T12:00:00Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
     <image:image>
-      <image:loc>https://roger-peer-companion.lovable.app/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png</image:loc>
+      <image:loc>https://peersupportAI.com/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png</image:loc>
       <image:title>CVMHW Logo</image:title>
       <image:caption>Unified system flowchart for Roger peer support</image:caption>
     </image:image>
   </url>
   
   <url>
-    <loc>https://roger-peer-companion.lovable.app/conversation-processing</loc>
+    <loc>https://peersupportAI.com/conversation-processing</loc>
     <lastmod>2025-01-11T12:00:00Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
     <image:image>
-      <image:loc>https://roger-peer-companion.lovable.app/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png</image:loc>
+      <image:loc>https://peersupportAI.com/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png</image:loc>
       <image:title>CVMHW Logo</image:title>
       <image:caption>Conversation processing documentation</image:caption>
     </image:image>
   </url>
   
   <url>
-    <loc>https://roger-peer-companion.lovable.app/mobile-desktop-analysis</loc>
+    <loc>https://peersupportAI.com/mobile-desktop-analysis</loc>
     <lastmod>2025-01-11T12:00:00Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <image:image>
-      <image:loc>https://roger-peer-companion.lovable.app/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png</image:loc>
+      <image:loc>https://peersupportAI.com/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png</image:loc>
       <image:title>CVMHW Logo</image:title>
       <image:caption>Mobile and desktop analysis interface</image:caption>
     </image:image>
   </url>
   
   <url>
-    <loc>https://roger-peer-companion.lovable.app/wrapping-hell-analysis</loc>
+    <loc>https://peersupportAI.com/wrapping-hell-analysis</loc>
     <lastmod>2025-01-11T12:00:00Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
     <image:image>
-      <image:loc>https://roger-peer-companion.lovable.app/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png</image:loc>
+      <image:loc>https://peersupportAI.com/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png</image:loc>
       <image:title>CVMHW Logo</image:title>
       <image:caption>Technical analysis documentation</image:caption>
     </image:image>
   </url>
 
-  <!-- Multilingual Preparation Structure (ready for future expansion) -->
-  <!-- 
+  <!-- Enhanced for Ohio Mental Health Keywords -->
   <url>
-    <loc>https://roger-peer-companion.lovable.app/es/</loc>
+    <loc>https://peersupportAI.com/ohio-mental-health-resources</loc>
     <lastmod>2025-01-11T12:00:00Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
-    <xhtml:link rel="alternate" hreflang="en" href="https://roger-peer-companion.lovable.app/" />
-    <xhtml:link rel="alternate" hreflang="es" href="https://roger-peer-companion.lovable.app/es/" />
+    <image:image>
+      <image:loc>https://peersupportAI.com/lovable-uploads/098e5a48-82bc-4b39-bd7c-491690a5c763.png</image:loc>
+      <image:title>Ohio Mental Health Resources</image:title>
+      <image:caption>Comprehensive mental health resources for Cleveland, Lorain, and Northeast Ohio communities</image:caption>
+      <image:geo_location>Cleveland, Lorain, Brook Park, Mentor, Hudson, Parma, Cuyahoga Falls, Madison, Jefferson, Ashtabula, Conneaut, Wickliffe, Richmond Heights, Willoughby, Chardon, Burton, Ohio</image:geo_location>
+    </image:image>
   </url>
-  -->
 
 </urlset>
