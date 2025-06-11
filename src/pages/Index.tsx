@@ -34,13 +34,18 @@ const Index = () => {
     canonicalUrl: 'https://peersupportai.com/'
   });
 
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    console.log('Image failed to load:', e.currentTarget.src);
+    e.currentTarget.style.display = 'none';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header />
       <main className="container mx-auto px-4 pt-20">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-140px)]">
           <div className="lg:col-span-1">
-            <WelcomeCard />
+            <WelcomeCard onImageError={handleImageError} />
           </div>
           <div className="lg:col-span-2">
             <ChatInterface />
@@ -48,7 +53,7 @@ const Index = () => {
         </div>
       </main>
       <FloatingCrisisButton />
-      <MainFooter />
+      <MainFooter onImageError={handleImageError} />
     </div>
   );
 };

@@ -19,13 +19,18 @@ const FlowchartPage = () => {
     ]
   );
 
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    console.log('Image failed to load:', e.currentTarget.src);
+    e.currentTarget.style.display = 'none';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header />
       <main className="pt-20">
         <RogerFlowchart />
       </main>
-      <MainFooter />
+      <MainFooter onImageError={handleImageError} />
     </div>
   );
 };
