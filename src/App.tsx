@@ -11,6 +11,7 @@ import UnifiedFlowchartPage from "./pages/UnifiedFlowchartPage";
 import ConversationProcessingPage from "./pages/ConversationProcessingPage";
 import WrappingHellAnalysisPage from "./pages/WrappingHellAnalysisPage";
 import MobileDesktopAnalysisPage from "./pages/MobileDesktopAnalysisPage";
+import TestDashboardPage from "./pages/TestDashboardPage";
 
 // Create a stable QueryClient instance
 const queryClient = new QueryClient({
@@ -36,6 +37,7 @@ const App: React.FC = () => {
             <Route path="/conversation-processing" element={<ConversationProcessingPage />} />
             <Route path="/wrapping-hell-analysis" element={<WrappingHellAnalysisPage />} />
             <Route path="/mobile-desktop-analysis" element={<MobileDesktopAnalysisPage />} />
+            <Route path="/test-dashboard" element={<TestDashboardPage />} />
           </Routes>
         </BrowserRouter>
       </ThemeProvider>
