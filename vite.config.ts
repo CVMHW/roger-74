@@ -25,28 +25,29 @@ export default defineConfig(({ mode }) => ({
         const seoFiles = ['/sitemap.xml', '/sitemap-production.xml', '/robots.txt', '/manifest.json'];
         
         seoFiles.forEach(filePath => {
-          server.middlewares.use(filePath, (req: any, res: any, next: any) => {
+          server.middlewares.use(filePath, async (req: any, res: any, next: any) => {
             console.log(`🚨 SEO INTERCEPT: ${filePath} request detected`);
             
-            const fs = require('fs');
-            const staticPath = path.join(__dirname, 'public', filePath.substring(1));
-            
-            // Set appropriate headers based on file type
-            if (filePath.includes('.xml')) {
-              res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-              res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
-              res.setHeader('X-Content-Type-Options', 'nosniff');
-              res.setHeader('X-Robots-Tag', 'index, follow');
-            } else if (filePath.includes('.txt')) {
-              res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-              res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
-            } else if (filePath.includes('.json')) {
-              res.setHeader('Content-Type', 'application/json; charset=utf-8');
-              res.setHeader('Cache-Control', 'public, max-age=86400');
-            }
-            
             try {
-              const content = fs.readFileSync(staticPath, 'utf8');
+              // Use dynamic import instead of require for fs
+              const { readFileSync } = await import('fs');
+              const staticPath = path.join(process.cwd(), 'public', filePath.substring(1));
+              
+              // Set appropriate headers based on file type
+              if (filePath.includes('.xml')) {
+                res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+                res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+                res.setHeader('X-Content-Type-Options', 'nosniff');
+                res.setHeader('X-Robots-Tag', 'index, follow');
+              } else if (filePath.includes('.txt')) {
+                res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+                res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+              } else if (filePath.includes('.json')) {
+                res.setHeader('Content-Type', 'application/json; charset=utf-8');
+                res.setHeader('Cache-Control', 'public, max-age=86400');
+              }
+              
+              const content = readFileSync(staticPath, 'utf8');
               console.log(`✅ SERVING SEO FILE: ${filePath} (${content.length} bytes)`);
               res.end(content);
             } catch (error) {
