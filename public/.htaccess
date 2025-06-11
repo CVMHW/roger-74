@@ -2,10 +2,12 @@
 # Enable rewrite engine
 RewriteEngine On
 
-# Serve static files directly without any rewriting
-RewriteRule ^(sitemap\.xml|sitemap-production\.xml|robots\.txt)$ - [L]
+# Serve static XML and txt files directly - FIRST PRIORITY
+RewriteRule ^sitemap\.xml$ - [L]
+RewriteRule ^sitemap-production\.xml$ - [L] 
+RewriteRule ^robots\.txt$ - [L]
 
-# Handle client routing for everything else
+# Only apply SPA routing to requests that aren't files and aren't static assets
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/(sitemap.*\.xml|robots\.txt)$

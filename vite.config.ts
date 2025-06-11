@@ -26,8 +26,14 @@ export default defineConfig(({ mode }) => ({
     // Ensure public directory files are copied to dist
     copyPublicDir: true,
     rollupOptions: {
-      // Don't try to bundle static files
-      external: ['/sitemap.xml', '/sitemap-production.xml', '/robots.txt']
+      // Don't bundle these files - serve them as static assets
+      external: (id) => {
+        return id.includes('sitemap') || id.includes('robots.txt');
+      },
     },
+  },
+  // Configure dev server to properly serve static files
+  preview: {
+    open: false,
   },
 }));

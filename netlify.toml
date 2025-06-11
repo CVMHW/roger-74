@@ -3,6 +3,7 @@
   publish = "dist"
   command = "npm run build"
 
+# Headers for static files
 [[headers]]
   for = "/sitemap.xml"
   [headers.values]
@@ -20,7 +21,7 @@
   [headers.values]
     Content-Type = "text/plain; charset=utf-8"
 
-# Static files should be served directly
+# Static file redirects - these must come FIRST
 [[redirects]]
   from = "/sitemap.xml"
   to = "/sitemap.xml"
@@ -39,9 +40,8 @@
   status = 200
   force = true
 
-# SPA fallback for everything else
+# SPA fallback - this must come LAST
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-  force = false
