@@ -2,10 +2,8 @@
 # Enable rewrite engine
 RewriteEngine On
 
-# Serve sitemap and robots files directly
-RewriteRule ^sitemap\.xml$ sitemap.xml [L,T=application/xml]
-RewriteRule ^sitemap-production\.xml$ sitemap-production.xml [L,T=application/xml]
-RewriteRule ^robots\.txt$ robots.txt [L,T=text/plain]
+# Serve static files directly without any rewriting
+RewriteRule ^(sitemap\.xml|sitemap-production\.xml|robots\.txt)$ - [L]
 
 # Handle client routing for everything else
 RewriteCond %{REQUEST_FILENAME} !-f

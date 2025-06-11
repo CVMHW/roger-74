@@ -20,14 +20,7 @@
   [headers.values]
     Content-Type = "text/plain; charset=utf-8"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-  conditions = {Role = ["admin"], Country = ["!"]}
-  force = false
-
-# Ensure XML files are served directly
+# Static files should be served directly
 [[redirects]]
   from = "/sitemap.xml"
   to = "/sitemap.xml"
@@ -45,3 +38,10 @@
   to = "/robots.txt"
   status = 200
   force = true
+
+# SPA fallback for everything else
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false
