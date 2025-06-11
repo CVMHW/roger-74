@@ -26,8 +26,8 @@ Disallow: /admin/
 Disallow: /_next/
 Disallow: /src/
 
-# Sitemap location
-Sitemap: https://peersupportai.com/sitemap.xml
+# Sitemap location - using current staging domain
+Sitemap: https://76a15c1c-d1af-45d2-87bd-9167c4426232.lovableproject.com/sitemap.xml
 
 # Enhanced for mental health SEO
 # Allow specific mental health content crawling
