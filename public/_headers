@@ -1,19 +1,30 @@
 
-# Headers for static files - CRITICAL for SEO
+# CRITICAL FIX #3: Enhanced Content-Type Headers - HIGHEST PRIORITY
 /sitemap.xml
   Content-Type: application/xml; charset=utf-8
-  Cache-Control: public, max-age=3600
+  Cache-Control: public, max-age=3600, must-revalidate
   X-Content-Type-Options: nosniff
+  X-Robots-Tag: index, follow
+  Vary: Accept-Encoding
 
 /sitemap-production.xml
   Content-Type: application/xml; charset=utf-8
-  Cache-Control: public, max-age=3600
+  Cache-Control: public, max-age=3600, must-revalidate
   X-Content-Type-Options: nosniff
+  X-Robots-Tag: index, follow
+  Vary: Accept-Encoding
 
 /robots.txt
   Content-Type: text/plain; charset=utf-8
-  Cache-Control: public, max-age=3600
+  Cache-Control: public, max-age=3600, must-revalidate
+  X-Robots-Tag: index, follow
 
-# Ensure XML files are never treated as HTML
+# Force XML MIME type for all XML files
 *.xml
   Content-Type: application/xml; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+# Block SPA routing from intercepting static files
+/sitemap*
+  X-Static-File: true
+  X-No-SPA-Routing: true
