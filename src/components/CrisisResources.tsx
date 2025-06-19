@@ -121,8 +121,8 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
                 { label: "Substance Abuse and Mental Health Hotline", phone: "1-800-622-4357", isPrimary: true },
                 { label: "Opiate Hotline", phone: "330-453-4357", isPrimary: true },
                 { label: "Ohio Gambling Hotline", phone: "1-888-532-3500", isPrimary: true },
-                { label: "United Way of Ohio", phone: "211" },
-                { label: "SMART Recovery (Mentor OH)", phone: "440-951-5357" }
+                { label: "SMART Recovery (Mentor OH)", phone: "440-951-5357" },
+                { label: "United Way of Ohio", phone: "211" }
               ]}
             />
             
@@ -133,11 +133,11 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
                 { label: "Stark County Mobile Crisis", phone: "330-452-6000", isPrimary: true },
                 { label: "Akron Children's Crisis Line", phone: "330-543-7472", isPrimary: true },
                 { label: "Portage Path Psychiatric Emergency Services", phone: "330-762-6110", isPrimary: true },
-                { label: "Homeless Hotline Stark County", phone: "330-452-4363" },
-                { label: "Homeless Hotline Summit County", phone: "330-615-0577" },
                 { label: "Akron Children's In-Patient Psychiatry", phone: "330-543-5015" },
                 { label: "Akron Children's Psychiatric Intake Response Center", phone: "330-543-7472" },
-                { label: "Alcoholics Anonymous Akron (9a-5p)", phone: "330-253-8181" }
+                { label: "Alcoholics Anonymous Akron (9a-5p)", phone: "330-253-8181" },
+                { label: "Homeless Hotline Stark County", phone: "330-452-4363" },
+                { label: "Homeless Hotline Summit County", phone: "330-615-0577" }
               ]}
             />
             
@@ -149,14 +149,14 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
                 { label: "Ashtabula County Children Services 24/7 Hotline", phone: "1-888-998-1811", isPrimary: true },
                 { label: "Ashtabula Homesafe Domestic Violence Hotline", phone: "1-800-952-2873", isPrimary: true },
                 { label: "Alcoholics Anonymous Ashtabula 24/7 Hotline", phone: "1-440-992-8383", isPrimary: true },
-                { label: "Rock Creek Glenbeigh Substance Abuse Hospital", phone: "1-877-487-5126" },
+                { label: "Ashtabula Beatitudes House (Housing Assistance)", phone: "1-440-992-0265" },
+                { label: "Ashtabula Catholic Charities (Non-Emergency)", phone: "1-440-992-2121" },
                 { label: "Ashtabula County Regional Medical Center Hospital", phone: "1-440-997-2262" },
+                { label: "Ashtabula Frontline Services", phone: "1-440-381-8347" },
+                { label: "Ashtabula Samaritan House (Housing Assistance)", phone: "1-440-992-3178" },
                 { label: "Chardon Ravenwood Psychiatric Hospital & Outpatient Clinic", phone: "1-440-285-4552" },
                 { label: "Cleveland Ohio Guidestone Pediatric Residential Psychiatric Hospital", phone: "1-844-622-5564" },
-                { label: "Ashtabula Samaritan House (Housing Assistance)", phone: "1-440-992-3178" },
-                { label: "Ashtabula Beatitudes House (Housing Assistance)", phone: "1-440-992-0265" },
-                { label: "Ashtabula Frontline Services", phone: "1-440-381-8347" },
-                { label: "Ashtabula Catholic Charities (Non-Emergency)", phone: "1-440-992-2121" }
+                { label: "Rock Creek Glenbeigh Substance Abuse Hospital", phone: "1-877-487-5126" }
               ]}
             />
             
@@ -169,21 +169,21 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
                 { label: "Cleveland Project DAWN Expanded Mobile Unit (Emergency)", phone: "1-216-387-6290", isPrimary: true },
                 { label: "Cleveland Elder Abuse Hotline", phone: "1-216-420-6700", isPrimary: true },
                 { label: "Cleveland Frontline Services", phone: "1-216-623-6555", isPrimary: true },
-                { label: "Cleveland National Alliance in Mental Health (NAMI) Hotline", phone: "1-216-875-7776" },
-                { label: "Cleveland Emily Program Eating Disorders Residential Hospital Admissions", phone: "1-888-272-0836" },
-                { label: "Cleveland Ohio Guidestone Pediatric Residential Psychiatric Hospital Admissions", phone: "1-844-622-5564" },
-                { label: "Cleveland Windsor-Laurelwood Residential Psychiatric Hospital Admissions", phone: "1-440-953-3000" },
-                { label: "Cleveland Highland Springs Residential Psychiatric Hospital Admissions", phone: "1-216-302-3070" },
-                { label: "Cleveland Bluestone Residential Pediatric Psychiatric Hospital Admissions", phone: "1-216-200-5030" },
-                { label: "Cleveland Veteran's Affairs Louis Stokes Mental Healthcare", phone: "1-216-791-3800", extension: "61035" },
+                { label: "Alcoholics Anonymous Cleveland (9a-5p)", phone: "1-216-241-7387" },
                 { label: "Chardon Ravenwood Psychiatric Hospital & Outpatient Clinic", phone: "1-440-285-4552" },
-                { label: "Rock Creek Glenbeigh Substance Abuse Hospital", phone: "1-877-487-5126" },
+                { label: "Cleveland Bluestone Residential Pediatric Psychiatric Hospital Admissions", phone: "1-216-200-5030" },
+                { label: "Cleveland Emily Program Eating Disorders Residential Hospital Admissions", phone: "1-888-272-0836" },
+                { label: "Cleveland Highland Springs Residential Psychiatric Hospital Admissions", phone: "1-216-302-3070" },
+                { label: "Cleveland National Alliance in Mental Health (NAMI) Hotline", phone: "1-216-875-7776" },
+                { label: "Cleveland Ohio Guidestone Pediatric Residential Psychiatric Hospital Admissions", phone: "1-844-622-5564" },
+                { label: "Cleveland Veteran's Affairs Louis Stokes Mental Healthcare", phone: "1-216-791-3800", extension: "61035" },
+                { label: "Cleveland Windsor-Laurelwood Residential Psychiatric Hospital Admissions", phone: "1-440-953-3000" },
                 { label: "Cuyahoga County Catholic Charities (Non-Emergency)", phone: "1-216-334-2900" },
-                { label: "Homeless Hotline Cuyahoga County", phone: "1-216-674-6700" },
                 { label: "EDEN Long-Term Housing", phone: "1-216-961-9690" },
                 { label: "Front-Steps Long-Term Housing", phone: "1-216-781-2250" },
+                { label: "Homeless Hotline Cuyahoga County", phone: "1-216-674-6700" },
                 { label: "Lake County Frontline Services", phone: "1-440-381-8347" },
-                { label: "Alcoholics Anonymous Cleveland (9a-5p)", phone: "1-216-241-7387" }
+                { label: "Rock Creek Glenbeigh Substance Abuse Hospital", phone: "1-877-487-5126" }
               ]}
             />
 
@@ -193,11 +193,11 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
                 { label: "Riveon/Nord Center Crisis Line (Emergency)", phone: "1-800-888-6161", isPrimary: true },
                 { label: "Riveon/Nord Center Crisis Line (Emergency - Alternative)", phone: "988", isPrimary: true },
                 { label: "University Hospitals St. John Medical Center", phone: "888-496-3730", isPrimary: true },
-                { label: "Berea Ohio Guidestone Pediatric Residential Psychiatric Hospital Admissions", phone: "1-844-622-5564" },
-                { label: "Riveon/Nord Center (Non-Emergency) Scheduling", phone: "440-233-7232" },
-                { label: "Homeless Hotline (Catholic Charities) Lorain County", phone: "440-242-0455" },
-                { label: "Catholic Charities Lorain County", phone: "440-366-1106" },
                 { label: "Alcoholics Anonymous Lorain (10a-2p)", phone: "440-246-1800" },
+                { label: "Berea Ohio Guidestone Pediatric Residential Psychiatric Hospital Admissions", phone: "1-844-622-5564" },
+                { label: "Catholic Charities Lorain County", phone: "440-366-1106" },
+                { label: "Homeless Hotline (Catholic Charities) Lorain County", phone: "440-242-0455" },
+                { label: "Riveon/Nord Center (Non-Emergency) Scheduling", phone: "440-233-7232" },
                 { label: "Safe Harbor & Genesis House", phone: "440-323-3400" },
                 { label: "The Gathering Place", phone: "216-595-9546" },
                 { label: "The Navigator", phone: "440-240-7025" }
