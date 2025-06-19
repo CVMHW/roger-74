@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -159,7 +158,7 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
                 { label: "Rock Creek Glenbeigh Substance Abuse Hospital", phone: "1-877-487-5126" }
               ]}
             />
-            
+
             <ResourceCategory 
               title="Cleveland/Mentor/Chardon Crisis Support"
               resources={[
@@ -191,7 +190,6 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
               title="Lorain/North Olmsted/Brook Park Crisis Support"
               resources={[
                 { label: "Riveon/Nord Center Crisis Line (Emergency)", phone: "1-800-888-6161", isPrimary: true },
-                { label: "Riveon/Nord Center Crisis Line (Emergency - Alternative)", phone: "988", isPrimary: true },
                 { label: "University Hospitals St. John Medical Center", phone: "888-496-3730", isPrimary: true },
                 { label: "Alcoholics Anonymous Lorain (10a-2p)", phone: "440-246-1800" },
                 { label: "Berea Ohio Guidestone Pediatric Residential Psychiatric Hospital Admissions", phone: "1-844-622-5564" },
