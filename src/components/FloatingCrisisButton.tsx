@@ -16,8 +16,10 @@ const FloatingCrisisButton: React.FC = () => {
 
   const quickCrisisResources = [
     { label: "National Suicide Prevention", phone: "988", isPrimary: true },
-    { label: "Crisis Text Line", phone: "Text 741741" },
+    { label: "Crisis Text Line", phone: "Text 741741", isPrimary: true },
     { label: "Emergency Services", phone: "911", isPrimary: true },
+    { label: "Ohio Veteran Crisis Line", phone: "1-800-273-8255", isPrimary: true },
+    { label: "Ashtabula County 24/7 Substance Use Disorder Crisis Hotline", phone: "1-800-577-7849", isPrimary: true },
     { label: "Summit County Mobile Crisis", phone: "330-434-9144", isPrimary: true },
     { label: "Cuyahoga County Mobile Crisis", phone: "216-623-6555", isPrimary: true },
     { label: "Riveon/Nord Center Crisis Line", phone: "1-800-888-6161", isPrimary: true }
