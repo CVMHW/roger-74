@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -103,6 +102,8 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
             )}
             
             <p className="text-sm text-gray-600 bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-100">
+              <strong>LEGAL NOTICE:</strong> Experimental beta software • Not FDA approved or clinically validated as a medical device • Informational only • Always consult healthcare professionals • 
+              Emergency: <a href="tel:911" className="text-cvmhw-blue hover:underline font-medium">911</a> or <a href="tel:988" className="text-cvmhw-blue hover:underline font-medium">988 Crisis Lifeline</a> • Responses may contain errors • Not a substitute for professional care. 
               Please use the resources below for immediate relief of symptoms and contact one of the relevant crisis resources or 911 for immediate assistance.
             </p>
             
@@ -127,9 +128,9 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
             <ResourceCategory 
               title="Akron/Canton Crisis Support"
               resources={[
-                { label: "Summit County Mobile Crisis", phone: "330-434-9144" },
+                { label: "Summit County Mobile Crisis", phone: "330-434-9144", isPrimary: true },
                 { label: "Akron Children's Crisis Line", phone: "330-543-7472" },
-                { label: "Stark County Mobile Crisis", phone: "330-452-6000" },
+                { label: "Stark County Mobile Crisis", phone: "330-452-6000", isPrimary: true },
                 { label: "Homeless Hotline Stark County", phone: "330-452-4363" },
                 { label: "Homeless Hotline Summit County", phone: "330-615-0577" },
                 { label: "Akron Children's In-Patient Psychiatry", phone: "330-543-5015" },
@@ -161,7 +162,7 @@ const CrisisResources: React.FC<CrisisResourcesProps> = ({ forceOpen = false }) 
             <ResourceCategory 
               title="Cleveland/Mentor/Chardon Crisis Support"
               resources={[
-                { label: "Cuyahoga County Mobile Crisis (Emergency)", phone: "1-216-623-6555" },
+                { label: "Cuyahoga County Mobile Crisis (Emergency)", phone: "1-216-623-6555", isPrimary: true },
                 { label: "Cleveland Emergency Medical Services (Emergency)", phone: "1-216-664-2555" },
                 { label: "Cleveland National Alliance in Mental Health (NAMI) Hotline", phone: "1-216-875-7776" },
                 { label: "Cleveland Emergency Children's Services Hotline", phone: "1-216-696-5437" },

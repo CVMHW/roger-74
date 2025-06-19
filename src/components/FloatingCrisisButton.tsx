@@ -17,10 +17,10 @@ const FloatingCrisisButton: React.FC = () => {
   const quickCrisisResources = [
     { label: "National Suicide Prevention", phone: "988", isPrimary: true },
     { label: "Crisis Text Line", phone: "Text 741741" },
-    { label: "Emergency Services", phone: "911" },
-    { label: "Summit County Mobile Crisis", phone: "330-434-9144" },
-    { label: "Cuyahoga County Mobile Crisis", phone: "216-623-6555" },
-    { label: "Riveon/Nord Center Crisis Line", phone: "1-800-888-6161" }
+    { label: "Emergency Services", phone: "911", isPrimary: true },
+    { label: "Summit County Mobile Crisis", phone: "330-434-9144", isPrimary: true },
+    { label: "Cuyahoga County Mobile Crisis", phone: "216-623-6555", isPrimary: true },
+    { label: "Riveon/Nord Center Crisis Line", phone: "1-800-888-6161", isPrimary: true }
   ];
 
   return (
@@ -43,6 +43,9 @@ const FloatingCrisisButton: React.FC = () => {
               Immediate Crisis Resources
             </DialogTitle>
             <DialogDescription>
+              <strong>LEGAL NOTICE:</strong> Experimental beta software • Not FDA approved or clinically validated as a medical device • Informational only • Always consult healthcare professionals • 
+              Emergency: <a href="tel:911" className="text-cvmhw-blue hover:underline font-medium">911</a> or <a href="tel:988" className="text-cvmhw-blue hover:underline font-medium">988 Crisis Lifeline</a> • Responses may contain errors • Not a substitute for professional care.
+              <br /><br />
               If you're in immediate danger, please call one of these numbers right now.
             </DialogDescription>
           </DialogHeader>
