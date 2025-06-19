@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
@@ -24,6 +24,18 @@ const queryClient = new QueryClient({
 });
 
 const App: React.FC = () => {
+  const [isReactReady, setIsReactReady] = useState(false);
+
+  useEffect(() => {
+    // Ensure React hooks are working before proceeding
+    setIsReactReady(true);
+  }, []);
+
+  // Don't render providers until React is confirmed ready
+  if (!isReactReady) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
