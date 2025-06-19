@@ -4,6 +4,12 @@ import React, { useState, useEffect } from "react";
 const MOBILE_BREAKPOINT = 768;
 
 export function useIsMobile(): boolean {
+  // Guard against React not being available
+  if (!React || typeof React.useState !== 'function') {
+    console.warn('React hooks not available, defaulting to non-mobile');
+    return false;
+  }
+
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
   useEffect(() => {

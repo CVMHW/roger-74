@@ -11,31 +11,39 @@ if (!rootElement) {
 
 console.log('Initializing React application...');
 
-// Ensure React is fully available before proceeding
-if (typeof React === 'undefined' || !React.useEffect) {
-  throw new Error('React is not properly loaded');
-}
+// Wait for React to be fully loaded with multiple checks
+const waitForReact = () => {
+  return new Promise<void>((resolve) => {
+    const checkReact = () => {
+      if (typeof React !== 'undefined' && 
+          React.useState && 
+          React.useEffect && 
+          React.useContext &&
+          typeof React.useState === 'function') {
+        resolve();
+      } else {
+        setTimeout(checkReact, 10);
+      }
+    };
+    checkReact();
+  });
+};
 
-// Add a small delay to ensure all modules are loaded
-const initializeApp = () => {
+const initializeApp = async () => {
   try {
+    // Wait for React to be fully available
+    await waitForReact();
+    
+    console.log('React confirmed ready, initializing app...');
     const root = createRoot(rootElement);
     root.render(<App />);
     console.log('React application initialized successfully');
   } catch (error) {
     console.error('Failed to initialize React application:', error);
-    // Fallback: try again after a short delay
-    setTimeout(() => {
-      try {
-        const root = createRoot(rootElement);
-        root.render(<App />);
-        console.log('React application initialized successfully on retry');
-      } catch (retryError) {
-        console.error('Failed to initialize React application on retry:', retryError);
-      }
-    }, 100);
+    // Show error to user
+    rootElement.innerHTML = '<div style="padding: 20px; color: red;">Failed to load application. Please refresh the page.</div>';
   }
 };
 
-// Use requestAnimationFrame to ensure DOM is ready
-requestAnimationFrame(initializeApp);
+// Start initialization
+initializeApp();
