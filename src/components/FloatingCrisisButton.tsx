@@ -19,7 +19,8 @@ const FloatingCrisisButton: React.FC = () => {
     { label: "Crisis Text Line", phone: "Text 741741" },
     { label: "Emergency Services", phone: "911" },
     { label: "Summit County Mobile Crisis", phone: "330-434-9144" },
-    { label: "Cuyahoga County Mobile Crisis", phone: "216-623-6555" }
+    { label: "Cuyahoga County Mobile Crisis", phone: "216-623-6555" },
+    { label: "Riveon/Nord Center Crisis Line", phone: "1-800-888-6161" }
   ];
 
   return (
