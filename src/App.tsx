@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
@@ -24,51 +24,6 @@ const queryClient = new QueryClient({
 });
 
 const App: React.FC = () => {
-  const [isReactReady, setIsReactReady] = useState(false);
-
-  useEffect(() => {
-    // Comprehensive React readiness check
-    const checkReactReadiness = () => {
-      const isReady = React && 
-                     typeof React.useState === 'function' && 
-                     typeof React.useEffect === 'function' &&
-                     typeof React.useContext === 'function' &&
-                     typeof React.useRef === 'function' &&
-                     typeof React.useMemo === 'function' &&
-                     React.useState !== null &&
-                     React.useEffect !== null &&
-                     React.useContext !== null;
-      
-      if (isReady) {
-        console.log('React hooks confirmed fully available');
-        setIsReactReady(true);
-      } else {
-        console.log('React hooks not yet available, checking again...');
-        setTimeout(checkReactReadiness, 10);
-      }
-    };
-
-    checkReactReadiness();
-  }, []);
-
-  // Don't render anything until React is confirmed ready
-  if (!isReactReady) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        fontFamily: 'Arial, sans-serif'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ marginBottom: '20px' }}>🔄</div>
-          <div>Initializing application...</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
